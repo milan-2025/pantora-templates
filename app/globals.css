@@ -1,26 +1,109 @@
 @import "tailwindcss";
 
+/* Pandora Templates brand palette (Brand guidelines v1) */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --plum: #3b1f4a;      /* primary: headings, logo */
+  --marigold: #f2a93b;  /* accent: buttons, highlights */
+  --cream: #fbf5ea;     /* main background */
+  --teal: #1f7a74;      /* secondary: finance, trust */
+  --coral: #e0675a;     /* warm accent: celebrations */
+  --charcoal: #2a2a2a;  /* body text */
+
+  /* light tints for chips & cards */
+  --sand: #fbe9c8;
+  --blush: #f8e1dd;
+  --mint: #dcedea;
+  --lavender: #ebe2ef;
+  --paper: #fffdf8;
+  --marigold-deep: #a8651a; /* marigold text on light backgrounds */
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-plum: var(--plum);
+  --color-marigold: var(--marigold);
+  --color-marigold-deep: var(--marigold-deep);
+  --color-cream: var(--cream);
+  --color-teal: var(--teal);
+  --color-coral: var(--coral);
+  --color-charcoal: var(--charcoal);
+  --color-sand: var(--sand);
+  --color-blush: var(--blush);
+  --color-mint: var(--mint);
+  --color-lavender: var(--lavender);
+  --color-paper: var(--paper);
+  --font-display: var(--font-dm-serif);
+  --font-sans: var(--font-poppins);
+  --shadow-soft: 0 1px 2px rgb(59 31 74 / 0.06), 0 12px 32px -12px rgb(59 31 74 / 0.22);
+  --shadow-lift: 0 2px 4px rgb(59 31 74 / 0.08), 0 28px 56px -18px rgb(59 31 74 / 0.32);
+  --animate-marquee: marquee 45s linear infinite;
+  --animate-twinkle: twinkle 2.8s ease-in-out infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-gradient: gradient 14s ease infinite;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes twinkle {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  50% { transform: scale(0.75) rotate(20deg); opacity: 0.7; }
+}
+@keyframes gradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@layer base {
+  body {
+    background: var(--cream);
+    color: var(--charcoal);
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3 {
+    color: var(--plum);
+    font-weight: 400;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Lenis smooth scroll */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+@layer components {
+  /* Faint planner-paper grid */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgb(59 31 74 / 0.045) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(59 31 74 / 0.045) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  /* Warm "sunlight through a window" glow used behind hero areas */
+  .bg-glow {
+    background-image:
+      radial-gradient(60% 50% at 85% 10%, rgb(242 169 59 / 0.22), transparent 70%),
+      radial-gradient(50% 45% at 5% 90%, rgb(224 103 90 / 0.12), transparent 70%);
+  }
+
+  /* Soft card surface (replaces the old thick-outline sticker style) */
+  .card {
+    background: var(--paper);
+    border: 1px solid rgb(59 31 74 / 0.08);
+    box-shadow: var(--shadow-soft);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
