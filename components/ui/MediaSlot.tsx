@@ -6,7 +6,7 @@ import type { Media } from "@/payload-types";
 import { isVideo, mediaDoc } from "@/lib/format";
 
 type Props = {
-  media: number | Media | null | undefined;
+  media: string | Media | null | undefined;
   className?: string;
   /** Rendered when nothing is uploaded. Defaults to nothing at all (no empty block). */
   fallback?: React.ReactNode;

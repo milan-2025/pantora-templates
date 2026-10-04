@@ -4,7 +4,7 @@ import { mediaDoc } from "@/lib/format";
 
 /** Builds page metadata from an SEO group, with sensible fallbacks. */
 export function seoMetadata(
-  seo: { title?: string | null; description?: string | null; image?: number | Media | null } | null | undefined,
+  seo: { title?: string | null; description?: string | null; image?: string | Media | null } | null | undefined,
   fallback: { title: string; description?: string | null },
 ): Metadata {
   const title = seo?.title || fallback.title;

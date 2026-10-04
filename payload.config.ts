@@ -1,7 +1,7 @@
 import path from "path";
 import { fileURLToPath } from "url";
 import { buildConfig } from "payload";
-import { sqliteAdapter } from "@payloadcms/db-sqlite";
+import { mongooseAdapter } from "@payloadcms/db-mongodb";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import { vercelBlobStorage } from "@payloadcms/storage-vercel-blob";
 import { resendAdapter } from "@payloadcms/email-resend";
@@ -20,12 +20,24 @@ import { SiteSettings } from "./globals/SiteSettings";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Accept the site address with and without "www." so either works for logging in.
+const withWww = (url?: string) => {
+  if (!url) return [];
+  try {
+    const u = new URL(url);
+    const bare = u.hostname.replace(/^www\./, "");
+    return [`${u.protocol}//${bare}${u.port ? `:${u.port}` : ""}`, `${u.protocol}//www.${bare}${u.port ? `:${u.port}` : ""}`];
+  } catch {
+    return [];
+  }
+};
+
 // Sites allowed to use the admin login cookie (CSRF protection): the real domain plus
 // Vercel's deployment URLs. Empty in local development so any localhost port works.
 const allowedOrigins =
   process.env.NODE_ENV === "production"
     ? [
-        process.env.NEXT_PUBLIC_SITE_URL,
+        ...withWww(process.env.NEXT_PUBLIC_SITE_URL),
         process.env.VERCEL_PROJECT_PRODUCTION_URL && `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`,
         process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}`,
         process.env.VERCEL_BRANCH_URL && `https://${process.env.VERCEL_BRANCH_URL}`,
@@ -65,14 +77,17 @@ export default buildConfig({
         defaultFromName: "Pandora Templates",
       })
     : undefined,
-  // Local dev: a SQLite file (schema auto-syncs). Production: Turso (hosted libSQL) via DATABASE_URI +
-  // DATABASE_AUTH_TOKEN, with migrations applied by `npm run vercel-build` before each deploy.
-  db: sqliteAdapter({
-    client: {
-      url: process.env.DATABASE_URI || "file:./payload.db",
-      authToken: process.env.DATABASE_AUTH_TOKEN,
-    },
+  // MongoDB Atlas (or any MongoDB). Collections and indexes are created automatically:
+  // there are no migration files to run.
+  db: mongooseAdapter({
+    url: process.env.DATABASE_URI || "",
   }),
+  // MongoDB creates collections lazily on first write, which can clash with a transaction
+  // ("catalog changes" errors) on a brand-new database. Create them all up front at startup.
+  onInit: async (payload) => {
+    const db = payload.db as unknown as { connection: { models: Record<string, { createCollection: () => Promise<unknown> }> } };
+    await Promise.allSettled(Object.values(db.connection.models).map((model) => model.createCollection()));
+  },
   plugins: [
     // Uploads go to Vercel Blob when its token is set (production); otherwise to local folders.
     vercelBlobStorage({

@@ -35,7 +35,7 @@ export const getPageBySlug = cache(async (slug: string) => {
   return res.docs[0] ?? null;
 });
 
-export const getProducts = cache(async (ids?: number[]) => {
+export const getProducts = cache(async (ids?: string[]) => {
   const payload = await getPayloadClient();
   const res = await payload.find({
     collection: "products",

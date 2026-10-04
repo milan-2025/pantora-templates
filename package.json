@@ -9,11 +9,10 @@
     "lint": "eslint",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "generate": "npm run payload generate:types && npm run payload generate:importmap",
-    "seed": "npm run payload run scripts/seed.ts",
-    "vercel-build": "npm run payload migrate && npm run build"
+    "seed": "npm run payload run scripts/seed.ts"
   },
   "dependencies": {
-    "@payloadcms/db-sqlite": "^3.90.2",
+    "@payloadcms/db-mongodb": "^3.90.2",
     "@payloadcms/email-resend": "^3.90.2",
     "@payloadcms/next": "^3.90.2",
     "@payloadcms/richtext-lexical": "^3.90.2",

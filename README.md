@@ -2,7 +2,7 @@
 
 The full pandoratemplates.com site: a multi-product homepage, animated product sales pages (such as `/wedding_planner`), pages the owner builds in the admin (such as `/ultimateweddingplanner`), a blog, checkout with promo codes and affiliate commissions, and a **WordPress-style admin at `/admin`**, so day-to-day changes need no developer.
 
-**Stack:** Next.js 16, Payload CMS 3 (the admin), SQLite locally / Turso in production, Vercel Blob for uploads, Tailwind CSS v4, Motion, Resend.
+**Stack:** Next.js 16, Payload CMS 3 (the admin), MongoDB Atlas, Vercel Blob for uploads, Tailwind CSS v4, Motion, Resend.
 
 ---
 
@@ -38,9 +38,8 @@ Tips:
 ### Run locally
 ```bash
 npm install
-cp .env.example .env.local     # set PAYLOAD_SECRET at minimum
-npm run payload migrate        # create the local database
-npm run seed                   # load the starting content
+cp .env.example .env.local     # set PAYLOAD_SECRET and DATABASE_URI (MongoDB)
+npm run seed                   # load the starting content (once per new database)
 npm run dev                    # http://localhost:3000 (admin at /admin)
 ```
 
@@ -57,16 +56,16 @@ npm run dev                    # http://localhost:3000 (admin at /admin)
 | Starting content | `scripts/seed.ts` |
 
 ### Changing the data model
-1. Edit `collections/*` and run `npm run generate` to update types.
-2. Run `npm run payload migrate:create <name>` and commit the new file in `migrations/`.
-3. Vercel applies it on the next deploy (`vercel-build` runs `payload migrate` first).
+Edit `collections/*` and run `npm run generate` to update types and the admin import map. MongoDB needs no migrations: new fields simply appear.
+
+Use a separate Atlas database (or cluster) for local development, so testing never touches real orders.
 
 ### Deploy on Vercel
-1. Add **Turso** (Vercel → Storage / Marketplace) and set `DATABASE_URI` + `DATABASE_AUTH_TOKEN`.
+1. Create a free **MongoDB Atlas** cluster. Under **Network Access**, allow `0.0.0.0/0` (Vercel's servers have changing IPs). Copy the connection string, add a database name (e.g. `/pandora?`), and set it as `DATABASE_URI`. You can also use Vercel's MongoDB Atlas integration (Vercel → Storage), which sets the variable for you.
 2. Add **Vercel Blob** (Vercel → Storage); `BLOB_READ_WRITE_TOKEN` is set automatically.
-3. Set `PAYLOAD_SECRET` and `NEXT_PUBLIC_SITE_URL`, plus `ALLOW_MOCK_PAYMENTS=true` for a demo on mock payments.
-4. Deploy. Vercel runs `npm run vercel-build` (migrations, then build). Then run the seed once against the production database (`npm run seed` with the production env vars), and create the first admin login at `/admin`.
-5. Point the pandoratemplates.com domain at the Vercel project.
+3. Set `PAYLOAD_SECRET` and `NEXT_PUBLIC_SITE_URL` (e.g. `https://pandoratemplates.com`; the `www.` version is allowed automatically), plus `ALLOW_MOCK_PAYMENTS=true` for a demo on mock payments.
+4. Deploy. Then run the seed once against the production database (`npm run seed` with the production `DATABASE_URI` in `.env.local`), and create the first admin login at `/admin`.
+5. Point the pandoratemplates.com domain at the Vercel project. If you change domains later, update `NEXT_PUBLIC_SITE_URL` and redeploy, or admin logins on the new domain will be refused.
 
 ### Going live with real payments
 Payments use a mock provider. To connect Razorpay or Cashfree:

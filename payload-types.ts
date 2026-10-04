@@ -98,7 +98,7 @@ export interface Config {
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
   };
   db: {
-    defaultIDType: number;
+    defaultIDType: string;
   };
   fallbackLocale: null;
   globals: {
@@ -142,7 +142,7 @@ export interface UserAuthOperations {
  * via the `definition` "products".
  */
 export interface Product {
-  id: number;
+  id: string;
   name: string;
   /**
    * The page address, e.g. wedding_planner → pandoratemplates.com/wedding_planner
@@ -155,7 +155,7 @@ export interface Product {
   /**
    * Image for product cards on the homepage
    */
-  cardImage?: (number | null) | Media;
+  cardImage?: (string | null) | Media;
   /**
    * Regular price in ₹. Set a lower price under the Offer tab.
    */
@@ -173,7 +173,7 @@ export interface Product {
   /**
    * The file buyers download after paying (kept private)
    */
-  downloadFile?: (number | null) | ProductFile;
+  downloadFile?: (string | null) | ProductFile;
   /**
    * Google Sheets 'make a copy' link given to buyers (ends with /copy)
    */
@@ -216,7 +216,7 @@ export interface Product {
     /**
      * Optional image or video shown behind the spreadsheet preview
      */
-    media?: (number | null) | Media;
+    media?: (string | null) | Media;
   };
   /**
    * Who it's for. Shown under the hero and above the features.
@@ -267,7 +267,7 @@ export interface Product {
           /**
            * Optional screenshot or screen-recording for this tab. Leave empty to show nothing.
            */
-          media?: (number | null) | Media;
+          media?: (string | null) | Media;
           id?: string | null;
         }[]
       | null;
@@ -293,7 +293,7 @@ export interface Product {
           /**
            * Screenshot or photo. If empty, an animated spreadsheet preview is shown instead.
            */
-          image?: (number | null) | Media;
+          image?: (string | null) | Media;
           /**
            * Preview shown when there's no image
            */
@@ -396,7 +396,7 @@ export interface Product {
     /**
      * Optional background image or video
      */
-    media?: (number | null) | Media;
+    media?: (string | null) | Media;
   };
   seo?: {
     title?: string | null;
@@ -404,7 +404,7 @@ export interface Product {
     /**
      * Image shown when the page is shared (1200×630 recommended)
      */
-    image?: (number | null) | Media;
+    image?: (string | null) | Media;
   };
   updatedAt: string;
   createdAt: string;
@@ -417,7 +417,7 @@ export interface Product {
  * via the `definition` "media".
  */
 export interface Media {
-  id: number;
+  id: string;
   /**
    * Short description of the image, for accessibility and Google.
    */
@@ -459,7 +459,7 @@ export interface Media {
  * via the `definition` "product-files".
  */
 export interface ProductFile {
-  id: number;
+  id: string;
   /**
    * Optional note, e.g. version number
    */
@@ -481,9 +481,9 @@ export interface ProductFile {
  * via the `definition` "orders".
  */
 export interface Order {
-  id: number;
+  id: string;
   orderId: string;
-  product: number | Product;
+  product: string | Product;
   paymentStatus?: ('created' | 'paid' | 'failed' | 'refunded') | null;
   paidAt?: string | null;
   customerName: string;
@@ -504,7 +504,7 @@ export interface Order {
    */
   offerApplied?: boolean | null;
   promoCode?: string | null;
-  affiliate?: (number | null) | Affiliate;
+  affiliate?: (string | null) | Affiliate;
   commissionAmount?: number | null;
   commissionStatus?: ('none' | 'pending' | 'paid') | null;
   paymentId?: string | null;
@@ -519,7 +519,7 @@ export interface Order {
  * via the `definition` "affiliates".
  */
 export interface Affiliate {
-  id: number;
+  id: string;
   name: string;
   /**
    * Customers type this at checkout, or arrive via ?ref=CODE
@@ -551,7 +551,7 @@ export interface Affiliate {
  * via the `definition` "pages".
  */
 export interface Page {
-  id: number;
+  id: string;
   title: string;
   /**
    * Page address, e.g. ultimateweddingplanner → pandoratemplates.com/ultimateweddingplanner. Use 'home' for the homepage.
@@ -577,7 +577,7 @@ export interface Page {
              * e.g. /wedding_planner or https://…
              */
             secondaryUrl?: string | null;
-            image?: (number | null) | Media;
+            image?: (string | null) | Media;
             id?: string | null;
             blockName?: string | null;
             blockType: 'hero';
@@ -604,7 +604,7 @@ export interface Page {
             blockType: 'richText';
           }
         | {
-            image: number | Media;
+            image: string | Media;
             eyebrow?: string | null;
             heading?: string | null;
             content?: {
@@ -666,7 +666,7 @@ export interface Page {
             /**
              * Leave empty to show all published products
              */
-            products?: (number | Product)[] | null;
+            products?: (string | Product)[] | null;
             id?: string | null;
             blockName?: string | null;
             blockType: 'productCards';
@@ -719,7 +719,7 @@ export interface Page {
             blockType: 'contactForm';
           }
         | {
-            media: number | Media;
+            media: string | Media;
             caption?: string | null;
             id?: string | null;
             blockName?: string | null;
@@ -730,7 +730,7 @@ export interface Page {
   seo?: {
     title?: string | null;
     description?: string | null;
-    image?: (number | null) | Media;
+    image?: (string | null) | Media;
   };
   updatedAt: string;
   createdAt: string;
@@ -741,7 +741,7 @@ export interface Page {
  * via the `definition` "posts".
  */
 export interface Post {
-  id: number;
+  id: string;
   title: string;
   /**
    * Address: /blog/<slug>
@@ -753,7 +753,7 @@ export interface Post {
    * Short summary shown on the blog list and in Google
    */
   excerpt?: string | null;
-  coverImage?: (number | null) | Media;
+  coverImage?: (string | null) | Media;
   content: {
     root: {
       type: string;
@@ -782,7 +782,7 @@ export interface Post {
  * via the `definition` "contact-submissions".
  */
 export interface ContactSubmission {
-  id: number;
+  id: string;
   name: string;
   email: string;
   phone?: string | null;
@@ -800,7 +800,7 @@ export interface ContactSubmission {
  * via the `definition` "users".
  */
 export interface User {
-  id: number;
+  id: string;
   name?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -827,7 +827,7 @@ export interface User {
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
-  id: number;
+  id: string;
   key: string;
   data:
     | {
@@ -844,48 +844,48 @@ export interface PayloadKv {
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
-  id: number;
+  id: string;
   document?:
     | ({
         relationTo: 'products';
-        value: number | Product;
+        value: string | Product;
       } | null)
     | ({
         relationTo: 'orders';
-        value: number | Order;
+        value: string | Order;
       } | null)
     | ({
         relationTo: 'affiliates';
-        value: number | Affiliate;
+        value: string | Affiliate;
       } | null)
     | ({
         relationTo: 'pages';
-        value: number | Page;
+        value: string | Page;
       } | null)
     | ({
         relationTo: 'posts';
-        value: number | Post;
+        value: string | Post;
       } | null)
     | ({
         relationTo: 'media';
-        value: number | Media;
+        value: string | Media;
       } | null)
     | ({
         relationTo: 'product-files';
-        value: number | ProductFile;
+        value: string | ProductFile;
       } | null)
     | ({
         relationTo: 'contact-submissions';
-        value: number | ContactSubmission;
+        value: string | ContactSubmission;
       } | null)
     | ({
         relationTo: 'users';
-        value: number | User;
+        value: string | User;
       } | null);
   globalSlug?: string | null;
   user: {
     relationTo: 'users';
-    value: number | User;
+    value: string | User;
   };
   updatedAt: string;
   createdAt: string;
@@ -895,10 +895,10 @@ export interface PayloadLockedDocument {
  * via the `definition` "payload-preferences".
  */
 export interface PayloadPreference {
-  id: number;
+  id: string;
   user: {
     relationTo: 'users';
-    value: number | User;
+    value: string | User;
   };
   key?: string | null;
   value?:
@@ -918,7 +918,7 @@ export interface PayloadPreference {
  * via the `definition` "payload-migrations".
  */
 export interface PayloadMigration {
-  id: number;
+  id: string;
   name?: string | null;
   batch?: number | null;
   updatedAt: string;
@@ -1446,7 +1446,7 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
  * via the `definition` "site-settings".
  */
 export interface SiteSetting {
-  id: number;
+  id: string;
   brandName?: string | null;
   tagline?: string | null;
   /**

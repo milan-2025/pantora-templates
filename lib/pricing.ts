@@ -17,7 +17,7 @@ export type OfferState = {
   showStock: boolean;
 };
 
-export async function countOfferSales(payload: Payload, productId: number) {
+export async function countOfferSales(payload: Payload, productId: string) {
   const res = await payload.count({
     collection: "orders",
     where: { product: { equals: productId }, paymentStatus: { equals: "paid" }, offerApplied: { equals: true } },

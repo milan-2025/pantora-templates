@@ -39,7 +39,13 @@ export const Pages: CollectionConfig = {
                   "Page address, e.g. ultimateweddingplanner → pandoratemplates.com/ultimateweddingplanner. Use 'home' for the homepage.",
               },
             },
-            { name: "layout", type: "blocks", label: "Page sections", blocks: pageBlocks },
+            {
+              name: "layout",
+              type: "blocks",
+              label: "Page sections",
+              labels: { singular: "Section", plural: "Sections" },
+              blocks: pageBlocks,
+            },
           ],
         },
         {
