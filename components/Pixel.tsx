@@ -2,8 +2,6 @@
 
 import Script from "next/script";
 
-const PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
-
 type FbqEvent = "ViewContent" | "InitiateCheckout" | "Purchase" | "Lead";
 
 declare global {
@@ -17,8 +15,9 @@ export function track(event: FbqEvent, params?: Record<string, unknown>) {
   if (typeof window !== "undefined" && window.fbq) window.fbq("track", event, params);
 }
 
-/** Meta (Instagram/Facebook) Pixel. Set NEXT_PUBLIC_META_PIXEL_ID to enable. */
-export function Pixel() {
+/** Meta (Instagram/Facebook) Pixel. The ID comes from Site settings (or NEXT_PUBLIC_META_PIXEL_ID). */
+export function Pixel({ id }: { id?: string | null }) {
+  const PIXEL_ID = (id || process.env.NEXT_PUBLIC_META_PIXEL_ID || "").replace(/\D/g, "");
   if (!PIXEL_ID) return null;
   return (
     <Script id="meta-pixel" strategy="afterInteractive">

@@ -1,22 +1,63 @@
 import { NextResponse } from "next/server";
-import { customerSchema } from "@/lib/schema";
+import { z } from "zod";
+import { customerSchema, promoCodeSchema } from "@/lib/schema";
 import { getPaymentProvider } from "@/lib/payments";
-import { product } from "@/lib/content";
+import { loadCheckoutProduct } from "@/lib/checkout";
+import { getQuote } from "@/lib/pricing";
+import { clientIp, rateLimit } from "@/lib/rateLimit";
+
+const bodySchema = z.object({
+  product: z.string().min(1).max(80),
+  customer: customerSchema,
+  promoCode: promoCodeSchema,
+});
 
 export async function POST(req: Request) {
+  if (!rateLimit(`order:${clientIp(req)}`, 10, 60_000)) {
+    return NextResponse.json({ error: "Too many attempts. Please wait a minute." }, { status: 429 });
+  }
   const body = await req.json().catch(() => null);
-  const parsed = customerSchema.safeParse(body?.customer);
+  const parsed = bodySchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid details" }, { status: 400 });
   }
+  const { customer, promoCode } = parsed.data;
+
+  const loaded = await loadCheckoutProduct(parsed.data.product);
+  if (!loaded) return NextResponse.json({ error: "This product isn't available" }, { status: 404 });
+  const { payload, product } = loaded;
 
   try {
+    // Price always comes from the server, never from the browser.
+    const quote = await getQuote(payload, product, promoCode);
+    if (quote.codeError) return NextResponse.json({ error: quote.codeError }, { status: 400 });
+
     const provider = getPaymentProvider();
-    // Price always comes from the server, never from the client.
-    const order = await provider.createOrder({ amount: product.price, currency: product.currency, customer: parsed.data });
-    // TODO (go-live): persist { orderId, customer, status: "created" } in a DB / sheet
-    // so the verify step and the download page can look the order up.
-    return NextResponse.json(order);
+    const order = await provider.createOrder({ amount: quote.total, currency: "INR", customer });
+
+    await payload.create({
+      collection: "orders",
+      data: {
+        orderId: order.orderId,
+        provider: order.provider,
+        product: product.id,
+        paymentStatus: "created",
+        customerName: customer.name,
+        email: customer.email,
+        phone: customer.phone,
+        city: customer.city || undefined,
+        listPrice: quote.listPrice,
+        discountAmount: quote.discount,
+        amount: quote.total,
+        offerApplied: quote.offer.active,
+        promoCode: quote.promoCode ?? undefined,
+        affiliate: quote.affiliate?.id,
+        commissionAmount: quote.commission,
+        commissionStatus: "none", // becomes "pending" once paid
+      },
+    });
+
+    return NextResponse.json({ ...order, amount: quote.total });
   } catch (e) {
     console.error("[create-order]", e);
     return NextResponse.json({ error: "Payments are temporarily unavailable. Please try again." }, { status: 503 });

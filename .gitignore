@@ -40,3 +40,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# payload (local dev database + uploads)
+/payload*.db*
+/media
+/product-files

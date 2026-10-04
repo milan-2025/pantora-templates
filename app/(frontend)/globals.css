@@ -1,0 +1,148 @@
+@import "tailwindcss";
+
+/* Pandora Templates brand palette (Brand guidelines v1) */
+:root {
+  --plum: #3b1f4a;      /* primary: headings, logo */
+  --marigold: #f2a93b;  /* accent: buttons, highlights */
+  --cream: #fbf5ea;     /* main background */
+  --teal: #1f7a74;      /* secondary: finance, trust */
+  --coral: #e0675a;     /* warm accent: celebrations */
+  --charcoal: #2a2a2a;  /* body text */
+
+  /* light tints for chips & cards */
+  --sand: #fbe9c8;
+  --blush: #f8e1dd;
+  --mint: #dcedea;
+  --lavender: #ebe2ef;
+  --paper: #fffdf8;
+  --marigold-deep: #a8651a; /* marigold text on light backgrounds */
+}
+
+@theme inline {
+  --color-plum: var(--plum);
+  --color-marigold: var(--marigold);
+  --color-marigold-deep: var(--marigold-deep);
+  --color-cream: var(--cream);
+  --color-teal: var(--teal);
+  --color-coral: var(--coral);
+  --color-charcoal: var(--charcoal);
+  --color-sand: var(--sand);
+  --color-blush: var(--blush);
+  --color-mint: var(--mint);
+  --color-lavender: var(--lavender);
+  --color-paper: var(--paper);
+  --font-display: var(--font-dm-serif);
+  --font-sans: var(--font-poppins);
+  --shadow-soft: 0 1px 2px rgb(59 31 74 / 0.06), 0 12px 32px -12px rgb(59 31 74 / 0.22);
+  --shadow-lift: 0 2px 4px rgb(59 31 74 / 0.08), 0 28px 56px -18px rgb(59 31 74 / 0.32);
+  --animate-marquee: marquee 45s linear infinite;
+  --animate-twinkle: twinkle 2.8s ease-in-out infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-gradient: gradient 14s ease infinite;
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes twinkle {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  50% { transform: scale(0.75) rotate(20deg); opacity: 0.7; }
+}
+@keyframes gradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@layer base {
+  /* clip (not hidden) so mobile browsers can't widen the layout viewport,
+     and sticky positioning keeps working */
+  html {
+    overflow-x: clip;
+  }
+
+  body {
+    background: var(--cream);
+    color: var(--charcoal);
+    overflow-x: clip;
+  }
+
+  h1, h2, h3 {
+    color: var(--plum);
+    font-weight: 400;
+  }
+}
+
+/* Lenis smooth scroll */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+@layer components {
+  /* Faint planner-paper grid */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgb(59 31 74 / 0.045) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(59 31 74 / 0.045) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  /* Warm "sunlight through a window" glow used behind hero areas */
+  .bg-glow {
+    background-image:
+      radial-gradient(60% 50% at 85% 10%, rgb(242 169 59 / 0.22), transparent 70%),
+      radial-gradient(50% 45% at 5% 90%, rgb(224 103 90 / 0.12), transparent 70%);
+  }
+
+  /* Rich text written in the admin (pages, blog posts) */
+  .prose-pandora {
+    color: var(--charcoal);
+    font-size: 1.0625rem;
+    line-height: 1.75;
+  }
+  .prose-pandora > * + * { margin-top: 1.1em; }
+  .prose-pandora h1, .prose-pandora h2, .prose-pandora h3, .prose-pandora h4 {
+    font-family: var(--font-dm-serif);
+    color: var(--plum);
+    line-height: 1.15;
+    margin-top: 1.6em;
+  }
+  .prose-pandora h1 { font-size: 2.6rem; }
+  .prose-pandora h2 { font-size: 2.1rem; }
+  .prose-pandora h3 { font-size: 1.6rem; }
+  .prose-pandora h4 { font-size: 1.3rem; }
+  .prose-pandora > :first-child { margin-top: 0; }
+  .prose-pandora a { color: var(--teal); text-decoration: underline; text-decoration-color: var(--marigold); text-underline-offset: 3px; }
+  .prose-pandora ul { list-style: disc; padding-left: 1.4em; }
+  .prose-pandora ol { list-style: decimal; padding-left: 1.4em; }
+  .prose-pandora li + li { margin-top: 0.35em; }
+  .prose-pandora blockquote {
+    border-left: 3px solid var(--marigold);
+    padding-left: 1em;
+    font-family: var(--font-dm-serif);
+    font-size: 1.3rem;
+    color: var(--plum);
+  }
+  .prose-pandora img { border-radius: 1.25rem; box-shadow: var(--shadow-soft); }
+  .prose-pandora hr { border-color: rgb(59 31 74 / 0.12); margin: 2em 0; }
+  .prose-pandora code { background: var(--lavender); padding: 0.1em 0.35em; border-radius: 0.35em; font-size: 0.9em; }
+
+  /* Soft card surface (replaces the old thick-outline sticker style) */
+  .card {
+    background: var(--paper);
+    border: 1px solid rgb(59 31 74 / 0.08);
+    box-shadow: var(--shadow-soft);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

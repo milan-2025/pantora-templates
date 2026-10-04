@@ -18,7 +18,9 @@ export function CountUp({
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true });
   const formatRef = useRef(format);
-  formatRef.current = format;
+  useEffect(() => {
+    formatRef.current = format;
+  }, [format]);
 
   useEffect(() => {
     if (!inView || !ref.current) return;

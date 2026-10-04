@@ -2,7 +2,17 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { CountUp } from "@/components/ui/CountUp";
-import { showcaseTabs, type ShowcaseTabId } from "@/lib/content";
+
+export type MockupTab = "budget" | "guests" | "vendors" | "payments" | "dashboard";
+
+/** The sheet tabs drawn along the bottom of the mock spreadsheet. */
+export const MOCKUP_SHEETS: { id: MockupTab; label: string; emoji: string }[] = [
+  { id: "budget", label: "Budget", emoji: "💰" },
+  { id: "guests", label: "Guests", emoji: "👨‍👩‍👧" },
+  { id: "vendors", label: "Vendors", emoji: "📸" },
+  { id: "payments", label: "Payments", emoji: "📅" },
+  { id: "dashboard", label: "Dashboard", emoji: "📊" },
+];
 
 const inr = (n: number) => "₹" + Math.round(n).toLocaleString("en-IN");
 
@@ -226,7 +236,7 @@ function Table({ head, children }: { head: string[]; children: React.ReactNode }
   );
 }
 
-const tabContent: Record<ShowcaseTabId, () => React.JSX.Element> = {
+const tabContent: Record<MockupTab, () => React.JSX.Element> = {
   budget: BudgetTab,
   guests: GuestsTab,
   vendors: VendorsTab,
@@ -241,8 +251,8 @@ export function SpreadsheetMockup({
   onTabChange,
   className = "",
 }: {
-  active: ShowcaseTabId;
-  onTabChange?: (id: ShowcaseTabId) => void;
+  active: MockupTab;
+  onTabChange?: (id: MockupTab) => void;
   className?: string;
 }) {
   const Content = tabContent[active];
@@ -276,7 +286,7 @@ export function SpreadsheetMockup({
       </div>
       {/* sheet tabs */}
       <div className="flex gap-1 overflow-x-auto border-t border-plum/10 bg-cream px-2 pt-1.5 [scrollbar-width:none]">
-        {showcaseTabs.map((t) => (
+        {MOCKUP_SHEETS.map((t) => (
           <button
             key={t.id}
             onClick={() => onTabChange?.(t.id)}

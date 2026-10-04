@@ -2,34 +2,43 @@
 
 import { motion } from "motion/react";
 import { ButtonLink } from "@/components/ui/Button";
-import { VideoSlot } from "@/components/ui/VideoSlot";
+import { MediaSlot } from "@/components/ui/MediaSlot";
 import { LogoMark } from "@/components/Logo";
-import { formatINR, product } from "@/lib/content";
+import { useCurrentPrice } from "@/components/landing/LiveData";
+import { checkoutHref, type LandingProps } from "@/components/landing/types";
+import { formatINR } from "@/lib/format";
 
-export function FinalCTA() {
+export function FinalCTA({ product, offer }: LandingProps) {
+  const cta = product.finalCta ?? {};
+  const { price } = useCurrentPrice(offer);
+  if (!cta.heading) return null;
+
   return (
-    <section className="relative overflow-hidden px-4 py-24 md:py-32">
-      <VideoSlot src="/videos/final-cta.mp4" label="final-cta.mp4" className="absolute inset-0" />
+    <section className="relative overflow-hidden bg-plum px-4 py-24 md:py-32">
+      <MediaSlot media={cta.media} className="absolute inset-0" sizes="100vw" />
       <div className="absolute inset-0 bg-plum/65" />
+      <div aria-hidden className="pointer-events-none absolute -left-24 top-0 size-96 rounded-full bg-marigold/15 blur-3xl" />
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ type: "spring", stiffness: 80, damping: 16 }}
-        className="relative mx-auto max-w-3xl rounded-[2rem] bg-cream p-8 text-center shadow-lift md:p-14"
+        className="relative mx-auto max-w-3xl rounded-4xl bg-cream p-8 text-center shadow-lift md:p-14"
       >
         {/* the brand moment: the box opens */}
         <LogoMark className="mx-auto mb-6 size-20" animated />
         <h2 className="font-display text-4xl leading-tight md:text-6xl">
-          Open the box.
-          <br />
-          <span className="italic text-marigold">Everything&apos;s ready.</span>
+          {cta.heading}
+          {cta.headingAccent && (
+            <>
+              <br />
+              <span className="italic text-marigold">{cta.headingAccent}</span>
+            </>
+          )}
         </h2>
-        <p className="mx-auto mt-5 max-w-lg text-lg text-charcoal/75">
-          Spend less time chasing details and more time enjoying the run-up to your big day.
-        </p>
-        <ButtonLink href="/checkout" size="lg" className="mt-8">
-          Get the planner · {formatINR(product.price)}
+        {cta.text && <p className="mx-auto mt-5 max-w-lg text-lg text-charcoal/75">{cta.text}</p>}
+        <ButtonLink href={checkoutHref(product)} size="lg" className="mt-8">
+          {cta.buttonLabel || "Get it now"} · {formatINR(price)}
         </ButtonLink>
       </motion.div>
     </section>

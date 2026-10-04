@@ -1,0 +1,43 @@
+/* Pandora Templates admin branding */
+:root {
+  --theme-success-500: #1f7a74;
+}
+
+.pt-admin-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pt-admin-mark {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  &--lg {
+    width: 52px;
+    height: 52px;
+  }
+}
+
+.pt-admin-wordmark {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+
+  span {
+    font-family: Georgia, "DM Serif Display", serif;
+    font-size: 30px;
+  }
+
+  small {
+    margin-top: 5px;
+    font-size: 10px;
+    letter-spacing: 0.38em;
+  }
+}

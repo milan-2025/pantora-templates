@@ -1,18 +1,18 @@
 # AI Video Prompts
 
-Generate these with Sora, Veo, Kling, Runway or a similar tool, export them as **MP4 (H.264), muted, under 4 MB each**, and save them to `public/videos/` with the exact file names below. Until a file exists, its slot shows an animated gradient.
+Generate these with Sora, Veo, Kling, Runway or a similar tool, export them as **MP4 (H.264), muted, under 4 MB each**, then upload them in the admin: **Content → Images & videos**, and pick each one in the matching field of the product (Hero → Media, Product tour → each tab's Media, Final call to action → Media). Fields left empty simply show nothing (or the animated spreadsheet preview), never an empty block.
 
 Style for every clip follows the **Pandora Templates brand**: warm, organised and quietly elegant. Use soft natural window light on cream linen, with plum (#3B1F4A), marigold/gold ribbon (#F2A93B), peacock teal (#1F7A74) and coral rose (#E0675A) accents, and slow, smooth camera motion. Think premium gift-unboxing photography. The clips should loop well and have no text (the site adds its own).
 
-| File | Aspect | Length | Where it shows |
+| Clip | Aspect | Length | Admin field |
 |---|---|---|---|
-| `hero.mp4` | 4:5 | 6–8s loop | Card behind the spreadsheet in the hero |
-| `tab-budget.mp4` | 16:9 | 5–6s | Product tour, Budget |
-| `tab-guests.mp4` | 16:9 | 5–6s | Product tour, Guests |
-| `tab-vendors.mp4` | 16:9 | 5–6s | Product tour, Vendors |
-| `tab-payments.mp4` | 16:9 | 5–6s | Product tour, Payments |
-| `tab-dashboard.mp4` | 16:9 | 5–6s | Product tour, Dashboard |
-| `final-cta.mp4` | 16:9 | 8–10s loop | Full-bleed background behind the final CTA |
+| `hero.mp4` | 4:5 | 6–8s loop | Product → Hero → Media |
+| `tab-budget.mp4` | 16:9 | 5–6s | Product → Product tour → Budget tab → Media |
+| `tab-guests.mp4` | 16:9 | 5–6s | Product → Product tour → Guests tab → Media |
+| `tab-vendors.mp4` | 16:9 | 5–6s | Product → Product tour → Vendors tab → Media |
+| `tab-payments.mp4` | 16:9 | 5–6s | Product → Product tour → Payments tab → Media |
+| `tab-dashboard.mp4` | 16:9 | 5–6s | Product → Product tour → Dashboard tab → Media |
+| `final-cta.mp4` | 16:9 | 8–10s loop | Product → Final call to action → Media |
 
 ## Prompts
 
