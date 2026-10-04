@@ -10,7 +10,24 @@ import { doc, h, p, ul } from "./lexical";
 const payload = await getPayload({ config });
 const ctx = { disableRevalidate: true };
 
+/** MongoDB marks some errors as safe to retry (e.g. while a new cluster finishes building indexes). */
+async function withRetry<T>(fn: () => Promise<T>, attempts = 5): Promise<T> {
+  for (let i = 1; ; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      const labels = (e as { errorLabelSet?: Set<string> }).errorLabelSet;
+      if (i >= attempts || !labels?.has("TransientTransactionError")) throw e;
+      await new Promise((r) => setTimeout(r, 500 * i));
+    }
+  }
+}
+
 async function upsert<T extends "products" | "pages" | "posts">(collection: T, slug: string, data: Record<string, unknown>) {
+  return withRetry(() => upsertOnce(collection, slug, data));
+}
+
+async function upsertOnce<T extends "products" | "pages" | "posts">(collection: T, slug: string, data: Record<string, unknown>) {
   const existing = await payload.find({ collection, where: { slug: { equals: slug } }, limit: 1, depth: 0, draft: true });
   if (existing.docs[0]) {
     await payload.update({ collection, id: existing.docs[0].id, data: data as never, context: ctx, draft: false });
@@ -22,7 +39,7 @@ async function upsert<T extends "products" | "pages" | "posts">(collection: T, s
 }
 
 /* ---------------- site settings ---------------- */
-await payload.updateGlobal({
+await withRetry(() => payload.updateGlobal({
   slug: "site-settings",
   context: ctx,
   data: {
@@ -45,7 +62,7 @@ await payload.updateGlobal({
       { label: "Contact Us", url: "/contact" },
     ],
   },
-});
+}));
 console.log("updated site-settings");
 
 /* ---------------- wedding planner product ---------------- */

@@ -81,12 +81,19 @@ export default buildConfig({
   // there are no migration files to run.
   db: mongooseAdapter({
     url: process.env.DATABASE_URI || "",
+    // Multi-document transactions are unreliable on Atlas shared clusters (random
+    // "TransientTransactionError" / lock timeouts). Every write on this site is a single
+    // document, so they aren't needed.
+    transactionOptions: false,
   }),
-  // MongoDB creates collections lazily on first write, which can clash with a transaction
-  // ("catalog changes" errors) on a brand-new database. Create them all up front at startup.
+  // MongoDB creates collections and builds indexes lazily, which clashes with transactions on a
+  // brand-new database ("catalog changes" / "LockTimeout" errors). So at startup, create every
+  // collection and wait for its indexes to finish before anything is written.
   onInit: async (payload) => {
-    const db = payload.db as unknown as { connection: { models: Record<string, { createCollection: () => Promise<unknown> }> } };
-    await Promise.allSettled(Object.values(db.connection.models).map((model) => model.createCollection()));
+    type Model = { createCollection: () => Promise<unknown>; createIndexes: () => Promise<unknown> };
+    const models = Object.values((payload.db as unknown as { connection: { models: Record<string, Model> } }).connection.models);
+    await Promise.allSettled(models.map((m) => m.createCollection()));
+    await Promise.allSettled(models.map((m) => m.createIndexes()));
   },
   plugins: [
     // Uploads go to Vercel Blob when its token is set (production); otherwise to local folders.
