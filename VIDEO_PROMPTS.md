@@ -2,17 +2,21 @@
 
 Generate these with Sora, Veo, Kling, Runway or a similar tool, export them as **MP4 (H.264), muted, under 4 MB each**, then upload them in the admin: **Content → Images & videos**, and pick each one in the matching field of the product (Hero → Media, Product tour → each tab's Media, Final call to action → Media). Fields left empty simply show nothing (or the animated spreadsheet preview), never an empty block.
 
-Style for every clip follows the **Pandora Templates brand**: warm, organised and quietly elegant. Use soft natural window light on cream linen, with plum (#3B1F4A), marigold/gold ribbon (#F2A93B), peacock teal (#1F7A74) and coral rose (#E0675A) accents, and slow, smooth camera motion. Think premium gift-unboxing photography. The clips should loop well and have no text (the site adds its own).
+**How videos behave on the site (no autoplay):**
+- **Product tour tabs** and **Video sections** show the video's first frame with a ▶ play button. The video only downloads when a visitor taps play, which keeps Cloudinary bandwidth low. So make the **first frame** attractive.
+- **Hero → Media** and **Final call to action → Media** are background spots: a video there only ever shows its first frame as a still image. A good photo works just as well in these two.
+
+Style for every clip follows the **Pandora Templates brand**: warm, organised and quietly elegant. Use soft natural window light on cream linen, with plum (#3B1F4A), marigold/gold ribbon (#F2A93B), peacock teal (#1F7A74) and coral rose (#E0675A) accents, and slow, smooth camera motion. Think premium gift-unboxing photography. Clips should open on a strong first frame (it doubles as the thumbnail) and have no text (the site adds its own).
 
 | Clip | Aspect | Length | Admin field |
 |---|---|---|---|
-| `hero.mp4` | 4:5 | 6–8s loop | Product → Hero → Media |
+| `hero.mp4` | 4:5 | 6–8s | Product → Hero → Media |
 | `tab-budget.mp4` | 16:9 | 5–6s | Product → Product tour → Budget tab → Media |
 | `tab-guests.mp4` | 16:9 | 5–6s | Product → Product tour → Guests tab → Media |
 | `tab-vendors.mp4` | 16:9 | 5–6s | Product → Product tour → Vendors tab → Media |
 | `tab-payments.mp4` | 16:9 | 5–6s | Product → Product tour → Payments tab → Media |
 | `tab-dashboard.mp4` | 16:9 | 5–6s | Product → Product tour → Dashboard tab → Media |
-| `final-cta.mp4` | 16:9 | 8–10s loop | Product → Final call to action → Media |
+| `final-cta.mp4` | 16:9 | 8–10s | Product → Final call to action → Media |
 
 ## Prompts
 

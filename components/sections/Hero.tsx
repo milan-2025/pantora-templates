@@ -148,6 +148,7 @@ export function Hero({ product, offer }: LandingProps) {
           <MediaSlot
             media={hero.media}
             priority
+            decorative
             className="absolute -right-3 -top-8 h-[85%] w-[80%] rotate-3 rounded-[2rem] shadow-lift md:-right-10"
             fallback={
               <div

@@ -26,7 +26,7 @@ import { AdminLogo as AdminLogo_db845eae23ef682757f9df5d4893ae70 } from '../../.
 import { EarningsNavLink as EarningsNavLink_a9e2de177d8a740fdff811a37b0467ec } from '../../../components/admin/EarningsNavLink'
 import { AffiliateEarnings as AffiliateEarnings_ef08b7cec93e369f2ff555016e225337 } from '../../../components/admin/AffiliateEarnings'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
-import { VercelBlobClientUploadHandler as VercelBlobClientUploadHandler_16c82c5e25f430251a3e3ba57219ff4e } from '@payloadcms/storage-vercel-blob/client'
+import { CloudinaryClientUploadHandler as CloudinaryClientUploadHandler_961b9585ef2c9bbbd573b5311b532454 } from '../../../components/admin/CloudinaryClientUploadHandler'
 
 /** @type import('payload').ImportMap */
 export const importMap = {
@@ -58,5 +58,5 @@ export const importMap = {
   "/components/admin/EarningsNavLink#EarningsNavLink": EarningsNavLink_a9e2de177d8a740fdff811a37b0467ec,
   "/components/admin/AffiliateEarnings#AffiliateEarnings": AffiliateEarnings_ef08b7cec93e369f2ff555016e225337,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
-  "@payloadcms/storage-vercel-blob/client#VercelBlobClientUploadHandler": VercelBlobClientUploadHandler_16c82c5e25f430251a3e3ba57219ff4e
+  "/components/admin/CloudinaryClientUploadHandler#CloudinaryClientUploadHandler": CloudinaryClientUploadHandler_961b9585ef2c9bbbd573b5311b532454
 }

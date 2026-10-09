@@ -2,7 +2,7 @@
 
 The full pandoratemplates.com site: a multi-product homepage, animated product sales pages (such as `/wedding_planner`), pages the owner builds in the admin (such as `/ultimateweddingplanner`), a blog, checkout with promo codes and affiliate commissions, and a **WordPress-style admin at `/admin`**, so day-to-day changes need no developer.
 
-**Stack:** Next.js 16, Payload CMS 3 (the admin), MongoDB Atlas, Vercel Blob for uploads, Tailwind CSS v4, Motion, Resend.
+**Stack:** Next.js 16, Payload CMS 3 (the admin), MongoDB Atlas, Cloudinary for uploads, Tailwind CSS v4, Motion, Resend.
 
 ---
 
@@ -62,7 +62,7 @@ Use a separate Atlas database (or cluster) for local development, so testing nev
 
 ### Deploy on Vercel
 1. Create a free **MongoDB Atlas** cluster. Under **Network Access**, allow `0.0.0.0/0` (Vercel's servers have changing IPs). Copy the connection string, add a database name (e.g. `/pandora?`), and set it as `DATABASE_URI`. You can also use Vercel's MongoDB Atlas integration (Vercel → Storage), which sets the variable for you.
-2. Add **Vercel Blob** (Vercel → Storage); `BLOB_READ_WRITE_TOKEN` is set automatically.
+2. Create a **Cloudinary** account and set `CLOUDINARY_URL` (Dashboard → API Keys → "API environment variable"). Images and videos load from Cloudinary's CDN; paid product files are stored as *private* and only reachable through the paid-order download link. Uploads go straight from the browser to Cloudinary, so large videos aren't limited by Vercel's 4.5 MB request size (Cloudinary's free plan allows up to 10 MB per image/file and 100 MB per video).
 3. Set `PAYLOAD_SECRET` and `NEXT_PUBLIC_SITE_URL` (e.g. `https://pandoratemplates.com`; the `www.` version is allowed automatically), plus `ALLOW_MOCK_PAYMENTS=true` for a demo on mock payments.
 4. Deploy. Then run the seed once against the production database (`npm run seed` with the production `DATABASE_URI` in `.env.local`), and create the first admin login at `/admin`.
 5. Point the pandoratemplates.com domain at the Vercel project. If you change domains later, update `NEXT_PUBLIC_SITE_URL` and redeploy, or admin logins on the new domain will be refused.

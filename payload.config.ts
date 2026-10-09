@@ -3,9 +3,9 @@ import { fileURLToPath } from "url";
 import { buildConfig } from "payload";
 import { mongooseAdapter } from "@payloadcms/db-mongodb";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
-import { vercelBlobStorage } from "@payloadcms/storage-vercel-blob";
 import { resendAdapter } from "@payloadcms/email-resend";
 import sharp from "sharp";
+import { cloudinaryStorage } from "./lib/storage/cloudinary";
 
 import { Users } from "./collections/Users";
 import { Media } from "./collections/Media";
@@ -96,12 +96,13 @@ export default buildConfig({
     await Promise.allSettled(models.map((m) => m.createIndexes()));
   },
   plugins: [
-    // Uploads go to Vercel Blob when its token is set (production); otherwise to local folders.
-    vercelBlobStorage({
-      enabled: Boolean(process.env.BLOB_READ_WRITE_TOKEN),
-      token: process.env.BLOB_READ_WRITE_TOKEN,
-      addRandomSuffix: true,
-      collections: { media: true, "product-files": true },
+    // Images, videos and paid files go to Cloudinary once CLOUDINARY_URL is set;
+    // until then they're saved to local folders (fine for local development only).
+    cloudinaryStorage({
+      collections: {
+        media: { folder: "pandora/media", visibility: "public" },
+        "product-files": { folder: "pandora/product-files", visibility: "private" },
+      },
     }),
   ],
   sharp,

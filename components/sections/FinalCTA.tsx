@@ -15,7 +15,7 @@ export function FinalCTA({ product, offer }: LandingProps) {
 
   return (
     <section className="relative overflow-hidden bg-plum px-4 py-24 md:py-32">
-      <MediaSlot media={cta.media} className="absolute inset-0" sizes="100vw" />
+      <MediaSlot media={cta.media} decorative className="absolute inset-0" sizes="100vw" />
       <div className="absolute inset-0 bg-plum/65" />
       <div aria-hidden className="pointer-events-none absolute -left-24 top-0 size-96 rounded-full bg-marigold/15 blur-3xl" />
       <motion.div

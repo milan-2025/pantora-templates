@@ -30,7 +30,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ orderId:
   const { exp, sig } = signDownload(file.filename);
   // Payload may give an absolute URL (serverURL); keep the visitor on the domain they used.
   const origin = new URL(req.url).origin;
-  const target = new URL(new URL(file.url, origin).pathname, origin);
+  const fileUrl = new URL(file.url, origin);
+  const target = new URL(fileUrl.pathname + fileUrl.search, origin);
   target.searchParams.set("exp", exp);
   target.searchParams.set("sig", sig);
   return NextResponse.redirect(target, 302);
