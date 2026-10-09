@@ -1,24 +1,18 @@
 import "server-only";
-import { Resend } from "resend";
+import { brevoSender, sendWithBrevo } from "@/lib/brevo";
 
 const siteUrl = () => process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-const from = () => process.env.EMAIL_FROM ?? "Pandora Templates <onboarding@resend.dev>";
 
 const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 async function send({ to, subject, html, replyTo }: { to: string; subject: string; html: string; replyTo?: string }) {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) {
-    console.log(`[email:dev] Would send "${subject}" to ${to}. Set RESEND_API_KEY to send for real.`);
-    return { sent: false };
-  }
-  const { error } = await new Resend(key).emails.send({ from: from(), to, subject, html, replyTo });
-  if (error) {
-    console.error("[email] send failed", error);
-    return { sent: false };
-  }
-  return { sent: true };
+  return sendWithBrevo({
+    to: [{ email: to }],
+    subject,
+    html,
+    ...(replyTo ? { replyTo: { email: replyTo } } : {}),
+  });
 }
 
 const btn = (href: string, label: string, bg: string, color = "#3B1F4A") =>
@@ -63,16 +57,13 @@ export async function sendDeliveryEmail(order: {
       }
       <p style="font-size:12px;color:#666;margin-top:24px">Order ID: ${escapeHtml(order.orderId)}</p>`);
 
-  return send({ to: order.email, subject: `Your ${order.productName} is ready`, html });
+  return send({ to: order.email, subject: `Your download is ready: ${order.productName}`, html });
 }
 
 /** Notifies the site owner about a new contact-form message. */
 export async function sendContactNotification(msg: { name: string; email: string; phone?: string; message: string; page?: string }) {
-  const to = process.env.CONTACT_TO_EMAIL;
-  if (!to) {
-    console.log(`[email:dev] New contact message from ${msg.email}. Set CONTACT_TO_EMAIL to get these by email.`);
-    return { sent: false };
-  }
+  // Defaults to the sending address (the shop's own inbox).
+  const to = process.env.CONTACT_TO_EMAIL || brevoSender().email;
   const html = shell(`
       <h1 style="margin:0 0 12px;font-size:24px;color:#3B1F4A">New message from ${escapeHtml(msg.name)}</h1>
       <p style="margin:0 0 4px"><b>Email:</b> ${escapeHtml(msg.email)}</p>

@@ -2,7 +2,7 @@
 
 The full pandoratemplates.com site: a multi-product homepage, animated product sales pages (such as `/wedding_planner`), pages the owner builds in the admin (such as `/ultimateweddingplanner`), a blog, checkout with promo codes and affiliate commissions, and a **WordPress-style admin at `/admin`**, so day-to-day changes need no developer.
 
-**Stack:** Next.js 16, Payload CMS 3 (the admin), MongoDB Atlas, Cloudinary for uploads, Tailwind CSS v4, Motion, Resend.
+**Stack:** Next.js 16, Payload CMS 3 (the admin), MongoDB Atlas, Cloudinary for uploads, Tailwind CSS v4, Motion, Brevo (email).
 
 ---
 

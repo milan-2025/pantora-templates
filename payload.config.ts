@@ -3,9 +3,9 @@ import { fileURLToPath } from "url";
 import { buildConfig } from "payload";
 import { mongooseAdapter } from "@payloadcms/db-mongodb";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
-import { resendAdapter } from "@payloadcms/email-resend";
 import sharp from "sharp";
 import { cloudinaryStorage } from "./lib/storage/cloudinary";
+import { brevoAdapter } from "./lib/brevo";
 
 import { Users } from "./collections/Users";
 import { Media } from "./collections/Media";
@@ -69,14 +69,8 @@ export default buildConfig({
   collections: [Products, Orders, Affiliates, Pages, Posts, Media, ProductFiles, ContactSubmissions, Users],
   globals: [SiteSettings],
   editor: lexicalEditor(),
-  // Admin emails (e.g. "forgot password") go through Resend once RESEND_API_KEY is set.
-  email: process.env.RESEND_API_KEY
-    ? resendAdapter({
-        apiKey: process.env.RESEND_API_KEY,
-        defaultFromAddress: process.env.EMAIL_FROM_ADDRESS || "onboarding@resend.dev",
-        defaultFromName: "Pandora Templates",
-      })
-    : undefined,
+  // Admin emails (e.g. "forgot password") go through Brevo, like the rest of the site's email.
+  email: brevoAdapter,
   // MongoDB Atlas (or any MongoDB). Collections and indexes are created automatically:
   // there are no migration files to run.
   db: mongooseAdapter({
