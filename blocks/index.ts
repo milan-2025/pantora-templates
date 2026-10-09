@@ -168,6 +168,44 @@ export const VideoBlock: Block = {
   ],
 };
 
+export const HtmlBlock: Block = {
+  slug: "html",
+  labels: { singular: "Custom HTML", plural: "Custom HTML" },
+  fields: [
+    {
+      name: "html",
+      type: "code",
+      label: "HTML code",
+      required: true,
+      admin: {
+        language: "html",
+        description:
+          "Paste HTML here: a small snippet or a whole page (including <style> and <script>). " +
+          "Tip: for a page made entirely of your own code, also tick 'Hide site menu & footer' in the page's sidebar.",
+        editorOptions: { minimap: { enabled: false }, wordWrap: "on" },
+      },
+    },
+    {
+      name: "mode",
+      type: "radio",
+      defaultValue: "isolated",
+      options: [
+        { label: "Isolated: runs exactly as pasted, styles and scripts included (best for whole pages)", value: "isolated" },
+        { label: "Blend in: uses the site's fonts and styles; scripts won't run (best for small snippets, better for Google)", value: "inline" },
+      ],
+    },
+    {
+      name: "width",
+      type: "select",
+      defaultValue: "full",
+      options: [
+        { label: "Full width (edge to edge)", value: "full" },
+        { label: "Centered (same width as other sections)", value: "contained" },
+      ],
+    },
+  ],
+};
+
 export const pageBlocks = [
   HeroBlock,
   RichTextBlock,
@@ -179,4 +217,5 @@ export const pageBlocks = [
   TestimonialsBlock,
   ContactFormBlock,
   VideoBlock,
+  HtmlBlock,
 ];

@@ -20,6 +20,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function HomePage() {
   const [page, settings] = await Promise.all([getPageBySlug("home"), getSettings()]);
 
+  if (page?.hideHeaderFooter) return <RenderBlocks blocks={page.layout} settings={settings} />;
+
   return (
     <SiteShell>
       {page ? (

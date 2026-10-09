@@ -45,6 +45,9 @@ export default async function SlugPage({ params }: Args) {
   const page = await getPageBySlug(slug);
   if (!page) notFound();
 
+  // A page that is entirely the owner's own design (e.g. pasted HTML) can drop the site menu & footer.
+  if (page.hideHeaderFooter) return <RenderBlocks blocks={page.layout} settings={settings} />;
+
   return (
     <SiteShell>
       <RenderBlocks blocks={page.layout} settings={settings} />

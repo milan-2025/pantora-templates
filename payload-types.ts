@@ -422,6 +422,8 @@ export interface Media {
    * Short description of the image, for accessibility and Google.
    */
   alt: string;
+  prefix?: string | null;
+  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -464,6 +466,8 @@ export interface ProductFile {
    * Optional note, e.g. version number
    */
   note?: string | null;
+  prefix?: string | null;
+  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -725,6 +729,17 @@ export interface Page {
             blockName?: string | null;
             blockType: 'video';
           }
+        | {
+            /**
+             * Paste HTML here: a small snippet or a whole page (including <style> and <script>). Tip: for a page made entirely of your own code, also tick 'Hide site menu & footer' in the page's sidebar.
+             */
+            html: string;
+            mode?: ('isolated' | 'inline') | null;
+            width?: ('full' | 'contained') | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'html';
+          }
       )[]
     | null;
   seo?: {
@@ -732,6 +747,10 @@ export interface Page {
     description?: string | null;
     image?: (string | null) | Media;
   };
+  /**
+   * Use when this page is entirely your own design (e.g. pasted with a Custom HTML section).
+   */
+  hideHeaderFooter?: boolean | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1269,6 +1288,15 @@ export interface PagesSelect<T extends boolean = true> {
               id?: T;
               blockName?: T;
             };
+        html?:
+          | T
+          | {
+              html?: T;
+              mode?: T;
+              width?: T;
+              id?: T;
+              blockName?: T;
+            };
       };
   seo?:
     | T
@@ -1277,6 +1305,7 @@ export interface PagesSelect<T extends boolean = true> {
         description?: T;
         image?: T;
       };
+  hideHeaderFooter?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -1309,6 +1338,8 @@ export interface PostsSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  prefix?: T;
+  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -1351,6 +1382,8 @@ export interface MediaSelect<T extends boolean = true> {
  */
 export interface ProductFilesSelect<T extends boolean = true> {
   note?: T;
+  prefix?: T;
+  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;

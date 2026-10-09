@@ -24,9 +24,9 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { AdminIcon as AdminIcon_db845eae23ef682757f9df5d4893ae70 } from '../../../components/admin/AdminBrand'
 import { AdminLogo as AdminLogo_db845eae23ef682757f9df5d4893ae70 } from '../../../components/admin/AdminBrand'
 import { EarningsNavLink as EarningsNavLink_a9e2de177d8a740fdff811a37b0467ec } from '../../../components/admin/EarningsNavLink'
+import { CloudinaryClientUploadHandler as CloudinaryClientUploadHandler_961b9585ef2c9bbbd573b5311b532454 } from '../../../components/admin/CloudinaryClientUploadHandler'
 import { AffiliateEarnings as AffiliateEarnings_ef08b7cec93e369f2ff555016e225337 } from '../../../components/admin/AffiliateEarnings'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
-import { CloudinaryClientUploadHandler as CloudinaryClientUploadHandler_961b9585ef2c9bbbd573b5311b532454 } from '../../../components/admin/CloudinaryClientUploadHandler'
 
 /** @type import('payload').ImportMap */
 export const importMap = {
@@ -56,7 +56,7 @@ export const importMap = {
   "/components/admin/AdminBrand#AdminIcon": AdminIcon_db845eae23ef682757f9df5d4893ae70,
   "/components/admin/AdminBrand#AdminLogo": AdminLogo_db845eae23ef682757f9df5d4893ae70,
   "/components/admin/EarningsNavLink#EarningsNavLink": EarningsNavLink_a9e2de177d8a740fdff811a37b0467ec,
+  "/components/admin/CloudinaryClientUploadHandler#CloudinaryClientUploadHandler": CloudinaryClientUploadHandler_961b9585ef2c9bbbd573b5311b532454,
   "/components/admin/AffiliateEarnings#AffiliateEarnings": AffiliateEarnings_ef08b7cec93e369f2ff555016e225337,
-  "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
-  "/components/admin/CloudinaryClientUploadHandler#CloudinaryClientUploadHandler": CloudinaryClientUploadHandler_961b9585ef2c9bbbd573b5311b532454
+  "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

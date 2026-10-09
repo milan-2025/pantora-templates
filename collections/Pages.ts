@@ -59,5 +59,15 @@ export const Pages: CollectionConfig = {
         },
       ],
     },
+    {
+      name: "hideHeaderFooter",
+      type: "checkbox",
+      label: "Hide site menu & footer",
+      defaultValue: false,
+      admin: {
+        position: "sidebar",
+        description: "Use when this page is entirely your own design (e.g. pasted with a Custom HTML section).",
+      },
+    },
   ],
 };

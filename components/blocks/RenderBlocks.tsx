@@ -12,6 +12,7 @@ import { FeatureIcon, ICON_TINTS } from "@/components/ui/FeatureIcon";
 import { FAQ } from "@/components/sections/FAQ";
 import { Testimonials } from "@/components/sections/Testimonials";
 import { ContactSection } from "@/components/sections/ContactSection";
+import { HtmlEmbed } from "./HtmlEmbed";
 
 type Block = NonNullable<Page["layout"]>[number];
 type BlockOf<T extends Block["blockType"]> = Extract<Block, { blockType: T }>;
@@ -60,6 +61,8 @@ export async function RenderBlocks({ blocks, settings }: { blocks: Page["layout"
             );
           case "video":
             return <VideoBlock key={key} block={block} />;
+          case "html":
+            return <HtmlEmbed key={key} html={block.html} mode={block.mode ?? "isolated"} width={block.width ?? "full"} />;
           default:
             return null;
         }
