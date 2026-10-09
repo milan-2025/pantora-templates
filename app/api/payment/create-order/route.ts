@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     if (quote.codeError) return NextResponse.json({ error: quote.codeError }, { status: 400 });
 
     const provider = getPaymentProvider();
-    const order = await provider.createOrder({ amount: quote.total, currency: "INR", customer });
+    const order = await provider.createOrder({ amount: quote.total, currency: "INR", customer, description: product.name });
 
     await payload.create({
       collection: "orders",

@@ -67,11 +67,13 @@ Use a separate Atlas database (or cluster) for local development, so testing nev
 4. Deploy. Then run the seed once against the production database (`npm run seed` with the production `DATABASE_URI` in `.env.local`), and create the first admin login at `/admin`.
 5. Point the pandoratemplates.com domain at the Vercel project. If you change domains later, update `NEXT_PUBLIC_SITE_URL` and redeploy, or admin logins on the new domain will be refused.
 
-### Going live with real payments
-Payments use a mock provider. To connect Razorpay or Cashfree:
-1. Implement a provider in `lib/payments.ts` (a Razorpay outline is included) and set `PAYMENT_PROVIDER`.
-2. In `app/(frontend)/checkout/CheckoutForm.tsx`, at `// GATEWAY CHECKOUT GOES HERE`, open the gateway's checkout with `order.clientData` and pass its response to `/api/payment/verify`.
-3. Move order confirmation and delivery to the gateway's webhook, so buyers who close the tab still get their email.
+### Payments (Razorpay)
+Checkout uses **Razorpay** whenever `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` are set; without them it runs in demo mode.
+1. **Test mode:** use the `rzp_test_…` keys. Checkout shows a "TEST MODE" banner. Pay with Razorpay's test card `4111 1111 1111 1111` (any future expiry, any CVV) or UPI ID `success@razorpay`.
+2. **Webhook (required before launch):** Razorpay Dashboard → Webhooks → Add webhook: URL `https://<your-site>/api/payment/webhook`, events `payment.captured` and `order.paid`, and a secret you choose. Set the same secret as `RAZORPAY_WEBHOOK_SECRET`. This confirms orders and emails the files even if a buyer closes the tab right after paying.
+3. **Go live:** complete Razorpay's account activation (KYC), generate **live** keys, replace both keys in Vercel, add the webhook again in **Live mode** (test and live webhooks are separate), and redeploy. The banner disappears automatically with `rzp_live_` keys.
+
+Prices are always calculated on the server, and every payment is confirmed with Razorpay's signature before the order is marked paid. Confirmation is idempotent: the checkout page and the webhook can both confirm the same order without double-emailing or double-counting commission.
 
 ### Security notes
 - Prices, promo discounts and commissions are always calculated on the server.

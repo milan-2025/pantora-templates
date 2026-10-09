@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { LogoMark } from "@/components/Logo";
 import { customerSchema, type Customer } from "@/lib/schema";
 import { formatINR } from "@/lib/format";
+import { openRazorpay } from "@/lib/razorpayCheckout";
 
 export type QuoteView = {
   regularPrice: number;
@@ -48,11 +49,14 @@ export function CheckoutForm({
   productSlug,
   initialQuote,
   initialCode,
+  paymentMode,
 }: {
   productSlug: string;
   initialQuote: QuoteView;
   /** Referral code remembered from an affiliate link (already applied to initialQuote if valid). */
   initialCode: string;
+  /** Shown as a banner so nobody mistakes a test checkout for a real one. */
+  paymentMode: "live" | "test" | "demo";
 }) {
   const router = useRouter();
   const [values, setValues] = useState<Customer>({ name: "", email: "", phone: "", city: "" });
@@ -113,12 +117,12 @@ export function CheckoutForm({
       const order = await res.json();
       if (!res.ok) throw new Error(order.error);
 
-      // GATEWAY CHECKOUT GOES HERE
-      // For a real gateway: open its checkout widget with `order.clientData`, and in its
-      // success handler call verify() with the payload it returns. The mock provider
-      // just plays a short "processing" animation instead.
+      // Take the payment: Razorpay's secure popup, or a short demo animation in mock mode.
       let gatewayPayload: Record<string, unknown> = {};
-      if (order.provider === "mock") {
+      if (order.provider === "razorpay") {
+        gatewayPayload = await openRazorpay(order.orderId, order.clientData);
+        setStep(1); // "Confirming with the bank…"
+      } else {
         for (let i = 0; i < processingSteps.length; i++) {
           setStep(i);
           await new Promise((r) => setTimeout(r, 900));
@@ -261,8 +265,12 @@ export function CheckoutForm({
           If you add your city, your first name and city may appear in our &ldquo;recent purchases&rdquo; notice. We never show
           your surname, email or phone.
         </p>
-        {process.env.NODE_ENV === "development" && (
-          <p className="mt-4 rounded bg-sand p-2 text-center font-mono text-[11px]">DEV: mock payment mode. No real money is charged</p>
+        {paymentMode !== "live" && (
+          <p className="mt-4 rounded bg-sand p-2 text-center font-mono text-[11px]">
+            {paymentMode === "test"
+              ? "TEST MODE: use Razorpay test cards or UPI (success@razorpay). No real money is charged."
+              : "DEMO MODE: no payment gateway connected. No real money is charged."}
+          </p>
         )}
       </form>
 

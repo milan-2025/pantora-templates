@@ -11,6 +11,17 @@ import { MediaSlot } from "@/components/ui/MediaSlot";
 import { loadCheckoutProduct } from "@/lib/checkout";
 import { getQuote } from "@/lib/pricing";
 import { REF_COOKIE } from "@/lib/referral";
+import { getPaymentProvider } from "@/lib/payments";
+
+/** "live" only with live Razorpay keys; test keys and the mock gateway show a banner. */
+function paymentMode(): "live" | "test" | "demo" {
+  try {
+    if (getPaymentProvider().name === "mock") return "demo";
+  } catch {
+    return "demo";
+  }
+  return process.env.RAZORPAY_KEY_ID?.startsWith("rzp_live_") ? "live" : "test";
+}
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Checkout", robots: { index: false } };
@@ -71,7 +82,7 @@ export default async function CheckoutPage({ searchParams }: Args) {
         </aside>
 
         <div className="min-w-0">
-          <CheckoutForm productSlug={product.slug} initialQuote={initialQuote} initialCode={refCode} />
+          <CheckoutForm productSlug={product.slug} initialQuote={initialQuote} initialCode={refCode} paymentMode={paymentMode()} />
         </div>
       </div>
     </div>
