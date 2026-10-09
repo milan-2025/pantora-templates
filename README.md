@@ -69,7 +69,7 @@ Use a separate Atlas database (or cluster) for local development, so testing nev
 
 ### Payments (Razorpay)
 Checkout uses **Razorpay** whenever `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` are set; without them it runs in demo mode.
-1. **Test mode:** use the `rzp_test_…` keys. Checkout shows a "TEST MODE" banner. Pay with Razorpay's test card `4111 1111 1111 1111` (any future expiry, any CVV) or UPI ID `success@razorpay`.
+1. **Test mode:** use the `rzp_test_…` keys. Checkout shows a "TEST MODE" banner. Pay with UPI ID `success@razorpay` (or `failure@razorpay` to test a failed payment), or an Indian test card such as Visa `4100 2800 0000 1007` / RuPay `6527 6589 0000 1005` (any future expiry, any CVV, any 4–10 digit OTP). Cards like `4111 1111 1111 1111` count as international and are rejected unless international payments are enabled on the Razorpay account.
 2. **Webhook (required before launch):** Razorpay Dashboard → Webhooks → Add webhook: URL `https://<your-site>/api/payment/webhook`, events `payment.captured` and `order.paid`, and a secret you choose. Set the same secret as `RAZORPAY_WEBHOOK_SECRET`. This confirms orders and emails the files even if a buyer closes the tab right after paying.
 3. **Go live:** complete Razorpay's account activation (KYC), generate **live** keys, replace both keys in Vercel, add the webhook again in **Live mode** (test and live webhooks are separate), and redeploy. The banner disappears automatically with `rzp_live_` keys.
 

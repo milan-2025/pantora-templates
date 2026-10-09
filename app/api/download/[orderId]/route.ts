@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
  * Personal download link from the delivery email / success page.
  * Only paid orders get through; they're redirected to a signed link that expires in 10 minutes.
  */
-export async function GET(req: Request, { params }: { params: Promise<{ orderId: string }> }) {
+export async function GET(_req: Request, { params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = await params;
   const payload = await getPayloadClient();
   const found = await payload.find({ collection: "orders", where: { orderId: { equals: orderId } }, limit: 1, depth: 2 });
@@ -28,11 +28,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ orderId:
   }
 
   const { exp, sig } = signDownload(file.filename);
-  // Payload may give an absolute URL (serverURL); keep the visitor on the domain they used.
-  const origin = new URL(req.url).origin;
-  const fileUrl = new URL(file.url, origin);
-  const target = new URL(fileUrl.pathname + fileUrl.search, origin);
+  // Redirect with a *relative* link so the browser stays on the domain the visitor is using.
+  // (Behind a hosting proxy, req.url is the internal address, e.g. https://0.0.0.0:3000.)
+  const target = new URL(file.url, "http://placeholder.local");
   target.searchParams.set("exp", exp);
   target.searchParams.set("sig", sig);
-  return NextResponse.redirect(target, 302);
+  return new Response(null, {
+    status: 302,
+    headers: { Location: target.pathname + target.search, "Cache-Control": "no-store" },
+  });
 }
