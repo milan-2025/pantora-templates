@@ -13,7 +13,7 @@ Log in at **pandoratemplates.com/admin**. Every change is live a few seconds aft
 | I want to… | Go to |
 |---|---|
 | Change text, prices or images on the wedding planner page | **Shop → Products → The Wedding Planner Sheet**. Each tab (Hero, Pain points, Product tour, Feature highlights, FAQ…) is one section of the page. |
-| Run a limited-time offer | Same product → **Offer** tab: tick "Offer is running", set the offer price, the end date and (optionally) the number of sales at that price. The countdown and "X of Y sold" bar appear automatically, and the price goes back to normal when the offer ends. |
+| Run a limited-time offer | Same product → **Offer** tab: tick "Offer is running" and set the offer price. Choose **Personal timer** (each visitor gets the price for e.g. 15 minutes from their first visit) or **Fixed end date** (ends for everyone at once). The countdown appears automatically, and checkout really charges the regular price once the offer ends. |
 | Upload the file buyers get | **Shop → Product files**, then pick it in the product's "Download file" field. |
 | Make a new page (e.g. `/ultimateweddingplanner`) | **Content → Pages → Create new**. Set the slug (the page address), add sections with the **+** button, click **Publish**. |
 | Edit the homepage | **Content → Pages → Home** |
@@ -79,4 +79,4 @@ Prices are always calculated on the server, and every payment is confirmed with 
 - Prices, promo discounts and commissions are always calculated on the server.
 - Paid files are private. `/api/download/<orderId>` checks the order is paid, then issues a signed link valid for 10 minutes.
 - Orders, affiliates and contact messages can't be read or created through the public API.
-- The offer countdown, "X of Y sold" counter and purchase popups use only real data (India's 2023 dark-patterns guidelines prohibit "false urgency").
+- The offer countdown and purchase popups only ever show real data: the timer counts to when the price genuinely changes for that visitor (enforced by a signed, server-checked cookie), and popups show real paid orders from the last 30 days (first name and city only). India's 2023 dark-patterns guidelines prohibit "false urgency" and fake social proof.

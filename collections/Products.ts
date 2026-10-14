@@ -108,8 +108,7 @@ export const Products: CollectionConfig = {
         {
           label: "Offer",
           description:
-            "A real limited-time price. When the end date passes or the number of offer sales reaches the limit, " +
-            "checkout automatically charges the regular price again.",
+            "A limited-time price. When it ends, checkout automatically charges the regular price again.",
           fields: [
             {
               name: "offer",
@@ -118,25 +117,43 @@ export const Products: CollectionConfig = {
                 { name: "enabled", type: "checkbox", defaultValue: false, label: "Offer is running" },
                 { name: "price", type: "number", min: 0, admin: { description: "Offer price in ₹" } },
                 {
-                  name: "endsAt",
-                  type: "date",
-                  admin: { date: { pickerAppearance: "dayAndTime" }, description: "When the offer price ends" },
+                  name: "mode",
+                  type: "radio",
+                  defaultValue: "visitor",
+                  options: [
+                    { label: "Personal timer: each visitor gets the offer for a set number of minutes", value: "visitor" },
+                    { label: "Fixed end date: the offer ends for everyone at the same time", value: "endDate" },
+                  ],
                 },
                 {
-                  name: "cap",
+                  name: "visitorMinutes",
                   type: "number",
                   min: 1,
-                  admin: { description: "Optional: maximum number of sales at the offer price (e.g. 200)" },
+                  max: 1440,
+                  defaultValue: 15,
+                  admin: {
+                    condition: (_, sibling) => sibling?.mode !== "endDate",
+                    description:
+                      "Minutes each visitor has from their first visit. After that, their checkout really charges the regular price (reloading doesn't reset it).",
+                  },
                 },
-                { name: "showCountdown", type: "checkbox", defaultValue: true, label: "Show countdown to the end date" },
-                { name: "showStock", type: "checkbox", defaultValue: true, label: "Show 'X of Y sold' (needs a limit)" },
+                {
+                  name: "endsAt",
+                  type: "date",
+                  admin: {
+                    condition: (_, sibling) => sibling?.mode === "endDate",
+                    date: { pickerAppearance: "dayAndTime" },
+                    description: "When the offer price ends for everyone",
+                  },
+                },
+                { name: "showCountdown", type: "checkbox", defaultValue: true, label: "Show countdown" },
               ],
             },
             {
               name: "showRecentPurchases",
               type: "checkbox",
               defaultValue: true,
-              label: "Show recent-purchase popups (from real paid orders only)",
+              label: "Show recent-purchase popups (real paid orders from the last 30 days)",
             },
           ],
         },

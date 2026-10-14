@@ -12,6 +12,7 @@ import { loadCheckoutProduct } from "@/lib/checkout";
 import { getQuote } from "@/lib/pricing";
 import { REF_COOKIE } from "@/lib/referral";
 import { getPaymentProvider } from "@/lib/payments";
+import { readVisitorStart } from "@/lib/offerWindow";
 
 /** "live" only with live Razorpay keys; test keys and the mock gateway show a banner. */
 function paymentMode(): "live" | "test" | "demo" {
@@ -36,7 +37,7 @@ export default async function CheckoutPage({ searchParams }: Args) {
 
   // An affiliate's ?ref=CODE link is remembered in a cookie; apply it straight away.
   const refCode = (await cookies()).get(REF_COOKIE)?.value ?? "";
-  const q = await getQuote(payload, product, refCode || null);
+  const q = await getQuote(payload, product, refCode || null, { visitorStart: await readVisitorStart(String(product.id)) });
   const initialQuote = {
     regularPrice: q.offer.regularPrice,
     offerActive: q.offer.active,

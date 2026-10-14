@@ -50,7 +50,10 @@ export default buildConfig({
   cors: allowedOrigins,
   admin: {
     user: Users.slug,
-    meta: { titleSuffix: " · Pandora Templates" },
+    meta: {
+      titleSuffix: " · Pandora Templates",
+      icons: [{ rel: "icon", type: "image/svg+xml", url: "/favicon.svg" }],
+    },
     importMap: { baseDir: dirname },
     components: {
       graphics: {

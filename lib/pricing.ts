@@ -3,51 +3,49 @@ import type { Affiliate, Product } from "@/payload-types";
 
 /**
  * The single source of truth for what a customer pays. Always runs on the server.
- * The offer is real: it ends at its end date or when `cap` offer sales are reached.
+ * An offer either ends for everyone at a fixed date, or ends for each visitor a set number of
+ * minutes after their first visit (see lib/offerWindow.ts). After that, checkout charges the regular price.
  */
 export type OfferState = {
   active: boolean;
   regularPrice: number;
   /** Price before any promo code (the offer price while the offer is active). */
   price: number;
+  /** When the offer ends for this visitor. Null for a first-time visitor whose timer hasn't started yet. */
   endsAt: string | null;
-  cap: number | null;
-  sold: number;
   showCountdown: boolean;
-  showStock: boolean;
 };
 
-export async function countOfferSales(payload: Payload, productId: string) {
-  const res = await payload.count({
-    collection: "orders",
-    where: { product: { equals: productId }, paymentStatus: { equals: "paid" }, offerApplied: { equals: true } },
-  });
-  return res.totalDocs;
-}
+export type OfferContext = {
+  /** When this visitor's personal timer started (from the signed cookie), if it has. */
+  visitorStart?: number | null;
+  now?: Date;
+};
 
-export async function getOfferState(payload: Payload, product: Product, now = new Date()): Promise<OfferState> {
+export async function getOfferState(_payload: Payload, product: Product, ctx: OfferContext = {}): Promise<OfferState> {
   const o = product.offer ?? {};
+  const now = ctx.now ?? new Date();
   const regularPrice = product.price;
-  const cap = o.cap ?? null;
   const base: OfferState = {
     active: false,
     regularPrice,
     price: regularPrice,
-    endsAt: o.endsAt ?? null,
-    cap,
-    sold: 0,
+    endsAt: null,
     showCountdown: Boolean(o.showCountdown),
-    showStock: Boolean(o.showStock),
   };
 
   const configured = o.enabled && o.price != null && o.price < regularPrice;
   if (!configured) return base;
-  if (o.endsAt && new Date(o.endsAt) <= now) return base;
 
-  const sold = cap ? await countOfferSales(payload, product.id) : 0;
-  if (cap && sold >= cap) return { ...base, sold };
+  let endsAt: Date | null = null;
+  if (o.mode === "endDate") {
+    endsAt = o.endsAt ? new Date(o.endsAt) : null;
+  } else if (ctx.visitorStart) {
+    endsAt = new Date(ctx.visitorStart + (o.visitorMinutes ?? 15) * 60_000);
+  } // else: a first-time visitor; their timer starts when the product page loads
 
-  return { ...base, active: true, price: o.price!, sold };
+  if (endsAt && endsAt <= now) return { ...base, endsAt: endsAt.toISOString() };
+  return { ...base, active: true, price: o.price!, endsAt: endsAt?.toISOString() ?? null };
 }
 
 export type Quote = {
@@ -62,8 +60,13 @@ export type Quote = {
   commission: number;
 };
 
-export async function getQuote(payload: Payload, product: Product, rawCode?: string | null): Promise<Quote> {
-  const offer = await getOfferState(payload, product);
+export async function getQuote(
+  payload: Payload,
+  product: Product,
+  rawCode?: string | null,
+  ctx: OfferContext = {},
+): Promise<Quote> {
+  const offer = await getOfferState(payload, product, ctx);
   const listPrice = offer.price;
   const code = rawCode?.trim().toUpperCase() || null;
 

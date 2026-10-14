@@ -1,13 +1,13 @@
 import type { Payload } from "payload";
 import type { Product } from "@/payload-types";
-import { getOfferState } from "@/lib/pricing";
+import { getOfferState, type OfferContext } from "@/lib/pricing";
 import type { LiveData } from "@/components/landing/LiveData";
 
-const RECENT_DAYS = 14;
+const RECENT_DAYS = 30;
 
 /** Real-time offer numbers + recent real purchases (first name and city only). */
-export async function getLiveData(payload: Payload, product: Product): Promise<LiveData> {
-  const offer = await getOfferState(payload, product);
+export async function getLiveData(payload: Payload, product: Product, ctx: OfferContext = {}): Promise<LiveData> {
+  const offer = await getOfferState(payload, product, ctx);
 
   let recent: LiveData["recent"] = [];
   if (product.showRecentPurchases) {
@@ -21,7 +21,7 @@ export async function getLiveData(payload: Payload, product: Product): Promise<L
         city: { exists: true },
       },
       sort: "-paidAt",
-      limit: 10,
+      limit: 20,
       depth: 0,
       select: { customerName: true, city: true, paidAt: true },
     });
@@ -37,8 +37,6 @@ export async function getLiveData(payload: Payload, product: Product): Promise<L
   return {
     offerActive: offer.active,
     price: offer.price,
-    sold: offer.sold,
-    cap: offer.cap,
     endsAt: offer.endsAt,
     recent,
   };

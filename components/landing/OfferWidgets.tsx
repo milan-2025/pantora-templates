@@ -20,10 +20,18 @@ function useNow() {
 const pad = (n: number) => String(n).padStart(2, "0");
 
 /**
- * Counts down to the real offer end date set in the admin.
- * Renders nothing when there's no active offer or no end date.
+ * Counts down to when the offer really ends for this visitor (their personal timer, or the
+ * fixed end date). Renders nothing when there's no active offer or no end time yet.
  */
-export function Countdown({ variant = "chip", enabled = true }: { variant?: "chip" | "block"; enabled?: boolean }) {
+export function Countdown({
+  variant = "chip",
+  enabled = true,
+  className = "",
+}: {
+  variant?: "chip" | "block";
+  enabled?: boolean;
+  className?: string;
+}) {
   const live = useLiveData();
   const now = useNow();
   if (!enabled || !live?.offerActive || !live.endsAt || now === null) return null;
@@ -51,7 +59,7 @@ export function Countdown({ variant = "chip", enabled = true }: { variant?: "chi
   }
 
   return (
-    <div className="text-center">
+    <div className={`text-center ${className}`}>
       <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-coral">Offer price ends in</p>
       <div className="flex justify-center gap-2">
         {units.map(([v, label]) => (
@@ -60,34 +68,6 @@ export function Countdown({ variant = "chip", enabled = true }: { variant?: "chi
             <div className="text-[10px] uppercase tracking-widest text-cream/70">{label}</div>
           </div>
         ))}
-      </div>
-    </div>
-  );
-}
-
-/** "147 of 200 sold at the offer price", from real paid orders. Needs a cap set in the admin. */
-export function StockBar({ enabled = true, tone = "light" }: { enabled?: boolean; tone?: "light" | "dark" }) {
-  const live = useLiveData();
-  if (!enabled || !live?.offerActive || !live.cap) return null;
-  const pct = Math.min(100, (live.sold / live.cap) * 100);
-  const left = Math.max(0, live.cap - live.sold);
-
-  return (
-    <div className="w-full">
-      <div className={`mb-1.5 flex justify-between text-sm ${tone === "dark" ? "text-cream/85" : "text-charcoal/80"}`}>
-        <span>
-          <span className="font-semibold">{live.sold}</span> of {live.cap} sold at the offer price
-        </span>
-        <span className="font-semibold">{left} left</span>
-      </div>
-      <div className={`h-2.5 overflow-hidden rounded-full ${tone === "dark" ? "bg-cream/15" : "bg-lavender"}`}>
-        <motion.div
-          className="h-full rounded-full bg-[linear-gradient(90deg,var(--coral),var(--marigold))]"
-          initial={{ width: 0 }}
-          whileInView={{ width: `${Math.max(pct, 2)}%` }}
-          viewport={{ once: true }}
-          transition={{ duration: 1.2, ease: "easeOut" }}
-        />
       </div>
     </div>
   );
@@ -114,17 +94,21 @@ export function RecentPurchases({ enabled = true, productName }: { enabled?: boo
 
   useEffect(() => {
     if (!enabled || dismissed || recent.length === 0) return;
-    let i = 0;
-    // first popup after 8s, then show each for 6s with 14s gaps
-    const show = () => setIndex(i++ % recent.length);
-    const hide = () => setIndex(-1);
+    // A new real buyer every ~4-6 seconds. With only a few real orders, slow down so the same
+    // names don't repeat every few seconds.
+    const SHOW_MS = 3500;
+    const gap = () => (recent.length >= 4 ? 1000 + Math.random() * 1500 : 12000 + Math.random() * 6000);
+    let last = -1;
     const timers: ReturnType<typeof setTimeout>[] = [];
-    const cycle = () => {
-      show();
-      timers.push(setTimeout(hide, 6000));
-      timers.push(setTimeout(cycle, 20000));
+    const next = () => {
+      let i = Math.floor(Math.random() * recent.length);
+      if (recent.length > 1 && i === last) i = (i + 1) % recent.length; // never the same person twice in a row
+      last = i;
+      setIndex(i);
+      timers.push(setTimeout(() => setIndex(-1), SHOW_MS));
+      timers.push(setTimeout(next, SHOW_MS + gap()));
     };
-    timers.push(setTimeout(cycle, 8000));
+    timers.push(setTimeout(next, 5000));
     return () => timers.forEach(clearTimeout);
   }, [enabled, dismissed, recent.length]);
 

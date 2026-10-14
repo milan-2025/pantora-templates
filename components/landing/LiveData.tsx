@@ -6,8 +6,6 @@ export type RecentPurchase = { firstName: string; city: string; at: string };
 export type LiveData = {
   offerActive: boolean;
   price: number;
-  sold: number;
-  cap: number | null;
   endsAt: string | null;
   recent: RecentPurchase[];
 };
@@ -15,7 +13,7 @@ export type LiveData = {
 const Ctx = createContext<LiveData | null>(null);
 
 /**
- * Pages are cached for speed, so real-time numbers (offer sales, recent purchases)
+ * Pages are cached for speed, so real-time data (this visitor's offer timer, recent purchases)
  * are fetched from /api/live/<slug> in the browser and refreshed every minute.
  */
 export function LiveDataProvider({ slug, initial, children }: { slug: string; initial: LiveData; children: React.ReactNode }) {
@@ -38,6 +36,22 @@ export function LiveDataProvider({ slug, initial, children }: { slug: string; in
       clearInterval(id);
     };
   }, [slug]);
+
+  // The moment this visitor's offer ends, refresh so the page shows the regular price straight away.
+  useEffect(() => {
+    if (!data.offerActive || !data.endsAt) return;
+    const ms = new Date(data.endsAt).getTime() - Date.now() + 1000;
+    if (ms <= 0 || ms > 2_147_000_000) return;
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/live/${encodeURIComponent(slug)}`, { cache: "no-store" });
+        if (res.ok) setData(await res.json());
+      } catch {
+        // the minute-by-minute refresh will catch up
+      }
+    }, ms);
+    return () => clearTimeout(t);
+  }, [data.offerActive, data.endsAt, slug]);
 
   return <Ctx.Provider value={data}>{children}</Ctx.Provider>;
 }

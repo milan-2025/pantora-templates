@@ -184,16 +184,16 @@ export interface Product {
      * Offer price in ₹
      */
     price?: number | null;
+    mode?: ('visitor' | 'endDate') | null;
     /**
-     * When the offer price ends
+     * Minutes each visitor has from their first visit. After that, their checkout really charges the regular price (reloading doesn't reset it).
+     */
+    visitorMinutes?: number | null;
+    /**
+     * When the offer price ends for everyone
      */
     endsAt?: string | null;
-    /**
-     * Optional: maximum number of sales at the offer price (e.g. 200)
-     */
-    cap?: number | null;
     showCountdown?: boolean | null;
-    showStock?: boolean | null;
   };
   showRecentPurchases?: boolean | null;
   hero?: {
@@ -967,10 +967,10 @@ export interface ProductsSelect<T extends boolean = true> {
     | {
         enabled?: T;
         price?: T;
+        mode?: T;
+        visitorMinutes?: T;
         endsAt?: T;
-        cap?: T;
         showCountdown?: T;
-        showStock?: T;
       };
   showRecentPurchases?: T;
   hero?:

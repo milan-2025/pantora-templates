@@ -85,7 +85,7 @@ await upsert("products", "wedding_planner", {
   ].map((text) => ({ text })),
   googleSheetsCopyUrl: "",
   // The offer starts OFF: set a real regular price, offer price and end date in the admin to turn it on.
-  offer: { enabled: false, cap: 200, showCountdown: true, showStock: true },
+  offer: { enabled: false, mode: "visitor", visitorMinutes: 15, showCountdown: true },
   showRecentPurchases: true,
   hero: {
     eyebrow: "Wedding planner · Excel + Google Sheets",

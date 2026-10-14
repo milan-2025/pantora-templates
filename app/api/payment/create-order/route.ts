@@ -4,6 +4,7 @@ import { customerSchema, promoCodeSchema } from "@/lib/schema";
 import { getPaymentProvider } from "@/lib/payments";
 import { loadCheckoutProduct } from "@/lib/checkout";
 import { getQuote } from "@/lib/pricing";
+import { ensureVisitorStart } from "@/lib/offerWindow";
 import { clientIp, rateLimit } from "@/lib/rateLimit";
 
 const bodySchema = z.object({
@@ -29,7 +30,9 @@ export async function POST(req: Request) {
 
   try {
     // Price always comes from the server, never from the browser.
-    const quote = await getQuote(payload, product, promoCode);
+    // A buyer who reaches checkout without ever loading the product page starts their timer now.
+    const visitorStart = product.offer?.mode === "endDate" ? null : await ensureVisitorStart(String(product.id));
+    const quote = await getQuote(payload, product, promoCode, { visitorStart });
     if (quote.codeError) return NextResponse.json({ error: quote.codeError }, { status: 400 });
 
     const provider = getPaymentProvider();
