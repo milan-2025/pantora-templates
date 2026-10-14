@@ -84,7 +84,8 @@ export async function getQuote(
   }
 
   const discount = affiliate ? Math.round((listPrice * (affiliate.discountPercent ?? 0)) / 100) : 0;
-  const total = Math.max(0, listPrice - discount);
+  // Razorpay can't take payments under ₹1, so even a 99% discount leaves at least ₹1 to pay.
+  const total = Math.max(listPrice > 0 ? 1 : 0, listPrice - discount);
   const commission = affiliate ? Math.round((total * (affiliate.commissionPercent ?? 0)) / 100) : 0;
 
   return { offer, listPrice, discount, total, affiliate, promoCode: affiliate ? code : null, codeError, commission };

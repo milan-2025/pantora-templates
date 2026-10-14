@@ -32,9 +32,9 @@ export const Affiliates: CollectionConfig = {
           name: "discountPercent",
           type: "number",
           min: 0,
-          max: 90,
+          max: 99,
           defaultValue: 10,
-          admin: { description: "Customer discount %" },
+          admin: { description: "Customer discount % (up to 99%)" },
         },
         {
           name: "commissionPercent",

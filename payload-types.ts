@@ -530,7 +530,7 @@ export interface Affiliate {
    */
   code: string;
   /**
-   * Customer discount %
+   * Customer discount % (up to 99%)
    */
   discountPercent?: number | null;
   /**
