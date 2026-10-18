@@ -3,9 +3,9 @@ import { cookies } from "next/headers";
 import { createHmac, timingSafeEqual } from "crypto";
 
 /**
- * Personal offer timer: when a visitor first lands on a product page, the server records the
- * time in a signed cookie. Pricing uses it, so the offer really ends for that visitor after
- * the configured minutes, and reloading or editing the cookie can't extend it.
+ * Quick-order bonus window: when a visitor first lands on a product page, the server records the
+ * time in a signed cookie. Orders placed within the configured minutes include the bonus;
+ * reloading or editing the cookie can't extend the window.
  */
 
 const COOKIE_DAYS = 30;
@@ -24,13 +24,13 @@ function parse(productId: string, value: string | undefined): number | null {
   return expected.length === given.length && timingSafeEqual(expected, given) ? start : null;
 }
 
-/** When this visitor's personal offer started, or null for a first-time visitor. */
+/** When this visitor's bonus window started, or null for a first-time visitor. */
 export async function readVisitorStart(productId: string) {
   const jar = await cookies();
   return parse(productId, jar.get(cookieName(productId))?.value);
 }
 
-/** Starts this visitor's personal timer if it hasn't started yet. Only callable from route handlers. */
+/** Starts this visitor's bonus window if it hasn't started yet. Only callable from route handlers. */
 export async function ensureVisitorStart(productId: string) {
   const existing = await readVisitorStart(productId);
   if (existing) return existing;

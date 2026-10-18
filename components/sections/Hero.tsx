@@ -7,7 +7,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Sparkle, Squiggle } from "@/components/ui/Squiggle";
 import { MediaSlot } from "@/components/ui/MediaSlot";
 import { MOCKUP_SHEETS, SpreadsheetMockup, type MockupTab } from "@/components/SpreadsheetMockup";
-import { Countdown } from "@/components/landing/OfferWidgets";
+import { Countdown, SoldCounter } from "@/components/landing/OfferWidgets";
 import { useCurrentPrice } from "@/components/landing/LiveData";
 import { checkoutHref, type LandingProps } from "@/components/landing/types";
 import { formatINR } from "@/lib/format";
@@ -103,8 +103,14 @@ export function Hero({ product, offer }: LandingProps) {
             </ButtonLink>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.15 }} className="mt-5">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.15 }}
+            className="mt-5 flex flex-col items-center gap-3 lg:items-start"
+          >
             <Countdown enabled={offer.showCountdown} />
+            <SoldCounter />
           </motion.div>
 
           {!!hero.trustPoints?.length && (

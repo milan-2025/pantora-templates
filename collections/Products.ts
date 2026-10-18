@@ -107,35 +107,25 @@ export const Products: CollectionConfig = {
         },
         {
           label: "Offer",
-          description:
-            "A limited-time price. When it ends, checkout automatically charges the regular price again.",
+          description: "An optional lower price, plus an optional free bonus for quick buyers. The price never changes per visitor.",
           fields: [
             {
               name: "offer",
               type: "group",
+              label: "Offer price",
               fields: [
-                { name: "enabled", type: "checkbox", defaultValue: false, label: "Offer is running" },
-                { name: "price", type: "number", min: 0, admin: { description: "Offer price in ₹" } },
+                { name: "enabled", type: "checkbox", defaultValue: false, label: "Offer price is running" },
+                { name: "price", type: "number", min: 0, admin: { description: "Offer price in ₹ (the regular price is shown crossed out)" } },
                 {
                   name: "mode",
                   type: "radio",
-                  defaultValue: "visitor",
+                  defaultValue: "always",
+                  // Products saved with the old per-visitor price timer become "No end date".
+                  hooks: { beforeValidate: [({ value }) => (value === "endDate" ? "endDate" : "always")] },
                   options: [
-                    { label: "Personal timer: each visitor gets the offer for a set number of minutes", value: "visitor" },
-                    { label: "Fixed end date: the offer ends for everyone at the same time", value: "endDate" },
+                    { label: "No end date", value: "always" },
+                    { label: "Ends on a fixed date for everyone", value: "endDate" },
                   ],
-                },
-                {
-                  name: "visitorMinutes",
-                  type: "number",
-                  min: 1,
-                  max: 1440,
-                  defaultValue: 15,
-                  admin: {
-                    condition: (_, sibling) => sibling?.mode !== "endDate",
-                    description:
-                      "Minutes each visitor has from their first visit. After that, their checkout really charges the regular price (reloading doesn't reset it).",
-                  },
                 },
                 {
                   name: "endsAt",
@@ -143,10 +133,87 @@ export const Products: CollectionConfig = {
                   admin: {
                     condition: (_, sibling) => sibling?.mode === "endDate",
                     date: { pickerAppearance: "dayAndTime" },
-                    description: "When the offer price ends for everyone",
+                    description: "When the offer price ends for everyone; checkout then charges the regular price",
                   },
                 },
-                { name: "showCountdown", type: "checkbox", defaultValue: true, label: "Show countdown" },
+                {
+                  name: "showCountdown",
+                  type: "checkbox",
+                  defaultValue: true,
+                  label: "Show countdown to the end date",
+                  admin: { condition: (_, sibling) => sibling?.mode === "endDate" },
+                },
+              ],
+            },
+            {
+              name: "bonus",
+              type: "group",
+              label: "Quick-order bonus",
+              admin: {
+                description:
+                  "A free extra for visitors who order within a set time of their first visit (e.g. 15 minutes). " +
+                  "The site shows a countdown, and orders placed in time get the bonus automatically.",
+              },
+              fields: [
+                { name: "enabled", type: "checkbox", defaultValue: false, label: "Bonus is running" },
+                {
+                  name: "title",
+                  type: "text",
+                  admin: { description: 'Short name shown in the countdown, e.g. "Wedding Day Checklist"' },
+                },
+                {
+                  name: "minutes",
+                  type: "number",
+                  min: 1,
+                  max: 1440,
+                  defaultValue: 15,
+                  admin: { description: "Minutes each visitor has from their first visit (reloading doesn't reset it)" },
+                },
+                {
+                  name: "file",
+                  type: "upload",
+                  relationTo: "product-files",
+                  admin: { description: "The bonus file buyers download (kept private)" },
+                },
+                {
+                  name: "link",
+                  type: "text",
+                  admin: { description: "Optional: a bonus link instead of, or as well as, a file (e.g. a Google Sheets copy link)" },
+                },
+              ],
+            },
+            {
+              name: "salesCounter",
+              type: "group",
+              label: "Sales counter",
+              admin: {
+                description: "Shows how many people have bought this, counted from real paid orders on this website.",
+              },
+              fields: [
+                { name: "show", type: "checkbox", defaultValue: false, label: "Show the sales counter" },
+                {
+                  name: "previousSales",
+                  type: "number",
+                  min: 0,
+                  defaultValue: 0,
+                  admin: {
+                    description:
+                      "Real sales made before this website (e.g. via WhatsApp or Instagram). Added to the website's paid orders. Only enter genuine sales.",
+                  },
+                },
+                {
+                  name: "minimumToShow",
+                  type: "number",
+                  min: 0,
+                  defaultValue: 10,
+                  admin: { description: "The counter stays hidden until total sales reach this number" },
+                },
+                {
+                  name: "text",
+                  type: "text",
+                  defaultValue: "{count} couples are already planning with this sheet",
+                  admin: { description: "Use {count} where the number should go" },
+                },
               ],
             },
             {

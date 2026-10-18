@@ -181,19 +181,55 @@ export interface Product {
   offer?: {
     enabled?: boolean | null;
     /**
-     * Offer price in ₹
+     * Offer price in ₹ (the regular price is shown crossed out)
      */
     price?: number | null;
-    mode?: ('visitor' | 'endDate') | null;
+    mode?: ('always' | 'endDate') | null;
     /**
-     * Minutes each visitor has from their first visit. After that, their checkout really charges the regular price (reloading doesn't reset it).
-     */
-    visitorMinutes?: number | null;
-    /**
-     * When the offer price ends for everyone
+     * When the offer price ends for everyone; checkout then charges the regular price
      */
     endsAt?: string | null;
     showCountdown?: boolean | null;
+  };
+  /**
+   * A free extra for visitors who order within a set time of their first visit (e.g. 15 minutes). The site shows a countdown, and orders placed in time get the bonus automatically.
+   */
+  bonus?: {
+    enabled?: boolean | null;
+    /**
+     * Short name shown in the countdown, e.g. "Wedding Day Checklist"
+     */
+    title?: string | null;
+    /**
+     * Minutes each visitor has from their first visit (reloading doesn't reset it)
+     */
+    minutes?: number | null;
+    /**
+     * The bonus file buyers download (kept private)
+     */
+    file?: (string | null) | ProductFile;
+    /**
+     * Optional: a bonus link instead of, or as well as, a file (e.g. a Google Sheets copy link)
+     */
+    link?: string | null;
+  };
+  /**
+   * Shows how many people have bought this, counted from real paid orders on this website.
+   */
+  salesCounter?: {
+    show?: boolean | null;
+    /**
+     * Real sales made before this website (e.g. via WhatsApp or Instagram). Added to the website's paid orders. Only enter genuine sales.
+     */
+    previousSales?: number | null;
+    /**
+     * The counter stays hidden until total sales reach this number
+     */
+    minimumToShow?: number | null;
+    /**
+     * Use {count} where the number should go
+     */
+    text?: string | null;
   };
   showRecentPurchases?: boolean | null;
   hero?: {
@@ -503,6 +539,10 @@ export interface Order {
    * Amount charged
    */
   amount: number;
+  /**
+   * Ordered within the quick-order bonus window, so the bonus is delivered
+   */
+  bonusIncluded?: boolean | null;
   /**
    * Bought at the limited-time offer price
    */
@@ -968,9 +1008,25 @@ export interface ProductsSelect<T extends boolean = true> {
         enabled?: T;
         price?: T;
         mode?: T;
-        visitorMinutes?: T;
         endsAt?: T;
         showCountdown?: T;
+      };
+  bonus?:
+    | T
+    | {
+        enabled?: T;
+        title?: T;
+        minutes?: T;
+        file?: T;
+        link?: T;
+      };
+  salesCounter?:
+    | T
+    | {
+        show?: T;
+        previousSales?: T;
+        minimumToShow?: T;
+        text?: T;
       };
   showRecentPurchases?: T;
   hero?:
@@ -1134,6 +1190,7 @@ export interface OrdersSelect<T extends boolean = true> {
   listPrice?: T;
   discountAmount?: T;
   amount?: T;
+  bonusIncluded?: T;
   offerApplied?: T;
   promoCode?: T;
   affiliate?: T;

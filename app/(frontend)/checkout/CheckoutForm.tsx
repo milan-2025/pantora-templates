@@ -19,6 +19,8 @@ export type QuoteView = {
   promoCode: string | null;
   discountPercent: number;
   codeError: string | null;
+  /** Quick-order bonus included with an order placed now, if any. */
+  bonusTitle?: string | null;
 };
 
 type Errors = Partial<Record<keyof Customer, string>>;
@@ -240,6 +242,12 @@ export function CheckoutForm({
             <div className="flex justify-between text-teal">
               <span>Promo code ({quote.promoCode})</span>
               <span>−{formatINR(quote.discount)}</span>
+            </div>
+          )}
+          {quote.bonusTitle && (
+            <div className="flex justify-between text-marigold-deep">
+              <span>🎁 Free bonus: {quote.bonusTitle}</span>
+              <span>Included</span>
             </div>
           )}
           <div className="flex justify-between border-t border-plum/10 pt-2 text-base font-semibold text-plum">

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import confetti from "canvas-confetti";
-import { Download, FileSpreadsheet, Mail, MessageCircle } from "lucide-react";
+import { Download, FileSpreadsheet, Gift, Mail, MessageCircle } from "lucide-react";
 import { buttonClasses } from "@/components/ui/Button";
 import { LogoMark } from "@/components/Logo";
 
@@ -18,6 +18,7 @@ type Props = {
   hasFile: boolean;
   googleSheetsCopyUrl: string | null;
   whatsappHref: string | null;
+  bonus: { title: string; hasFile: boolean; link: string | null } | null;
 };
 
 export function SuccessContent(p: Props) {
@@ -64,7 +65,7 @@ export function SuccessContent(p: Props) {
       <LogoMark className="mx-auto mb-5 size-20" animated />
       <h1 className="font-display text-4xl md:text-5xl">{p.firstName ? `Yay, ${p.firstName}!` : "Payment successful!"}</h1>
       <p className="mt-3 text-lg text-charcoal/80">
-        Your <span className="font-semibold text-plum">{p.productName}</span> is unboxed and ready to use.
+        <span className="font-semibold text-plum">{p.productName}</span> is unboxed and ready to use.
       </p>
 
       <div className="mt-8 grid gap-4">
@@ -84,6 +85,26 @@ export function SuccessContent(p: Props) {
           </a>
         )}
       </div>
+
+      {p.bonus && (
+        <div className="mt-6 rounded-2xl bg-sand p-5 text-left">
+          <p className="flex items-center gap-2 font-semibold text-plum">
+            <Gift className="size-5 text-marigold-deep" /> Your free bonus: {p.bonus.title}
+          </p>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+            {p.bonus.hasFile && (
+              <a href={`/api/download/${encodeURIComponent(p.orderId)}?item=bonus`} className={buttonClasses({ variant: "plum", className: "w-full sm:w-auto" })}>
+                <Download className="size-4" /> Download bonus
+              </a>
+            )}
+            {p.bonus.link && (
+              <a href={p.bonus.link} target="_blank" rel="noopener noreferrer" className={buttonClasses({ variant: "outline", className: "w-full sm:w-auto" })}>
+                Open bonus
+              </a>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="mt-7 flex items-start gap-3 rounded-2xl bg-lavender p-4 text-left text-sm text-charcoal">
         <Mail className="mt-0.5 size-5 shrink-0 text-coral" />

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { ShoppingBag, X } from "lucide-react";
+import { ShoppingBag, Users, X } from "lucide-react";
 import { useLiveData } from "./LiveData";
 
 // A once-per-second clock. Null during server render, so the countdown only appears in the browser.
@@ -20,8 +20,10 @@ function useNow() {
 const pad = (n: number) => String(n).padStart(2, "0");
 
 /**
- * Counts down to when the offer really ends for this visitor (their personal timer, or the
- * fixed end date). Renders nothing when there's no active offer or no end time yet.
+ * Countdown to a real deadline:
+ *  - the quick-order bonus: "Order in the next 14:32 to get <bonus> free" (this visitor's window), or
+ *  - the offer price's fixed end date, if there's no bonus running.
+ * Renders nothing when there's no running deadline (it never sits at 00:00).
  */
 export function Countdown({
   variant = "chip",
@@ -29,39 +31,58 @@ export function Countdown({
   className = "",
 }: {
   variant?: "chip" | "block";
+  /** Whether to show the offer end-date countdown (the bonus countdown always shows while it runs). */
   enabled?: boolean;
   className?: string;
 }) {
   const live = useLiveData();
   const now = useNow();
-  if (!enabled || !live?.offerActive || !live.endsAt || now === null) return null;
+  if (!live || now === null) return null;
 
-  const left = new Date(live.endsAt).getTime() - now;
+  const bonus = live.bonus?.active && live.bonus.endsAt ? live.bonus : null;
+  const target = bonus ? bonus.endsAt : enabled && live.offerActive ? live.endsAt : null;
+  if (!target) return null;
+
+  const left = new Date(target).getTime() - now;
   if (left <= 0) return null;
 
   const d = Math.floor(left / 86_400_000);
   const h = Math.floor((left % 86_400_000) / 3_600_000);
   const m = Math.floor((left % 3_600_000) / 60_000);
   const s = Math.floor((left % 60_000) / 1000);
-  const units = [...(d > 0 ? [[d, "days"] as const] : []), [h, "hrs"] as const, [m, "min"] as const, [s, "sec"] as const];
+  const units = [
+    ...(d > 0 ? [[d, "days"] as const] : []),
+    ...(d > 0 || h > 0 ? [[h, "hrs"] as const] : []),
+    [m, "min"] as const,
+    [s, "sec"] as const,
+  ];
+  const clock = `${d > 0 ? `${d}d ` : ""}${d > 0 || h > 0 ? `${pad(h)}:` : ""}${pad(m)}:${pad(s)}`;
 
   if (variant === "chip") {
     return (
-      <div className="inline-flex items-center gap-2 rounded-full bg-blush px-4 py-1.5 text-sm font-medium text-plum">
-        <span className="size-2 animate-pulse rounded-full bg-coral" />
-        Offer price ends in{" "}
-        <span className="font-semibold tabular-nums">
-          {d > 0 && `${d}d `}
-          {pad(h)}:{pad(m)}:{pad(s)}
-        </span>
+      <div className="inline-flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-0.5 rounded-full bg-blush px-4 py-1.5 text-sm font-medium text-plum">
+        <span className="size-2 shrink-0 animate-pulse rounded-full bg-coral" />
+        {bonus ? (
+          <span>
+            Order in the next <span className="font-semibold tabular-nums">{clock}</span> to get{" "}
+            <span className="font-semibold">{bonus.title}</span> free
+          </span>
+        ) : (
+          <span>
+            Offer price ends in <span className="font-semibold tabular-nums">{clock}</span>
+          </span>
+        )}
       </div>
     );
   }
 
   return (
     <div className={`text-center ${className}`}>
-      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-coral">Offer price ends in</p>
-      <div className="flex justify-center gap-2">
+      <p className="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-coral">
+        {bonus ? "Free bonus if you order within" : "Offer price ends in"}
+      </p>
+      {bonus && <p className="mb-3 font-display text-lg text-plum">🎁 {bonus.title}</p>}
+      <div className={`flex justify-center gap-2 ${bonus ? "" : "mt-2"}`}>
         {units.map(([v, label]) => (
           <div key={label} className="min-w-16 rounded-2xl bg-plum px-3 py-2 text-cream">
             <div className="font-display text-3xl tabular-nums">{pad(v)}</div>
@@ -69,6 +90,26 @@ export function Countdown({
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+/** "1,240 couples are already planning with this sheet": counted from real sales. */
+export function SoldCounter({ tone = "light", className = "" }: { tone?: "light" | "dark"; className?: string }) {
+  const live = useLiveData();
+  if (!live?.sold) return null;
+  const n = live.sold.count.toLocaleString("en-IN");
+  const [before, after] = live.sold.text.includes("{count}") ? live.sold.text.split("{count}", 2) : ["", ` ${live.sold.text}`];
+  return (
+    <div
+      className={`inline-flex items-center gap-2 text-sm ${tone === "dark" ? "text-cream/90" : "text-charcoal/80"} ${className}`}
+    >
+      <Users className={`size-4 shrink-0 ${tone === "dark" ? "text-marigold" : "text-teal"}`} />
+      <span>
+        {before}
+        <span className={`font-semibold ${tone === "dark" ? "text-cream" : "text-plum"}`}>{n}</span>
+        {after}
+      </span>
     </div>
   );
 }

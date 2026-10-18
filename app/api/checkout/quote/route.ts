@@ -31,5 +31,6 @@ export async function POST(req: Request) {
     promoCode: q.promoCode,
     discountPercent: q.affiliate?.discountPercent ?? 0,
     codeError: q.codeError,
+    bonusTitle: q.bonus?.active ? q.bonus.title : null,
   });
 }

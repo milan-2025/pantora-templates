@@ -3,21 +3,21 @@ import type { Affiliate, Product } from "@/payload-types";
 
 /**
  * The single source of truth for what a customer pays. Always runs on the server.
- * An offer either ends for everyone at a fixed date, or ends for each visitor a set number of
- * minutes after their first visit (see lib/offerWindow.ts). After that, checkout charges the regular price.
+ * The offer price is the same for every visitor; it either has no end, or ends for everyone
+ * at a fixed date (after which checkout charges the regular price).
  */
 export type OfferState = {
   active: boolean;
   regularPrice: number;
   /** Price before any promo code (the offer price while the offer is active). */
   price: number;
-  /** When the offer ends for this visitor. Null for a first-time visitor whose timer hasn't started yet. */
+  /** Fixed end date of the offer price, if it has one. */
   endsAt: string | null;
   showCountdown: boolean;
 };
 
 export type OfferContext = {
-  /** When this visitor's personal timer started (from the signed cookie), if it has. */
+  /** When this visitor's quick-order bonus window started (from the signed cookie), if it has. */
   visitorStart?: number | null;
   now?: Date;
 };
@@ -26,30 +26,45 @@ export async function getOfferState(_payload: Payload, product: Product, ctx: Of
   const o = product.offer ?? {};
   const now = ctx.now ?? new Date();
   const regularPrice = product.price;
+  const endsAt = o.mode === "endDate" && o.endsAt ? new Date(o.endsAt) : null;
   const base: OfferState = {
     active: false,
     regularPrice,
     price: regularPrice,
-    endsAt: null,
-    showCountdown: Boolean(o.showCountdown),
+    endsAt: endsAt?.toISOString() ?? null,
+    showCountdown: Boolean(o.showCountdown) && Boolean(endsAt),
   };
 
   const configured = o.enabled && o.price != null && o.price < regularPrice;
   if (!configured) return base;
+  if (endsAt && endsAt <= now) return base;
+  return { ...base, active: true, price: o.price! };
+}
 
-  let endsAt: Date | null = null;
-  if (o.mode === "endDate") {
-    endsAt = o.endsAt ? new Date(o.endsAt) : null;
-  } else if (ctx.visitorStart) {
-    endsAt = new Date(ctx.visitorStart + (o.visitorMinutes ?? 15) * 60_000);
-  } // else: a first-time visitor; their timer starts when the product page loads
+/**
+ * Quick-order bonus: a free extra for visitors who order within N minutes of their first visit.
+ * The price never changes; only whether the bonus is included.
+ */
+export type BonusState = {
+  active: boolean;
+  title: string;
+  /** When this visitor's window closes. Null for a first-time visitor whose window starts on page load. */
+  endsAt: string | null;
+};
 
-  if (endsAt && endsAt <= now) return { ...base, endsAt: endsAt.toISOString() };
-  return { ...base, active: true, price: o.price!, endsAt: endsAt?.toISOString() ?? null };
+export function getBonusState(product: Product, ctx: OfferContext = {}): BonusState | null {
+  const b = product.bonus ?? {};
+  if (!b.enabled || !b.title || (!b.file && !b.link)) return null;
+  const now = ctx.now ?? new Date();
+  if (!ctx.visitorStart) return { active: true, title: b.title, endsAt: null };
+  const endsAt = new Date(ctx.visitorStart + (b.minutes ?? 15) * 60_000);
+  return { active: endsAt > now, title: b.title, endsAt: endsAt.toISOString() };
 }
 
 export type Quote = {
   offer: OfferState;
+  /** The quick-order bonus, if one is running (active = this order would include it). */
+  bonus: BonusState | null;
   listPrice: number;
   discount: number;
   total: number;
@@ -88,5 +103,6 @@ export async function getQuote(
   const total = Math.max(listPrice > 0 ? 1 : 0, listPrice - discount);
   const commission = affiliate ? Math.round((total * (affiliate.commissionPercent ?? 0)) / 100) : 0;
 
-  return { offer, listPrice, discount, total, affiliate, promoCode: affiliate ? code : null, codeError, commission };
+  const bonus = getBonusState(product, ctx);
+  return { offer, bonus, listPrice, discount, total, affiliate, promoCode: affiliate ? code : null, codeError, commission };
 }

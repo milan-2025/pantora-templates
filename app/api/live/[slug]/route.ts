@@ -18,8 +18,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
   const product = res.docs[0];
   if (!product) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  // Starts this visitor's personal offer timer on their first visit (signed cookie).
-  const visitorStart = product.offer?.mode === "endDate" ? null : await ensureVisitorStart(String(product.id));
+  // Starts this visitor's quick-order bonus window on their first visit (signed cookie).
+  const visitorStart = product.bonus?.enabled ? await ensureVisitorStart(String(product.id)) : null;
   const data = await getLiveData(payload, product, { visitorStart });
   return NextResponse.json(data, { headers: { "Cache-Control": "no-store" } });
 }

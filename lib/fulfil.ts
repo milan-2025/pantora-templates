@@ -42,6 +42,10 @@ export async function markOrderPaid(payload: Payload, orderId: string, paymentId
     hasFile: Boolean(product.downloadFile),
     googleSheetsCopyUrl: product.googleSheetsCopyUrl,
     supportWhatsapp: whatsappLink(settings.whatsappNumber, settings.whatsappMessage),
+    bonus:
+      order.bonusIncluded && product.bonus?.title
+        ? { title: product.bonus.title, hasFile: Boolean(product.bonus.file), link: product.bonus.link }
+        : null,
   });
   return { found: true as const, alreadyPaid: false, emailSent: email.sent };
 }

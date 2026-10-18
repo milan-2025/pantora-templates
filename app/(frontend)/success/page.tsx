@@ -33,6 +33,11 @@ export default async function SuccessPage({ searchParams }: Args) {
         productSlug={product?.slug ?? ""}
         hasFile={Boolean(product?.downloadFile)}
         googleSheetsCopyUrl={product?.googleSheetsCopyUrl ?? null}
+        bonus={
+          order?.bonusIncluded && product?.bonus?.title
+            ? { title: product.bonus.title, hasFile: Boolean(product.bonus.file), link: product.bonus.link ?? null }
+            : null
+        }
         whatsappHref={whatsappLink(
           settings.whatsappNumber,
           `Hi! I bought the ${product?.name ?? "template"} (order ${order?.orderId ?? ""}) and need a little help.`,

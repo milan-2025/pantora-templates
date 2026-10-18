@@ -6,7 +6,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 import { Sparkle } from "@/components/ui/Squiggle";
 import { LogoMark } from "@/components/Logo";
-import { Countdown } from "@/components/landing/OfferWidgets";
+import { Countdown, SoldCounter } from "@/components/landing/OfferWidgets";
 import { useCurrentPrice } from "@/components/landing/LiveData";
 import { checkoutHref, type LandingProps } from "@/components/landing/types";
 import { formatINR } from "@/lib/format";
@@ -59,9 +59,8 @@ export function Pricing({ product, offer }: LandingProps) {
               {offerActive && <span className="mb-1 text-xl text-charcoal/45 line-through">{formatINR(offer.regularPrice)}</span>}
             </div>
 
-            {offerActive && (
-              <Countdown variant="block" enabled={offer.showCountdown} className="mb-7 rounded-2xl bg-lavender/60 p-4" />
-            )}
+            <SoldCounter className="-mt-2 mb-6" />
+            <Countdown variant="block" enabled={offer.showCountdown} className="mb-7 rounded-2xl bg-lavender/60 p-4" />
 
             {!!includes.length && (
               <ul className="mb-8 space-y-3">

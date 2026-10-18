@@ -13,12 +13,13 @@ Log in at **pandoratemplates.com/admin**. Every change is live a few seconds aft
 | I want to… | Go to |
 |---|---|
 | Change text, prices or images on the wedding planner page | **Shop → Products → The Wedding Planner Sheet**. Each tab (Hero, Pain points, Product tour, Feature highlights, FAQ…) is one section of the page. |
-| Run a limited-time offer | Same product → **Offer** tab: tick "Offer is running" and set the offer price. Choose **Personal timer** (each visitor gets the price for e.g. 15 minutes from their first visit) or **Fixed end date** (ends for everyone at once). The countdown appears automatically, and checkout really charges the regular price once the offer ends. |
+| Run an offer or a quick-order bonus | Same product → **Offer** tab. **Offer price:** tick "Offer price is running", set the price, and optionally a fixed end date for everyone. **Quick-order bonus:** tick "Bonus is running", name it, attach the bonus file (or a link) and set the minutes (e.g. 15). Each visitor sees "Order in the next 14:32 to get … free"; orders placed in time get the bonus automatically, and the price never changes. |
 | Upload the file buyers get | **Shop → Product files**, then pick it in the product's "Download file" field. |
 | Make a new page (e.g. `/ultimateweddingplanner`) | **Content → Pages → Create new**. Set the slug (the page address), add sections with the **+** button, click **Publish**. |
 | Edit the homepage | **Content → Pages → Home** |
 | Write a blog post | **Content → Blog posts → Create new** (it appears at `/blog/<slug>`) |
 | Upload images or videos | **Content → Images & videos**, or straight from any image field |
+| Show a sales counter | Product → **Offer** tab → **Sales counter**: tick "Show the sales counter". It counts real paid orders on the website (refunds excluded); add genuine earlier sales (WhatsApp/Instagram) under "Real sales made before this website". It stays hidden until it reaches the minimum you set. |
 | Add an affiliate | **Shop → Affiliates → Create new**: name, code, customer discount %, commission %. Share `pandoratemplates.com/wedding_planner?ref=CODE`; the code is applied automatically at checkout. |
 | See what you owe affiliates | **💰 Affiliate earnings** in the menu. Pay them, then click **Mark as paid**. |
 | See orders | **Shop → Orders** |
@@ -79,4 +80,4 @@ Prices are always calculated on the server, and every payment is confirmed with 
 - Prices, promo discounts and commissions are always calculated on the server.
 - Paid files are private. `/api/download/<orderId>` checks the order is paid, then issues a signed link valid for 10 minutes.
 - Orders, affiliates and contact messages can't be read or created through the public API.
-- The offer countdown and purchase popups only ever show real data: the timer counts to when the price genuinely changes for that visitor (enforced by a signed, server-checked cookie), and popups show real paid orders from the last 30 days (first name and city only). India's 2023 dark-patterns guidelines prohibit "false urgency" and fake social proof.
+- The offer countdown and purchase popups only ever show real data: the bonus timer counts to when that visitor's bonus window genuinely closes (enforced by a signed, server-checked cookie; late orders don't get the bonus), and popups show real paid orders from the last 30 days (first name and city only). India's 2023 dark-patterns guidelines prohibit "false urgency" and fake social proof.

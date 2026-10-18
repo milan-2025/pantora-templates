@@ -6,14 +6,19 @@ export type RecentPurchase = { firstName: string; city: string; at: string };
 export type LiveData = {
   offerActive: boolean;
   price: number;
+  /** Fixed end date of the offer price, if any. */
   endsAt: string | null;
+  /** This visitor's quick-order bonus (window from their first visit), if one is running. */
+  bonus: { active: boolean; title: string; endsAt: string | null } | null;
+  /** Real total sales (website paid orders + genuine earlier sales), when the counter is on. */
+  sold: { count: number; text: string } | null;
   recent: RecentPurchase[];
 };
 
 const Ctx = createContext<LiveData | null>(null);
 
 /**
- * Pages are cached for speed, so real-time data (this visitor's offer timer, recent purchases)
+ * Pages are cached for speed, so real-time data (this visitor's bonus timer, recent purchases)
  * are fetched from /api/live/<slug> in the browser and refreshed every minute.
  */
 export function LiveDataProvider({ slug, initial, children }: { slug: string; initial: LiveData; children: React.ReactNode }) {
@@ -37,10 +42,14 @@ export function LiveDataProvider({ slug, initial, children }: { slug: string; in
     };
   }, [slug]);
 
-  // The moment this visitor's offer ends, refresh so the page shows the regular price straight away.
+  // The moment the offer price or this visitor's bonus window ends, refresh so the page updates straight away.
+  const nextChange = [data.offerActive ? data.endsAt : null, data.bonus?.active ? data.bonus.endsAt : null]
+    .filter((d): d is string => Boolean(d))
+    .map((d) => new Date(d).getTime())
+    .sort((a, b) => a - b)[0];
   useEffect(() => {
-    if (!data.offerActive || !data.endsAt) return;
-    const ms = new Date(data.endsAt).getTime() - Date.now() + 1000;
+    if (!nextChange) return;
+    const ms = nextChange - Date.now() + 1000;
     if (ms <= 0 || ms > 2_147_000_000) return;
     const t = setTimeout(async () => {
       try {
@@ -51,7 +60,7 @@ export function LiveDataProvider({ slug, initial, children }: { slug: string; in
       }
     }, ms);
     return () => clearTimeout(t);
-  }, [data.offerActive, data.endsAt, slug]);
+  }, [nextChange, slug]);
 
   return <Ctx.Provider value={data}>{children}</Ctx.Provider>;
 }

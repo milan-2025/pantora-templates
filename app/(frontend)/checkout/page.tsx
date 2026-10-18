@@ -47,6 +47,7 @@ export default async function CheckoutPage({ searchParams }: Args) {
     promoCode: q.promoCode,
     discountPercent: q.affiliate?.discountPercent ?? 0,
     codeError: q.codeError,
+    bonusTitle: q.bonus?.active ? q.bonus.title : null,
   };
 
   return (

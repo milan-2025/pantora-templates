@@ -66,6 +66,12 @@ export const Orders: CollectionConfig = {
           ],
         },
         {
+          name: "bonusIncluded",
+          type: "checkbox",
+          index: true,
+          admin: { readOnly: true, description: "Ordered within the quick-order bonus window, so the bonus is delivered" },
+        },
+        {
           name: "offerApplied",
           type: "checkbox",
           index: true,

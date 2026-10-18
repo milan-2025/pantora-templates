@@ -85,7 +85,11 @@ await upsert("products", "wedding_planner", {
   ].map((text) => ({ text })),
   googleSheetsCopyUrl: "",
   // The offer starts OFF: set a real regular price, offer price and end date in the admin to turn it on.
-  offer: { enabled: false, mode: "visitor", visitorMinutes: 15, showCountdown: true },
+  offer: { enabled: false, mode: "always", showCountdown: true },
+  // Quick-order bonus: switch on in the admin and attach the bonus file (e.g. a checklist template).
+  bonus: { enabled: false, title: "Wedding Day Checklist", minutes: 15 },
+  // Real sales counter: switch on in the admin; add genuine pre-website sales under "previousSales".
+  salesCounter: { show: false, previousSales: 0, minimumToShow: 10, text: "{count} couples are already planning with this sheet" },
   showRecentPurchases: true,
   hero: {
     eyebrow: "Wedding planner · Excel + Google Sheets",

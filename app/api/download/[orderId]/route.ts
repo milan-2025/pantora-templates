@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
  * Personal download link from the delivery email / success page.
  * Only paid orders get through; they're redirected to a signed link that expires in 10 minutes.
  */
-export async function GET(_req: Request, { params }: { params: Promise<{ orderId: string }> }) {
+export async function GET(req: Request, { params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = await params;
   const payload = await getPayloadClient();
   const found = await payload.find({ collection: "orders", where: { orderId: { equals: orderId } }, limit: 1, depth: 2 });
@@ -19,7 +19,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ orderId
     return NextResponse.json({ error: "This download link isn't valid." }, { status: 403 });
   }
 
-  const file = (order.product as Product | undefined)?.downloadFile as ProductFile | undefined;
+  // ?item=bonus downloads the quick-order bonus, only for orders that earned it.
+  const wantsBonus = new URL(req.url).searchParams.get("item") === "bonus";
+  const product = order.product as Product | undefined;
+  if (wantsBonus && !order.bonusIncluded) {
+    return NextResponse.json({ error: "This order doesn't include the bonus." }, { status: 403 });
+  }
+  const file = (wantsBonus ? product?.bonus?.file : product?.downloadFile) as ProductFile | undefined;
   if (!file?.filename || !file.url) {
     return NextResponse.json(
       { error: "The file isn't available yet. Please contact us and we'll send it to you." },
