@@ -61,11 +61,46 @@ export function getBonusState(product: Product, ctx: OfferContext = {}): BonusSt
   return { active: endsAt > now, title: b.title, endsAt: endsAt.toISOString() };
 }
 
+/** An upsell product offered at checkout (only ever built from the main product's admin list). */
+export type UpsellOption = {
+  id: string;
+  name: string;
+  tagline: string | null;
+  image: string | null;
+  /** The upsell product's own regular price, shown crossed out. */
+  regularPrice: number;
+  /** The special upsell price set on the main product. */
+  price: number;
+  pitch: string | null;
+};
+
+/** Upsells for a product: published products from its admin list, excluding itself and duplicates. */
+export function getUpsellOptions(product: Product): UpsellOption[] {
+  const seen = new Set<string>();
+  const options: UpsellOption[] = [];
+  for (const row of product.upsells ?? []) {
+    const p = row.product;
+    if (!p || typeof p !== "object") continue; // not populated (needs depth >= 1)
+    const id = String(p.id);
+    if (id === String(product.id) || seen.has(id) || p._status !== "published" || !(row.price > 0)) continue;
+    seen.add(id);
+    const img = p.cardImage && typeof p.cardImage === "object" ? p.cardImage.url ?? null : null;
+    options.push({ id, name: p.name, tagline: p.tagline ?? null, image: img, regularPrice: p.price, price: row.price, pitch: row.pitch ?? null });
+  }
+  return options;
+}
+
 export type Quote = {
   offer: OfferState;
   /** The quick-order bonus, if one is running (active = this order would include it). */
   bonus: BonusState | null;
+  /** Main product price before any promo code (the offer price while the offer is active). */
   listPrice: number;
+  /** Upsells this product offers, and the ones selected for this order. */
+  availableUpsells: UpsellOption[];
+  addOns: { id: string; name: string; price: number }[];
+  /** Main product + selected add-ons, before the promo code. */
+  subtotal: number;
   discount: number;
   total: number;
   affiliate: Affiliate | null;
@@ -80,6 +115,7 @@ export async function getQuote(
   product: Product,
   rawCode?: string | null,
   ctx: OfferContext = {},
+  upsellIds: string[] = [],
 ): Promise<Quote> {
   const offer = await getOfferState(payload, product, ctx);
   const listPrice = offer.price;
@@ -98,11 +134,31 @@ export async function getQuote(
     if (!affiliate) codeError = "This code isn't valid";
   }
 
-  const discount = affiliate ? Math.round((listPrice * (affiliate.discountPercent ?? 0)) / 100) : 0;
+  // Only upsells from this product's own admin list are accepted; prices always come from there.
+  const availableUpsells = getUpsellOptions(product);
+  const wanted = new Set(upsellIds.map(String));
+  const addOns = availableUpsells.filter((u) => wanted.has(u.id)).map(({ id, name, price }) => ({ id, name, price }));
+  const subtotal = listPrice + addOns.reduce((sum, a) => sum + a.price, 0);
+
+  // A promo code discounts the whole order (main product + add-ons).
+  const discount = affiliate ? Math.round((subtotal * (affiliate.discountPercent ?? 0)) / 100) : 0;
   // Razorpay can't take payments under ₹1, so even a 99% discount leaves at least ₹1 to pay.
-  const total = Math.max(listPrice > 0 ? 1 : 0, listPrice - discount);
+  const total = Math.max(subtotal > 0 ? 1 : 0, subtotal - discount);
   const commission = affiliate ? Math.round((total * (affiliate.commissionPercent ?? 0)) / 100) : 0;
 
   const bonus = getBonusState(product, ctx);
-  return { offer, bonus, listPrice, discount, total, affiliate, promoCode: affiliate ? code : null, codeError, commission };
+  return {
+    offer,
+    bonus,
+    listPrice,
+    availableUpsells,
+    addOns,
+    subtotal,
+    discount,
+    total,
+    affiliate,
+    promoCode: affiliate ? code : null,
+    codeError,
+    commission,
+  };
 }

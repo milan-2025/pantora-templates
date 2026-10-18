@@ -9,14 +9,18 @@ import type { LandingProps } from "@/components/landing/types";
 const icons = [ShoppingBag, Mail, Copy, Sparkles];
 const COLS: Record<number, string> = { 1: "md:grid-cols-1", 2: "md:grid-cols-2", 3: "md:grid-cols-3", 4: "md:grid-cols-4" };
 
-export function HowItWorks({ product }: LandingProps) {
+export function HowItWorks(props: LandingProps) {
+  // useScroll needs its target on the page, so the hooks live in a component that only renders with content.
+  if (!props.product.steps?.items?.length) return null;
+  return <HowItWorksSection {...props} />;
+}
+
+function HowItWorksSection({ product }: LandingProps) {
   const s = product.steps ?? {};
   const steps = s.items ?? [];
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start 80%", "end 60%"] });
   const progress = useSpring(scrollYProgress, { stiffness: 100, damping: 24 });
-
-  if (!steps.length) return null;
 
   return (
     <section className="bg-teal px-4 py-20 text-cream md:py-28">

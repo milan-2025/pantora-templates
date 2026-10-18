@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { Check, Loader2, Lock, ShieldCheck, Tag, X } from "lucide-react";
+import { Check, Loader2, Lock, Plus, ShieldCheck, Tag, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { LogoMark } from "@/components/Logo";
 import { customerSchema, type Customer } from "@/lib/schema";
 import { formatINR } from "@/lib/format";
 import { openRazorpay } from "@/lib/razorpayCheckout";
+import type { UpsellOption } from "@/lib/pricing";
 
 export type QuoteView = {
   regularPrice: number;
@@ -21,6 +22,9 @@ export type QuoteView = {
   codeError: string | null;
   /** Quick-order bonus included with an order placed now, if any. */
   bonusTitle?: string | null;
+  /** Upsells added to this order (prices from the server). */
+  addOns?: { id: string; name: string; price: number }[];
+  subtotal?: number;
 };
 
 type Errors = Partial<Record<keyof Customer, string>>;
@@ -52,6 +56,7 @@ export function CheckoutForm({
   initialQuote,
   initialCode,
   paymentMode,
+  upsells,
 }: {
   productSlug: string;
   initialQuote: QuoteView;
@@ -59,6 +64,8 @@ export function CheckoutForm({
   initialCode: string;
   /** Shown as a banner so nobody mistakes a test checkout for a real one. */
   paymentMode: "live" | "test" | "demo";
+  /** Other products the buyer can add to this order at a special price. */
+  upsells: UpsellOption[];
 }) {
   const router = useRouter();
   const [values, setValues] = useState<Customer>({ name: "", email: "", phone: "", city: "" });
@@ -73,17 +80,40 @@ export function CheckoutForm({
   const [codeBusy, setCodeBusy] = useState(false);
   const [codeError, setCodeError] = useState(initialQuote.codeError ?? "");
 
+  const [selected, setSelected] = useState<string[]>([]);
+  const [pricing, setPricing] = useState(false);
+
+  /** Asks the server for the price of this order (promo code + ticked upsells). */
+  async function fetchQuote(code: string, upsellIds: string[]) {
+    const res = await fetch("/api/checkout/quote", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ product: productSlug, promoCode: code || undefined, upsells: upsellIds }),
+    });
+    const q = (await res.json()) as QuoteView & { error?: string };
+    if (!res.ok) throw new Error(q.error || "Couldn't update the price");
+    return q;
+  }
+
+  async function toggleUpsell(id: string) {
+    const next = selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id];
+    setSelected(next);
+    setPricing(true);
+    try {
+      setQuote(await fetchQuote(quote.promoCode ?? "", next));
+    } catch (err) {
+      setSelected(selected);
+      setFormError(err instanceof Error ? err.message : "Couldn't update the price");
+    } finally {
+      setPricing(false);
+    }
+  }
+
   async function applyCode(code: string) {
     setCodeBusy(true);
     setCodeError("");
     try {
-      const res = await fetch("/api/checkout/quote", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ product: productSlug, promoCode: code || undefined }),
-      });
-      const q = (await res.json()) as QuoteView & { error?: string };
-      if (!res.ok) throw new Error(q.error || "Couldn't check that code");
+      const q = await fetchQuote(code, selected);
       if (q.codeError) {
         setCodeError(q.codeError);
       } else {
@@ -114,7 +144,12 @@ export function CheckoutForm({
       const res = await fetch("/api/payment/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ product: productSlug, customer: parsed.data, promoCode: quote.promoCode ?? undefined }),
+        body: JSON.stringify({
+          product: productSlug,
+          customer: parsed.data,
+          promoCode: quote.promoCode ?? undefined,
+          upsells: selected,
+        }),
       });
       const order = await res.json();
       if (!res.ok) throw new Error(order.error);
@@ -155,6 +190,62 @@ export function CheckoutForm({
       <form onSubmit={onSubmit} noValidate className="card h-fit rounded-3xl p-6 md:p-8">
         <h2 className="mb-1 font-display text-3xl">Almost there</h2>
         <p className="mb-6 text-charcoal/70">Add your details and your files will be ready in under a minute.</p>
+
+        {upsells.length > 0 && (
+          <div className="mb-7">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-teal">Add to your order</p>
+            <div className="space-y-3">
+              {upsells.map((u) => {
+                const on = selected.includes(u.id);
+                const save = u.regularPrice > u.price ? Math.round((1 - u.price / u.regularPrice) * 100) : 0;
+                return (
+                  <button
+                    key={u.id}
+                    type="button"
+                    role="checkbox"
+                    aria-checked={on}
+                    disabled={pricing}
+                    onClick={() => toggleUpsell(u.id)}
+                    className={`flex w-full items-center gap-3 rounded-2xl border-2 p-3 text-left transition-all ${
+                      on ? "border-marigold bg-sand/60 shadow-soft" : "border-plum/10 bg-cream hover:border-marigold/60"
+                    }`}
+                  >
+                    <span
+                      className={`grid size-6 shrink-0 place-items-center rounded-md border-2 transition-colors ${
+                        on ? "border-marigold bg-marigold text-plum" : "border-plum/25 bg-white"
+                      }`}
+                    >
+                      {on && <Check className="size-4" strokeWidth={3.5} />}
+                    </span>
+                    {u.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={u.image} alt="" className="size-14 shrink-0 rounded-xl object-cover" />
+                    ) : (
+                      <span className="grid size-14 shrink-0 place-items-center rounded-xl bg-lavender">
+                        <LogoMark className="size-8" />
+                      </span>
+                    )}
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-semibold leading-snug text-plum">{u.name}</span>
+                      {(u.pitch || u.tagline) && (
+                        <span className="mt-0.5 line-clamp-2 block text-xs text-charcoal/65">{u.pitch || u.tagline}</span>
+                      )}
+                    </span>
+                    <span className="shrink-0 text-right">
+                      <span className="block font-display text-lg leading-none text-plum">+{formatINR(u.price)}</span>
+                      {save > 0 && <s className="text-xs text-charcoal/45">{formatINR(u.regularPrice)}</s>}
+                      {on ? (
+                        <span className="mt-1 block text-[11px] font-semibold text-teal">Added ✓</span>
+                      ) : save > 0 ? (
+                        <span className="mt-1 block text-[11px] font-semibold text-coral">Save {save}%</span>
+                      ) : null}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="grid gap-5 sm:grid-cols-2">
           {fields.map((f) => (
@@ -238,6 +329,14 @@ export function CheckoutForm({
             <span>{quote.offerActive ? "Offer price" : "Price"}</span>
             <span>{formatINR(quote.listPrice)}</span>
           </div>
+          {(quote.addOns ?? []).map((a) => (
+            <div key={a.id} className="flex justify-between gap-3">
+              <span className="flex items-center gap-1">
+                <Plus className="size-3.5 shrink-0 text-teal" /> {a.name}
+              </span>
+              <span>{formatINR(a.price)}</span>
+            </div>
+          ))}
           {quote.discount > 0 && (
             <div className="flex justify-between text-teal">
               <span>Promo code ({quote.promoCode})</span>
@@ -252,13 +351,16 @@ export function CheckoutForm({
           )}
           <div className="flex justify-between border-t border-plum/10 pt-2 text-base font-semibold text-plum">
             <span>Total</span>
-            <span>{formatINR(quote.total)}</span>
+            <span className="flex items-center gap-2">
+              {pricing && <Loader2 className="size-4 animate-spin text-charcoal/40" />}
+              {formatINR(quote.total)}
+            </span>
           </div>
         </div>
 
         {formError && <p className="mt-5 rounded-xl bg-blush p-3 text-sm font-medium text-plum">{formError}</p>}
 
-        <Button type="submit" size="lg" className="mt-6 w-full" disabled={busy}>
+        <Button type="submit" size="lg" className="mt-6 w-full" disabled={busy || pricing}>
           {busy ? <Loader2 className="size-5 animate-spin" /> : <Lock className="size-5" />}
           Pay {formatINR(quote.total)}
         </Button>

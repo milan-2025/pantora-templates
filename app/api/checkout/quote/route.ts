@@ -3,14 +3,14 @@ import { z } from "zod";
 import { loadCheckoutProduct } from "@/lib/checkout";
 import { getQuote } from "@/lib/pricing";
 import { readVisitorStart } from "@/lib/offerWindow";
-import { promoCodeSchema } from "@/lib/schema";
+import { promoCodeSchema, upsellIdsSchema } from "@/lib/schema";
 import { clientIp, rateLimit } from "@/lib/rateLimit";
 
-const bodySchema = z.object({ product: z.string().min(1).max(80), promoCode: promoCodeSchema });
+const bodySchema = z.object({ product: z.string().min(1).max(80), promoCode: promoCodeSchema, upsells: upsellIdsSchema });
 
 /** Price for the checkout summary: offer price, promo-code discount and total. Always computed here. */
 export async function POST(req: Request) {
-  if (!rateLimit(`quote:${clientIp(req)}`, 30, 60_000)) {
+  if (!rateLimit(`quote:${clientIp(req)}`, 60, 60_000)) {
     return NextResponse.json({ error: "Too many attempts. Please wait a minute." }, { status: 429 });
   }
   const parsed = bodySchema.safeParse(await req.json().catch(() => null));
@@ -19,9 +19,13 @@ export async function POST(req: Request) {
   const loaded = await loadCheckoutProduct(parsed.data.product);
   if (!loaded) return NextResponse.json({ error: "Product not found" }, { status: 404 });
 
-  const q = await getQuote(loaded.payload, loaded.product, parsed.data.promoCode, {
-    visitorStart: await readVisitorStart(String(loaded.product.id)),
-  });
+  const q = await getQuote(
+    loaded.payload,
+    loaded.product,
+    parsed.data.promoCode,
+    { visitorStart: await readVisitorStart(String(loaded.product.id)) },
+    parsed.data.upsells,
+  );
   return NextResponse.json({
     regularPrice: q.offer.regularPrice,
     offerActive: q.offer.active,
@@ -32,5 +36,7 @@ export async function POST(req: Request) {
     discountPercent: q.affiliate?.discountPercent ?? 0,
     codeError: q.codeError,
     bonusTitle: q.bonus?.active ? q.bonus.title : null,
+    addOns: q.addOns,
+    subtotal: q.subtotal,
   });
 }

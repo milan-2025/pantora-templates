@@ -6,7 +6,8 @@ import { ArrowDown, Check } from "lucide-react";
 import { ButtonLink } from "@/components/ui/Button";
 import { Sparkle, Squiggle } from "@/components/ui/Squiggle";
 import { MediaSlot } from "@/components/ui/MediaSlot";
-import { MOCKUP_SHEETS, SpreadsheetMockup, type MockupTab } from "@/components/SpreadsheetMockup";
+import { SpreadsheetMockup } from "@/components/SpreadsheetMockup";
+import { sheetPreview } from "@/lib/sheetPreview";
 import { Countdown, SoldCounter } from "@/components/landing/OfferWidgets";
 import { useCurrentPrice } from "@/components/landing/LiveData";
 import { checkoutHref, type LandingProps } from "@/components/landing/types";
@@ -15,18 +16,18 @@ import { formatINR } from "@/lib/format";
 export function Hero({ product, offer }: LandingProps) {
   const hero = product.hero ?? {};
   const current = useCurrentPrice(offer);
-  const [tab, setTab] = useState<MockupTab>("budget");
+  const preview = sheetPreview(product);
+  const sheetCount = preview.sheets.length;
+  const [tab, setTab] = useState(0);
   const [paused, setPaused] = useState(false);
   const words = (hero.headline || product.name).split(" ");
 
   // Auto-cycle the mockup tabs until the visitor clicks one.
   useEffect(() => {
-    if (paused) return;
-    const id = setInterval(() => {
-      setTab((t) => MOCKUP_SHEETS[(MOCKUP_SHEETS.findIndex((x) => x.id === t) + 1) % MOCKUP_SHEETS.length].id);
-    }, 3800);
+    if (paused || sheetCount < 2) return;
+    const id = setInterval(() => setTab((t) => (t + 1) % sheetCount), 3800);
     return () => clearInterval(id);
-  }, [paused]);
+  }, [paused, sheetCount]);
 
   return (
     <section className="bg-glow relative overflow-hidden px-4 pb-20 pt-28 md:pb-28 md:pt-36">
@@ -164,7 +165,7 @@ export function Hero({ product, offer }: LandingProps) {
             }
           />
           <div className="relative animate-float" onPointerDown={() => setPaused(true)}>
-            <SpreadsheetMockup active={tab} onTabChange={setTab} className="-rotate-1" />
+            <SpreadsheetMockup preview={preview} active={tab} onTabChange={setTab} className="-rotate-1" />
           </div>
           {hero.badge && (
             <motion.div

@@ -2,12 +2,13 @@ import type { CollectionConfig, Field } from "payload";
 import { authenticated, formatSlug, publishedOrAuthenticated, validateSlug } from "@/lib/cms/access";
 import { revalidateAfterChange, revalidateAfterDelete } from "@/lib/cms/revalidate";
 
+/** Picks a tab of the product's own Sheet preview. The stored values are kept from the first version (budget = tab 1…). */
 export const MOCKUP_TABS = [
-  { label: "Budget", value: "budget" },
-  { label: "Guests", value: "guests" },
-  { label: "Vendors", value: "vendors" },
-  { label: "Payments", value: "payments" },
-  { label: "Dashboard", value: "dashboard" },
+  { label: "Sheet tab 1", value: "budget" },
+  { label: "Sheet tab 2", value: "guests" },
+  { label: "Sheet tab 3", value: "vendors" },
+  { label: "Sheet tab 4", value: "payments" },
+  { label: "Sheet tab 5", value: "dashboard" },
 ];
 
 export const FEATURE_ICONS = [
@@ -239,6 +240,92 @@ export const Products: CollectionConfig = {
           ],
         },
         {
+          name: "preview",
+          label: "Sheet preview",
+          description:
+            "The animated spreadsheet shown in the hero, the product tour, feature highlights and checkout. Fill it with sample data that looks like this product. Until you add a tab, a simple preview of the “What's included” list is shown.",
+          fields: [
+            {
+              type: "row",
+              fields: [
+                { name: "fileName", type: "text", admin: { width: "50%", placeholder: "30-day-workout-challenge.xlsx", description: "Shown in the window's title bar" } },
+                { name: "formula", type: "text", admin: { width: "50%", placeholder: '=COUNTIF(Days[Done],"✓")', description: "Shown in the formula bar" } },
+              ],
+            },
+            {
+              name: "sheets",
+              type: "array",
+              maxRows: 5,
+              labels: { singular: "Sheet tab", plural: "Sheet tabs" },
+              admin: {
+                description: "Up to 5 tabs. Each tab draws only the parts you fill in, top to bottom: big numbers, table, progress bar, charts.",
+                initCollapsed: true,
+                components: { RowLabel: "@/components/admin/SheetTabRowLabel#SheetTabRowLabel" },
+              },
+              fields: [
+                {
+                  type: "row",
+                  fields: [
+                    { name: "label", type: "text", required: true, admin: { width: "60%", placeholder: "Tracker" } },
+                    { name: "emoji", type: "text", admin: { width: "40%", placeholder: "🏋️" } },
+                  ],
+                },
+                {
+                  name: "stats",
+                  label: "Big numbers",
+                  type: "array",
+                  maxRows: 3,
+                  labels: { singular: "Number", plural: "Numbers" },
+                  admin: { description: "Up to 3 cards that count up, e.g. “Days done” / “18”, “Calories” / “9,450 kcal”, “Saved” / “₹12,000”." },
+                  fields: [
+                    {
+                      type: "row",
+                      fields: [
+                        { name: "label", type: "text", required: true, admin: { width: "60%" } },
+                        { name: "value", type: "text", required: true, admin: { width: "40%" } },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  name: "columns",
+                  label: "Table columns",
+                  type: "text",
+                  hasMany: true,
+                  maxRows: 5,
+                  admin: { description: "Column headings, e.g. Day, Workout, Minutes, Status. Press Enter after each." },
+                },
+                {
+                  name: "rows",
+                  label: "Table rows",
+                  type: "textarea",
+                  admin: {
+                    rows: 6,
+                    placeholder: "Day 1 | Full body | 30 min | Done\nDay 2 | Cardio | 25 min | Done\nDay 3 | Yoga | 20 min | Pending",
+                    description:
+                      "One row per line, cells separated by | (or paste straight from Excel). Up to 8 rows. Numbers like 450, ₹2,000 or 68% count up. In the last column, words like Done, Paid, Pending, Booked or “In 3 days” become coloured tags.",
+                  },
+                },
+                {
+                  type: "row",
+                  fields: [
+                    { name: "progressLabel", label: "Progress bar label", type: "text", admin: { width: "60%", placeholder: "Challenge completed" } },
+                    { name: "progressPercent", label: "Progress %", type: "number", min: 0, max: 100, admin: { width: "40%" } },
+                  ],
+                },
+                {
+                  type: "row",
+                  fields: [
+                    { name: "bars", label: "Bar chart values", type: "number", hasMany: true, maxRows: 8, admin: { width: "50%", description: "e.g. 20, 35, 30, 50" } },
+                    { name: "donut", label: "Donut chart values", type: "number", hasMany: true, maxRows: 5, admin: { width: "50%", description: "Slices, e.g. 40, 30, 30" } },
+                  ],
+                },
+                { name: "chartLabel", type: "text", admin: { description: "Caption under the charts, e.g. “Weekly minutes”" } },
+              ],
+            },
+          ],
+        },
+        {
           label: "Audience",
           fields: [
             {
@@ -277,7 +364,7 @@ export const Products: CollectionConfig = {
               name: "tabs",
               type: "array",
               fields: [
-                { name: "mockup", type: "select", options: MOCKUP_TABS, required: true, admin: { description: "Which spreadsheet tab to animate" } },
+                { name: "mockup", type: "select", options: MOCKUP_TABS, required: true, admin: { description: "Which tab of the Sheet preview to animate" } },
                 { name: "label", type: "text", required: true },
                 { name: "emoji", type: "text" },
                 { name: "headline", type: "text" },
@@ -303,7 +390,7 @@ export const Products: CollectionConfig = {
                 { name: "text", type: "textarea" },
                 { name: "bullets", type: "text", hasMany: true },
                 media("image", "Screenshot or photo. If empty, an animated spreadsheet preview is shown instead."),
-                { name: "mockup", type: "select", options: MOCKUP_TABS, admin: { description: "Preview shown when there's no image" } },
+                { name: "mockup", type: "select", options: MOCKUP_TABS, admin: { description: "Sheet preview tab shown when there's no image" } },
               ],
             },
           ],
@@ -387,6 +474,41 @@ export const Products: CollectionConfig = {
             { name: "text", type: "textarea" },
             { name: "buttonLabel", type: "text" },
             media("media", "Optional background image or video"),
+          ],
+        },
+        {
+          label: "Upsells",
+          description:
+            "Other products offered at checkout at a special price. Buyers tick the ones they want before paying, and receive them with their order.",
+          fields: [
+            {
+              name: "upsells",
+              type: "array",
+              labels: { singular: "Upsell", plural: "Upsells" },
+              maxRows: 10,
+              fields: [
+                {
+                  name: "product",
+                  type: "relationship",
+                  relationTo: "products",
+                  required: true,
+                  // Can't offer a product as an upsell of itself.
+                  filterOptions: ({ id }) => (id ? { id: { not_equals: id } } : true),
+                },
+                {
+                  name: "price",
+                  type: "number",
+                  required: true,
+                  min: 1,
+                  admin: { description: "Upsell price in ₹ (the product's regular price is shown crossed out)" },
+                },
+                {
+                  name: "pitch",
+                  type: "text",
+                  admin: { description: 'Optional one-liner on the card, e.g. "Track every rupee: 60% off with your planner"' },
+                },
+              ],
+            },
           ],
         },
         {

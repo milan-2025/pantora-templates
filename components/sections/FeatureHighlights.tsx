@@ -5,6 +5,7 @@ import { Check } from "lucide-react";
 import { MediaSlot } from "@/components/ui/MediaSlot";
 import { Reveal } from "@/components/ui/Reveal";
 import { SpreadsheetMockup } from "@/components/SpreadsheetMockup";
+import { previewTabIndex, sheetPreview } from "@/lib/sheetPreview";
 import type { LandingProps } from "@/components/landing/types";
 
 const GLOWS = ["bg-sand", "bg-mint", "bg-blush", "bg-lavender"];
@@ -14,6 +15,7 @@ export function FeatureHighlights({ product }: LandingProps) {
   const h = product.highlights ?? {};
   const items = h.items ?? [];
   if (!items.length) return null;
+  const preview = sheetPreview(product);
 
   return (
     <section className="overflow-hidden bg-paper px-4 py-20 md:py-28">
@@ -45,7 +47,10 @@ export function FeatureHighlights({ product }: LandingProps) {
                     className="relative aspect-[4/3] w-full rounded-3xl shadow-lift"
                     fallback={
                       <div className="pointer-events-none relative" aria-hidden>
-                        <SpreadsheetMockup active={item.mockup ?? "dashboard"} />
+                        <SpreadsheetMockup
+                          preview={preview}
+                          active={previewTabIndex(item.mockup ?? "dashboard", preview.sheets.length)}
+                        />
                       </div>
                     }
                   />

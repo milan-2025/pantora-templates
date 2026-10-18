@@ -33,6 +33,12 @@ export default async function SuccessPage({ searchParams }: Args) {
         productSlug={product?.slug ?? ""}
         hasFile={Boolean(product?.downloadFile)}
         googleSheetsCopyUrl={product?.googleSheetsCopyUrl ?? null}
+        addOns={(order?.addOns ?? [])
+          .filter((a) => a.product && typeof a.product === "object")
+          .map((a) => {
+            const p = a.product as Product;
+            return { id: String(p.id), name: a.name || p.name, hasFile: Boolean(p.downloadFile), googleSheetsCopyUrl: p.googleSheetsCopyUrl ?? null };
+          })}
         bonus={
           order?.bonusIncluded && product?.bonus?.title
             ? { title: product.bonus.title, hasFile: Boolean(product.bonus.file), link: product.bonus.link ?? null }

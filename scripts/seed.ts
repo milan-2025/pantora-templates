@@ -6,6 +6,7 @@
 import { getPayload } from "payload";
 import config from "@payload-config";
 import { doc, h, p, ul } from "./lexical";
+import { WEDDING_PREVIEW } from "../lib/sheetPreview";
 
 const payload = await getPayload({ config });
 const ctx = { disableRevalidate: true };
@@ -101,6 +102,7 @@ await upsert("products", "wedding_planner", {
     trustPoints: ["Instant download", "One-time payment", "WhatsApp support"],
     badge: "Formulas already built in",
   },
+  preview: WEDDING_PREVIEW,
   audienceLine:
     "Designed for brides, grooms, families, wedding planners, and event managers who want a complete wedding management toolkit.",
   pain: {

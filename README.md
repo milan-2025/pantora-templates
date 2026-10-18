@@ -13,7 +13,9 @@ Log in at **pandoratemplates.com/admin**. Every change is live a few seconds aft
 | I want to… | Go to |
 |---|---|
 | Change text, prices or images on the wedding planner page | **Shop → Products → The Wedding Planner Sheet**. Each tab (Hero, Pain points, Product tour, Feature highlights, FAQ…) is one section of the page. |
+| Change the animated spreadsheet for a product | Product → **Sheet preview** tab: set the file name and formula line, then add up to 5 **Sheet tabs**. Each tab can have big numbers, a table (one row per line, cells separated by `\|`, or paste from Excel), a progress bar and bar/donut charts; only the parts you fill in are shown. Words like Done, Paid, Pending or "In 3 days" in the last column become coloured tags. In **Product tour** and **Feature highlights**, "Sheet tab 1–5" picks which of these tabs to show. A product with no tabs yet shows its "What's included" list. |
 | Run an offer or a quick-order bonus | Same product → **Offer** tab. **Offer price:** tick "Offer price is running", set the price, and optionally a fixed end date for everyone. **Quick-order bonus:** tick "Bonus is running", name it, attach the bonus file (or a link) and set the minutes (e.g. 15). Each visitor sees "Order in the next 14:32 to get … free"; orders placed in time get the bonus automatically, and the price never changes. |
+| Offer add-ons at checkout (upsells) | Product → **Upsells** tab → **Add Upsell**: pick another shop product, set its special price (₹) and an optional one-line pitch. Buyers see it as a tick-box card above the details form; ticked add-ons are added to the total, any promo code discounts the whole order, and the add-on's files are emailed and shown on the thank-you page. Add-on sales also count on that product's own sales counter and purchase popups. |
 | Upload the file buyers get | **Shop → Product files**, then pick it in the product's "Download file" field. |
 | Make a new page (e.g. `/ultimateweddingplanner`) | **Content → Pages → Create new**. Set the slug (the page address), add sections with the **+** button, click **Publish**. |
 | Edit the homepage | **Content → Pages → Home** |
@@ -55,6 +57,9 @@ npm run dev                    # http://localhost:3000 (admin at /admin)
 | Payment gateway abstraction | `lib/payments.ts` |
 | Emails | `lib/email.ts` |
 | Starting content | `scripts/seed.ts` |
+
+### Upgrading an existing database
+The animated sheet preview moved from code into the admin. Run `npm run fill-preview` once against an existing database (production `DATABASE_URI` in `.env.local`) to give the Wedding Planner its preview back; it changes nothing if the product already has one. Don't re-run `npm run seed` on a live database: it overwrites the starting content.
 
 ### Changing the data model
 Edit `collections/*` and run `npm run generate` to update types and the admin import map. MongoDB needs no migrations: new fields simply appear.

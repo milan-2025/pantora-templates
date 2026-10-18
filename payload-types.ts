@@ -254,6 +254,58 @@ export interface Product {
      */
     media?: (string | null) | Media;
   };
+  preview?: {
+    /**
+     * Shown in the window's title bar
+     */
+    fileName?: string | null;
+    /**
+     * Shown in the formula bar
+     */
+    formula?: string | null;
+    /**
+     * Up to 5 tabs. Each tab draws only the parts you fill in, top to bottom: big numbers, table, progress bar, charts.
+     */
+    sheets?:
+      | {
+          label: string;
+          emoji?: string | null;
+          /**
+           * Up to 3 cards that count up, e.g. “Days done” / “18”, “Calories” / “9,450 kcal”, “Saved” / “₹12,000”.
+           */
+          stats?:
+            | {
+                label: string;
+                value: string;
+                id?: string | null;
+              }[]
+            | null;
+          /**
+           * Column headings, e.g. Day, Workout, Minutes, Status. Press Enter after each.
+           */
+          columns?: string[] | null;
+          /**
+           * One row per line, cells separated by | (or paste straight from Excel). Up to 8 rows. Numbers like 450, ₹2,000 or 68% count up. In the last column, words like Done, Paid, Pending, Booked or “In 3 days” become coloured tags.
+           */
+          rows?: string | null;
+          progressLabel?: string | null;
+          progressPercent?: number | null;
+          /**
+           * e.g. 20, 35, 30, 50
+           */
+          bars?: number[] | null;
+          /**
+           * Slices, e.g. 40, 30, 30
+           */
+          donut?: number[] | null;
+          /**
+           * Caption under the charts, e.g. “Weekly minutes”
+           */
+          chartLabel?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
   /**
    * Who it's for. Shown under the hero and above the features.
    */
@@ -293,7 +345,7 @@ export interface Product {
     tabs?:
       | {
           /**
-           * Which spreadsheet tab to animate
+           * Which tab of the Sheet preview to animate
            */
           mockup: 'budget' | 'guests' | 'vendors' | 'payments' | 'dashboard';
           label: string;
@@ -331,7 +383,7 @@ export interface Product {
            */
           image?: (string | null) | Media;
           /**
-           * Preview shown when there's no image
+           * Sheet preview tab shown when there's no image
            */
           mockup?: ('budget' | 'guests' | 'vendors' | 'payments' | 'dashboard') | null;
           id?: string | null;
@@ -434,6 +486,20 @@ export interface Product {
      */
     media?: (string | null) | Media;
   };
+  upsells?:
+    | {
+        product: string | Product;
+        /**
+         * Upsell price in ₹ (the product's regular price is shown crossed out)
+         */
+        price: number;
+        /**
+         * Optional one-liner on the card, e.g. "Track every rupee: 60% off with your planner"
+         */
+        pitch?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   seo?: {
     title?: string | null;
     description?: string | null;
@@ -458,8 +524,6 @@ export interface Media {
    * Short description of the image, for accessibility and Google.
    */
   alt: string;
-  prefix?: string | null;
-  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -502,8 +566,6 @@ export interface ProductFile {
    * Optional note, e.g. version number
    */
   note?: string | null;
-  prefix?: string | null;
-  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -531,14 +593,26 @@ export interface Order {
   phone?: string | null;
   city?: string | null;
   /**
-   * Price before promo code
+   * Main product price before promo code
    */
   listPrice?: number | null;
+  /**
+   * Main product + add-ons, before promo code
+   */
+  subtotal?: number | null;
   discountAmount?: number | null;
   /**
    * Amount charged
    */
   amount: number;
+  addOns?:
+    | {
+        product?: (string | null) | Product;
+        name?: string | null;
+        price?: number | null;
+        id?: string | null;
+      }[]
+    | null;
   /**
    * Ordered within the quick-order bonus window, so the bonus is delivered
    */
@@ -1041,6 +1115,33 @@ export interface ProductsSelect<T extends boolean = true> {
         badge?: T;
         media?: T;
       };
+  preview?:
+    | T
+    | {
+        fileName?: T;
+        formula?: T;
+        sheets?:
+          | T
+          | {
+              label?: T;
+              emoji?: T;
+              stats?:
+                | T
+                | {
+                    label?: T;
+                    value?: T;
+                    id?: T;
+                  };
+              columns?: T;
+              rows?: T;
+              progressLabel?: T;
+              progressPercent?: T;
+              bars?: T;
+              donut?: T;
+              chartLabel?: T;
+              id?: T;
+            };
+      };
   audienceLine?: T;
   pain?:
     | T
@@ -1163,6 +1264,14 @@ export interface ProductsSelect<T extends boolean = true> {
         buttonLabel?: T;
         media?: T;
       };
+  upsells?:
+    | T
+    | {
+        product?: T;
+        price?: T;
+        pitch?: T;
+        id?: T;
+      };
   seo?:
     | T
     | {
@@ -1188,8 +1297,17 @@ export interface OrdersSelect<T extends boolean = true> {
   phone?: T;
   city?: T;
   listPrice?: T;
+  subtotal?: T;
   discountAmount?: T;
   amount?: T;
+  addOns?:
+    | T
+    | {
+        product?: T;
+        name?: T;
+        price?: T;
+        id?: T;
+      };
   bonusIncluded?: T;
   offerApplied?: T;
   promoCode?: T;
@@ -1395,8 +1513,6 @@ export interface PostsSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
-  prefix?: T;
-  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -1439,8 +1555,6 @@ export interface MediaSelect<T extends boolean = true> {
  */
 export interface ProductFilesSelect<T extends boolean = true> {
   note?: T;
-  prefix?: T;
-  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;

@@ -13,6 +13,7 @@ import { getQuote } from "@/lib/pricing";
 import { REF_COOKIE } from "@/lib/referral";
 import { getPaymentProvider } from "@/lib/payments";
 import { readVisitorStart } from "@/lib/offerWindow";
+import { sheetPreview } from "@/lib/sheetPreview";
 
 /** "live" only with live Razorpay keys; test keys and the mock gateway show a banner. */
 function paymentMode(): "live" | "test" | "demo" {
@@ -48,6 +49,8 @@ export default async function CheckoutPage({ searchParams }: Args) {
     discountPercent: q.affiliate?.discountPercent ?? 0,
     codeError: q.codeError,
     bonusTitle: q.bonus?.active ? q.bonus.title : null,
+    addOns: q.addOns,
+    subtotal: q.subtotal,
   };
 
   return (
@@ -64,7 +67,7 @@ export default async function CheckoutPage({ searchParams }: Args) {
         {/* order summary */}
         <aside className="h-fit min-w-0 rounded-3xl bg-lavender p-6 shadow-soft md:p-8">
           <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-teal">Your order</p>
-          <MediaSlot media={product.cardImage} className="aspect-[4/3] w-full rounded-2xl" fallback={<MiniMockup />} />
+          <MediaSlot media={product.cardImage} className="aspect-[4/3] w-full rounded-2xl" fallback={<MiniMockup preview={sheetPreview(product)} />} />
           <div className="mt-6">
             <h1 className="font-display text-2xl">{product.name}</h1>
             {!!product.formats?.length && (
@@ -84,7 +87,13 @@ export default async function CheckoutPage({ searchParams }: Args) {
         </aside>
 
         <div className="min-w-0">
-          <CheckoutForm productSlug={product.slug} initialQuote={initialQuote} initialCode={refCode} paymentMode={paymentMode()} />
+          <CheckoutForm
+            productSlug={product.slug}
+            initialQuote={initialQuote}
+            initialCode={refCode}
+            paymentMode={paymentMode()}
+            upsells={q.availableUpsells}
+          />
         </div>
       </div>
     </div>

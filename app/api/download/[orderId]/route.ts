@@ -19,13 +19,22 @@ export async function GET(req: Request, { params }: { params: Promise<{ orderId:
     return NextResponse.json({ error: "This download link isn't valid." }, { status: 403 });
   }
 
-  // ?item=bonus downloads the quick-order bonus, only for orders that earned it.
-  const wantsBonus = new URL(req.url).searchParams.get("item") === "bonus";
+  // ?item=bonus → the quick-order bonus (only for orders that earned it)
+  // ?item=addon-<productId> → an upsell product bought with this order
+  const item = new URL(req.url).searchParams.get("item") ?? "";
   const product = order.product as Product | undefined;
-  if (wantsBonus && !order.bonusIncluded) {
-    return NextResponse.json({ error: "This order doesn't include the bonus." }, { status: 403 });
+  let file: ProductFile | undefined;
+  if (item === "bonus") {
+    if (!order.bonusIncluded) return NextResponse.json({ error: "This order doesn't include the bonus." }, { status: 403 });
+    file = product?.bonus?.file as ProductFile | undefined;
+  } else if (item.startsWith("addon-")) {
+    const addonId = item.slice("addon-".length);
+    const line = (order.addOns ?? []).find((a) => a.product && String(typeof a.product === "object" ? a.product.id : a.product) === addonId);
+    if (!line) return NextResponse.json({ error: "This order doesn't include that add-on." }, { status: 403 });
+    file = (typeof line.product === "object" ? line.product?.downloadFile : undefined) as ProductFile | undefined;
+  } else {
+    file = product?.downloadFile as ProductFile | undefined;
   }
-  const file = (wantsBonus ? product?.bonus?.file : product?.downloadFile) as ProductFile | undefined;
   if (!file?.filename || !file.url) {
     return NextResponse.json(
       { error: "The file isn't available yet. Please contact us and we'll send it to you." },

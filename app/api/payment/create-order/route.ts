@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { customerSchema, promoCodeSchema } from "@/lib/schema";
+import { customerSchema, promoCodeSchema, upsellIdsSchema } from "@/lib/schema";
 import { getPaymentProvider } from "@/lib/payments";
 import { loadCheckoutProduct } from "@/lib/checkout";
 import { getQuote } from "@/lib/pricing";
@@ -11,6 +11,7 @@ const bodySchema = z.object({
   product: z.string().min(1).max(80),
   customer: customerSchema,
   promoCode: promoCodeSchema,
+  upsells: upsellIdsSchema,
 });
 
 export async function POST(req: Request) {
@@ -32,11 +33,15 @@ export async function POST(req: Request) {
     // Price always comes from the server, never from the browser.
     // A buyer who reaches checkout without ever loading the product page starts their bonus window now.
     const visitorStart = product.bonus?.enabled ? await ensureVisitorStart(String(product.id)) : null;
-    const quote = await getQuote(payload, product, promoCode, { visitorStart });
+    const quote = await getQuote(payload, product, promoCode, { visitorStart }, parsed.data.upsells);
     if (quote.codeError) return NextResponse.json({ error: quote.codeError }, { status: 400 });
 
     const provider = getPaymentProvider();
-    const order = await provider.createOrder({ amount: quote.total, currency: "INR", customer, description: product.name });
+    const description =
+      quote.addOns.length > 0
+        ? `${product.name} + ${quote.addOns.length} add-on${quote.addOns.length > 1 ? "s" : ""}`
+        : product.name;
+    const order = await provider.createOrder({ amount: quote.total, currency: "INR", customer, description });
 
     await payload.create({
       collection: "orders",
@@ -50,6 +55,8 @@ export async function POST(req: Request) {
         phone: customer.phone,
         city: customer.city || undefined,
         listPrice: quote.listPrice,
+        subtotal: quote.subtotal,
+        addOns: quote.addOns.map((a) => ({ product: a.id, name: a.name, price: a.price })),
         discountAmount: quote.discount,
         amount: quote.total,
         offerApplied: quote.offer.active,

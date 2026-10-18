@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import confetti from "canvas-confetti";
-import { Download, FileSpreadsheet, Gift, Mail, MessageCircle } from "lucide-react";
+import { Download, FileSpreadsheet, Gift, Mail, MessageCircle, Plus } from "lucide-react";
 import { buttonClasses } from "@/components/ui/Button";
 import { LogoMark } from "@/components/Logo";
 
@@ -19,6 +19,7 @@ type Props = {
   googleSheetsCopyUrl: string | null;
   whatsappHref: string | null;
   bonus: { title: string; hasFile: boolean; link: string | null } | null;
+  addOns: { id: string; name: string; hasFile: boolean; googleSheetsCopyUrl: string | null }[];
 };
 
 export function SuccessContent(p: Props) {
@@ -85,6 +86,33 @@ export function SuccessContent(p: Props) {
           </a>
         )}
       </div>
+
+      {p.addOns.length > 0 && (
+        <div className="mt-6 space-y-3 text-left">
+          {p.addOns.map((a) => (
+            <div key={a.id} className="rounded-2xl bg-lavender p-5">
+              <p className="flex items-center gap-2 font-semibold text-plum">
+                <Plus className="size-5 text-teal" /> {a.name}
+              </p>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                {a.hasFile && (
+                  <a
+                    href={`/api/download/${encodeURIComponent(p.orderId)}?item=addon-${encodeURIComponent(a.id)}`}
+                    className={buttonClasses({ variant: "teal", className: "w-full sm:w-auto" })}
+                  >
+                    <Download className="size-4" /> Download
+                  </a>
+                )}
+                {a.googleSheetsCopyUrl && (
+                  <a href={a.googleSheetsCopyUrl} target="_blank" rel="noopener noreferrer" className={buttonClasses({ variant: "outline", className: "w-full sm:w-auto" })}>
+                    <FileSpreadsheet className="size-4" /> Copy to Google Sheets
+                  </a>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {p.bonus && (
         <div className="mt-6 rounded-2xl bg-sand p-5 text-left">

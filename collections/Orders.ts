@@ -60,9 +60,26 @@ export const Orders: CollectionConfig = {
         {
           type: "row",
           fields: [
-            { name: "listPrice", type: "number", admin: { readOnly: true, description: "Price before promo code" } },
+            { name: "listPrice", type: "number", admin: { readOnly: true, description: "Main product price before promo code" } },
+            { name: "subtotal", type: "number", admin: { readOnly: true, description: "Main product + add-ons, before promo code" } },
             { name: "discountAmount", type: "number", admin: { readOnly: true } },
             { name: "amount", type: "number", required: true, admin: { readOnly: true, description: "Amount charged" } },
+          ],
+        },
+        {
+          name: "addOns",
+          type: "array",
+          label: "Add-ons (upsells)",
+          admin: { readOnly: true },
+          fields: [
+            {
+              type: "row",
+              fields: [
+                { name: "product", type: "relationship", relationTo: "products", index: true },
+                { name: "name", type: "text" },
+                { name: "price", type: "number" },
+              ],
+            },
           ],
         },
         {

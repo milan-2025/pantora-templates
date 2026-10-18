@@ -19,6 +19,9 @@ export const promoCodeSchema = z
   .optional()
   .transform((v) => (v ? v.toUpperCase() : undefined));
 
+/** Upsell product ids ticked at checkout (validated against the product's own list on the server). */
+export const upsellIdsSchema = z.array(z.string().min(1).max(64)).max(10).optional().default([]);
+
 export const contactSchema = z.object({
   name: z.string().trim().min(2, "Please enter your name").max(80),
   email: z.email("Please enter a valid email"),

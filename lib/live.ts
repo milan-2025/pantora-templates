@@ -1,9 +1,14 @@
-import type { Payload } from "payload";
+import type { Payload, Where } from "payload";
 import type { Product } from "@/payload-types";
 import { getBonusState, getOfferState, type OfferContext } from "@/lib/pricing";
 import type { LiveData } from "@/components/landing/LiveData";
 
 const RECENT_DAYS = 30;
+
+/** Orders that bought this product, either as the main item or as a checkout add-on (upsell). */
+const boughtThis = (productId: string): Where => ({
+  or: [{ product: { equals: productId } }, { "addOns.product": { equals: productId } }],
+});
 
 /** Real-time offer numbers + recent real purchases (first name and city only). */
 export async function getLiveData(payload: Payload, product: Product, ctx: OfferContext = {}): Promise<LiveData> {
@@ -15,7 +20,7 @@ export async function getLiveData(payload: Payload, product: Product, ctx: Offer
     const orders = await payload.find({
       collection: "orders",
       where: {
-        product: { equals: product.id },
+        ...boughtThis(product.id),
         paymentStatus: { equals: "paid" },
         paidAt: { greater_than: since },
         city: { exists: true },
@@ -40,7 +45,7 @@ export async function getLiveData(payload: Payload, product: Product, ctx: Offer
   if (counter?.show) {
     const paid = await payload.count({
       collection: "orders",
-      where: { product: { equals: product.id }, paymentStatus: { equals: "paid" } },
+      where: { ...boughtThis(product.id), paymentStatus: { equals: "paid" } },
     });
     const count = paid.totalDocs + Math.max(0, counter.previousSales ?? 0);
     if (count > 0 && count >= (counter.minimumToShow ?? 0)) {

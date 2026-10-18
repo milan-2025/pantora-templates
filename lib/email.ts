@@ -35,6 +35,8 @@ export async function sendDeliveryEmail(order: {
   supportWhatsapp?: string | null;
   /** Quick-order bonus earned with this order, if any. */
   bonus?: { title: string; hasFile: boolean; link?: string | null } | null;
+  /** Upsell products bought with this order. */
+  addOns?: { id: string; name: string; hasFile: boolean; googleSheetsCopyUrl?: string | null }[];
 }) {
   const first = escapeHtml(order.customerName.split(" ")[0]);
   const buttons = [
@@ -51,12 +53,22 @@ export async function sendDeliveryEmail(order: {
         ${bonus.link ? `<br/>${btn(bonus.link, "Open your bonus", "#F2A93B")}` : ""}
       </div>`
     : "";
+  const addOnsHtml = (order.addOns ?? [])
+    .map(
+      (a) => `<div style="margin:14px 0 0;padding:16px;border-radius:16px;background:#EBE2EF">
+        <p style="margin:0 0 8px;font-weight:700;color:#3B1F4A">➕ ${escapeHtml(a.name)}</p>
+        ${a.hasFile ? btn(`${siteUrl()}/api/download/${encodeURIComponent(order.orderId)}?item=addon-${encodeURIComponent(a.id)}`, `Download ${escapeHtml(a.name)}`, "#1F7A74", "#FBF5EA") : ""}
+        ${a.googleSheetsCopyUrl ? `<br/>${btn(a.googleSheetsCopyUrl, "Copy to Google Sheets", "#F2A93B")}` : ""}
+      </div>`,
+    )
+    .join("");
 
   const html = shell(`
       <p style="margin:0 0 6px;font-size:12px;letter-spacing:3px;color:#1F7A74;font-weight:700">OPEN THE BOX</p>
       <h1 style="margin:0 0 8px;font-size:30px;color:#3B1F4A;font-family:'DM Serif Display',Georgia,serif;font-weight:400">Everything&#39;s ready, ${first}.</h1>
       <p style="font-size:16px;line-height:1.5;margin:0 0 20px">Your <b>${escapeHtml(order.productName)}</b> is ready to use. Here are your links:</p>
       ${buttons}
+      ${addOnsHtml}
       ${bonusHtml}
       <p style="font-size:14px;line-height:1.5;margin:24px 0 0">
         The download link is personal to your order. If it ever stops working, just reply to this email.

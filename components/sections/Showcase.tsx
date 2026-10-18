@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useInView } from "motion/react";
 import { SpreadsheetMockup } from "@/components/SpreadsheetMockup";
+import { previewTabIndex, sheetPreview } from "@/lib/sheetPreview";
 import { MediaSlot } from "@/components/ui/MediaSlot";
 import { Squiggle } from "@/components/ui/Squiggle";
 import type { LandingProps } from "@/components/landing/types";
@@ -34,8 +35,10 @@ export function Showcase({ product }: LandingProps) {
     setAuto(false);
     setIndex(i);
   };
-  const pickByMockup = (mockup: string) => {
-    const i = tabs.findIndex((t) => t.mockup === mockup);
+  const preview = sheetPreview(product);
+  const sheetOf = (mockup: string | null | undefined) => previewTabIndex(mockup, preview.sheets.length);
+  const pickBySheet = (sheet: number) => {
+    const i = tabs.findIndex((t) => sheetOf(t.mockup) === sheet);
     if (i >= 0) pick(i);
   };
 
@@ -112,7 +115,7 @@ export function Showcase({ product }: LandingProps) {
             </AnimatePresence>
           </div>
           <div className="order-1 min-w-0 px-1 pb-2 lg:order-2">
-            <SpreadsheetMockup active={current.mockup} onTabChange={pickByMockup} />
+            <SpreadsheetMockup preview={preview} active={sheetOf(current.mockup)} onTabChange={pickBySheet} />
             <div className="mt-6 flex justify-center gap-2">
               {tabs.map((t, i) => (
                 <motion.button

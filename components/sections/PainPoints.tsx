@@ -40,7 +40,13 @@ function Bubble({ p, i, progress, spread }: { p: Item; i: number; progress: Moti
   );
 }
 
-export function PainPoints({ product }: LandingProps) {
+export function PainPoints(props: LandingProps) {
+  // useScroll needs its target on the page, so the hooks live in a component that only renders with content.
+  if (!props.product.pain?.items?.length) return null;
+  return <PainPointsSection {...props} />;
+}
+
+function PainPointsSection({ product }: LandingProps) {
   const pain = product.pain ?? {};
   const items = pain.items ?? [];
   const ref = useRef<HTMLDivElement>(null);
@@ -56,8 +62,6 @@ export function PainPoints({ product }: LandingProps) {
   }, []);
   const sortedOpacity = useTransform(scrollYProgress, [0.85, 1], [0, 1]);
   const sortedScale = useTransform(scrollYProgress, [0.85, 1], [0.5, 1]);
-
-  if (!items.length) return null;
 
   return (
     <section className="overflow-hidden bg-plum px-4 py-20 text-cream md:py-28">
