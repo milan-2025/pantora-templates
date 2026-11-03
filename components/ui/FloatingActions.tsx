@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { MessageCircle } from "lucide-react";
 import { formatINR } from "@/lib/format";
+import { useCurrentPrice } from "@/components/landing/LiveData";
 
 /** WhatsApp bubble, plus (on product pages) a mobile sticky buy bar that appears after the hero. */
 export function FloatingActions({
@@ -15,6 +16,8 @@ export function FloatingActions({
   buy?: { href: string; price: number; label: string } | null;
 }) {
   const [show, setShow] = useState(false);
+  // On product pages the live price wins (offer ending, referral discount).
+  const current = useCurrentPrice({ active: false, price: buy?.price ?? 0, regularPrice: buy?.price ?? 0 });
 
   useEffect(() => {
     if (!buy) return;
@@ -59,7 +62,7 @@ export function FloatingActions({
           >
             <div className="flex items-center justify-between gap-3">
               <div className="leading-tight">
-                <div className="font-display text-2xl text-plum">{formatINR(buy.price)}</div>
+                <div className="font-display text-2xl text-plum">{current.pending ? "\u00a0" : formatINR(current.price)}</div>
                 <div className="text-xs text-charcoal/70">One-time · Instant download</div>
               </div>
               <Link

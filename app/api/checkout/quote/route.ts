@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     loaded.payload,
     loaded.product,
     parsed.data.promoCode,
-    { visitorStart: await readVisitorStart(String(loaded.product.id)) },
+    { visitorStart: await readVisitorStart(loaded.product) },
     parsed.data.upsells,
   );
   return NextResponse.json({

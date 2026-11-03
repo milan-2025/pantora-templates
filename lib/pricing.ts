@@ -50,15 +50,34 @@ export type BonusState = {
   title: string;
   /** When this visitor's window closes. Null for a first-time visitor whose window starts on page load. */
   endsAt: string | null;
+  /** After the window has closed: when this visitor gets a fresh countdown (if the timer restarts). */
+  restartsAt: string | null;
 };
+
+const UNIT_MS = { minutes: 60_000, hours: 3_600_000, days: 86_400_000 } as const;
+
+/**
+ * How long each visitor's bonus window lasts, and how long after it closes a fresh one starts
+ * (null = never restarts).
+ */
+export function bonusTiming(product: Product) {
+  const b = product.bonus ?? {};
+  const windowMs = Math.max(1, b.minutes ?? 15) * 60_000;
+  const unit = UNIT_MS[(b.resetUnit as keyof typeof UNIT_MS) ?? "days"] ?? UNIT_MS.days;
+  const restartMs = b.resetAfter && b.resetAfter > 0 ? b.resetAfter * unit : null;
+  return { windowMs, restartMs };
+}
 
 export function getBonusState(product: Product, ctx: OfferContext = {}): BonusState | null {
   const b = product.bonus ?? {};
   if (!b.enabled || !b.title || (!b.file && !b.link)) return null;
   const now = ctx.now ?? new Date();
-  if (!ctx.visitorStart) return { active: true, title: b.title, endsAt: null };
-  const endsAt = new Date(ctx.visitorStart + (b.minutes ?? 15) * 60_000);
-  return { active: endsAt > now, title: b.title, endsAt: endsAt.toISOString() };
+  if (!ctx.visitorStart) return { active: true, title: b.title, endsAt: null, restartsAt: null };
+  const { windowMs, restartMs } = bonusTiming(product);
+  const endsAt = new Date(ctx.visitorStart + windowMs);
+  const active = endsAt > now;
+  const restartsAt = !active && restartMs ? new Date(endsAt.getTime() + restartMs).toISOString() : null;
+  return { active, title: b.title, endsAt: endsAt.toISOString(), restartsAt };
 }
 
 /** An upsell product offered at checkout (only ever built from the main product's admin list). */
@@ -88,6 +107,27 @@ export function getUpsellOptions(product: Product): UpsellOption[] {
     options.push({ id, name: p.name, tagline: p.tagline ?? null, image: img, regularPrice: p.price, price: row.price, pitch: row.pitch ?? null });
   }
   return options;
+}
+
+/** An active affiliate by promo code (case-insensitive), or null. */
+export async function findAffiliate(payload: Payload, rawCode: string | null | undefined): Promise<Affiliate | null> {
+  const code = rawCode?.trim().toUpperCase();
+  if (!code || !/^[A-Z0-9_-]{3,30}$/.test(code)) return null;
+  const res = await payload.find({
+    collection: "affiliates",
+    where: { code: { equals: code }, active: { equals: true } },
+    limit: 1,
+    depth: 0,
+  });
+  return res.docs[0] ?? null;
+}
+
+/** The promo-code discount on an amount, exactly as checkout charges it. */
+export function applyPromo(amount: number, affiliate: Affiliate | null) {
+  const discount = affiliate ? Math.round((amount * (affiliate.discountPercent ?? 0)) / 100) : 0;
+  // Razorpay can't take payments under ₹1, so even a 99% discount leaves at least ₹1 to pay.
+  const total = Math.max(amount > 0 ? 1 : 0, amount - discount);
+  return { discount: amount - total, total };
 }
 
 export type Quote = {
@@ -121,18 +161,8 @@ export async function getQuote(
   const listPrice = offer.price;
   const code = rawCode?.trim().toUpperCase() || null;
 
-  let affiliate: Affiliate | null = null;
-  let codeError: string | null = null;
-  if (code) {
-    const res = await payload.find({
-      collection: "affiliates",
-      where: { code: { equals: code }, active: { equals: true } },
-      limit: 1,
-      depth: 0,
-    });
-    affiliate = res.docs[0] ?? null;
-    if (!affiliate) codeError = "This code isn't valid";
-  }
+  const affiliate = code ? await findAffiliate(payload, code) : null;
+  const codeError = code && !affiliate ? "This code isn't valid" : null;
 
   // Only upsells from this product's own admin list are accepted; prices always come from there.
   const availableUpsells = getUpsellOptions(product);
@@ -141,9 +171,7 @@ export async function getQuote(
   const subtotal = listPrice + addOns.reduce((sum, a) => sum + a.price, 0);
 
   // A promo code discounts the whole order (main product + add-ons).
-  const discount = affiliate ? Math.round((subtotal * (affiliate.discountPercent ?? 0)) / 100) : 0;
-  // Razorpay can't take payments under ₹1, so even a 99% discount leaves at least ₹1 to pay.
-  const total = Math.max(subtotal > 0 ? 1 : 0, subtotal - discount);
+  const { discount, total } = applyPromo(subtotal, affiliate);
   const commission = affiliate ? Math.round((total * (affiliate.commissionPercent ?? 0)) / 100) : 0;
 
   const bonus = getBonusState(product, ctx);

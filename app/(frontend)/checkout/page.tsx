@@ -38,7 +38,7 @@ export default async function CheckoutPage({ searchParams }: Args) {
 
   // An affiliate's ?ref=CODE link is remembered in a cookie; apply it straight away.
   const refCode = (await cookies()).get(REF_COOKIE)?.value ?? "";
-  const q = await getQuote(payload, product, refCode || null, { visitorStart: await readVisitorStart(String(product.id)) });
+  const q = await getQuote(payload, product, refCode || null, { visitorStart: await readVisitorStart(product) });
   const initialQuote = {
     regularPrice: q.offer.regularPrice,
     offerActive: q.offer.active,

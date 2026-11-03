@@ -13,8 +13,8 @@ import { formatINR } from "@/lib/format";
 
 export function Pricing({ product, offer }: LandingProps) {
   // Live data wins over the cached page, so the price flips as soon as an offer ends.
-  const { active: offerActive, price } = useCurrentPrice(offer);
-  const savings = offerActive ? Math.round((1 - price / offer.regularPrice) * 100) : 0;
+  const { active: offerActive, price, regularPrice, referral, pending } = useCurrentPrice(offer);
+  const savings = offerActive && !pending ? Math.round((1 - price / regularPrice) * 100) : 0;
   const includes = product.includes ?? [];
 
   return (
@@ -26,7 +26,7 @@ export function Pricing({ product, offer }: LandingProps) {
       <div className="relative mx-auto max-w-lg">
         <Reveal className="mb-10 text-center">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-marigold">
-            {offerActive ? "Limited-time price" : "Simple pricing"}
+            {referral ? "Your special price" : offerActive ? "Limited-time price" : "Simple pricing"}
           </p>
           <h2 className="font-display text-4xl text-cream md:text-6xl">One price. Everything included.</h2>
           <p className="mt-3 text-cream/75">Pay once and use it for the whole wedding, and the next one in the family too.</p>
@@ -54,9 +54,16 @@ export function Pricing({ product, offer }: LandingProps) {
               </div>
             </div>
 
-            <div className="mb-6 flex items-end gap-3">
-              <span className="font-display text-6xl leading-none text-plum md:text-7xl">{formatINR(price)}</span>
-              {offerActive && <span className="mb-1 text-xl text-charcoal/45 line-through">{formatINR(offer.regularPrice)}</span>}
+            <div className={`mb-6 transition-opacity ${pending ? "opacity-0" : ""}`}>
+              <div className="flex items-end gap-3">
+                <span className="font-display text-6xl leading-none text-plum md:text-7xl">{formatINR(price)}</span>
+                {offerActive && <span className="mb-1 text-xl text-charcoal/45 line-through">{formatINR(regularPrice)}</span>}
+              </div>
+              {referral && (
+                <p className="mt-2 text-sm font-medium text-teal">
+                  Includes {referral.discountPercent}% off with code {referral.code}, applied automatically at checkout
+                </p>
+              )}
             </div>
 
             <SoldCounter className="-mt-2 mb-6" />

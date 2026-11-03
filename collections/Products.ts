@@ -1,4 +1,4 @@
-import type { CollectionConfig, Field } from "payload";
+import type { CollectionConfig, Field, TextFieldSingleValidation } from "payload";
 import { authenticated, formatSlug, publishedOrAuthenticated, validateSlug } from "@/lib/cms/access";
 import { revalidateAfterChange, revalidateAfterDelete } from "@/lib/cms/revalidate";
 
@@ -104,6 +104,49 @@ export const Products: CollectionConfig = {
               type: "text",
               admin: { description: "Google Sheets 'make a copy' link given to buyers (ends with /copy)" },
             },
+            {
+              name: "extraFiles",
+              type: "array",
+              label: "More files & links",
+              labels: { singular: "File / link", plural: "More files & links" },
+              admin: {
+                description:
+                  "Extra files and/or links buyers get with this product, on top of the download file and Google Sheets link above. " +
+                  "Each row can have a file, a link, or both.",
+                initCollapsed: true,
+                components: { RowLabel: "@/components/admin/ExtraFileRowLabel#ExtraFileRowLabel" },
+              },
+              fields: [
+                {
+                  name: "label",
+                  type: "text",
+                  required: true,
+                  admin: { placeholder: "e.g. Bonus budget sheet (PDF)", description: "Button text buyers see" },
+                },
+                {
+                  type: "row",
+                  fields: [
+                    {
+                      name: "file",
+                      type: "upload",
+                      relationTo: "product-files",
+                      admin: { width: "50%", description: "A file to download (kept private)" },
+                    },
+                    {
+                      name: "link",
+                      type: "text",
+                      admin: { width: "50%", placeholder: "https://…", description: "A link to open (e.g. Google Sheets copy link, Notion, Canva)" },
+                      validate: ((value, { siblingData }) => {
+                        const v = typeof value === "string" ? value.trim() : "";
+                        if (v && !/^https?:\/\/\S+$/i.test(v)) return "Enter a full link starting with https://";
+                        if (!v && !(siblingData as { file?: unknown } | undefined)?.file) return "Add a file, a link, or both";
+                        return true;
+                      }) satisfies TextFieldSingleValidation,
+                    },
+                  ],
+                },
+              ],
+            },
           ],
         },
         {
@@ -169,6 +212,34 @@ export const Products: CollectionConfig = {
                   max: 1440,
                   defaultValue: 15,
                   admin: { description: "Minutes each visitor has from their first visit (reloading doesn't reset it)" },
+                },
+                {
+                  type: "row",
+                  fields: [
+                    {
+                      name: "resetAfter",
+                      type: "number",
+                      min: 1,
+                      label: "Restart the timer after",
+                      admin: {
+                        width: "50%",
+                        description:
+                          "Optional: once a visitor's countdown runs out, give them a fresh countdown after this long (e.g. 1 minute, 1 day). Leave empty to never restart.",
+                      },
+                    },
+                    {
+                      name: "resetUnit",
+                      type: "select",
+                      defaultValue: "days",
+                      label: "Unit",
+                      options: [
+                        { label: "Minutes", value: "minutes" },
+                        { label: "Hours", value: "hours" },
+                        { label: "Days", value: "days" },
+                      ],
+                      admin: { width: "50%" },
+                    },
+                  ],
                 },
                 {
                   name: "file",

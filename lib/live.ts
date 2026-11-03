@@ -1,6 +1,7 @@
 import type { Payload, Where } from "payload";
 import type { Product } from "@/payload-types";
-import { getBonusState, getOfferState, type OfferContext } from "@/lib/pricing";
+import { applyPromo, getBonusState, getOfferState, type OfferContext } from "@/lib/pricing";
+import type { Affiliate } from "@/payload-types";
 import type { LiveData } from "@/components/landing/LiveData";
 
 const RECENT_DAYS = 30;
@@ -10,9 +11,23 @@ const boughtThis = (productId: string): Where => ({
   or: [{ product: { equals: productId } }, { "addOns.product": { equals: productId } }],
 });
 
-/** Real-time offer numbers + recent real purchases (first name and city only). */
-export async function getLiveData(payload: Payload, product: Product, ctx: OfferContext = {}): Promise<LiveData> {
+/**
+ * Real-time offer numbers + recent real purchases (first name and city only).
+ * With an affiliate (the visitor came via ?ref=CODE), the price is the one they'll pay at checkout
+ * with that code applied.
+ */
+export async function getLiveData(
+  payload: Payload,
+  product: Product,
+  ctx: OfferContext = {},
+  affiliate: Affiliate | null = null,
+): Promise<LiveData> {
   const offer = await getOfferState(payload, product, ctx);
+  const promo = affiliate ? applyPromo(offer.price, affiliate) : null;
+  const referral =
+    affiliate && promo && promo.discount > 0
+      ? { code: affiliate.code, discountPercent: affiliate.discountPercent ?? 0, priceBefore: offer.price }
+      : null;
 
   let recent: LiveData["recent"] = [];
   if (product.showRecentPurchases) {
@@ -55,7 +70,9 @@ export async function getLiveData(payload: Payload, product: Product, ctx: Offer
 
   return {
     offerActive: offer.active,
-    price: offer.price,
+    price: referral && promo ? promo.total : offer.price,
+    regularPrice: offer.regularPrice,
+    referral,
     endsAt: offer.endsAt,
     bonus: getBonusState(product, ctx),
     sold,

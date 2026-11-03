@@ -1,3 +1,4 @@
+import { ExtraFileRowLabel as ExtraFileRowLabel_effde69f59edd8b5da78ced11291278e } from '@/components/admin/ExtraFileRowLabel'
 import { SheetTabRowLabel as SheetTabRowLabel_a46bdde4411019975f07ff2c767af4fd } from '@/components/admin/SheetTabRowLabel'
 import { RscEntryLexicalCell as RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { RscEntryLexicalField as RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
@@ -31,6 +32,7 @@ import { CloudinaryClientUploadHandler as CloudinaryClientUploadHandler_961b9585
 
 /** @type import('payload').ImportMap */
 export const importMap = {
+  "@/components/admin/ExtraFileRowLabel#ExtraFileRowLabel": ExtraFileRowLabel_effde69f59edd8b5da78ced11291278e,
   "@/components/admin/SheetTabRowLabel#SheetTabRowLabel": SheetTabRowLabel_a46bdde4411019975f07ff2c767af4fd,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalCell": RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalField": RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e,

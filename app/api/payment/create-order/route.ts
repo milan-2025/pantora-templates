@@ -32,7 +32,7 @@ export async function POST(req: Request) {
   try {
     // Price always comes from the server, never from the browser.
     // A buyer who reaches checkout without ever loading the product page starts their bonus window now.
-    const visitorStart = product.bonus?.enabled ? await ensureVisitorStart(String(product.id)) : null;
+    const visitorStart = product.bonus?.enabled ? await ensureVisitorStart(product) : null;
     const quote = await getQuote(payload, product, promoCode, { visitorStart }, parsed.data.upsells);
     if (quote.codeError) return NextResponse.json({ error: quote.codeError }, { status: 400 });
 

@@ -4,9 +4,10 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import confetti from "canvas-confetti";
-import { Download, FileSpreadsheet, Gift, Mail, MessageCircle, Plus } from "lucide-react";
+import { Download, ExternalLink, FileSpreadsheet, Gift, Mail, MessageCircle, Plus } from "lucide-react";
 import { buttonClasses } from "@/components/ui/Button";
 import { LogoMark } from "@/components/Logo";
+import { downloadPath, type ExtraItem } from "@/lib/deliverables";
 
 type Props = {
   paid: boolean;
@@ -17,10 +18,37 @@ type Props = {
   productSlug: string;
   hasFile: boolean;
   googleSheetsCopyUrl: string | null;
+  extras: ExtraItem[];
   whatsappHref: string | null;
   bonus: { title: string; hasFile: boolean; link: string | null } | null;
-  addOns: { id: string; name: string; hasFile: boolean; googleSheetsCopyUrl: string | null }[];
+  addOns: { id: string; name: string; hasFile: boolean; googleSheetsCopyUrl: string | null; extras: ExtraItem[] }[];
 };
+
+/** Buttons for a product's "More files & links": a download for each file, and/or a button that opens each link. */
+function ExtraButtons({ orderId, extras, addonId, size }: { orderId: string; extras: ExtraItem[]; addonId?: string; size?: "lg" }) {
+  return extras.flatMap((x) => [
+    x.hasFile && (
+      <a
+        key={`${x.id}-file`}
+        href={downloadPath(orderId, { addonId, extraId: x.id })}
+        className={buttonClasses({ variant: "teal", size, className: size ? "w-full" : "w-full sm:w-auto" })}
+      >
+        <Download className={size ? "size-5" : "size-4"} /> {x.label}
+      </a>
+    ),
+    x.link && (
+      <a
+        key={`${x.id}-link`}
+        href={x.link}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={buttonClasses({ variant: "outline", size, className: size ? "w-full" : "w-full sm:w-auto" })}
+      >
+        <ExternalLink className={size ? "size-5" : "size-4"} /> {x.hasFile ? `Open ${x.label}` : x.label}
+      </a>
+    ),
+  ]);
+}
 
 export function SuccessContent(p: Props) {
   useEffect(() => {
@@ -85,6 +113,7 @@ export function SuccessContent(p: Props) {
             <FileSpreadsheet className="size-5" /> Copy to Google Sheets
           </a>
         )}
+        <ExtraButtons orderId={p.orderId} extras={p.extras} size="lg" />
       </div>
 
       {p.addOns.length > 0 && (
@@ -94,7 +123,7 @@ export function SuccessContent(p: Props) {
               <p className="flex items-center gap-2 font-semibold text-plum">
                 <Plus className="size-5 text-teal" /> {a.name}
               </p>
-              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                 {a.hasFile && (
                   <a
                     href={`/api/download/${encodeURIComponent(p.orderId)}?item=addon-${encodeURIComponent(a.id)}`}
@@ -108,6 +137,7 @@ export function SuccessContent(p: Props) {
                     <FileSpreadsheet className="size-4" /> Copy to Google Sheets
                   </a>
                 )}
+                <ExtraButtons orderId={p.orderId} extras={a.extras} addonId={a.id} />
               </div>
             </div>
           ))}

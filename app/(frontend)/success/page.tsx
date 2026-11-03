@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getPayloadClient, getSettings } from "@/lib/cms/queries";
 import { whatsappLink } from "@/lib/format";
 import type { Product } from "@/payload-types";
+import { extraItems } from "@/lib/deliverables";
 import { TrackEvent } from "@/components/TrackEvent";
 import { SuccessContent } from "./SuccessContent";
 
@@ -33,11 +34,18 @@ export default async function SuccessPage({ searchParams }: Args) {
         productSlug={product?.slug ?? ""}
         hasFile={Boolean(product?.downloadFile)}
         googleSheetsCopyUrl={product?.googleSheetsCopyUrl ?? null}
+        extras={extraItems(product)}
         addOns={(order?.addOns ?? [])
           .filter((a) => a.product && typeof a.product === "object")
           .map((a) => {
             const p = a.product as Product;
-            return { id: String(p.id), name: a.name || p.name, hasFile: Boolean(p.downloadFile), googleSheetsCopyUrl: p.googleSheetsCopyUrl ?? null };
+            return {
+              id: String(p.id),
+              name: a.name || p.name,
+              hasFile: Boolean(p.downloadFile),
+              googleSheetsCopyUrl: p.googleSheetsCopyUrl ?? null,
+              extras: extraItems(p),
+            };
           })}
         bonus={
           order?.bonusIncluded && product?.bonus?.title
