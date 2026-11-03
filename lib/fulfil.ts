@@ -4,6 +4,7 @@ import { getSettings } from "@/lib/cms/queries";
 import { sendDeliveryEmail } from "@/lib/email";
 import { whatsappLink } from "@/lib/format";
 import type { Product } from "@/payload-types";
+import { extraItems } from "@/lib/deliverables";
 
 /**
  * Marks an order paid and emails the buyer their files.
@@ -41,6 +42,7 @@ export async function markOrderPaid(payload: Payload, orderId: string, paymentId
     productName: product.name,
     hasFile: Boolean(product.downloadFile),
     googleSheetsCopyUrl: product.googleSheetsCopyUrl,
+    extras: extraItems(product),
     supportWhatsapp: whatsappLink(settings.whatsappNumber, settings.whatsappMessage),
     bonus:
       order.bonusIncluded && product.bonus?.title
@@ -50,7 +52,13 @@ export async function markOrderPaid(payload: Payload, orderId: string, paymentId
       .filter((a) => a.product && typeof a.product === "object")
       .map((a) => {
         const p = a.product as Product;
-        return { id: String(p.id), name: a.name || p.name, hasFile: Boolean(p.downloadFile), googleSheetsCopyUrl: p.googleSheetsCopyUrl };
+        return {
+          id: String(p.id),
+          name: a.name || p.name,
+          hasFile: Boolean(p.downloadFile),
+          googleSheetsCopyUrl: p.googleSheetsCopyUrl,
+          extras: extraItems(p),
+        };
       }),
   });
   return { found: true as const, alreadyPaid: false, emailSent: email.sent };

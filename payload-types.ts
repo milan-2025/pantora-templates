@@ -178,6 +178,26 @@ export interface Product {
    * Google Sheets 'make a copy' link given to buyers (ends with /copy)
    */
   googleSheetsCopyUrl?: string | null;
+  /**
+   * Extra files and/or links buyers get with this product, on top of the download file and Google Sheets link above. Each row can have a file, a link, or both.
+   */
+  extraFiles?:
+    | {
+        /**
+         * Button text buyers see
+         */
+        label: string;
+        /**
+         * A file to download (kept private)
+         */
+        file?: (string | null) | ProductFile;
+        /**
+         * A link to open (e.g. Google Sheets copy link, Notion, Canva)
+         */
+        link?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   offer?: {
     enabled?: boolean | null;
     /**
@@ -204,6 +224,11 @@ export interface Product {
      * Minutes each visitor has from their first visit (reloading doesn't reset it)
      */
     minutes?: number | null;
+    /**
+     * Optional: once a visitor's countdown runs out, give them a fresh countdown after this long (e.g. 1 minute, 1 day). Leave empty to never restart.
+     */
+    resetAfter?: number | null;
+    resetUnit?: ('minutes' | 'hours' | 'days') | null;
     /**
      * The bonus file buyers download (kept private)
      */
@@ -1076,6 +1101,14 @@ export interface ProductsSelect<T extends boolean = true> {
       };
   downloadFile?: T;
   googleSheetsCopyUrl?: T;
+  extraFiles?:
+    | T
+    | {
+        label?: T;
+        file?: T;
+        link?: T;
+        id?: T;
+      };
   offer?:
     | T
     | {
@@ -1091,6 +1124,8 @@ export interface ProductsSelect<T extends boolean = true> {
         enabled?: T;
         title?: T;
         minutes?: T;
+        resetAfter?: T;
+        resetUnit?: T;
         file?: T;
         link?: T;
       };

@@ -96,8 +96,9 @@ export function Hero({ product, offer }: LandingProps) {
             className="mt-9 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start"
           >
             <ButtonLink href={checkoutHref(product)} size="lg">
-              {hero.ctaLabel || "Buy now"} · {formatINR(current.price)}
-              {current.active && <s className="text-sm font-normal opacity-60">{formatINR(current.regularPrice)}</s>}
+              {hero.ctaLabel || "Buy now"} ·{" "}
+              <span className={`transition-opacity ${current.pending ? "opacity-0" : ""}`}>{formatINR(current.price)}</span>
+              {current.active && !current.pending && <s className="text-sm font-normal opacity-60">{formatINR(current.regularPrice)}</s>}
             </ButtonLink>
             <ButtonLink href="#inside" size="lg" variant="outline">
               See inside <ArrowDown className="size-4" />

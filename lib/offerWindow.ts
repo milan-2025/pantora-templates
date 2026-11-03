@@ -1,11 +1,14 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { createHmac, timingSafeEqual } from "crypto";
+import { bonusTiming } from "@/lib/pricing";
+import type { Product } from "@/payload-types";
 
 /**
  * Quick-order bonus window: when a visitor first lands on a product page, the server records the
  * time in a signed cookie. Orders placed within the configured minutes include the bonus;
- * reloading or editing the cookie can't extend the window.
+ * reloading or editing the cookie can't extend the window. If the product's timer is set to
+ * restart (e.g. 1 day after it runs out), the visitor gets a fresh window once that time has passed.
  */
 
 const COOKIE_DAYS = 30;
@@ -24,24 +27,34 @@ function parse(productId: string, value: string | undefined): number | null {
   return expected.length === given.length && timingSafeEqual(expected, given) ? start : null;
 }
 
-/** When this visitor's bonus window started, or null for a first-time visitor. */
-export async function readVisitorStart(productId: string) {
+/** When this visitor's bonus window started, or null for a first-time visitor (or one due a fresh window). */
+export async function readVisitorStart(product: Product) {
+  const id = String(product.id);
   const jar = await cookies();
-  return parse(productId, jar.get(cookieName(productId))?.value);
+  const start = parse(id, jar.get(cookieName(id))?.value);
+  if (!start) return null;
+  const { windowMs, restartMs } = bonusTiming(product);
+  // The window ran out and the restart time has passed: treat them like a new visitor.
+  if (restartMs && Date.now() >= start + windowMs + restartMs) return null;
+  return start;
 }
 
-/** Starts this visitor's bonus window if it hasn't started yet. Only callable from route handlers. */
-export async function ensureVisitorStart(productId: string) {
-  const existing = await readVisitorStart(productId);
+/** Starts this visitor's bonus window if it hasn't started yet (or is due to restart). Only callable from route handlers. */
+export async function ensureVisitorStart(product: Product) {
+  const existing = await readVisitorStart(product);
   if (existing) return existing;
+  const id = String(product.id);
   const start = Date.now();
+  const { windowMs, restartMs } = bonusTiming(product);
+  // Keep the cookie at least until the next restart, so a long restart period is still honoured.
+  const maxAgeMs = Math.max(COOKIE_DAYS * 86_400_000, windowMs + (restartMs ?? 0) + 86_400_000);
   const jar = await cookies();
-  jar.set(cookieName(productId), `${start}.${sign(productId, start)}`, {
+  jar.set(cookieName(id), `${start}.${sign(id, start)}`, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: COOKIE_DAYS * 86_400,
+    maxAge: Math.round(maxAgeMs / 1000),
   });
   return start;
 }

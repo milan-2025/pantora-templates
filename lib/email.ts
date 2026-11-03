@@ -1,5 +1,6 @@
 import "server-only";
 import { brevoSender, sendWithBrevo } from "@/lib/brevo";
+import { downloadPath, type ExtraItem } from "@/lib/deliverables";
 
 const siteUrl = () => process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
@@ -32,16 +33,29 @@ export async function sendDeliveryEmail(order: {
   productName: string;
   hasFile: boolean;
   googleSheetsCopyUrl?: string | null;
+  /** The product's "More files & links". */
+  extras?: ExtraItem[];
   supportWhatsapp?: string | null;
   /** Quick-order bonus earned with this order, if any. */
   bonus?: { title: string; hasFile: boolean; link?: string | null } | null;
   /** Upsell products bought with this order. */
-  addOns?: { id: string; name: string; hasFile: boolean; googleSheetsCopyUrl?: string | null }[];
+  addOns?: { id: string; name: string; hasFile: boolean; googleSheetsCopyUrl?: string | null; extras?: ExtraItem[] }[];
 }) {
   const first = escapeHtml(order.customerName.split(" ")[0]);
+  // Each extra file goes through the paid-order check like the main download; links open directly.
+  const extraButtons = (extras: ExtraItem[] | undefined, addonId?: string) =>
+    (extras ?? [])
+      .flatMap((x) => [
+        x.hasFile
+          ? btn(`${siteUrl()}${downloadPath(order.orderId, { addonId, extraId: x.id })}`, `Download ${escapeHtml(x.label)}`, "#1F7A74", "#FBF5EA")
+          : "",
+        x.link ? btn(escapeHtml(x.link), x.hasFile ? `Open ${escapeHtml(x.label)}` : escapeHtml(x.label), "#F2A93B") : "",
+      ])
+      .filter(Boolean);
   const buttons = [
     order.hasFile ? btn(`${siteUrl()}/api/download/${encodeURIComponent(order.orderId)}`, "Download your file", "#1F7A74", "#FBF5EA") : "",
     order.googleSheetsCopyUrl ? btn(order.googleSheetsCopyUrl, "Copy to Google Sheets", "#F2A93B") : "",
+    ...extraButtons(order.extras),
   ]
     .filter(Boolean)
     .join("<br/>");
@@ -59,6 +73,7 @@ export async function sendDeliveryEmail(order: {
         <p style="margin:0 0 8px;font-weight:700;color:#3B1F4A">➕ ${escapeHtml(a.name)}</p>
         ${a.hasFile ? btn(`${siteUrl()}/api/download/${encodeURIComponent(order.orderId)}?item=addon-${encodeURIComponent(a.id)}`, `Download ${escapeHtml(a.name)}`, "#1F7A74", "#FBF5EA") : ""}
         ${a.googleSheetsCopyUrl ? `<br/>${btn(a.googleSheetsCopyUrl, "Copy to Google Sheets", "#F2A93B")}` : ""}
+        ${extraButtons(a.extras, a.id).map((b) => `<br/>${b}`).join("")}
       </div>`,
     )
     .join("");

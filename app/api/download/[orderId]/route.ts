@@ -21,19 +21,25 @@ export async function GET(req: Request, { params }: { params: Promise<{ orderId:
 
   // ?item=bonus → the quick-order bonus (only for orders that earned it)
   // ?item=addon-<productId> → an upsell product bought with this order
-  const item = new URL(req.url).searchParams.get("item") ?? "";
-  const product = order.product as Product | undefined;
+  // &file=<rowId> → one of that product's "More files & links" instead of its main download file
+  const sp = new URL(req.url).searchParams;
+  const item = sp.get("item") ?? "";
+  const extraId = sp.get("file");
+  let product = order.product as Product | undefined;
   let file: ProductFile | undefined;
   if (item === "bonus") {
     if (!order.bonusIncluded) return NextResponse.json({ error: "This order doesn't include the bonus." }, { status: 403 });
     file = product?.bonus?.file as ProductFile | undefined;
-  } else if (item.startsWith("addon-")) {
-    const addonId = item.slice("addon-".length);
-    const line = (order.addOns ?? []).find((a) => a.product && String(typeof a.product === "object" ? a.product.id : a.product) === addonId);
-    if (!line) return NextResponse.json({ error: "This order doesn't include that add-on." }, { status: 403 });
-    file = (typeof line.product === "object" ? line.product?.downloadFile : undefined) as ProductFile | undefined;
   } else {
-    file = product?.downloadFile as ProductFile | undefined;
+    if (item.startsWith("addon-")) {
+      const addonId = item.slice("addon-".length);
+      const line = (order.addOns ?? []).find((a) => a.product && String(typeof a.product === "object" ? a.product.id : a.product) === addonId);
+      if (!line) return NextResponse.json({ error: "This order doesn't include that add-on." }, { status: 403 });
+      product = typeof line.product === "object" ? (line.product as Product) : undefined;
+    }
+    file = (
+      extraId ? product?.extraFiles?.find((row) => row.id === extraId)?.file : product?.downloadFile
+    ) as ProductFile | undefined;
   }
   if (!file?.filename || !file.url) {
     return NextResponse.json(

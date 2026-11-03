@@ -10,7 +10,7 @@ import { formatINR } from "@/lib/format";
 
 export function FinalCTA({ product, offer }: LandingProps) {
   const cta = product.finalCta ?? {};
-  const { price } = useCurrentPrice(offer);
+  const { price, pending } = useCurrentPrice(offer);
   if (!cta.heading) return null;
 
   return (
@@ -38,7 +38,8 @@ export function FinalCTA({ product, offer }: LandingProps) {
         </h2>
         {cta.text && <p className="mx-auto mt-5 max-w-lg text-lg text-charcoal/75">{cta.text}</p>}
         <ButtonLink href={checkoutHref(product)} size="lg" className="mt-8">
-          {cta.buttonLabel || "Get it now"} · {formatINR(price)}
+          {cta.buttonLabel || "Get it now"} ·{" "}
+          <span className={`transition-opacity ${pending ? "opacity-0" : ""}`}>{formatINR(price)}</span>
         </ButtonLink>
       </motion.div>
     </section>
