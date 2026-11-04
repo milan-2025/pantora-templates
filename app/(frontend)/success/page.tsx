@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getPayloadClient, getSettings } from "@/lib/cms/queries";
 import { whatsappLink } from "@/lib/format";
 import type { Product } from "@/payload-types";
-import { extraItems } from "@/lib/deliverables";
+import { deliveryNote, extraItems } from "@/lib/deliverables";
 import { TrackEvent } from "@/components/TrackEvent";
 import { SuccessContent } from "./SuccessContent";
 
@@ -35,6 +35,7 @@ export default async function SuccessPage({ searchParams }: Args) {
         hasFile={Boolean(product?.downloadFile)}
         googleSheetsCopyUrl={product?.googleSheetsCopyUrl ?? null}
         extras={extraItems(product)}
+        note={deliveryNote(product, order?.customerName.trim().split(/\s+/)[0] ?? "")}
         addOns={(order?.addOns ?? [])
           .filter((a) => a.product && typeof a.product === "object")
           .map((a) => {

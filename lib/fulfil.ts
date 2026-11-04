@@ -4,7 +4,7 @@ import { getSettings } from "@/lib/cms/queries";
 import { sendDeliveryEmail } from "@/lib/email";
 import { whatsappLink } from "@/lib/format";
 import type { Product } from "@/payload-types";
-import { extraItems } from "@/lib/deliverables";
+import { deliveryNote, extraItems } from "@/lib/deliverables";
 
 /**
  * Marks an order paid and emails the buyer their files.
@@ -43,6 +43,7 @@ export async function markOrderPaid(payload: Payload, orderId: string, paymentId
     hasFile: Boolean(product.downloadFile),
     googleSheetsCopyUrl: product.googleSheetsCopyUrl,
     extras: extraItems(product),
+    note: deliveryNote(product, order.customerName.trim().split(/\s+/)[0] ?? ""),
     supportWhatsapp: whatsappLink(settings.whatsappNumber, settings.whatsappMessage),
     bonus:
       order.bonusIncluded && product.bonus?.title

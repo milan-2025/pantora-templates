@@ -23,3 +23,16 @@ export function downloadPath(orderId: string, opts: { addonId?: string; extraId?
   const qs = q.toString();
   return `/api/download/${encodeURIComponent(orderId)}${qs ? `?${qs}` : ""}`;
 }
+
+/** The product's delivery message ({name} → buyer's first name) and how-to links, if any. */
+export type DeliveryNote = { message: string | null; links: { label: string; url: string; video: boolean }[] };
+
+export function deliveryNote(product: Product | null | undefined, firstName: string): DeliveryNote | null {
+  const d = product?.delivery;
+  const message = d?.message?.trim() ? d.message.trim().replace(/\{name\}/g, firstName || "there") : null;
+  const links = (d?.helpLinks ?? [])
+    .map((l) => ({ label: l.label?.trim() ?? "", url: l.url?.trim() ?? "" }))
+    .filter((l) => l.label && /^https?:\/\//i.test(l.url))
+    .map((l) => ({ ...l, video: /(youtube\.com|youtu\.be|vimeo\.com)/i.test(l.url) }));
+  return message || links.length ? { message, links } : null;
+}

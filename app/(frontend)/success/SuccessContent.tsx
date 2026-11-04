@@ -4,10 +4,10 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import confetti from "canvas-confetti";
-import { Download, ExternalLink, FileSpreadsheet, Gift, Mail, MessageCircle, Plus } from "lucide-react";
+import { Download, ExternalLink, FileSpreadsheet, Lightbulb, PlayCircle, Gift, Mail, MessageCircle, Plus } from "lucide-react";
 import { buttonClasses } from "@/components/ui/Button";
 import { LogoMark } from "@/components/Logo";
-import { downloadPath, type ExtraItem } from "@/lib/deliverables";
+import { downloadPath, type DeliveryNote, type ExtraItem } from "@/lib/deliverables";
 
 type Props = {
   paid: boolean;
@@ -19,6 +19,7 @@ type Props = {
   hasFile: boolean;
   googleSheetsCopyUrl: string | null;
   extras: ExtraItem[];
+  note: DeliveryNote | null;
   whatsappHref: string | null;
   bonus: { title: string; hasFile: boolean; link: string | null } | null;
   addOns: { id: string; name: string; hasFile: boolean; googleSheetsCopyUrl: string | null; extras: ExtraItem[] }[];
@@ -115,6 +116,26 @@ export function SuccessContent(p: Props) {
         )}
         <ExtraButtons orderId={p.orderId} extras={p.extras} size="lg" />
       </div>
+
+      {p.note && (
+        <div className="mt-6 rounded-2xl bg-mint p-5 text-left">
+          <p className="flex items-center gap-2 font-semibold text-plum">
+            <Lightbulb className="size-5 text-teal" /> Getting started
+          </p>
+          {p.note.message && <p className="mt-2 whitespace-pre-line text-charcoal">{p.note.message}</p>}
+          {p.note.links.length > 0 && (
+            <ul className="mt-3 space-y-2">
+              {p.note.links.map((l, i) => (
+                <li key={i}>
+                  <a href={l.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 font-semibold text-teal hover:underline">
+                    {l.video ? <PlayCircle className="size-4 shrink-0" /> : <ExternalLink className="size-4 shrink-0" />} {l.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       {p.addOns.length > 0 && (
         <div className="mt-6 space-y-3 text-left">

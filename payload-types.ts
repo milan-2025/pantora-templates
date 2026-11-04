@@ -198,6 +198,22 @@ export interface Product {
         id?: string | null;
       }[]
     | null;
+  delivery?: {
+    /**
+     * Optional. Shown in the email and on the thank-you page, under the download buttons. Use {name} for the buyer's first name. Line breaks are kept.
+     */
+    message?: string | null;
+    /**
+     * e.g. a YouTube video or playlist on how to use the planner, an FAQ page, a Notion guide.
+     */
+    helpLinks?:
+      | {
+          label: string;
+          url: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
   offer?: {
     enabled?: boolean | null;
     /**
@@ -1108,6 +1124,18 @@ export interface ProductsSelect<T extends boolean = true> {
         file?: T;
         link?: T;
         id?: T;
+      };
+  delivery?:
+    | T
+    | {
+        message?: T;
+        helpLinks?:
+          | T
+          | {
+              label?: T;
+              url?: T;
+              id?: T;
+            };
       };
   offer?:
     | T

@@ -1,6 +1,6 @@
 import "server-only";
 import { brevoSender, sendWithBrevo } from "@/lib/brevo";
-import { downloadPath, type ExtraItem } from "@/lib/deliverables";
+import { downloadPath, type DeliveryNote, type ExtraItem } from "@/lib/deliverables";
 
 const siteUrl = () => process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
@@ -35,6 +35,8 @@ export async function sendDeliveryEmail(order: {
   googleSheetsCopyUrl?: string | null;
   /** The product's "More files & links". */
   extras?: ExtraItem[];
+  /** The product's delivery message and how-to links (e.g. YouTube tutorials). */
+  note?: DeliveryNote | null;
   supportWhatsapp?: string | null;
   /** Quick-order bonus earned with this order, if any. */
   bonus?: { title: string; hasFile: boolean; link?: string | null } | null;
@@ -59,6 +61,19 @@ export async function sendDeliveryEmail(order: {
   ]
     .filter(Boolean)
     .join("<br/>");
+  const note = order.note;
+  const noteHtml = note
+    ? `<div style="margin:22px 0 0;padding:16px;border-radius:16px;background:#E3F1EE">
+        <p style="margin:0 0 8px;font-weight:700;color:#3B1F4A">💡 Getting started</p>
+        ${note.message ? `<p style="margin:0 0 10px;font-size:15px;line-height:1.6">${escapeHtml(note.message).replace(/\r?\n/g, "<br/>")}</p>` : ""}
+        ${note.links
+          .map(
+            (l) =>
+              `<p style="margin:6px 0;font-size:15px">${l.video ? "▶️" : "🔗"} <a href="${escapeHtml(l.url)}" style="color:#1F7A74;font-weight:700">${escapeHtml(l.label)}</a></p>`,
+          )
+          .join("")}
+      </div>`
+    : "";
   const bonus = order.bonus;
   const bonusHtml = bonus
     ? `<div style="margin:22px 0 0;padding:16px;border-radius:16px;background:#FBE9C8">
@@ -83,6 +98,7 @@ export async function sendDeliveryEmail(order: {
       <h1 style="margin:0 0 8px;font-size:30px;color:#3B1F4A;font-family:'DM Serif Display',Georgia,serif;font-weight:400">Everything&#39;s ready, ${first}.</h1>
       <p style="font-size:16px;line-height:1.5;margin:0 0 20px">Your <b>${escapeHtml(order.productName)}</b> is ready to use. Here are your links:</p>
       ${buttons}
+      ${noteHtml}
       ${addOnsHtml}
       ${bonusHtml}
       <p style="font-size:14px;line-height:1.5;margin:24px 0 0">

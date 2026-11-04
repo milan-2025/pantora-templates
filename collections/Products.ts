@@ -150,6 +150,63 @@ export const Products: CollectionConfig = {
           ],
         },
         {
+          label: "After purchase",
+          description: "A message and how-to links buyers get in their delivery email and on the thank-you page.",
+          fields: [
+            {
+              name: "delivery",
+              type: "group",
+              label: "Delivery message",
+              fields: [
+                {
+                  name: "message",
+                  type: "textarea",
+                  admin: {
+                    rows: 6,
+                    placeholder:
+                      "Hi {name}! Start with the Budget tab and fill in your total budget. Everything else updates on its own.\n\nWatch the video below for a 5-minute tour.",
+                    description:
+                      "Optional. Shown in the email and on the thank-you page, under the download buttons. Use {name} for the buyer's first name. Line breaks are kept.",
+                  },
+                },
+                {
+                  name: "helpLinks",
+                  type: "array",
+                  label: "How-to links",
+                  labels: { singular: "Link", plural: "How-to links" },
+                  admin: {
+                    description: "e.g. a YouTube video or playlist on how to use the planner, an FAQ page, a Notion guide.",
+                    initCollapsed: true,
+                    components: { RowLabel: "@/components/admin/ExtraFileRowLabel#ExtraFileRowLabel" },
+                  },
+                  fields: [
+                    {
+                      type: "row",
+                      fields: [
+                        {
+                          name: "label",
+                          type: "text",
+                          required: true,
+                          admin: { width: "50%", placeholder: "Watch: how to use the planner" },
+                        },
+                        {
+                          name: "url",
+                          type: "text",
+                          required: true,
+                          admin: { width: "50%", placeholder: "https://youtube.com/…" },
+                          validate: ((value) =>
+                            (typeof value === "string" && /^https?:\/\/\S+$/i.test(value.trim())) ||
+                            "Enter a full link starting with https://") satisfies TextFieldSingleValidation,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        {
           label: "Offer",
           description: "An optional lower price, plus an optional free bonus for quick buyers. The price never changes per visitor.",
           fields: [
