@@ -21,6 +21,7 @@ import { TrackEvent } from "@/components/TrackEvent";
 import { LiveDataProvider } from "./LiveData";
 import { RecentPurchases } from "./OfferWidgets";
 import { RefCapture } from "./RefCapture";
+import { referralMaxAgeMs } from "@/lib/referral";
 import { checkoutHref } from "./types";
 
 /** The animated sales page for one product, e.g. /wedding_planner. All content comes from the admin. */
@@ -38,7 +39,7 @@ export async function ProductLanding({ product, settings }: { product: Product; 
 
   return (
     <LiveDataProvider slug={product.slug} initial={live}>
-      <RefCapture />
+      <RefCapture maxAgeSeconds={Math.round(referralMaxAgeMs(settings) / 1000)} />
       <TrackEvent event="ViewContent" value={offer.price} name={product.name} />
       <Nav links={links} cta={{ label: "Buy now", url: checkoutHref(product) }} />
       <main>

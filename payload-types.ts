@@ -1717,6 +1717,16 @@ export interface SiteSetting {
       }[]
     | null;
   /**
+   * When someone opens an affiliate's link, their code is remembered so they still get the referral price (and the affiliate still earns) if they come back later without the ?ref= part. After this time it's forgotten and they see the normal price. Clicking a referral link again starts the time over.
+   */
+  referral?: {
+    /**
+     * e.g. 30 minutes for a single visit, 1 day, 7 days
+     */
+    rememberFor?: number | null;
+    rememberUnit?: ('minutes' | 'hours' | 'days') | null;
+  };
+  /**
    * Meta (Instagram/Facebook) Pixel ID for ad tracking
    */
   metaPixelId?: string | null;
@@ -1753,6 +1763,12 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         label?: T;
         url?: T;
         id?: T;
+      };
+  referral?:
+    | T
+    | {
+        rememberFor?: T;
+        rememberUnit?: T;
       };
   metaPixelId?: T;
   updatedAt?: T;

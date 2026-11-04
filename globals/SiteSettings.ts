@@ -58,6 +58,49 @@ export const SiteSettings: GlobalConfig = {
           ],
         },
         {
+          label: "Referrals",
+          fields: [
+            {
+              name: "referral",
+              type: "group",
+              label: "Referral links (?ref=CODE)",
+              admin: {
+                description:
+                  "When someone opens an affiliate's link, their code is remembered so they still get the referral price " +
+                  "(and the affiliate still earns) if they come back later without the ?ref= part. After this time it's forgotten " +
+                  "and they see the normal price. Clicking a referral link again starts the time over.",
+              },
+              fields: [
+                {
+                  type: "row",
+                  fields: [
+                    {
+                      name: "rememberFor",
+                      type: "number",
+                      min: 1,
+                      defaultValue: 1,
+                      label: "Remember referral code for",
+                      admin: { width: "50%", description: "e.g. 30 minutes for a single visit, 1 day, 7 days" },
+                    },
+                    {
+                      name: "rememberUnit",
+                      type: "select",
+                      defaultValue: "days",
+                      label: "Unit",
+                      options: [
+                        { label: "Minutes", value: "minutes" },
+                        { label: "Hours", value: "hours" },
+                        { label: "Days", value: "days" },
+                      ],
+                      admin: { width: "50%" },
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        {
           label: "Tracking",
           fields: [
             {

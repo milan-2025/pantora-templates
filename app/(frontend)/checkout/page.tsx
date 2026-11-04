@@ -10,7 +10,8 @@ import { Logo } from "@/components/Logo";
 import { MediaSlot } from "@/components/ui/MediaSlot";
 import { loadCheckoutProduct } from "@/lib/checkout";
 import { getQuote } from "@/lib/pricing";
-import { REF_COOKIE } from "@/lib/referral";
+import { REF_COOKIE, readRefCookie, referralMaxAgeMs } from "@/lib/referral";
+import { getSettings } from "@/lib/cms/queries";
 import { getPaymentProvider } from "@/lib/payments";
 import { readVisitorStart } from "@/lib/offerWindow";
 import { sheetPreview } from "@/lib/sheetPreview";
@@ -36,8 +37,9 @@ export default async function CheckoutPage({ searchParams }: Args) {
   if (!loaded) notFound();
   const { payload, product } = loaded;
 
-  // An affiliate's ?ref=CODE link is remembered in a cookie; apply it straight away.
-  const refCode = (await cookies()).get(REF_COOKIE)?.value ?? "";
+  // An affiliate's ?ref=CODE link is remembered in a cookie (for the time set in Site settings); apply it straight away.
+  const settings = await getSettings();
+  const refCode = readRefCookie((await cookies()).get(REF_COOKIE)?.value, referralMaxAgeMs(settings)) ?? "";
   const q = await getQuote(payload, product, refCode || null, { visitorStart: await readVisitorStart(product) });
   const initialQuote = {
     regularPrice: q.offer.regularPrice,

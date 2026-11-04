@@ -22,7 +22,7 @@ Log in at **pandoratemplates.com/admin**. Every change is live a few seconds aft
 | Write a blog post | **Content → Blog posts → Create new** (it appears at `/blog/<slug>`) |
 | Upload images or videos | **Content → Images & videos**, or straight from any image field |
 | Show a sales counter | Product → **Offer** tab → **Sales counter**: tick "Show the sales counter". It counts real paid orders on the website (refunds excluded); add genuine earlier sales (WhatsApp/Instagram) under "Real sales made before this website". It stays hidden until it reaches the minimum you set. |
-| Add an affiliate | **Shop → Affiliates → Create new**: name, code, customer discount %, commission %. Share `pandoratemplates.com/wedding_planner?ref=CODE`; visitors from that link see the discounted price on the product page, and the code is applied automatically at checkout. |
+| Add an affiliate | **Shop → Affiliates → Create new**: name, code, customer discount %, commission %. Share `pandoratemplates.com/wedding_planner?ref=CODE`; visitors from that link see the discounted price on the product page, and the code is applied automatically at checkout. The code is remembered for 1 day by default; change it under **Settings → Site settings → Referrals**. |
 | See what you owe affiliates | **💰 Affiliate earnings** in the menu. Pay them, then click **Mark as paid**. |
 | See orders | **Shop → Orders** |
 | Read contact-form messages | **Inbox → Contact messages** (also emailed to you) |

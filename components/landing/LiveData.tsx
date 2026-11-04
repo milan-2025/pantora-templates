@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useSyncExternalStore } from "react";
-import { REF_COOKIE } from "@/lib/referral";
+import { REF_COOKIE, isValidRefCode } from "@/lib/referral";
 
 export type RecentPurchase = { firstName: string; city: string; at: string };
 export type LiveData = {
@@ -25,7 +25,7 @@ const Ctx = createContext<LiveData | null>(null);
 const PendingCtx = createContext(false);
 
 const noSubscribe = () => () => {};
-const validRef = (v: string | null | undefined) => (v && /^[A-Za-z0-9_-]{3,30}$/.test(v) ? v : null);
+const validRef = (v: string | null | undefined) => (isValidRefCode(v) ? v : null);
 /** Whether this visitor has a referral code (in the link or remembered from an earlier visit). */
 const readHasRef = () =>
   Boolean(validRef(new URLSearchParams(window.location.search).get("ref"))) ||
