@@ -9,7 +9,7 @@ export const publishedOrAuthenticated: Access = ({ req }) =>
   req.user ? true : { _status: { equals: "published" } };
 
 // URL segments that belong to the app itself and can't be used as page slugs.
-const RESERVED = new Set(["admin", "api", "blog", "checkout", "success", "_next", "media", "product-files"]);
+const RESERVED = new Set(["admin", "api", "blog", "checkout", "success", "shaadi", "i", "_next", "media", "product-files"]);
 
 /** Products and Pages share the top-level URL space (/<slug>), so a slug must be unique across both. */
 export const validateSlug: Validate<string> = async (value, { req, id, collectionSlug }) => {
