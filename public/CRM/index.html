@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><base href="/CRM/"><meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LeadFlow CRM</title><link rel="manifest" href="manifest.json"><meta name="theme-color" content="#2563eb"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<style>
+:root{--bg:#f3f5f8;--card:#fff;--tx:#1b1f24;--mut:#6b7280;--bd:#e3e6ea;--ac:#2563eb;--ok:#16a34a;--bad:#dc2626;--warn:#d97706;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1318;--card:#1a1f26;--tx:#e8eaed;--mut:#98a2b3;--bd:#2b323b;--ac:#6ea0ff;--ok:#4ade80;--bad:#f87171;--warn:#fbbf24}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:12px}
+header{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px}h1{font-size:19px;margin:0}
+button,select,input,textarea{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:9px 12px;min-height:40px}
+button,.btn{cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:9px 13px;min-height:40px;font-weight:500}
+.btn.p,button.p{background:var(--ac);color:#fff;border-color:var(--ac)}.btn.wa{background:#16a34a;color:#fff;border-color:#16a34a}.btn.call{background:#2563eb;color:#fff;border-color:#2563eb}
+.btn.dg{color:var(--bad);border-color:var(--bad)}.btn.sm{padding:6px 10px;min-height:34px;font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px}
+.st{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:9px 12px;border-top:3px solid var(--c,var(--bd))}
+.st b{display:block;font-size:22px}.st span{color:var(--mut);font-size:12px}
+.tabs{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;position:sticky;top:0;background:var(--bg);padding:4px 0;z-index:5}
+.tabs button{white-space:nowrap}.tabs button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.bd{background:var(--bad);color:#fff;border-radius:99px;padding:0 7px;font-size:12px;margin-left:5px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}.bar input{flex:1 1 150px;min-width:120px}
+.dd{position:relative}.pnl{position:absolute;z-index:15;top:44px;left:0;width:min(300px,86vw);max-height:300px;overflow:auto;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:8px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.ck{display:flex;gap:8px;align-items:center;padding:7px 4px;cursor:pointer}.ck input{width:18px;height:18px;min-height:0;flex:none}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:8px}
+.lead{background:var(--card);border:1px solid var(--bd);border-left:5px solid var(--c,var(--bd));border-radius:12px;padding:10px 12px;cursor:pointer}
+.lt{display:flex;justify-content:space-between;gap:8px;align-items:center}.lm{display:flex;flex-wrap:wrap;gap:4px 12px;margin:6px 0;font-size:13px}.lm i{font-style:normal;color:var(--mut)}
+.lb{display:flex;gap:6px}.lb .btn{flex:1}
+.chip{display:inline-block;padding:1px 9px;border-radius:99px;font-size:12px;font-weight:600;color:var(--c);background:color-mix(in srgb,var(--c) 16%,transparent);white-space:nowrap}
+.sec{font-weight:700;margin:14px 2px 6px;display:flex;align-items:center;gap:8px}.sec:first-child{margin-top:0}
+.board{display:flex;gap:8px;overflow-x:auto;align-items:flex-start}.col{min-width:220px;flex:1;background:var(--card);border:1px solid var(--bd);border-top:4px solid var(--c);border-radius:12px;padding:8px}
+.col h3{margin:2px 4px 8px;font-size:13px}.col .lead{margin-bottom:6px;background:var(--bg)}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--bd)}th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--bd);white-space:nowrap}th{font-size:12px;color:var(--mut)}.sc{overflow-x:auto}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:center;z-index:30}.ov.open{display:flex}
+.md{background:var(--card);width:100%;max-width:580px;max-height:92vh;overflow:auto;border-radius:16px 16px 0 0;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+@media(min-width:700px){.ov{align-items:center}.md{border-radius:16px}}
+.md label.l{display:block;font-size:12px;color:var(--mut);margin:9px 0 3px}.md input:not([type=checkbox]),.md select,.md textarea{width:100%}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.acts{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.acts .btn{flex:1 1 auto}
+.q{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px;margin:6px 0}
+.tl div{border-left:2px solid var(--bd);padding:2px 0 8px 10px;font-size:13px}.mut,.tl small{color:var(--mut)}.od{color:var(--bad);font-weight:600}.msg{padding:30px;text-align:center;color:var(--mut)}
+.menu .btn{width:100%;margin-bottom:8px;justify-content:flex-start}
+.nts{font-size:13px;margin:4px 0 8px;display:grid;gap:3px}.nts div{background:color-mix(in srgb,var(--warn) 14%,transparent);border-radius:8px;padding:4px 8px}.nts small{color:var(--mut)}
+.lead.sel{outline:2px solid var(--ac);background:color-mix(in srgb,var(--ac) 9%,var(--card))}.cb{font-size:18px;margin-right:6px}
+.bulk{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--card);border-top:1px solid var(--bd);padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));display:flex;flex-wrap:wrap;gap:6px;align-items:center;box-shadow:0 -6px 20px rgba(0,0,0,.18)}
+.bulk select,.bulk input{flex:1 1 120px;min-width:0}body.selmode .wrap{padding-bottom:170px}
+.dt{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;background:var(--bg);border-radius:10px;padding:8px 10px;margin:8px 0;font-size:13px}.dt small{color:var(--mut);display:block}
+</style></head><body>
+<div class="wrap"><header><h1>LeadFlow CRM</h1><div style="display:flex;gap:6px"><button class="p" data-act="add">+ Add lead</button><button data-act="menu">☰ Menu</button></div></header><div id="app"><div class="msg">Loading…</div></div></div><div id="bulk"></div>
+<input type="file" id="file" accept=".csv,.tsv,.txt" hidden>
+<div class="ov" id="ov"><div class="md" id="md"></div></div>
+<script src="shim.js"></script>
+<script>
+const ST={New:"#2563eb",Contacted:"#7c3aed",Qualified:"#0d9488",Proposal:"#ea580c",Won:"#16a34a",Lost:"#6b7280"},STAGES=Object.keys(ST);
+const BASE=[["phone","Phone"],["email","Email"],["campaign","Campaign / event"],["adset","Ad set"],["ad","Ad"],["source","Source"],["owner","Owner"],["follow","Follow-up"],["created","Received"]];
+const DEF=[{t:"First message",m:"Hi {name}, thanks for your interest! When is a good time to talk?"},{t:"Follow-up",m:"Hi {name}, just following up on your enquiry. Any questions I can help with?"},{t:"Send details",m:"Hi {name}, here are the details we discussed. Let me know what you think!"}];
+const LS={g:(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},s:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let imps=[],rules=null,vws=LS.g("views",[]),me={name:"",role:"agent"},labels={},showTeam=LS.g("showteam",false),fp="",pend=false,selMode=false,sel=new Set(),lastVis=[],showN=LS.g("shownotes",true),db,leads=[],team=[],tpls=null,tab="today",q="",fs="",fo="",fc=new Set(),fsr=new Set(),dd="",imp=null,cols=LS.g("cols",["phone","campaign","owner","follow","created"]);
+const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ld=d=>new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10),td=()=>ld(new Date()),addD=n=>ld(new Date(Date.now()+n*864e5));
+const digits=p=>String(p||"").replace(/\D/g,"").slice(-10),fmt=t=>new Date(t).toLocaleString([],{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+const wa=p=>{let d=String(p||"").replace(/\D/g,"");if(d.length===10)d="91"+d;return"https://wa.me/"+d};
+const ck=l=>l.campaign||l.source||"Unknown",tl=()=>tpls&&tpls.list&&tpls.list.length?tpls.list:DEF,open_=h=>{$("#md").innerHTML=h;$("#ov").classList.add("open")},close=()=>$("#ov").classList.remove("open");
+const chip=(t,c)=>`<span class="chip" style="--c:${c}">${esc(t)}</span>`,done=l=>l.status==="Won"||l.status==="Lost";
+const nowT=()=>{const d=new Date();return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")},fst=l=>!l.follow||done(l)?0:l.follow<td()?2:l.follow===td()?(l.ftime&&l.ftime<nowT()?2:1):0;
+const tkd=l=>(l.tasks||[]).some(k=>!k.done&&k.due&&k.due<=td()),apt=l=>(l.appts||[]).some(a=>!a.done&&a.at.slice(0,10)===td()),pnd=l=>fst(l)>0||(l.status==="New"&&!l.follow)||tkd(l)||apt(l);
+const dur=ms=>{const m=Math.round(ms/6e4);return m<60?m+"m":m<1440?Math.round(m/60)+"h":Math.round(m/1440)+"d"},ft=l=>l.firstAt?{}:{firstAt:Date.now(),firstBy:me.name};
+const PR={Hot:["#dc2626","🔥"],Warm:["#d97706","🌤️"],Cold:["#0ea5e9","❄️"]},pri=l=>({Hot:0,Warm:1,Cold:3})[l.prio]??2,sysx=k=>/^(id|ad_id|adset_id|campaign_id|form_id|page_id)$/i.test(k);
+const wait=l=>l.status==="New"&&!l.firstAt?(ms=>chip("⏱ waiting "+dur(ms),ms<18e5?"#16a34a":ms<72e5?"#d97706":"#dc2626"))(Date.now()-(l.created||Date.now())):"";
+const pr=l=>(l.prio&&PR[l.prio]?chip(PR[l.prio][1]+" "+l.prio,PR[l.prio][0]):"")+(l.tags||[]).map(t=>chip("#"+t,"#64748b")).join("")+nextA(l)+taskC(l);
+const extras=()=>[...new Set(leads.flatMap(l=>Object.keys(l.extra||{})))].filter(k=>!/^(id|ad_id|adset_id|campaign_id|form_id|page_id)$/i.test(k));
+const fv=(l,k)=>{if(k==="follow"){const s=fst(l);return l.follow?chip((s===2?"Overdue ":"")+(l.follow===td()?"Today":l.follow)+(l.ftime?" "+l.ftime:""),s===2?"#dc2626":s===1?"#d97706":"#16a34a"):""}
+ if(k==="created")return esc(fmt(l.created));if(k.startsWith("x:"))return esc((l.extra||{})[k.slice(2)]);return esc(l[k])};
+const dflt=k=>k.startsWith("x:")?k.slice(2):(BASE.find(b=>b[0]===k)||[,k])[1],lbl=k=>labels[k]||dflt(k);
+
+(async()=>{
+ try{const r=await fetch("api.php?r=me");if(r.status===401){location.href="login.html";return}me=await r.json();db=makeDb()}catch(e){}
+ if(!db){$("#app").innerHTML='<div class="msg">Could not reach the server.</div>';return}
+ db.collection("leads").onSnapshot(s=>{leads=s.docs.map(d=>({id:d.id,...d.data()}));leads.sort((a,b)=>(b.created||0)-(a.created||0));render();checkAlerts()},e=>{$("#app").innerHTML='<div class="msg">Could not load ('+esc(e.message)+')</div>'});
+ db.doc("settings/team").onSnapshot(s=>{team=(s.exists&&s.data().names)||[];render()},()=>{});
+ db.doc("settings/templates").onSnapshot(s=>{tpls=s.exists?s.data():null},()=>{});
+ db.doc("settings/rules").onSnapshot(s=>{rules=s.exists?s.data():null},()=>{});
+ db.doc("settings/imports").onSnapshot(s=>{imps=(s.exists&&s.data().list)||[]},()=>{});setInterval(checkAlerts,3e4);setInterval(render,6e4);
+ db.doc("settings/labels").onSnapshot(s=>{labels=s.exists?s.data():{};render()},()=>{});
+})();
+
+function card(l,full){
+ const m=full?cols.map(k=>{const v=fv(l,k);return v?`<span><i>${esc(lbl(k))}:</i> ${v}</span>`:""}).join(""):`<span>${esc(l.phone)}</span>`;
+ return `<div class="lead${sel.has(l.id)?" sel":""}" data-act="lead" data-id="${l.id}" style="--c:${ST[l.status]||"#999"}"><div class="lt"><b>${selMode?`<span class="cb">${sel.has(l.id)?"☑":"☐"}</span>`:""}${esc(l.name)||"(no name)"}</b>${chip(l.status,ST[l.status]||"#999")}</div><div class="lm">${full?wait(l)+pr(l):""}${m}</div>${full&&showN&&(l.notes||[]).length?`<div class="nts">${l.notes.slice(0,2).map(n=>`<div><small>${fmt(n.t)}${n.by?" · "+esc(n.by):""}</small> ${esc(String(n.x).slice(0,140))}</div>`).join("")}</div>`:""}${full&&l.phone?`<div class="lb"><a class="btn call sm" href="tel:${esc(l.phone)}">📞 Call</a><a class="btn wa sm" target="_blank" rel="noopener" href="${wa(l.phone)}">WhatsApp</a></div>`:""}</div>`;
+}
+function ddh(id,label,opts,set){
+ return `<div class="dd"><button data-act="dd" data-v="${id}">${label}: ${set.size?set.size+" selected":"All"} ▾</button>${dd===id?`<div class="pnl"><button class="btn sm" data-act="clr" data-v="${id}">Show all</button>${opts.map(([o,n])=>`<label class="ck"><input type="checkbox" data-ck="${id}" data-v="${esc(o)}" ${set.has(o)?"checked":""}><span>${esc(o)} <span class="mut">(${n})</span></span></label>`).join("")}</div>`:""}</div>`;
+}
+function render(){
+ if(!db)return;
+ const cnt=(f)=>{const m={};leads.forEach(l=>{const k=f(l);m[k]=(m[k]||0)+1});return Object.entries(m).sort((a,b)=>b[1]-a[1])};
+ const vis=leads.filter(l=>(!fc.size||fc.has(ck(l)))&&(!fsr.size||fsr.has(l.source||"Unknown"))&&(!fo||l.owner===fo)&&(!pend||pnd(l))&&(!fp||l.prio===fp)&&(tab!=="leads"||!fs||l.status===fs)&&(!q||JSON.stringify(l).toLowerCase().includes(q)));
+ lastVis=vis;const t=td(),due=vis.filter(l=>fst(l)>0),over=vis.filter(l=>fst(l)===2),today=vis.filter(l=>fst(l)===1),fresh=vis.filter(l=>l.status==="New"&&!l.follow);
+ document.title=(due.length?"("+due.length+") ":"")+"LeadFlow CRM";const S=[["Leads",vis.length,"#2563eb"],["Untouched",vis.filter(l=>l.status==="New").length,"#7c3aed"],["Overdue",over.length,"#dc2626"],["Due today",today.length,"#d97706"],["Won",vis.filter(l=>l.status==="Won").length,"#16a34a"]];
+ let h='<div class="stats">'+S.map(s=>`<div class="st" style="--c:${s[2]}"><b>${s[1]}</b><span>${s[0]}</span></div>`).join("")+"</div>";
+ h+='<div class="tabs">'+[["today","Today"],["leads","All leads"],["board","Pipeline"],["cal","Calendar"],["camp","Campaigns"],...(showTeam&&me.role==="admin"?[["team","Team"]]:[])].map(x=>`<button class="${tab===x[0]?"on":""}" data-act="tab" data-v="${x[0]}">${x[1]}${x[0]==="today"&&due.length?`<span class="bd">${due.length}</span>`:""}</button>`).join("")+"</div>";
+ h+=`<div class="bar"><input id="q" placeholder="Search…" value="${esc(q)}">${tab==="leads"?`<select id="fs"><option value="">All stages</option>${STAGES.map(s=>`<option ${fs===s?"selected":""}>${s}</option>`).join("")}</select>`:""}<select id="fo"><option value="">Everyone</option>${team.map(s=>`<option ${fo===s?"selected":""}>${esc(s)}</option>`).join("")}</select>${viewsH()}<select id="fp"><option value="">Any priority</option>${["Hot","Warm","Cold"].map(p=>`<option ${fp===p?"selected":""}>${p}</option>`).join("")}</select><button data-act="pd" class="${pend?"p":""}">⚡ Pending today <span class="bd" style="background:${pend?"#fff":"var(--bad)"};color:${pend?"var(--ac)":"#fff"}">${leads.filter(pnd).length}</span></button><button data-act="selm" class="${selMode?"p":""}">☑ Select</button><button data-act="tn">📝 Notes: ${showN?"On":"Off"}</button>${ddh("c","Campaign / event",cnt(ck),fc)}${ddh("s","Source",cnt(l=>l.source||"Unknown"),fsr)}</div>`;
+ if(tab==="today"){
+  const sec=(n,c,a)=>a.length?`<div class="sec" style="color:${c}">${n} (${a.length})</div><div class="grid">${a.slice().sort((x,y)=>pri(x)-pri(y)||(x.ftime||"99").localeCompare(y.ftime||"99")).map(l=>card(l,1)).join("")}</div>`:"";
+  h+=sec("Overdue follow-ups","#dc2626",over)+sec("Due today","#d97706",today)+sec("Appointments today","#7c3aed",vis.filter(apt))+sec("Tasks due","#0891b2",vis.filter(tkd))+sec("New leads, not contacted yet","#2563eb",fresh)||"";
+  if(!over.length&&!today.length&&!fresh.length&&!vis.some(apt)&&!vis.some(tkd))h+='<div class="msg">All caught up. Nothing due today 🎉</div>';
+ }else if(tab==="leads")h+=vis.length?`<div class="grid">${vis.map(l=>card(l,1)).join("")}</div>`:'<div class="msg">No leads match. Add one or import a CSV from the menu.</div>';
+ else if(tab==="board")h+='<div class="board">'+STAGES.map(s=>{const c=vis.filter(l=>l.status===s);return `<div class="col" style="--c:${ST[s]}"><h3>${s} · ${c.length}</h3>${c.map(l=>card(l,0)).join("")}</div>`}).join("")+"</div>";
+ else if(tab==="cal")h+=calH(vis);else if(tab==="team")h+=teamH(vis);else{const m={};vis.forEach(l=>{const k=ck(l),o=m[k]=m[k]||{n:0,q:0,w:0,l:0};o.n++;if(["Qualified","Proposal","Won"].includes(l.status))o.q++;if(l.status==="Won")o.w++;if(l.status==="Lost")o.l++});
+  h+=Object.keys(m).length?'<div class="sc"><table><tr><th>Campaign / event</th><th>Leads</th><th>Qualified</th><th>Won</th><th>Lost</th><th>Won %</th></tr>'+Object.entries(m).sort((a,b)=>b[1].n-a[1].n).map(([k,o])=>`<tr><td>${esc(k)}</td><td>${o.n}</td><td>${o.q}</td><td style="color:var(--ok)">${o.w}</td><td class="mut">${o.l}</td><td>${Math.round(o.w/o.n*100)}%</td></tr>`).join("")+"</table></div>":'<div class="msg">Nothing to show yet.</div>';}
+ const a=document.activeElement,fi=a&&a.id==="q",p=fi?a.selectionStart:0;$("#app").innerHTML=h;$("#bulk").innerHTML=selMode?bulkH():"";document.body.classList.toggle("selmode",selMode);if(fi){const e=$("#q");e.focus();try{e.setSelectionRange(p,p)}catch(x){}}
+}
+
+document.addEventListener("click",async e=>{
+ const T=e.target;if(dd&&!T.closest(".dd")){dd="";render()}
+ const a=T.closest("[data-act]");if(!a)return;if(a.dataset.act==="lead"&&T.closest("a"))return;
+ const v=a.dataset.v,act=a.dataset.act;
+ if(act==="tab"){tab=v;render()}else if(act==="dd"){dd=dd===v?"":v;render()}
+ else if(act==="clr"){(v==="c"?fc:fsr).clear();render()}
+ else if(act==="lead"){if(selMode){const i=a.dataset.id;sel.has(i)?sel.delete(i):sel.add(i);render()}else openLead(a.dataset.id)}else if(act==="add")openAdd();else if(act==="menu")openMenu();
+ else if(act==="close")close();else if(act==="save")saveLead(a.dataset.id);else if(act==="q")quick(a.dataset.id,v);
+ else if(act==="wa")sendWA(a.dataset.id,+v);
+ else if(act==="del"&&confirm("Delete this lead?")){await db.collection("leads").doc(a.dataset.id).delete();close()}
+ else if(act==="addsave")addSave();else if(act==="imp"){close();$("#file").click()}else if(act==="fields")openFields();
+ else if(act==="tpl")openTpl();else if(act==="team")openTeam();else if(act==="out"){await fetch("api.php?r=logout",{method:"POST"});location.href="login.html"}
+ else if(act==="svf"){cols=[...document.querySelectorAll("[data-col]:checked")].map(x=>x.dataset.col);LS.s("cols",cols);if(me.role==="admin"){const L={};document.querySelectorAll("[data-lab]").forEach(i=>{const k=i.dataset.lab,v=i.value.trim();if(v&&v!==dflt(k))L[k]=v});await db.doc("settings/labels").set(L)}close();render()}
+ else if(act==="svt"){const list=$("#tt").value.split("\n").map(x=>x.split("|")).filter(x=>x[1]&&x[1].trim()).map(x=>({t:x[0].trim(),m:x.slice(1).join("|").trim()}));await db.doc("settings/templates").set({list});close()}
+ else if(act==="svm"){await db.doc("settings/team").set({names:$("#tn").value.split(",").map(s=>s.trim()).filter(Boolean)});close()}
+ else if(act==="go"){imp.remap?runRemap():runImport()}
+ else if(act==="pd"){pend=!pend;render()}
+ else if(act==="users")openUsers();else if(act==="ue")editUser(+v);else if(act==="pw")openPw();
+ else if(act==="usv"){const i=+v,b={id:i>=0?window._u[i].id:"",name:$("#un").value,email:$("#ue2").value,role:$("#ur").value,password:$("#up").value},r=await ap("user_save",b);if(!r.ok){$("#er").textContent=r.j.error||"Error";return}openUsers()}
+ else if(act==="udl"){const x=window._u[+v];if(confirm("Delete user "+x.name+"? Their leads stay in the CRM.")){const r=await ap("user_delete",{id:x.id});if(!r.ok){$("#er").textContent=r.j.error;return}openUsers()}}
+ else if(act==="pwgo"){const r=await ap("password",{old:$("#po").value,new:$("#pn").value});if(!r.ok){$("#er").textContent=r.j.error||"Error";return}open_('<h3 style="margin:0">Password changed ✅</h3><div class="acts"><button class="p" data-act="close">Done</button></div>')}
+ else if(act==="exp")exportCsv();else if(act==="bak")dl("crm-backup-"+td()+".json",JSON.stringify({exported:new Date().toISOString(),leads,labels,templates:tpls},null,1),"application/json");
+ else if(act==="tm"){showTeam=!showTeam;LS.s("showteam",showTeam);if(!showTeam&&tab==="team")tab="today";close();render()}
+ 
+ else if(act==="sn")snooze(a.dataset.id,v);
+ else if(act==="vw"){const w=allViews()[+v];fc=new Set(w.fc||[]);fsr=new Set(w.fsr||[]);fo=w.fo||"";fp=w.fp||"";pend=!!w.pend;fs=w.fs||"";q="";tab=w.tab||"leads";dd="";render()}
+ else if(act==="vsave"){const n=prompt("Name this view:");if(n){vws.push({n,fc:[...fc],fsr:[...fsr],fo,fp,pend,fs,tab});LS.s("views",vws);dd="";render()}}
+ else if(act==="vdel"){vws.splice(+v,1);LS.s("views",vws);render()}
+ else if(act==="rules")openRules();
+ else if(act==="rsv"){const g=i=>Math.max(0,+$(i).value||0);await db.doc("settings/rules").set({noAns:g("#r1"),noAnsAct:$("#r2").value,dNoAns:g("#r3"),dCb:g("#r4"),dInt:g("#r5"),untouched:g("#r6")});close()}
+ else if(act==="dup")openDup();else if(act==="mg"){await mergeG(+v);setTimeout(openDup,1000)}
+ else if(act==="inst"){if(dip){dip.prompt();dip=null}else if(matchMedia("(display-mode: standalone)").matches)open_('<h3 style="margin:0">Already installed ✅</h3><div class="acts"><button class="p" data-act="close">Close</button></div>');else open_('<h3 style="margin:0 0 6px">Install on your home screen</h3><p><b>iPhone (Safari):</b> tap the Share button, then <b>Add to Home Screen</b>.<br><br><b>Android (Chrome):</b> tap the ⋮ menu, then <b>Install app</b> or <b>Add to Home screen</b>.<br><br><b>Computer (Chrome/Edge):</b> click the install icon in the address bar.</p><div class="acts"><button class="p" data-act="close">Got it</button></div>')}
+ else if(act==="hist")openHist();else if(act==="undo")undoImp(v);else if(act==="rm")openRemap(v);
+ else if(act==="nt"){if(notifOn){notifOn=false;LS.s("notif",false);close()}else if(typeof Notification==="undefined")alert("This browser doesn't support notifications.");else Notification.requestPermission().then(p=>{if(p==="granted"){notifOn=true;LS.s("notif",true);close();notify("Notifications on","You'll be alerted about new leads, follow-ups and appointments while the CRM is open.")}else alert("Notifications are blocked. Allow them in your browser or phone site settings, then try again.")})}
+ else if(act==="cd"){calD=v;render()}else if(act==="cm"){calM=new Date(calM.getFullYear(),calM.getMonth()+ +v,1);render()}
+ else if(act==="aadd"){const dt=$("#adt").value,ty=$("#at").value,nt=$("#an").value.trim();if(dt)lupd(a.dataset.id,l=>({appts:[...(l.appts||[]),{id:Date.now().toString(36),type:ty,at:dt,note:nt}],notes:[{t:Date.now(),by:me.name,x:"Scheduled "+ty+" "+dt.replace("T"," ")},...(l.notes||[])]}))}
+ else if(act==="ad")lupd(a.dataset.id,l=>({appts:(l.appts||[]).map(x=>x.id===v?{...x,done:!x.done}:x)}));
+ else if(act==="adel")lupd(a.dataset.id,l=>({appts:(l.appts||[]).filter(x=>x.id!==v)}));
+ else if(act==="tadd"){const t=$("#tk").value.trim(),d=$("#tkd").value;if(t)lupd(a.dataset.id,l=>({tasks:[...(l.tasks||[]),{id:Date.now().toString(36),t,due:d,by:me.name}]}))}
+ else if(act==="tt")lupd(a.dataset.id,l=>({tasks:(l.tasks||[]).map(x=>x.id===v?{...x,done:!x.done}:x)}));
+ else if(act==="tdel")lupd(a.dataset.id,l=>({tasks:(l.tasks||[]).filter(x=>x.id!==v)}));
+ else if(act==="selm"){selMode=!selMode;sel.clear();render()}
+ else if(act==="tn"){showN=!showN;LS.s("shownotes",showN);render()}
+ else if(act==="selall"){const all=lastVis.every(l=>sel.has(l.id));lastVis.forEach(l=>all?sel.delete(l.id):sel.add(l.id));render()}
+ else if(act==="bend"){selMode=false;sel.clear();render()}
+ else if(act==="bdel"){if(sel.size&&confirm("Delete "+sel.size+" leads? This cannot be undone."))await bulk(l=>null,"Deleting")}
+ else if(act==="bname")openFixName();
+ else if(act==="bnamego"){const k=$("#fk").value;close();await bulk(l=>(l.extra&&l.extra[k])?{name:l.extra[k]}:{},"Updating names")}
+ else if(act==="rmap"){imp.map={...imp.guess};LS.s(imp.key,null);openMap()}
+});
+document.addEventListener("input",e=>{if(e.target.id==="q"){q=e.target.value.toLowerCase();render()}});
+document.addEventListener("change",e=>{const T=e.target;if(T.id==="fs"){fs=T.value;render()}else if(T.id==="fo"){fo=T.value;render()}else if(T.id==="fp"){fp=T.value;render()}
+ else if(T.dataset.ck){const s=T.dataset.ck==="c"?fc:fsr;T.checked?s.add(T.dataset.v):s.delete(T.dataset.v);render()}else if(T.id==="bs"&&T.value&&sel.size){const s=T.value;bulk(l=>l.status===s?{}:{...ft(l),status:s,notes:[{t:Date.now(),by:me.name,x:"Stage: "+l.status+" → "+s+" (bulk)"},...(l.notes||[])]},"Changing stage")}
+ else if(T.id==="bo"&&T.value&&sel.size){const o=T.value==="__u"?"":T.value;bulk(l=>({owner:o}),"Assigning")}
+ else if(T.id==="bf"&&T.value&&sel.size){const f=T.value;bulk(l=>({follow:f}),"Setting follow-up")}
+ else if(T.closest("#md")&&T.dataset.m)prev()});
+$("#ov").addEventListener("click",e=>{if(e.target.id==="ov")close()});
+
+async function bulk(fn,msg){const ids=[...sel];let n=0;for(const id of ids){const l=leads.find(x=>x.id===id);if(!l)continue;const u=fn(l),d=db.collection("leads").doc(id);if(u===null)await d.delete();else if(Object.keys(u).length)await d.update(u);n++;$("#bulk").innerHTML=`<b>${msg}… ${n}/${ids.length}</b>`}sel.clear();render()}
+function bulkH(){return `<b>${sel.size} selected</b><button data-act="selall">Select all shown</button><select id="bs"><option value="">Change stage…</option>${STAGES.map(s=>`<option>${s}</option>`).join("")}</select><select id="bo"><option value="">Assign to…</option><option value="__u">Unassigned</option>${team.map(s=>`<option>${esc(s)}</option>`).join("")}</select><span class="mut">Follow-up</span><input type="date" id="bf"><button data-act="bname">Fix names…</button>${me.role==="admin"?`<button class="btn dg" data-act="bdel">🗑 Delete</button>`:""}<button data-act="bend">Done</button>`}
+function openFixName(){const ex=extras(),l=leads.find(x=>sel.has(x.id));
+ open_(`<h3 style="margin:0 0 6px">Fix names</h3><div class="mut">Copy another imported column into the Name field for the ${sel.size} selected leads. Leads without that column stay unchanged.</div>${ex.length?`<label class="l">Use this column as the name</label><select id="fk">${ex.map(k=>`<option value="${esc(k)}">${esc(k)}${l&&l.extra&&l.extra[k]?" — e.g. "+esc(String(l.extra[k]).slice(0,25)):""}</option>`).join("")}</select><div class="acts"><button class="p" data-act="bnamego">Apply</button><button data-act="close">Cancel</button></div>`:`<p>No extra columns are saved for these leads. Leads imported before the column-matching update can't be fixed this way: select and delete them, then re-import using the matching screen.</p><div class="acts"><button data-act="close">Close</button></div>`}`)}
+const nextOwner=()=>team.length?team[leads.length%team.length]:"";
+function openMenu(){const ad=me.role==="admin";open_(`<div class="menu"><h3 style="margin:0 0 4px">Menu</h3><div class="mut" style="margin-bottom:10px">Signed in as ${esc(me.name)} (${me.role})</div>${ad?`<button class="btn" data-act="imp">📥 Import CSV</button>`:""}<button class="btn" data-act="fields">🧩 Fields &amp; field names</button>${ad?`<button class="btn" data-act="tpl">💬 WhatsApp templates</button><button class="btn" data-act="users">👥 Manage users &amp; roles</button><button class="btn" data-act="tm">📊 Team report: ${showTeam?"On → turn off":"Off → turn on"}</button><button class="btn" data-act="exp">📤 Export leads (CSV)</button><button class="btn" data-act="bak">💾 Backup (JSON)</button><button class="btn" data-act="rules">⚙️ Automatic rules</button><button class="btn" data-act="dup">🧬 Find duplicates</button><button class="btn" data-act="hist">🕘 Import history &amp; undo</button>`:""}<button class="btn" data-act="nt">🔔 Notifications: ${notifOn&&typeof Notification!=="undefined"&&Notification.permission==="granted"?"On → turn off":"Off → turn on"}</button><button class="btn" data-act="inst">📲 Install on home screen</button><button class="btn" data-act="pw">🔑 Change my password</button><button class="btn" data-act="out">🚪 Log out</button><button class="btn" data-act="close">Close</button></div>`)}
+function openAdd(){const cs=[...new Set(leads.map(l=>l.campaign).filter(Boolean))];
+ open_(`<h3 style="margin:0">Add lead</h3><label class="l">Name</label><input id="n"><div class="row2"><div><label class="l">Phone</label><input id="p" inputmode="tel"></div><div><label class="l">Email</label><input id="e"></div></div><label class="l">Campaign / event</label><input id="c" list="cl" placeholder="e.g. Diwali offer"><datalist id="cl">${cs.map(c=>`<option value="${esc(c)}">`).join("")}</datalist><div id="er" class="od"></div><div class="acts"><button class="p" data-act="addsave">Save</button><button data-act="close">Cancel</button></div>`)}
+async function addSave(){const d={name:$("#n").value.trim(),phone:$("#p").value.trim(),email:$("#e").value.trim(),campaign:$("#c").value.trim(),source:"Manual"};
+ if(!d.name&&!d.phone){$("#er").textContent="Enter a name or phone.";return}
+ if(leads.some(l=>(d.phone&&digits(l.phone)===digits(d.phone))||(d.email&&l.email&&l.email.toLowerCase()===d.email.toLowerCase()))){$("#er").textContent="This phone or email already exists.";return}
+ await db.collection("leads").add({...d,status:"New",owner:me.role==="admin"?nextOwner():me.name,created:Date.now(),notes:[]});close()}
+function openLead(id){const l=leads.find(x=>x.id===id);if(!l)return;
+ open_(`<div class="lt"><h3 style="margin:0">${esc(l.name)||"Lead"}</h3>${chip(l.status,ST[l.status])}</div><div class="mut">${esc(ck(l))}${l.adset?" · "+esc(l.adset):""}${l.ad?" · "+esc(l.ad):""}</div>
+ <div class="acts">${l.phone?`<a class="btn call" href="tel:${esc(l.phone)}">📞 Call</a><a class="btn wa" target="_blank" rel="noopener" href="${wa(l.phone)}">WhatsApp</a>`:""}${l.email?`<a class="btn" href="mailto:${esc(l.email)}">✉️ Email</a>`:""}</div>
+ ${Object.entries(l.extra||{}).filter(([k,v])=>v&&!sysx(k)).length?`<div class="dt">${Object.entries(l.extra).filter(([k,v])=>v&&!sysx(k)).map(([k,v])=>`<div><small>${esc(lbl("x:"+k))}</small>${esc(v)}</div>`).join("")}</div>`:""}<label class="l">After the call, tap one:</label><div class="q"><button class="btn sm" data-act="q" data-id="${id}" data-v="noans">📵 No answer</button><button class="btn sm" data-act="q" data-id="${id}" data-v="cb">⏰ Call back</button><button class="btn sm" data-act="q" data-id="${id}" data-v="int" style="color:var(--ok)">👍 Interested</button><button class="btn sm" data-act="q" data-id="${id}" data-v="ni" style="color:var(--bad)">👎 Not interested</button><button class="btn sm" data-act="q" data-id="${id}" data-v="wn">🚫 Wrong number</button></div>
+ ${l.phone?`<label class="l">WhatsApp templates (tap to open chat with the message ready)</label><div class="q">${tl().map((t,i)=>`<button class="btn sm wa" data-act="wa" data-id="${id}" data-v="${i}">${esc(t.t)}</button>`).join("")}</div>`:""}
+ <label class="l">📅 Meetings &amp; site visits</label>${(l.appts||[]).map(a=>`<div class="lt" style="font-size:13px;padding:3px 0"><span>${a.done?"✅ ":""}${chip(a.type,APC[a.type]||"#999")} ${esc(a.at.replace("T"," "))} ${esc(a.note||"")}</span><span><button class="btn sm" data-act="ad" data-id="${id}" data-v="${a.id}">${a.done?"↩":"✔"}</button> <button class="btn sm dg" data-act="adel" data-id="${id}" data-v="${a.id}">✕</button></span></div>`).join("")}<div class="row2"><select id="at">${Object.keys(APC).map(x=>`<option>${x}</option>`).join("")}</select><input type="datetime-local" id="adt"></div><div style="display:flex;gap:6px;margin-top:4px"><input id="an" placeholder="Note / address" style="flex:1"><button class="btn sm p" data-act="aadd" data-id="${id}">Add</button></div>
+ <label class="l">✅ Tasks</label>${(l.tasks||[]).map(k=>`<div class="lt" style="font-size:13px;padding:2px 0"><label class="ck" style="flex:1"><input type="checkbox" data-act="tt" data-id="${id}" data-v="${k.id}" ${k.done?"checked":""}><span style="${k.done?"text-decoration:line-through;color:var(--mut)":""}">${esc(k.t)} ${k.due?`<small class="${!k.done&&k.due<=td()?"od":"mut"}">· ${esc(k.due)}</small>`:""}</span></label><button class="btn sm dg" data-act="tdel" data-id="${id}" data-v="${k.id}">✕</button></div>`).join("")}<div style="display:flex;gap:6px;margin-top:4px"><input id="tk" placeholder="e.g. send quote" style="flex:1"><input type="date" id="tkd" style="max-width:140px"><button class="btn sm p" data-act="tadd" data-id="${id}">Add</button></div>
+ <label class="l">Snooze follow-up</label><div class="q">${[["h1","+1 hour"],["h3","+3 hours"],["d1","Tomorrow 10:00"],["d3","In 3 days"],["d7","Next week"]].map(x=>`<button class="btn sm" data-act="sn" data-id="${id}" data-v="${x[0]}">⏰ ${x[1]}</button>`).join("")}</div>
+ <div class="row2"><div><label class="l">Name</label><input id="en" value="${esc(l.name)}"></div><div><label class="l">Phone</label><input id="ep" value="${esc(l.phone)}"></div></div><label class="l">Email</label><input id="ee" value="${esc(l.email)}">
+ <div class="row2"><div><label class="l">Stage</label><select id="ls">${STAGES.map(s=>`<option ${l.status===s?"selected":""}>${s}</option>`).join("")}</select></div><div><label class="l">Next follow-up (date + optional time)</label><div style="display:flex;gap:4px"><input type="date" id="lf" value="${esc(l.follow||"")}"><input type="time" id="lft" value="${esc(l.ftime||"")}"></div></div></div>
+ <label class="l">Owner</label><select id="lo"><option value="">Unassigned</option>${team.map(s=>`<option ${l.owner===s?"selected":""}>${esc(s)}</option>`).join("")}</select>
+ <div class="row2"><div><label class="l">Priority</label><select id="lp"><option value="">—</option>${["Hot","Warm","Cold"].map(p=>`<option ${l.prio===p?"selected":""}>${p}</option>`).join("")}</select></div><div><label class="l">Tags (comma separated)</label><input id="ltg" value="${esc((l.tags||[]).join(", "))}"></div></div><label class="l">Add note</label><textarea id="nt" rows="2"></textarea>
+ <div class="acts"><button class="p" data-act="save" data-id="${id}">Save</button><button data-act="close">Close</button>${me.role==="admin"?`<button class="btn dg" data-act="del" data-id="${id}" style="flex:0">Delete</button>`:""}</div>
+ <div class="tl"><div><small>${fmt(l.created)}</small><br>Received via ${esc(l.source||"unknown")}</div>${l.firstAt?`<div><small>${fmt(l.firstAt)}${l.firstBy?" · "+esc(l.firstBy):""}</small><br>First response after ${dur(l.firstAt-l.created)}</div>`:""}${(l.notes||[]).map(n=>`<div><small>${fmt(n.t)}${n.by?" · "+esc(n.by):""}</small><br>${esc(n.x)}</div>`).join("")}</div>`)}
+async function saveLead(id){const l=leads.find(x=>x.id===id),nt=$("#nt").value.trim(),st=$("#ls").value,notes=(l.notes||[]).slice();
+ if(st!==l.status)notes.unshift({t:Date.now(),by:me.name,x:"Stage: "+l.status+" → "+st});if(nt)notes.unshift({t:Date.now(),by:me.name,x:nt});
+ await db.collection("leads").doc(id).update({...(st!==l.status||nt?ft(l):{}),name:$("#en").value.trim(),phone:$("#ep").value.trim(),email:$("#ee").value.trim(),status:st,follow:$("#lf").value,ftime:$("#lft").value,owner:$("#lo").value,prio:$("#lp").value,tags:$("#ltg").value.split(",").map(x=>x.trim()).filter(Boolean),notes});close()}
+const rl=()=>({noAns:3,noAnsAct:"cold",dNoAns:1,dCb:1,dInt:2,untouched:60,...(rules||{})});
+async function quick(id,k){const l=leads.find(x=>x.id===id),f=$("#lf").value,s=l.status==="New"?"Contacted":l.status,R=rl();
+ const M={noans:["Called – no answer",s,addD(R.dNoAns)],cb:["Called – call back requested",s,f&&f>=td()?f:addD(R.dCb)],int:["Called – interested","Qualified",addD(R.dInt)],ni:["Called – not interested","Lost",""],wn:["Wrong number / invalid","Lost",""]}[k];
+ const u={...ft(l),status:M[1],follow:M[2],ftime:k==="cb"&&f&&f>=td()?$("#lft").value:"",nac:k==="noans"?(l.nac||0)+1:0,notes:[{t:Date.now(),by:me.name,x:M[0]},...(l.notes||[])]};
+ if(k==="noans"&&R.noAns>0&&u.nac>=R.noAns){u.prio="Cold";u.notes.unshift({t:Date.now(),by:"Auto rule",x:u.nac+" no-answer calls: marked Cold"+(R.noAnsAct==="lost"?" and Lost":"")});if(R.noAnsAct==="lost"){u.status="Lost";u.follow=""}}
+ await db.collection("leads").doc(id).update(u);close()}
+async function snooze(id,k){const l=leads.find(x=>x.id===id),n=+k.slice(1);let fl,tm="";
+ if(k[0]==="h"){const d=new Date(Date.now()+n*36e5);fl=ld(d);tm=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}else{fl=addD(n);tm=n===1?"10:00":""}
+ await db.collection("leads").doc(id).update({follow:fl,ftime:tm,notes:[{t:Date.now(),by:me.name,x:"Snoozed to "+fl+(tm?" "+tm:"")},...(l.notes||[])]});close()}
+async function sendWA(id,i){const l=leads.find(x=>x.id===id),t=tl()[i],m=t.m.replace(/{name}/g,(l.name||"").split(" ")[0]).replace(/{campaign}/g,l.campaign||"");
+ window.open(wa(l.phone)+"?text="+encodeURIComponent(m),"_blank");await db.collection("leads").doc(id).update({...ft(l),notes:[{t:Date.now(),by:me.name,x:"WhatsApp opened: "+t.t},...(l.notes||[])],status:l.status==="New"?"Contacted":l.status})}
+function openFields(){const all=[...BASE.map(b=>b[0]),...extras().map(k=>"x:"+k)],ad=me.role==="admin";
+ open_(`<h3 style="margin:0 0 6px">Fields &amp; field names</h3><div class="mut">Tick what shows on each lead card.${ad?" Edit the name on the right to rename a field everywhere (for example what_type_of_door_you_have becomes Door Type).":""}</div>${all.map(k=>`<div class="ck"><label style="display:flex;gap:8px;align-items:center;flex:1;min-width:0"><input type="checkbox" data-col="${esc(k)}" ${cols.includes(k)?"checked":""}>${ad?"":`<span>${esc(lbl(k))}</span>`}</label>${ad?`<input data-lab="${esc(k)}" value="${esc(lbl(k))}" style="flex:1;min-width:0">`:""}</div>`).join("")}<div class="acts"><button class="p" data-act="svf">Save</button><button data-act="close">Cancel</button></div>`)}
+function openTpl(){open_(`<h3 style="margin:0 0 6px">WhatsApp templates</h3><div class="mut">One per line: <b>Title | message</b>. Use {name} for the lead's first name and {campaign} for the campaign.</div><textarea id="tt" rows="9" style="width:100%;margin-top:8px">${esc(tl().map(t=>t.t+" | "+t.m).join("\n"))}</textarea><div class="acts"><button class="p" data-act="svt">Save</button><button data-act="close">Cancel</button></div>`)}
+function openTeam(){open_(`<h3 style="margin:0 0 6px">Team names</h3><div class="mut">Comma separated. New leads are assigned round-robin.</div><input id="tn" value="${esc(team.join(", "))}" style="width:100%;margin-top:8px"><div class="acts"><button class="p" data-act="svm">Save</button><button data-act="close">Cancel</button></div>`)}
+
+const ap=(r,b)=>fetch("api.php?r="+r,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b||{}),credentials:"same-origin"}).then(async x=>({ok:x.ok,j:await x.json()}));
+async function openUsers(){const u=await(await fetch("api.php?r=users_list",{credentials:"same-origin"})).json();window._u=u;
+ open_(`<h3 style="margin:0 0 8px">Users &amp; roles</h3>${u.map((x,i)=>`<div class="lt" style="padding:8px 0;border-bottom:1px solid var(--bd)"><span><b>${esc(x.name)}</b> ${chip(x.role,x.role==="admin"?"#7c3aed":"#2563eb")}<br><small class="mut">${esc(x.email)}</small></span><button class="btn sm" data-act="ue" data-v="${i}">Edit</button></div>`).join("")}<div class="acts"><button class="p" data-act="ue" data-v="-1">+ Add user</button><button data-act="close">Close</button></div>`)}
+function editUser(i){const x=i>=0?window._u[i]:{name:"",email:"",role:"agent"};
+ open_(`<h3 style="margin:0">${i>=0?"Edit":"Add"} user</h3><label class="l">Name (shown on notes and leads)</label><input id="un" value="${esc(x.name)}"><label class="l">Email (login)</label><input id="ue2" value="${esc(x.email)}"><label class="l">Role</label><select id="ur"><option value="agent" ${x.role==="agent"?"selected":""}>Agent: sees only their own leads</option><option value="admin" ${x.role==="admin"?"selected":""}>Admin: sees everything</option></select><label class="l">${i>=0?"New password (leave blank to keep)":"Password (min 8 characters)"}</label><input id="up" autocomplete="off"><div id="er" class="od"></div><div class="acts"><button class="p" data-act="usv" data-v="${i}">Save</button>${i>=0?`<button class="btn dg" data-act="udl" data-v="${i}">Delete</button>`:""}<button data-act="users">Back</button></div>`)}
+function openPw(){open_(`<h3 style="margin:0">Change my password</h3><label class="l">Current password</label><input id="po" type="password"><label class="l">New password (min 8 characters)</label><input id="pn" type="password"><div id="er" class="od"></div><div class="acts"><button class="p" data-act="pwgo">Change</button><button data-act="close">Cancel</button></div>`)}
+function teamH(vis){const names=[...new Set([...team,...vis.map(l=>l.owner).filter(Boolean)])],t=td();
+ const rows=names.map(n=>{const my=vis.filter(l=>l.owner===n),calls=vis.reduce((c,l)=>c+(l.notes||[]).filter(x=>x.by===n&&/^Called/.test(x.x)).length,0),rs=vis.filter(l=>l.firstAt&&l.firstBy===n).map(l=>l.firstAt-l.created);
+  return `<tr><td><b>${esc(n)}</b></td><td>${my.length}</td><td>${my.filter(l=>l.status==="New"&&!l.firstAt).length}</td><td>${calls}</td><td>${rs.length?dur(rs.reduce((a,b)=>a+b,0)/rs.length):"—"}</td><td>${my.filter(l=>["Qualified","Proposal","Won"].includes(l.status)).length}</td><td style="color:var(--ok)">${my.filter(l=>l.status==="Won").length}</td><td class="od">${my.filter(l=>fst(l)===2).length}</td></tr>`}).join("");
+ return `<div class="sc"><table><tr><th>Agent</th><th>Leads</th><th>Untouched</th><th>Calls logged</th><th>Avg first response</th><th>Qualified</th><th>Won</th><th>Overdue</th></tr>${rows}</table></div><div class="mut" style="margin-top:6px;font-size:12px">Follows your current filters. Calls logged counts the "Called…" outcome buttons.</div>`}
+function dl(name,text,type){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click()}
+function exportCsv(){const ex=extras(),c=v=>'"'+String(v??"").replace(/"/g,'""')+'"',H=["Name","Phone","Email","Campaign","Ad set","Ad","Source","Stage","Owner","Priority","Tags","Follow-up","Received","First response (min)","First response by",...ex.map(k=>lbl("x:"+k)),"Notes"];
+ const R=leads.map(l=>[l.name,l.phone,l.email,l.campaign,l.adset,l.ad,l.source,l.status,l.owner,l.prio,(l.tags||[]).join("; "),l.follow,new Date(l.created).toISOString(),l.firstAt?Math.round((l.firstAt-l.created)/6e4):"",l.firstBy,...ex.map(k=>(l.extra||{})[k]),(l.notes||[]).map(n=>fmt(n.t)+(n.by?" "+n.by:"")+": "+n.x).join(" | ")]);
+ dl("leads-"+td()+".csv","\uFEFF"+[H,...R].map(r=>r.map(c).join(",")).join("\r\n"),"text/csv")}
+let dip=null;addEventListener("beforeinstallprompt",e=>{e.preventDefault();dip=e});if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+const allViews=()=>[{n:"My leads today",fo:me.name,pend:true,tab:"today"},{n:"🔥 Hot leads",fp:"Hot",tab:"leads"},...vws];
+function viewsH(){return `<div class="dd"><button data-act="dd" data-v="v">⭐ Views ▾</button>${dd==="v"?`<div class="pnl">${allViews().map((w,i)=>`<div class="ck" style="justify-content:space-between"><div data-act="vw" data-v="${i}" style="flex:1;cursor:pointer;padding:6px 0">${esc(w.n)}</div>${i>=2?`<button class="btn sm dg" data-act="vdel" data-v="${i-2}">✕</button>`:""}</div>`).join("")}<button class="btn sm p" data-act="vsave" style="margin-top:6px;width:100%">+ Save current filters as a view</button></div>`:""}</div>`}
+function openRules(){const R=rl();open_(`<h3 style="margin:0 0 6px">Automatic rules</h3><div class="mut">These run when an agent taps a call-outcome button.</div>
+ <label class="l">After this many "No answer" calls in a row (0 = off)</label><input id="r1" type="number" min="0" value="${R.noAns}"><label class="l">…then</label><select id="r2"><option value="cold" ${R.noAnsAct==="cold"?"selected":""}>Mark priority Cold</option><option value="lost" ${R.noAnsAct==="lost"?"selected":""}>Mark Cold and move to Lost</option></select>
+ <div class="row2"><div><label class="l">No answer: follow up in (days)</label><input id="r3" type="number" min="0" value="${R.dNoAns}"></div><div><label class="l">Call back: default (days)</label><input id="r4" type="number" min="0" value="${R.dCb}"></div></div><label class="l">Interested: follow up in (days)</label><input id="r5" type="number" min="0" value="${R.dInt}"><label class="l">Alert when a new lead is untouched for (minutes, 0 = off)</label><input id="r6" type="number" min="0" value="${R.untouched}">
+ <div class="acts"><button class="p" data-act="rsv">Save</button><button data-act="close">Cancel</button></div>`)}
+function dupGroups(){const p=leads.map((l,i)=>i),f=i=>p[i]===i?i:(p[i]=f(p[i])),seen={},nn=l=>(l.name||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+ leads.forEach((l,i)=>{[digits(l.phone)&&"p"+digits(l.phone),l.email&&"e"+l.email.toLowerCase(),nn(l).length>3&&"n"+nn(l)].filter(Boolean).forEach(k=>{if(k in seen)p[f(i)]=f(seen[k]);else seen[k]=i})});
+ const g={};leads.forEach((l,i)=>(g[f(i)]=g[f(i)]||[]).push(l));return Object.values(g).filter(a=>a.length>1)}
+function openDup(){const g=window._dg=dupGroups();
+ open_(`<h3 style="margin:0 0 6px">Possible duplicates</h3><div class="mut">Matched by phone, email or identical name. A name match alone can be two different people, so check before merging. Merging keeps the oldest lead, combines notes, tags and extra fields, and deletes the others.</div>${g.length?g.slice(0,15).map((a,i)=>`<div class="lead" style="margin:8px 0;cursor:default">${a.map(l=>`<div style="padding:3px 0;font-size:13px"><b>${esc(l.name)||"(no name)"}</b> · ${esc(l.phone)} · ${esc(l.email)}<br><span class="mut">${esc(ck(l))} · ${l.status} · ${fmt(l.created)}</span></div>`).join("")}<button class="btn sm p" data-act="mg" data-v="${i}" style="margin-top:6px">Merge ${a.length} into one</button></div>`).join(""):'<p>No duplicates found 🎉</p>'}<div class="acts"><button data-act="close">Close</button></div>`)}
+async function mergeG(gi){const g=window._dg[gi].slice().sort((a,b)=>(a.created||0)-(b.created||0)),P=g[0],rest=g.slice(1),m={...P},rk=s=>({Lost:0,New:1,Contacted:2,Qualified:3,Proposal:4,Won:5})[s]??1,ex={};
+ g.slice().reverse().forEach(l=>Object.assign(ex,l.extra||{}));m.extra=ex;
+ ["name","phone","email","campaign","adset","ad","owner"].forEach(k=>{if(!m[k])for(const l of rest)if(l[k]){m[k]=l[k];break}});
+ m.tags=[...new Set(g.flatMap(l=>l.tags||[]))];m.prio=["Hot","Warm","Cold"].find(x=>g.some(l=>l.prio===x))||"";
+ m.notes=g.flatMap(l=>l.notes||[]).sort((a,b)=>b.t-a.t);m.notes.unshift({t:Date.now(),by:me.name,x:"Merged "+g.length+" duplicate leads"});
+ m.follow=g.map(l=>l.follow).filter(Boolean).sort()[0]||"";m.status=g.map(l=>l.status).sort((a,b)=>rk(b)-rk(a))[0];
+ const fa=g.filter(l=>l.firstAt).sort((a,b)=>a.firstAt-b.firstAt)[0];if(fa){m.firstAt=fa.firstAt;m.firstBy=fa.firstBy}
+ const{id,...data}=m;await db.collection("leads").doc(P.id).update(data);for(const l of rest)await db.collection("leads").doc(l.id).delete()}
+const APC={Meeting:"#7c3aed","Site visit":"#ea580c",Call:"#2563eb"};let calM=new Date(new Date().getFullYear(),new Date().getMonth(),1),calD=null,notifOn=LS.g("notif",false);
+const nextA=l=>{const a=(l.appts||[]).filter(x=>!x.done&&x.at.slice(0,10)>=td()).sort((x,y)=>x.at.localeCompare(y.at))[0];return a?chip("📅 "+a.type+" "+a.at.slice(5,10)+" "+a.at.slice(11),APC[a.type]||"#999"):""};
+const taskC=l=>{const o=(l.tasks||[]).filter(k=>!k.done);return o.length?chip("☑ "+o.length+" task"+(o.length>1?"s":""),o.some(k=>k.due&&k.due<=td())?"#dc2626":"#0891b2"):""};
+async function lupd(id,fn){const l=leads.find(x=>x.id===id);await db.collection("leads").doc(id).update(fn(l));setTimeout(()=>openLead(id),450)}
+function calH(vis){calD=calD||td();const ev={};vis.forEach(l=>(l.appts||[]).forEach(a=>{(ev[a.at.slice(0,10)]=ev[a.at.slice(0,10)]||[]).push({l,a})}));
+ const y=calM.getFullYear(),mo=calM.getMonth(),first=new Date(y,mo,1).getDay(),dim=new Date(y,mo+1,0).getDate();let cells="";
+ for(let i=0;i<first;i++)cells+="<div></div>";
+ for(let d=1;d<=dim;d++){const k=ld(new Date(y,mo,d,12)),e=ev[k]||[];cells+=`<div data-act="cd" data-v="${k}" style="cursor:pointer;min-height:54px;border:1px solid ${k===calD?"var(--ac)":"var(--bd)"};border-radius:8px;padding:3px 5px;background:${k===td()?"color-mix(in srgb,var(--ac) 10%,var(--card))":"var(--card)"}"><b style="font-size:12px">${d}</b><div>${e.slice(0,3).map(x=>`<span style="display:inline-block;width:8px;height:8px;border-radius:99px;margin-right:2px;background:${APC[x.a.type]||"#999"};opacity:${x.a.done?.35:1}"></span>`).join("")}${e.length>3?`<small class="mut">+${e.length-3}</small>`:""}</div></div>`}
+ const day=(ev[calD]||[]).sort((a,b)=>a.a.at.localeCompare(b.a.at));
+ return `<div class="lt" style="margin-bottom:8px"><button data-act="cm" data-v="-1">‹</button><b>${calM.toLocaleString([],{month:"long",year:"numeric"})}</b><button data-act="cm" data-v="1">›</button></div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;font-size:11px;color:var(--mut);text-align:center;margin-bottom:4px">${["S","M","T","W","T","F","S"].map(x=>`<div>${x}</div>`).join("")}</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">${cells}</div><div class="sec" style="margin-top:14px">${calD===td()?"Today":calD} (${day.length})</div>${day.length?`<div class="grid">${day.map(x=>`<div class="lead" data-act="lead" data-id="${x.l.id}" style="--c:${APC[x.a.type]||"#999"}"><div class="lt"><b>${x.a.done?"✅ ":""}${esc(x.a.at.slice(11))} · ${esc(x.l.name)||"(no name)"}</b>${chip(x.a.type,APC[x.a.type]||"#999")}</div><div class="lm"><span>${esc(x.l.phone)}</span><span>${esc(x.a.note||"")}</span></div></div>`).join("")}</div>`:'<div class="msg">Nothing scheduled this day.</div>'}`}
+const notify=(t,b)=>{const f=()=>{try{new Notification(t,{body:b,icon:"icon-192.png"})}catch(e){}};try{navigator.serviceWorker?navigator.serviceWorker.getRegistration().then(r=>r&&r.showNotification?r.showNotification(t,{body:b,icon:"icon-192.png",tag:t+b}):f()).catch(f):f()}catch(e){f()}};
+function checkAlerts(){if(!db||!leads.length)return;const R=rl(),now=Date.now(),seen=LS.g("seen",null),sent=LS.g("sent",{}),al=[];
+ if(seen!==null){const S=new Set(seen);leads.filter(l=>!S.has(l.id)&&now-l.created<864e5).forEach(l=>al.push(["New lead",(l.name||l.phone||"")+(l.campaign?" · "+l.campaign:"")]))}LS.s("seen",leads.map(l=>l.id));
+ const mk=(k,t,b)=>{if(!sent[k]){sent[k]=now;al.push([t,b])}};
+ leads.forEach(l=>{if(!done(l)&&l.follow){const d=new Date(l.follow+"T"+(l.ftime||"09:00")).getTime();if(now>=d&&now-d<216e5)mk("f:"+l.id+l.follow+(l.ftime||""),"Follow-up due",l.name||l.phone)}
+  if(l.status==="New"&&!l.firstAt&&R.untouched>0){const w=now-l.created;if(w>=R.untouched*6e4&&w<864e5)mk("u:"+l.id,"Lead waiting "+dur(w),l.name||l.phone)}
+  (l.appts||[]).forEach(a=>{if(!a.done){const t=new Date(a.at).getTime();if(t-now<18e5&&now-t<6e5)mk("a:"+l.id+a.id,"📅 "+a.type+" soon",(l.name||"")+" · "+a.at.slice(11))}})});
+ Object.keys(sent).forEach(k=>{if(now-sent[k]>2592e5)delete sent[k]});LS.s("sent",sent);
+ if(!al.length||!notifOn||typeof Notification==="undefined"||Notification.permission!=="granted")return;
+ if(al.length>3)notify(al.length+" new alerts",al.slice(0,3).map(a=>a[0]+": "+a[1]).join("\n"));else al.forEach(a=>notify(a[0],a[1]))}
+function openHist(){const old=leads.filter(l=>!l.imp&&["CSV import","Meta Lead Ads"].includes(l.source)).length;
+ open_(`<h3 style="margin:0 0 6px">Import history</h3>${imps.map(x=>{const n=leads.filter(l=>l.imp===x.id).length;return `<div class="lead" style="margin:6px 0;cursor:default"><b>${esc(x.file||"CSV")}</b>${x.label?" · "+esc(x.label):""}<br><span class="mut">${fmt(x.at)} · by ${esc(x.by)} · ${x.n} added, ${x.skipped} skipped${x.undone?" · undone":""}</span><div class="acts" style="margin:6px 0 0">${n?`<button class="btn sm" data-act="rm" data-v="${x.id}">Re-map columns</button><button class="btn sm dg" data-act="undo" data-v="${x.id}">Undo import</button>`:'<span class="mut">No leads left from this import</span>'}</div></div>`}).join("")||'<p class="mut">No imports recorded yet.</p>'}${old?`<div class="lead" style="margin:6px 0;cursor:default"><b>Earlier imports</b> (before history existed)<br><span class="mut">${old} leads</span><div class="acts" style="margin:6px 0 0"><button class="btn sm" data-act="rm" data-v="__old">Re-map from saved extra columns</button></div></div>`:""}<div class="acts"><button data-act="close">Close</button></div>`)}
+async function undoImp(bid){const b=leads.filter(l=>l.imp===bid),ok=b.filter(l=>!l.firstAt&&!(l.notes||[]).length),keep=b.length-ok.length;
+ if(!ok.length){alert("Nothing to undo: those leads were already worked on or are gone.");return}
+ if(!confirm("Delete "+ok.length+" leads from this import?"+(keep?" ("+keep+" leads that were already worked on will be kept.)":"")))return;
+ for(const l of ok)await db.collection("leads").doc(l.id).delete();
+ imps=imps.map(x=>x.id===bid?{...x,undone:Date.now()}:x);await db.doc("settings/imports").set({list:imps});
+ open_(`<h3 style="margin:0">Import undone ✅</h3><p>${ok.length} leads removed.${keep?" "+keep+" kept because they were already worked on.":""}</p><div class="acts"><button class="p" data-act="close">Close</button></div>`)}
+function openRemap(bid){const L=leads.filter(l=>bid==="__old"?(!l.imp&&["CSV import","Meta Lead Ads"].includes(l.source)):l.imp===bid),src=l=>l.raw||l.extra||{},hd=[...new Set(L.flatMap(l=>Object.keys(src(l))))];
+ if(!hd.length){alert("These leads have no saved columns, so they can't be re-mapped.");return}
+ const A={name:["full_name","full name","name"],phone:["phone_number","phone","mobile"],email:["email","e-mail"],campaign:["campaign_name","campaign"],adset:["adset_name","ad set name"],ad:["ad_name","ad name"],created:["created_time","created","date"]},g={};
+ for(const t in A)g[t]=hd.findIndex(h=>A[t].includes(h.toLowerCase()));
+ imp={hd,rows:L.map(l=>hd.map(h=>src(l)[h]||"")),map:g,guess:g,key:"rm:"+bid,remap:L.map(l=>l.id)};openMap()}
+async function runRemap(){readMap();const m=imp.map,ids=imp.remap,out=$("#ir"),mapped=new Set(Object.values(m).flatMap(v=>String(v).startsWith("fl:")?v.split(":").slice(1).map(Number):[+v]));let n=0;
+ for(let k=0;k<imp.rows.length;k++){const r=imp.rows[k],u={};
+  [["name","name"],["phone","phone"],["email","email"],["campaign","campaign"],["adset","adset"],["ad","ad"]].forEach(([f,c])=>{const v=cell(r,m[c]);if(v)u[f]=f==="email"?v.toLowerCase():v});
+  const ts=Date.parse(cell(r,m.created));if(!isNaN(ts))u.created=ts;
+  const x={};imp.hd.forEach((h,i)=>{if(!mapped.has(i)&&r[i])x[h]=r[i]});u.extra=x;
+  await db.collection("leads").doc(ids[k]).update(u);n++;out.style.color="var(--mut)";out.textContent="Updating… "+n}
+ open_(`<h3 style="margin:0">Re-map finished ✅</h3><p>${n} leads updated with the new column matching.</p><div class="acts"><button class="p" data-act="close">Done</button></div>`)}
+// ---------- CSV import with column mapping ----------
+$("#file").onchange=async e=>{const f=e.target.files[0];if(!f)return;const txt=await f.text();e.target.value="";
+ const dl=txt.split("\n")[0].includes("\t")?"\t":",",rows=[];let cur=[],c="",iq=false;
+ for(let i=0;i<txt.length;i++){const ch=txt[i];if(iq){if(ch=='"'){if(txt[i+1]=='"'){c+='"';i++}else iq=false}else c+=ch}else if(ch=='"')iq=true;else if(ch===dl){cur.push(c);c=""}else if(ch==="\n"||ch==="\r"){if(ch==="\r"&&txt[i+1]==="\n")i++;cur.push(c);c="";if(cur.some(x=>x.trim()))rows.push(cur);cur=[]}else c+=ch}
+ if(c||cur.length){cur.push(c);rows.push(cur)}if(rows.length<2){alert("No rows found in that file.");return}
+ const hd=rows[0].map(x=>x.trim().replace(/^\uFEFF/,"")),key="map:"+hd.join("|"),A={name:["full_name","full name","name","customer name","lead name"],phone:["phone_number","phone","mobile","mobile number","whatsapp"],email:["email","e-mail","email address"],campaign:["campaign_name","campaign"],adset:["adset_name","ad set name","adset"],ad:["ad_name","ad name"],created:["created_time","created","date"]};
+ const g={};for(const t in A){let i=hd.findIndex(h=>A[t].includes(h.toLowerCase()));if(i<0&&t==="phone")i=hd.findIndex(h=>/phone|mobile/i.test(h)&&!/name/i.test(h));if(i<0&&t==="email")i=hd.findIndex(h=>/mail/i.test(h));g[t]=i}
+ if(g.name<0){const fi=hd.findIndex(h=>/^first.?name$/i.test(h)),li=hd.findIndex(h=>/^last.?name$/i.test(h));g.name=fi>=0&&li>=0?"fl:"+fi+":"+li:fi>=0?fi:hd.findIndex(h=>/name/i.test(h)&&!/(^|[_ ])(ad|adset|campaign|form|page|company)([_ ]|$)/i.test(h))}
+ imp={hd,rows:rows.slice(1),map:LS.g(key,g),guess:g,key,fname:f.name};openMap()};
+const F=[["name","Name"],["phone","Phone"],["email","Email"],["campaign","Campaign / event"],["adset","Ad set"],["ad","Ad"],["created","Date received"]];
+function openMap(){const{hd,map}=imp,smp=i=>{for(const r of imp.rows.slice(0,8)){const v=(r[i]||"").trim();if(v)return v.slice(0,22)}return""},fi=hd.findIndex(h=>/^first.?name$/i.test(h)),li=hd.findIndex(h=>/^last.?name$/i.test(h));
+ open_(`<h3 style="margin:0 0 4px">Match your columns</h3><div class="mut">${imp.rows.length} rows found. Check each field points to the right column. The preview updates as you change them.</div>
+ ${F.map(([k,n])=>`<label class="l">${n}</label><select data-m="${k}"><option value="-1">— none —</option>${k==="name"&&fi>=0&&li>=0?`<option value="fl:${fi}:${li}" ${map.name==="fl:"+fi+":"+li?"selected":""}>First name + Last name</option>`:""}${hd.map((h,i)=>`<option value="${i}" ${String(map[k])===String(i)?"selected":""}>${esc(h)}${smp(i)?" — "+esc(smp(i)):""}</option>`).join("")}</select>`).join("")}
+ <label class="l">Label for this batch (used as campaign / event when the file has none)</label><input id="lab" placeholder="e.g. Delhi expo Nov 2026"><label class="ck" style="margin-top:6px"><input type="checkbox" id="xt" checked><span>Keep the other columns as extra fields</span></label>
+ <div id="pv" class="mut" style="font-size:13px;margin-top:6px"></div><div id="ir" class="od"></div><div class="acts"><button class="p" data-act="go">Import</button><button data-act="rmap">Reset</button><button data-act="close">Cancel</button></div>`);prev()}
+const cell=(r,v)=>{v=String(v);if(v.startsWith("fl:")){const[,a,b]=v.split(":");return((r[a]||"")+" "+(r[b]||"")).trim()}return+v>=0||v==="0"?(r[+v]||"").trim().replace(/^p:/,""):""};
+function readMap(){document.querySelectorAll("[data-m]").forEach(s=>{imp.map[s.dataset.m]=s.value.startsWith("fl:")?s.value:+s.value})}
+function prev(){readMap();const m=imp.map;$("#pv").innerHTML="<b>Preview</b><br>"+imp.rows.slice(0,3).map(r=>`${esc(cell(r,m.name))||"(no name)"} · ${esc(cell(r,m.phone))} · ${esc(cell(r,m.email))}`).join("<br>")}
+async function runImport(){readMap();const m=imp.map,lab=$("#lab").value.trim(),xt=$("#xt").checked;LS.s(imp.key,m);
+ const ph=new Set(leads.map(l=>digits(l.phone)).filter(Boolean)),em=new Set(leads.map(l=>(l.email||"").toLowerCase()).filter(Boolean));
+ const mapped=new Set(Object.values(m).flatMap(v=>String(v).startsWith("fl:")?v.split(":").slice(1).map(Number):[+v]));
+ const bid="b"+Date.now().toString(36);let add=0,skip=0,n=leads.length;const out=$("#ir");
+ for(const r of imp.rows){const nm=cell(r,m.name),p=cell(r,m.phone),e=cell(r,m.email).toLowerCase(),dg=digits(p);if(!nm&&!p&&!e)continue;
+  if((dg&&ph.has(dg))||(e&&em.has(e))){skip++;continue}if(dg)ph.add(dg);if(e)em.add(e);
+  const x={};if(xt)imp.hd.forEach((h,i)=>{if(!mapped.has(i)&&(r[i]||"").trim())x[h]=r[i].trim()});
+  const ts=Date.parse(cell(r,m.created));
+  await db.collection("leads").add({name:nm,phone:p,email:e,campaign:cell(r,m.campaign)||lab,adset:cell(r,m.adset),ad:cell(r,m.ad),source:"CSV import",imp:bid,raw:Object.fromEntries(imp.hd.map((h,i)=>[h,(r[i]||"").trim()])),status:"New",owner:team.length?team[n%team.length]:"",created:isNaN(ts)?Date.now():ts,notes:[],extra:x});n++;add++;
+  out.style.color="var(--mut)";out.textContent="Importing… "+add;}
+ imps=[{id:bid,at:Date.now(),by:me.name,file:imp.fname||"CSV",n:add,skipped:skip,label:lab},...imps].slice(0,50);await db.doc("settings/imports").set({list:imps});open_(`<h3 style="margin:0">Import finished</h3><p>✅ ${add} new leads added<br>⏭️ ${skip} skipped (phone or email already in the CRM)</p><div class="acts"><button class="p" data-act="close">Done</button><button class="btn dg" data-act="undo" data-v="${bid}">Undo this import</button></div>`);}
+</script></body></html>
