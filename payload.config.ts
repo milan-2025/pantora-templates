@@ -15,6 +15,8 @@ import { Pages } from "./collections/Pages";
 import { Posts } from "./collections/Posts";
 import { Affiliates } from "./collections/Affiliates";
 import { Orders } from "./collections/Orders";
+import { Invites } from "./collections/Invites";
+import { InviteRsvps } from "./collections/InviteRsvps";
 import { ContactSubmissions } from "./collections/ContactSubmissions";
 import { SiteSettings } from "./globals/SiteSettings";
 
@@ -69,7 +71,7 @@ export default buildConfig({
       },
     },
   },
-  collections: [Products, Orders, Affiliates, Pages, Posts, Media, ProductFiles, ContactSubmissions, Users],
+  collections: [Products, Orders, Invites, InviteRsvps, Affiliates, Pages, Posts, Media, ProductFiles, ContactSubmissions, Users],
   globals: [SiteSettings],
   editor: lexicalEditor(),
   // Admin emails (e.g. "forgot password") go through Brevo, like the rest of the site's email.

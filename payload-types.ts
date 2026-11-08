@@ -69,6 +69,8 @@ export interface Config {
   collections: {
     products: Product;
     orders: Order;
+    invites: Invite;
+    'invite-rsvps': InviteRsvp;
     affiliates: Affiliate;
     pages: Page;
     posts: Post;
@@ -85,6 +87,8 @@ export interface Config {
   collectionsSelect: {
     products: ProductsSelect<false> | ProductsSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
+    invites: InvitesSelect<false> | InvitesSelect<true>;
+    'invite-rsvps': InviteRsvpsSelect<false> | InviteRsvpsSelect<true>;
     affiliates: AffiliatesSelect<false> | AffiliatesSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
@@ -688,6 +692,64 @@ export interface Affiliate {
   createdAt: string;
 }
 /**
+ * Open a couple's invite at pandoratemplates.com/i/<link>. Their design data is stored privately.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "invites".
+ */
+export interface Invite {
+  id: string;
+  /**
+   * The invite link: /i/<slug>
+   */
+  slug: string;
+  names?: string | null;
+  paymentStatus?: ('created' | 'paid' | 'refunded') | null;
+  plan?: ('basic' | 'premium' | 'royal') | null;
+  paidAt?: string | null;
+  /**
+   * The invite stops showing after this date (12 months from payment). Change it to extend.
+   */
+  expiresAt?: string | null;
+  contactEmail?: string | null;
+  /**
+   * Rupees charged for the selected plan
+   */
+  amount?: number | null;
+  promoCode?: string | null;
+  orderId?: string | null;
+  /**
+   * The plan being paid for; becomes the plan once payment is confirmed
+   */
+  orderPlan?: ('basic' | 'premium' | 'royal') | null;
+  paymentId?: string | null;
+  editToken?: string | null;
+  state:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "invite-rsvps".
+ */
+export interface InviteRsvp {
+  id: string;
+  invite: string | Invite;
+  name: string;
+  guests: number;
+  events?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Build any page from blocks. The page with slug 'home' is the homepage.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1011,6 +1073,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'orders';
         value: string | Order;
+      } | null)
+    | ({
+        relationTo: 'invites';
+        value: string | Invite;
+      } | null)
+    | ({
+        relationTo: 'invite-rsvps';
+        value: string | InviteRsvp;
       } | null)
     | ({
         relationTo: 'affiliates';
@@ -1351,6 +1421,40 @@ export interface OrdersSelect<T extends boolean = true> {
   commissionStatus?: T;
   paymentId?: T;
   provider?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "invites_select".
+ */
+export interface InvitesSelect<T extends boolean = true> {
+  slug?: T;
+  names?: T;
+  paymentStatus?: T;
+  plan?: T;
+  paidAt?: T;
+  expiresAt?: T;
+  contactEmail?: T;
+  amount?: T;
+  promoCode?: T;
+  orderId?: T;
+  orderPlan?: T;
+  paymentId?: T;
+  editToken?: T;
+  state?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "invite-rsvps_select".
+ */
+export interface InviteRsvpsSelect<T extends boolean = true> {
+  invite?: T;
+  name?: T;
+  guests?: T;
+  events?: T;
   updatedAt?: T;
   createdAt?: T;
 }
