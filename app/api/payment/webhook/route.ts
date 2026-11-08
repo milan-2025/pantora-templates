@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPayloadClient } from "@/lib/cms/queries";
 import { markOrderPaid } from "@/lib/fulfil";
+import { markInvitePaid } from "@/lib/invites";
 import { hmacHex, signaturesMatch } from "@/lib/payments";
 
 /**
@@ -38,7 +39,11 @@ export async function POST(req: Request) {
       const payload = await getPayloadClient();
       const result = await markOrderPaid(payload, orderId, payment?.id);
       // Orders from other sites/tests on the same Razorpay account are simply ignored.
-      if (!result.found) console.log(`[webhook] no order ${orderId} on this site; ignored`);
+      if (!result.found) {
+        // Not a shop order: it may be a wedding invite payment.
+        const invite = await markInvitePaid(payload, orderId, payment?.id);
+        if (!invite.found) console.log(`[webhook] no order ${orderId} on this site; ignored`);
+      }
     }
   }
   // Always 200 for valid, signed events so Razorpay doesn't keep retrying ones we don't use.
