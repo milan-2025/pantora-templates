@@ -10,7 +10,8 @@
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "generate": "npm run payload generate:types && npm run payload generate:importmap",
     "seed": "npm run payload run scripts/seed.ts",
-    "fill-preview": "npm run payload run scripts/fill-preview.ts"
+    "fill-preview": "npm run payload run scripts/fill-preview.ts",
+    "build-studio": "node scripts/build-studio.mjs"
   },
   "dependencies": {
     "@payloadcms/db-mongodb": "^3.90.2",
