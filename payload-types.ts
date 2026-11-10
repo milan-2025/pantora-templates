@@ -107,9 +107,11 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     'site-settings': SiteSetting;
+    'invite-plans': InvitePlan;
   };
   globalsSelect: {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    'invite-plans': InvitePlansSelect<false> | InvitePlansSelect<true>;
   };
   locale: null;
   widgets: {
@@ -700,6 +702,16 @@ export interface Affiliate {
 export interface Invite {
   id: string;
   /**
+   * Tick this and save to send them a reminder with a link to finish their invite. Needs their email below.
+   */
+  emailNow?: boolean | null;
+  /**
+   * An active code from Affiliates, e.g. SHAADI20. Leave empty to use the default from Invite plans & prices.
+   */
+  emailPromo?: string | null;
+  lastEmailedAt?: string | null;
+  reminderCount?: number | null;
+  /**
    * The invite link: /i/<slug>
    */
   slug: string;
@@ -746,6 +758,15 @@ export interface InviteRsvp {
   name: string;
   guests: number;
   events?: string | null;
+  meal?: string | null;
+  /**
+   * Which guest link they replied from (if any)
+   */
+  guest?: string | null;
+  /**
+   * Blessing / note the guest left for the couple
+   */
+  message?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1429,6 +1450,10 @@ export interface OrdersSelect<T extends boolean = true> {
  * via the `definition` "invites_select".
  */
 export interface InvitesSelect<T extends boolean = true> {
+  emailNow?: T;
+  emailPromo?: T;
+  lastEmailedAt?: T;
+  reminderCount?: T;
   slug?: T;
   names?: T;
   paymentStatus?: T;
@@ -1455,6 +1480,9 @@ export interface InviteRsvpsSelect<T extends boolean = true> {
   name?: T;
   guests?: T;
   events?: T;
+  meal?: T;
+  guest?: T;
+  message?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1828,6 +1856,54 @@ export interface SiteSetting {
   createdAt?: string | null;
 }
 /**
+ * Edit the names, prices (₹, incl. GST) and bullet points of the three invite plans. Leave the 'Plan' dropdown as it is: it decides which features each plan unlocks (guest links and RSVP tracker from Premium, custom domain on Royal).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "invite-plans".
+ */
+export interface InvitePlan {
+  id: string;
+  /**
+   * Optional line above the plans, e.g. “Festive offer: 20% off with code SHAADI20”.
+   */
+  banner?: string | null;
+  /**
+   * How many months an invite stays live after payment (applies to new payments).
+   */
+  validityMonths?: number | null;
+  /**
+   * Emails couples who saved their email but didn't pay. Needs a daily cron job calling /api/shaadi/cron/reminders (see the README).
+   */
+  reminderEnabled?: boolean | null;
+  reminderAfterHours?: number | null;
+  /**
+   * An active code from Affiliates, e.g. SHAADI20. The email shows its discount and applies it at checkout.
+   */
+  reminderPromoCode?: string | null;
+  reminderMessage?: string | null;
+  plans?:
+    | {
+        planId: 'basic' | 'premium' | 'royal';
+        name: string;
+        price: number;
+        tagline?: string | null;
+        /**
+         * Small label on the card, e.g. “Most chosen”.
+         */
+        badge?: string | null;
+        features?:
+          | {
+              text: string;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings_select".
  */
@@ -1859,6 +1935,37 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         id?: T;
       };
   metaPixelId?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "invite-plans_select".
+ */
+export interface InvitePlansSelect<T extends boolean = true> {
+  banner?: T;
+  validityMonths?: T;
+  reminderEnabled?: T;
+  reminderAfterHours?: T;
+  reminderPromoCode?: T;
+  reminderMessage?: T;
+  plans?:
+    | T
+    | {
+        planId?: T;
+        name?: T;
+        price?: T;
+        tagline?: T;
+        badge?: T;
+        features?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

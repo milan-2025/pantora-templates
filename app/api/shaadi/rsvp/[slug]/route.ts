@@ -8,6 +8,9 @@ const bodySchema = z.object({
   name: z.string().trim().min(1).max(120),
   guests: z.coerce.number().int().min(1).max(50).default(1),
   events: z.string().trim().max(250).optional().default(""),
+  meal: z.string().trim().max(30).optional().default(""),
+  guest: z.string().trim().max(90).optional().default(""),
+  message: z.string().trim().max(500).optional().default(""),
 });
 
 /** A guest's reply from a live invite. */
