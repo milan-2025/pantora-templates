@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getPayloadClient } from "@/lib/cms/queries";
-import { INVITE_PLANS, PLAN_IDS, authorize, quoteFor } from "@/lib/invites";
+import { PLAN_IDS, authorize, isLive, quoteFor } from "@/lib/invites";
 import { getPaymentProvider } from "@/lib/payments";
 import { clientIp, rateLimit } from "@/lib/rateLimit";
 import { promoCodeSchema } from "@/lib/schema";
@@ -25,7 +25,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid details" }, { status: 400 });
   const { plan, coupon, email, phone } = parsed.data;
 
-  const quote = await quoteFor(payload, plan, coupon);
+  // A paid invite buying a higher plan only pays the difference.
+  const quote = await quoteFor(payload, plan, coupon, isLive(invite) ? invite.plan : null);
   if ("error" in quote && quote.error) return NextResponse.json({ error: quote.error }, { status: 400 });
 
   try {
@@ -33,7 +34,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
       amount: quote.total,
       currency: "INR",
       customer: { name: invite.names || "Wedding invite", email, phone, city: "" },
-      description: `Wedding invite – ${INVITE_PLANS[plan].name} plan`,
+      description: `Wedding invite – ${quote.name ?? plan} plan`,
     });
     await payload.update({
       collection: "invites",

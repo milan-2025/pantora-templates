@@ -1,4 +1,4 @@
-import type { CollectionConfig } from "payload";
+import { APIError, type CollectionConfig } from "payload";
 import { authenticated, nobody } from "@/lib/cms/access";
 
 /** Wedding invites made with the invite maker (/shaadi). Created and edited through /api/shaadi, never the public Payload API. */
@@ -13,7 +13,39 @@ export const Invites: CollectionConfig = {
   },
   defaultSort: "-createdAt",
   access: { read: authenticated, create: nobody, update: authenticated, delete: authenticated },
+  hooks: {
+    // Tick "Email the couple now" and save: sends them their draft link (with the promo code, if you typed one).
+    beforeChange: [
+      async ({ data, originalDoc, req }) => {
+        if (!data?.emailNow) return data;
+        const id = originalDoc?.id;
+        const full = id ? await req.payload.findByID({ collection: "invites", id, depth: 0, overrideAccess: true }) : null;
+        if (!full) throw new APIError("Save the invite first.", 400);
+        if (full.paymentStatus === "paid") throw new APIError("This couple has already paid.", 400);
+        const email = data.contactEmail ?? full.contactEmail;
+        if (!email) throw new APIError("Add the couple's email under Payment details first.", 400);
+        // Loaded on demand so the Payload CLI (which loads this file) never imports server-only code.
+        const { emailCouple } = await import("@/lib/inviteEmail");
+        await emailCouple(req.payload, { ...full, contactEmail: email }, { kind: "reminder", promo: data.emailPromo ?? undefined });
+        data.emailNow = false;
+        data.lastEmailedAt = new Date().toISOString();
+        data.reminderCount = (full.reminderCount ?? 0) + 1;
+        return data;
+      },
+    ],
+  },
   fields: [
+    {
+      type: "collapsible",
+      label: "Email the couple",
+      admin: { initCollapsed: false },
+      fields: [
+        { name: "emailNow", type: "checkbox", defaultValue: false, label: "Email the couple now", admin: { description: "Tick this and save to send them a reminder with a link to finish their invite. Needs their email below." } },
+        { name: "emailPromo", type: "text", label: "Promo code to include (optional)", admin: { description: "An active code from Affiliates, e.g. SHAADI20. Leave empty to use the default from Invite plans & prices." } },
+        { name: "lastEmailedAt", type: "date", admin: { readOnly: true } },
+        { name: "reminderCount", type: "number", defaultValue: 0, admin: { readOnly: true } },
+      ],
+    },
     { name: "slug", type: "text", required: true, unique: true, index: true, admin: { readOnly: true, description: "The invite link: /i/<slug>" } },
     { name: "names", type: "text", admin: { readOnly: true } },
     {

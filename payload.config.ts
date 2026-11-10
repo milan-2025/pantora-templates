@@ -19,6 +19,7 @@ import { Invites } from "./collections/Invites";
 import { InviteRsvps } from "./collections/InviteRsvps";
 import { ContactSubmissions } from "./collections/ContactSubmissions";
 import { SiteSettings } from "./globals/SiteSettings";
+import { InvitePlans } from "./globals/InvitePlans";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -72,7 +73,7 @@ export default buildConfig({
     },
   },
   collections: [Products, Orders, Invites, InviteRsvps, Affiliates, Pages, Posts, Media, ProductFiles, ContactSubmissions, Users],
-  globals: [SiteSettings],
+  globals: [SiteSettings, InvitePlans],
   editor: lexicalEditor(),
   // Admin emails (e.g. "forgot password") go through Brevo, like the rest of the site's email.
   email: brevoAdapter,

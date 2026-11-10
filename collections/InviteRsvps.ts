@@ -17,5 +17,8 @@ export const InviteRsvps: CollectionConfig = {
     { name: "name", type: "text", required: true },
     { name: "guests", type: "number", required: true, min: 1, max: 50 },
     { name: "events", type: "text" },
+    { name: "meal", type: "text" },
+    { name: "guest", type: "text", admin: { description: "Which guest link they replied from (if any)" } },
+    { name: "message", type: "textarea", admin: { description: "Blessing / note the guest left for the couple" } },
   ],
 };
