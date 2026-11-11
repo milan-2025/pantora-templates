@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
     return {
       beforeFiles: [
         { source: "/CRM", destination: "/CRM/index.html" },
-        { source: "/crm", destination: "/CRM/index.html" },
+        { source: "/crm", destination: "/crm-software.html" },
         { source: "/CRM/api.php", destination: "/api/crm" },
       ],
       afterFiles: [],
