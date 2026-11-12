@@ -12,6 +12,7 @@ import {
   UNIT_STATUSES, UNIT_LIMITS, PROJECT_TYPES, canRelease, canTransition, cleanUnit, expiredHoldFilter,
   holdFilter, holdHours, modeOf, releaseUpdate, type UnitStatus,
 } from "@/lib/crm/realestate";
+import { buildReport } from "@/lib/crm/reports";
 import { cleanEnquiry, cleanPhone10, parseAmenities, safeHttpsUrl } from "@/lib/crm/publicPage";
 import { canChangeStatus, cleanPct, commissionAmount, effectiveRate, partnerLeadFields, partnerStats, shouldCreate, summarize } from "@/lib/crm/commission";
 import { addVisit, cleanOutcome, cleanVisit, listVisits, removeVisit, rescheduleVisit, stageOnDone, stageOnSchedule, updateVisit, visitNote } from "@/lib/crm/visits";
@@ -196,7 +197,7 @@ const WRITES = new Set([
   "visit_save", "visit_done", "visit_delete", "commission_update",
 ]);
 // Only available when the company has switched Real estate mode on (Menu > Real estate mode).
-const RE_ACTIONS = new Set(["projects_list", "project_save", "project_delete", "units_list", "unit_save", "units_import", "unit_delete", "unit_hold", "unit_release", "unit_status", "visits_list", "visit_save", "visit_done", "visit_delete", "partners_list", "commissions_list", "commission_update"]);
+const RE_ACTIONS = new Set(["projects_list", "project_save", "project_delete", "units_list", "unit_save", "units_import", "unit_delete", "unit_hold", "unit_release", "unit_status", "visits_list", "visit_save", "visit_done", "visit_delete", "partners_list", "commissions_list", "commission_update", "report"]);
 // Channel partners can only use these (their own leads, the project list, and their own commissions).
 const PARTNER_OK = new Set(["me", "leads", "leads_add", "leads_update", "settings", "projects_list", "units_list", "commissions_list", "password"]);
 const setCookie = (res: NextResponse, u: any) => res.cookies.set("crm_t", makeToken(u), { httpOnly: true, secure: E.NODE_ENV === "production", sameSite: "lax", path: "/CRM", maxAge: 30 * 86400 });
@@ -620,6 +621,24 @@ async function handle(req: NextRequest) {
       if (body.note !== undefined) set.note = String(body.note || "").trim().slice(0, 200);
       await c.commissions.updateOne({ _id: cm._id, ws, status: cm.status }, { $set: set });
       return json({ ok: 1 });
+    }
+
+
+    // ----- Reports (admins only): leads received in the period are followed through to visits and bookings -----
+    case "report": {
+      const x = only(); if (x) return x;
+      const ts = (k: string) => { const v = url.searchParams.get(k); return v && /^\d{10,14}$/.test(v) ? Number(v) : null; };
+      const [ls, us, ps, cs] = await Promise.all([
+        c.leads.find({ ws }).limit(20000).toArray(), c.units.find({ ws }).limit(20000).toArray(),
+        c.projects.find({ ws }).toArray(), c.commissions.find({ ws }).limit(20000).toArray(),
+      ]);
+      return json(buildReport({
+        from: ts("from"), to: ts("to"),
+        leads: ls.map((l: any) => ({ id: l._id, created: l.created, status: l.data?.status, source: l.data?.source, owner: l.data?.owner, partnerId: l.data?.partnerId, partner: l.data?.partner, project: l.data?.project, appts: l.data?.appts })),
+        units: us.map((u: any) => ({ id: u._id, project: u.project, status: u.status, price: u.price, leadId: u.leadId })),
+        projects: ps.map((p: any) => ({ id: p._id, name: p.name, views: p.views, enquiries: p.enquiries })),
+        commissions: cs.map((m: any) => ({ partnerId: m.partnerId, status: m.status, amount: m.amount, created: m.created })),
+      }));
     }
 
     // ----- platform admin (you): manage every customer company -----

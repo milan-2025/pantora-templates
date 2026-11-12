@@ -14,6 +14,28 @@ Your platform admin screen can also set the mode for any company.
 - **Lead stages:** adds *Site visit scheduled*, *Site visit done*, *Negotiation*, *Booked* to the normal stages.
 - **Lead fields:** project interested in, budget, type/BHK (also available as columns).
 
+## Site visits (menu: 📍 Site visits)
+- Schedule a visit for a lead (project, optional unit, time). Early-stage leads move to *Site visit scheduled*; later stages never move backwards.
+- Mark done with an outcome (interested, still thinking, not interested, did not come) and feedback. The lead moves to *Site visit done*, a note is added, and "not interested" marks it Cold. A no-show keeps the stage and can be rescheduled.
+- Tabs: Today, Needs update, Upcoming, Done. Agents see their own leads' visits, admins see everyone's. One-tap call and WhatsApp.
+- Visits are stored on the lead as appointments of type "Site visit", so they also appear in the existing calendar and "today" lists.
+
+## Channel partners and commissions (menu: 🤝 Partners & commissions)
+- Admins add **partners** (a login with a limited view). Partners do not use a sales seat and never get leads assigned.
+- A partner registers customers on the normal Leads screen. **First registration wins**: a phone number already in the CRM is refused. New partner leads go to the sales team round-robin; the partner keeps attribution and sees only their own customers, the project list and availability (not who holds units).
+- Partners cannot change stage, owner or attribution. Only an admin can change a lead's partner (lead detail → Channel partner).
+- **Commission rates:** per project (Properties → Edit project → Partner commission %), optionally overridden per partner. When an admin books a unit for a partner's lead, a *pending* commission is created (sale value x rate). Admins approve, mark paid, edit the amount, or cancel. Releasing a booked unit cancels unpaid commissions; paid ones are kept.
+- GST and TDS on payouts are **not** calculated yet (confirm rules with your CA first).
+
+## Public project page
+- Properties → Edit project → **Publish this project's public page**. Add about text, amenities, a cover image link (https) and a contact number.
+- The link looks like `/property/<id>?ref=<your id>`. Use **Copy page link** or **Share on WhatsApp**: each team member or partner gets their own `ref`, so enquiries are credited to them.
+- The page shows the project, starting price, available units grouped by type (no unit numbers or buyers) and a callback form. Submissions create a lead (source "Project page"); repeat enquiries add a note instead of a duplicate. Spam is limited (hidden trap field, 5 enquiries/hour per visitor).
+- The page goes offline if real estate mode is switched off, the project is unpublished, or the subscription ends.
+
+## Reports (menu: 📊 Reports, admins)
+Leads received in the chosen period (7/30/90 days or all time) followed through the funnel: sources, projects (units and page views/enquiries), sales team and partners. A lead's furthest stage is taken from its current stage and its site visits; leads marked Lost keep credit only for visits they had.
+
 ## Rules built in
 - Every project and unit belongs to one company; every query is scoped to it (see `tests/crm-api.test.ts`).
 - Real estate endpoints return 403 when the company's mode is off.
@@ -21,13 +43,15 @@ Your platform admin screen can also set the mode for any company.
 - Plan unit limits (`UNIT_LIMITS` in `lib/crm/realestate.ts`): trial 200, starter 500, growth 5,000.
 
 ## Data (MongoDB)
-`crm_workspaces.mode` (`"general"` or `"realestate"`), `crm_projects`, `crm_units` (unique per company + project + unit number).
+`crm_workspaces.mode` (`"general"` or `"realestate"`), `crm_projects`, `crm_units` (unique per company + project + unit number), `crm_commissions`. Partners are `crm_users` with role `partner`.
 
 ## Code map
 - Pure logic + tests: `lib/crm/realestate.ts`, `tests/realestate.test.ts`
 - API: `app/api/crm/route.ts` (actions `mode_set`, `projects_list`, `project_save`, `units_list`, `unit_save`, `units_import`, `unit_hold`, `unit_release`, `unit_status` ...)
-- Screens: `public/CRM/properties.html`, and mode-aware parts of `public/CRM/index.html`
+- Screens: `public/CRM/properties.html`, `visits.html`, `partners.html`, `reports.html` (shared styles in `re.css`), and mode-aware parts of `public/CRM/index.html`
+- Logic (pure, tested): `lib/crm/realestate.ts`, `visits.ts`, `commission.ts`, `publicPage.ts`, `reports.ts`
+- Public page: `app/property/[pub]/route.ts`; enquiry form posts to the `enquiry` action in `app/api/crm/route.ts`
 - Tests: `npm test` (runs against an in-memory database; no MongoDB needed)
 
 ## Not built yet
-Commissions and channel partners, GST/TDS invoicing, cost sheets, per-company WhatsApp, public property pages, Razorpay subscriptions.
+Cost sheets and quotations, GST/TDS on payouts, per-company WhatsApp API, Razorpay subscriptions.
