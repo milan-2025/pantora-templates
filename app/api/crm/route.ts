@@ -12,6 +12,7 @@ import {
   UNIT_STATUSES, UNIT_LIMITS, PROJECT_TYPES, canRelease, canTransition, cleanUnit, expiredHoldFilter,
   holdFilter, holdHours, modeOf, releaseUpdate, type UnitStatus,
 } from "@/lib/crm/realestate";
+import { canChangeStatus, cleanPct, commissionAmount, effectiveRate, partnerLeadFields, partnerStats, shouldCreate, summarize } from "@/lib/crm/commission";
 import { addVisit, cleanOutcome, cleanVisit, listVisits, removeVisit, rescheduleVisit, stageOnDone, stageOnSchedule, updateVisit, visitNote } from "@/lib/crm/visits";
 
 export const dynamic = "force-dynamic";
@@ -65,10 +66,33 @@ const state = (w: any) => {
 // ---------- database (re-uses Payload's MongoDB connection) ----------
 async function dbs() {
   const db = (await getPayloadClient()).db.connection.db as any;
-  return { users: db.collection("crm_users"), leads: db.collection("crm_leads"), settings: db.collection("crm_settings"), ws: db.collection("crm_workspaces"), projects: db.collection("crm_projects"), units: db.collection("crm_units") };
+  return { users: db.collection("crm_users"), leads: db.collection("crm_leads"), settings: db.collection("crm_settings"), ws: db.collection("crm_workspaces"), projects: db.collection("crm_projects"), units: db.collection("crm_units"), commissions: db.collection("crm_commissions") };
 }
 type C = Awaited<ReturnType<typeof dbs>>;
-const teamNames = async (c: C, ws: string) => (await c.users.find({ ws }).sort({ name: 1 }).toArray()).map((u: any) => u.name as string);
+/** Create (or cancel) the channel-partner commission when a unit is booked / released. */
+async function syncCommission(c: C, ws: string, unit: any, lead: any, to: string) {
+  if (to === "available" || to === "hard_hold") {
+    await c.commissions.updateMany({ ws, unitId: unit._id, status: { $in: ["pending", "approved"] } }, { $set: { status: "cancelled", updated: Date.now() } });
+    return;
+  }
+  if (to !== "booked" && to !== "sold") return;
+  const l = lead || (unit.leadId ? await c.leads.findOne({ _id: unit.leadId, ws }) : null);
+  const pid = l?.data?.partnerId;
+  if (!pid) return;
+  const partner = await c.users.findOne({ _id: pid, ws, role: "partner" });
+  if (!partner) return;
+  const proj = await c.projects.findOne({ _id: unit.project, ws });
+  const rate = effectiveRate(partner.rate, proj?.commissionPct);
+  if (!shouldCreate(pid, rate, unit.price)) return;
+  if (await c.commissions.findOne({ ws, unitId: unit._id, leadId: l._id, status: { $ne: "cancelled" } })) return;
+  await c.commissions.insertOne({
+    _id: rid(), ws, leadId: l._id, leadName: l.data?.name || "", unitId: unit._id, unitLabel: `${unit.tower ? unit.tower + " " : ""}${unit.no}`,
+    projectId: unit.project, projectName: proj?.name || "", partnerId: partner._id, partnerName: partner.name,
+    saleValue: unit.price, rate, amount: commissionAmount(unit.price, rate), status: "pending", created: Date.now(), updated: Date.now(),
+  });
+}
+
+const teamNames = async (c: C, ws: string) => (await c.users.find({ ws, role: { $ne: "partner" } }).sort({ name: 1 }).toArray()).map((u: any) => u.name as string);
 const row = (d: any) => ({ id: d._id, ...d.data });
 const sk = (ws: string, k: string) => `${ws}:${k}`;
 
@@ -86,6 +110,7 @@ async function boot(c: C) {
   await c.units.createIndex({ ws: 1, project: 1, no: 1 }, { unique: true }).catch(() => {});
   await c.units.createIndex({ ws: 1, status: 1 }).catch(() => {});
   await c.projects.createIndex({ ws: 1, name: 1 }).catch(() => {});
+  await c.commissions.createIndex({ ws: 1, partnerId: 1, status: 1 }).catch(() => {});
   let w = await c.ws.findOne({ plan: "internal" });
   const old = await c.users.countDocuments({ ws: { $exists: false } });
   const list = (E.CRM_USERS || "").split(",").filter(Boolean);
@@ -166,10 +191,12 @@ async function ingestMeta(c: C, w: any, id: string) {
 const WRITES = new Set([
   "leads_add", "leads_update", "leads_delete", "settings_set", "user_save",
   "mode_set", "project_save", "project_delete", "unit_save", "units_import", "unit_delete", "unit_hold", "unit_release", "unit_status",
-  "visit_save", "visit_done", "visit_delete",
+  "visit_save", "visit_done", "visit_delete", "commission_update",
 ]);
 // Only available when the company has switched Real estate mode on (Menu > Real estate mode).
-const RE_ACTIONS = new Set(["projects_list", "project_save", "project_delete", "units_list", "unit_save", "units_import", "unit_delete", "unit_hold", "unit_release", "unit_status", "visits_list", "visit_save", "visit_done", "visit_delete"]);
+const RE_ACTIONS = new Set(["projects_list", "project_save", "project_delete", "units_list", "unit_save", "units_import", "unit_delete", "unit_hold", "unit_release", "unit_status", "visits_list", "visit_save", "visit_done", "visit_delete", "partners_list", "commissions_list", "commission_update"]);
+// Channel partners can only use these (their own leads, the project list, and their own commissions).
+const PARTNER_OK = new Set(["me", "leads", "leads_add", "leads_update", "settings", "projects_list", "units_list", "commissions_list", "password"]);
 const setCookie = (res: NextResponse, u: any) => res.cookies.set("crm_t", makeToken(u), { httpOnly: true, secure: E.NODE_ENV === "production", sameSite: "lax", path: "/CRM", maxAge: 30 * 86400 });
 
 // ---------- the API ----------
@@ -265,8 +292,11 @@ async function handle(req: NextRequest) {
   if (RE_ACTIONS.has(r) && mode !== "realestate") return json({ error: "Real estate mode is off. Turn it on in the menu." }, 403);
   const admin = U.role === "admin";
   const sa = isSA(U.email);
+  const partner = U.role === "partner"; // external channel partner: sees only leads they brought in
+  if (partner && mode !== "realestate") return json({ error: "Channel partner access is switched off for this company." }, 403);
+  if (partner && !PARTNER_OK.has(r)) return json({ error: "Not available for channel partners" }, 403);
   const only = () => (admin ? null : json({ error: "Admins only" }, 403));
-  const mine = (d: any) => admin || (d?.owner ?? "") === U.name;
+  const mine = (d: any) => admin || (partner ? d?.partnerId === U._id : (d?.owner ?? "") === U.name);
   const clean = (o: any) => Object.fromEntries(Object.entries(o || {}).filter(([k]) => !k.startsWith("$") && !k.includes(".")));
   const id = url.searchParams.get("id") || "";
   const key = url.searchParams.get("k") || "";
@@ -274,13 +304,26 @@ async function handle(req: NextRequest) {
   switch (r) {
     case "me": return json({ id: U._id, name: U.name, role: U.role, sa, ws: { name: W.name, plan: W.plan, mode, daysLeft: st.daysLeft, readonly: st.ro, sheetToken: admin ? W.sheetToken : undefined } });
     case "leads": {
-      const docs = await c.leads.find(admin ? { ws } : { ws, "data.owner": U.name }).sort({ created: -1 }).limit(5000).toArray();
+      const docs = await c.leads.find(admin ? { ws } : partner ? { ws, "data.partnerId": U._id } : { ws, "data.owner": U.name }).sort({ created: -1 }).limit(5000).toArray();
       return json(docs.map(row));
     }
     case "leads_add": {
       if ((await c.leads.countDocuments({ ws })) >= PLANS[W.plan].leads) return json({ error: `Your plan allows ${PLANS[W.plan].leads} leads. Contact us to upgrade.` }, 403);
-      const d = clean(body) as any;
-      if (!admin && !d.owner) d.owner = U.name;
+      let d = clean(body) as any;
+      delete d.partnerId; delete d.partner;
+      if (partner) {
+        // A partner registers a buyer: first registration wins, and the lead is assigned to the sales team.
+        const pk = digits(d.phone);
+        if (pk.length < 10) return json({ error: "Enter a valid 10-digit phone number" }, 400);
+        if (await c.leads.findOne({ ws, pk })) return json({ error: "This customer is already registered with us." }, 409);
+        const names = await teamNames(c, ws);
+        const n = await c.leads.countDocuments({ ws });
+        d = { ...partnerLeadFields(d), status: "New", source: "Channel partner", owner: names.length ? names[n % names.length] : "", partnerId: U._id, partner: U.name, notes: [], created: Date.now() };
+      } else if (!admin && !d.owner) d.owner = U.name;
+      if (admin && body.partnerId) {
+        const pu = await c.users.findOne({ _id: String(body.partnerId), ws, role: "partner" });
+        if (pu) { d.partnerId = pu._id; d.partner = pu.name; }
+      }
       const nid = rid();
       await c.leads.insertOne({ _id: nid, ws, pk: digits(d.phone), created: d.created || Date.now(), data: d });
       return json({ id: nid });
@@ -290,8 +333,15 @@ async function handle(req: NextRequest) {
       if (!old) return json({ error: "nf" }, 404);
       if (!mine(old.data)) return json({ error: "Not your lead" }, 403);
       const set: any = {};
-      for (const [k, v] of Object.entries(clean(body))) set[`data.${k}`] = v;
-      if ("phone" in body) set.pk = digits(body.phone);
+      const fields: Record<string, any> = partner ? partnerLeadFields(body) : { ...clean(body) };
+      delete fields.partnerId; delete fields.partner; // attribution can only be changed below, by an admin
+      for (const [k, v] of Object.entries(fields)) set[`data.${k}`] = v;
+      if ("phone" in fields) set.pk = digits(fields.phone);
+      if (admin && "partnerId" in body) {
+        const pu = body.partnerId ? await c.users.findOne({ _id: String(body.partnerId), ws, role: "partner" }) : null;
+        set["data.partnerId"] = pu ? pu._id : "";
+        set["data.partner"] = pu ? pu.name : "";
+      }
       if (Object.keys(set).length) await c.leads.updateOne({ _id: id, ws }, { $set: set });
       return json({ ok: 1 });
     }
@@ -304,23 +354,25 @@ async function handle(req: NextRequest) {
     case "settings_set": { const x = only(); if (x) return x; await c.settings.replaceOne({ _id: sk(ws, key) }, { _id: sk(ws, key), ws, k: key, v: body }, { upsert: true }); return json({ ok: 1 }); }
     case "users_list": {
       const x = only(); if (x) return x;
-      return json((await c.users.find({ ws }).sort({ name: 1 }).toArray()).map((u: any) => ({ id: u._id, name: u.name, email: u.email, role: u.role })));
+      return json((await c.users.find({ ws }).sort({ name: 1 }).toArray()).map((u: any) => ({ id: u._id, name: u.name, email: u.email, role: u.role, rate: u.rate ?? null })));
     }
     case "user_save": {
       const x = only(); if (x) return x;
-      const n = String(body.name || "").trim(), e = String(body.email || "").trim().toLowerCase(), ro = body.role === "admin" ? "admin" : "agent", pw = String(body.password || ""), uid2 = String(body.id || "");
+      const n = String(body.name || "").trim(), e = String(body.email || "").trim().toLowerCase(), ro = body.role === "admin" ? "admin" : body.role === "partner" ? "partner" : "agent", rate = cleanPct(body.rate), pw = String(body.password || ""), uid2 = String(body.id || "");
       if (!n || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) return json({ error: "Enter a name and a valid email" }, 400);
       if (await c.users.findOne({ $or: [{ ws, name: n }, { email: e }], _id: { $ne: uid2 } })) return json({ error: "That name or email is already used" }, 400);
       if (pw && pw.length < 8) return json({ error: "Password must be at least 8 characters" }, 400);
       if (!uid2) {
         if (!pw) return json({ error: "Set a password (min 8 characters)" }, 400);
-        if ((await c.users.countDocuments({ ws })) >= PLANS[W.plan].users) return json({ error: `Your plan allows ${PLANS[W.plan].users} users. Contact us to upgrade.` }, 403);
-        await c.users.insertOne({ _id: rid(), ws, name: n, email: e, pass: hash(pw), role: ro });
+        if (ro === "partner" && mode !== "realestate") return json({ error: "Turn on Real estate mode to add channel partners." }, 403);
+        if (ro === "partner") { if ((await c.users.countDocuments({ ws, role: "partner" })) >= 200) return json({ error: "Partner limit reached (200)." }, 403); }
+        else if ((await c.users.countDocuments({ ws, role: { $ne: "partner" } })) >= PLANS[W.plan].users) return json({ error: `Your plan allows ${PLANS[W.plan].users} users. Contact us to upgrade.` }, 403);
+        await c.users.insertOne({ _id: rid(), ws, name: n, email: e, pass: hash(pw), role: ro, ...(ro === "partner" ? { rate } : {}) });
       } else {
         const old = await c.users.findOne({ _id: uid2, ws });
         if (!old) return json({ error: "User not found" }, 404);
         if (old.role === "admin" && ro !== "admin" && (await c.users.countDocuments({ ws, role: "admin" })) < 2) return json({ error: "Keep at least one admin" }, 400);
-        await c.users.updateOne({ _id: uid2 }, { $set: { name: n, email: e, role: ro, ...(pw ? { pass: hash(pw) } : {}) } });
+        await c.users.updateOne({ _id: uid2 }, { $set: { name: n, email: e, role: ro, rate: ro === "partner" ? rate : null, ...(pw ? { pass: hash(pw) } : {}) } });
         if (old.name !== n) await c.leads.updateMany({ ws, "data.owner": old.name }, { $set: { "data.owner": n } });
       }
       return json({ ok: 1 });
@@ -347,7 +399,7 @@ async function handle(req: NextRequest) {
     }
     case "projects_list": {
       const ps = await c.projects.find({ ws }).sort({ name: 1 }).toArray();
-      return json(ps.map((p: any) => ({ id: p._id, name: p.name, city: p.city || "", locality: p.locality || "", type: p.type || "residential", reraNumber: p.reraNumber || "", holdHours: p.holdHours || 48 })));
+      return json(ps.map((p: any) => ({ id: p._id, name: p.name, city: p.city || "", locality: p.locality || "", type: p.type || "residential", reraNumber: p.reraNumber || "", holdHours: p.holdHours || 48, ...(admin ? { commissionPct: p.commissionPct ?? null } : {}) })));
     }
     case "project_save": {
       const x = only(); if (x) return x;
@@ -358,7 +410,7 @@ async function handle(req: NextRequest) {
       const doc = {
         name, city: String(body.city || "").trim().slice(0, 60), locality: String(body.locality || "").trim().slice(0, 80),
         type: (PROJECT_TYPES as readonly string[]).includes(body.type) ? body.type : "residential",
-        reraNumber: String(body.reraNumber || "").trim().slice(0, 40), holdHours: holdHours(body.holdHours),
+        reraNumber: String(body.reraNumber || "").trim().slice(0, 40), holdHours: holdHours(body.holdHours), commissionPct: cleanPct(body.commissionPct),
       };
       if (pid) { const r2 = await c.projects.updateOne({ _id: pid, ws }, { $set: doc }); if (!r2.matchedCount) return json({ error: "nf" }, 404); return json({ id: pid }); }
       const nid = rid();
@@ -377,7 +429,7 @@ async function handle(req: NextRequest) {
       const q: any = { ws };
       if (id) q.project = id;
       const us = await c.units.find(q).sort({ project: 1, tower: 1, floor: 1, no: 1 }).limit(5000).toArray();
-      return json(us.map((u: any) => ({ id: u._id, project: u.project, no: u.no, tower: u.tower || "", floor: u.floor ?? null, bhk: u.bhk || "", area: u.area ?? null, price: u.price ?? null, status: u.status, heldUntil: u.heldUntil || null, heldBy: u.heldBy || "", leadId: u.leadId || "", leadName: u.leadName || "" })));
+      return json(us.map((u: any) => ({ id: u._id, project: u.project, no: u.no, tower: u.tower || "", floor: u.floor ?? null, bhk: u.bhk || "", area: u.area ?? null, price: u.price ?? null, status: u.status, heldUntil: u.heldUntil || null, ...(partner ? {} : { heldBy: u.heldBy || "", leadId: u.leadId || "", leadName: u.leadName || "" }) })));
     }
     case "unit_save": {
       const x = only(); if (x) return x;
@@ -455,6 +507,7 @@ async function handle(req: NextRequest) {
       const upd: any = to === "available" ? releaseUpdate() : { $set: { status: to, updated: Date.now(), ...(lead ? { leadId: lead._id, leadName: lead.data?.name || "" } : {}) }, $unset: { heldUntil: "", heldBy: "" } };
       const r2 = await c.units.updateOne({ _id: unit._id, ws, status: unit.status }, upd); // fails if someone changed it in the meantime
       if (!r2.matchedCount) return json({ error: "This unit was just changed by someone else. Refresh and try again." }, 409);
+      await syncCommission(c, ws, unit, lead, to);
       if (lead && to === "booked" && lead.data?.status !== "Won") await c.leads.updateOne({ _id: lead._id, ws }, { $set: { "data.status": "Booked", "data.unit": `${unit.tower ? unit.tower + " " : ""}${unit.no}` } });
       return json({ ok: 1 });
     }
@@ -500,6 +553,45 @@ async function handle(req: NextRequest) {
       const lead = await c.leads.findOne({ _id: String(body.leadId || ""), ws });
       if (!lead || !mine(lead.data)) return json({ error: "Lead not found" }, 404);
       await c.leads.updateOne({ _id: lead._id, ws }, { $set: { "data.appts": removeVisit(lead.data.appts, String(body.id || "")) } });
+      return json({ ok: 1 });
+    }
+
+
+    // ----- Channel partners and commissions -----
+    case "partners_list": {
+      const x = only(); if (x) return x;
+      const ps = await c.users.find({ ws, role: "partner" }).sort({ name: 1 }).toArray();
+      const ids = ps.map((p: any) => p._id);
+      const ls = ids.length ? await c.leads.find({ ws, "data.partnerId": { $in: ids } }).limit(10000).toArray() : [];
+      const cs = await c.commissions.find({ ws }).limit(10000).toArray();
+      return json(partnerStats(ps.map((p: any) => ({ id: p._id, name: p.name, email: p.email, rate: p.rate })), ls.map((l: any) => ({ status: l.data?.status, partnerId: l.data?.partnerId })), cs));
+    }
+    case "commissions_list": {
+      const q: any = admin ? { ws } : { ws, partnerId: U._id };
+      const st = url.searchParams.get("status");
+      if (st) q.status = st;
+      const cs = await c.commissions.find(q).sort({ created: -1 }).limit(2000).toArray();
+      const all = st ? await c.commissions.find(admin ? { ws } : { ws, partnerId: U._id }).limit(5000).toArray() : cs;
+      return json({ items: cs.map((m: any) => ({ id: m._id, leadName: m.leadName, unit: m.unitLabel, project: m.projectName, partnerId: m.partnerId, partner: m.partnerName, saleValue: m.saleValue, rate: m.rate, amount: m.amount, status: m.status, created: m.created, paidAt: m.paidAt || null, note: m.note || "" })), totals: summarize(all) });
+    }
+    case "commission_update": {
+      const x = only(); if (x) return x;
+      const cm = await c.commissions.findOne({ _id: String(body.id || ""), ws });
+      if (!cm) return json({ error: "nf" }, 404);
+      const set: any = { updated: Date.now() };
+      if (body.status !== undefined && body.status !== cm.status) {
+        if (!canChangeStatus(cm.status, String(body.status))) return json({ error: `A ${cm.status} commission cannot be changed to ${body.status}` }, 409);
+        set.status = String(body.status);
+        set.paidAt = body.status === "paid" ? Date.now() : null;
+      }
+      if (body.amount !== undefined && body.amount !== "") {
+        const a = Math.round(Number(body.amount));
+        if (!Number.isFinite(a) || a < 0) return json({ error: "Enter a valid amount" }, 400);
+        if (cm.status === "paid" && set.status !== "approved") return json({ error: "Reopen a paid commission before changing its amount" }, 409);
+        set.amount = a; set.manual = true;
+      }
+      if (body.note !== undefined) set.note = String(body.note || "").trim().slice(0, 200);
+      await c.commissions.updateOne({ _id: cm._id, ws, status: cm.status }, { $set: set });
       return json({ ok: 1 });
     }
 
