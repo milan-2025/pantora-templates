@@ -12,6 +12,7 @@ import {
   UNIT_STATUSES, UNIT_LIMITS, PROJECT_TYPES, canRelease, canTransition, cleanUnit, expiredHoldFilter,
   holdFilter, holdHours, modeOf, releaseUpdate, type UnitStatus,
 } from "@/lib/crm/realestate";
+import { addVisit, cleanOutcome, cleanVisit, listVisits, removeVisit, rescheduleVisit, stageOnDone, stageOnSchedule, updateVisit, visitNote } from "@/lib/crm/visits";
 
 export const dynamic = "force-dynamic";
 
@@ -165,9 +166,10 @@ async function ingestMeta(c: C, w: any, id: string) {
 const WRITES = new Set([
   "leads_add", "leads_update", "leads_delete", "settings_set", "user_save",
   "mode_set", "project_save", "project_delete", "unit_save", "units_import", "unit_delete", "unit_hold", "unit_release", "unit_status",
+  "visit_save", "visit_done", "visit_delete",
 ]);
 // Only available when the company has switched Real estate mode on (Menu > Real estate mode).
-const RE_ACTIONS = new Set(["projects_list", "project_save", "project_delete", "units_list", "unit_save", "units_import", "unit_delete", "unit_hold", "unit_release", "unit_status"]);
+const RE_ACTIONS = new Set(["projects_list", "project_save", "project_delete", "units_list", "unit_save", "units_import", "unit_delete", "unit_hold", "unit_release", "unit_status", "visits_list", "visit_save", "visit_done", "visit_delete"]);
 const setCookie = (res: NextResponse, u: any) => res.cookies.set("crm_t", makeToken(u), { httpOnly: true, secure: E.NODE_ENV === "production", sameSite: "lax", path: "/CRM", maxAge: 30 * 86400 });
 
 // ---------- the API ----------
@@ -454,6 +456,50 @@ async function handle(req: NextRequest) {
       const r2 = await c.units.updateOne({ _id: unit._id, ws, status: unit.status }, upd); // fails if someone changed it in the meantime
       if (!r2.matchedCount) return json({ error: "This unit was just changed by someone else. Refresh and try again." }, 409);
       if (lead && to === "booked" && lead.data?.status !== "Won") await c.leads.updateOne({ _id: lead._id, ws }, { $set: { "data.status": "Booked", "data.unit": `${unit.tower ? unit.tower + " " : ""}${unit.no}` } });
+      return json({ ok: 1 });
+    }
+
+
+    // ----- Site visits (stored on the lead as appointments of type "Site visit") -----
+    case "visits_list": {
+      const now = url.searchParams.get("now") || "";
+      if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(now)) return json({ error: "Missing time" }, 400);
+      const q: any = admin ? { ws } : { ws, "data.owner": U.name };
+      q["data.appts.type"] = "Site visit";
+      const docs = await c.leads.find(q).limit(5000).toArray();
+      return json(listVisits(docs.map(row) as any, now).slice(0, 2000));
+    }
+    case "visit_save": {
+      const lead = await c.leads.findOne({ _id: String(body.leadId || ""), ws });
+      if (!lead || !mine(lead.data)) return json({ error: "Lead not found" }, 404);
+      const cv = cleanVisit(body);
+      if (!cv.ok) return json({ error: cv.error }, 400);
+      let appts: any[] | null;
+      let vid = String(body.id || "");
+      if (vid) { appts = rescheduleVisit(lead.data.appts, vid, cv.v); if (!appts) return json({ error: "Visit not found" }, 404); }
+      else { appts = addVisit(lead.data.appts, cv.v); vid = appts[appts.length - 1].id; }
+      await c.leads.updateOne({ _id: lead._id, ws }, { $set: { "data.appts": appts, "data.status": stageOnSchedule(lead.data.status || "New") } });
+      return json({ id: vid });
+    }
+    case "visit_done": {
+      const lead = await c.leads.findOne({ _id: String(body.leadId || ""), ws });
+      if (!lead || !mine(lead.data)) return json({ error: "Lead not found" }, 404);
+      const outcome = cleanOutcome(body.outcome);
+      if (!outcome) return json({ error: "Choose how the visit went" }, 400);
+      const vid = String(body.id || "");
+      const feedback = String(body.feedback || "").trim().slice(0, 500);
+      const appts = updateVisit(lead.data.appts, vid, { done: true, outcome, feedback, doneAt: Date.now() });
+      if (!appts) return json({ error: "Visit not found" }, 404);
+      const visit = appts.find((a: any) => a.id === vid)!;
+      const set: any = { "data.appts": appts, "data.status": stageOnDone(lead.data.status || "New", outcome), "data.notes": [visitNote(U.name, visit, outcome, feedback), ...(lead.data.notes || [])] };
+      if (outcome === "not_interested") set["data.prio"] = "Cold";
+      await c.leads.updateOne({ _id: lead._id, ws }, { $set: set });
+      return json({ ok: 1 });
+    }
+    case "visit_delete": {
+      const lead = await c.leads.findOne({ _id: String(body.leadId || ""), ws });
+      if (!lead || !mine(lead.data)) return json({ error: "Lead not found" }, 404);
+      await c.leads.updateOne({ _id: lead._id, ws }, { $set: { "data.appts": removeVisit(lead.data.appts, String(body.id || "")) } });
       return json({ ok: 1 });
     }
 
