@@ -23,6 +23,7 @@ button,.btn{cursor:pointer;display:inline-flex;align-items:center;justify-conten
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .u{text-align:left;background:var(--card);border:1px solid var(--bd);border-left:5px solid var(--c);border-radius:12px;padding:9px 11px;display:block;min-height:0;width:100%}
 .u b{font-size:16px;display:block}.u small{display:block;color:var(--mut);font-size:12px;margin-top:2px}.u .st{font-size:12px;font-weight:600;color:var(--c);margin-top:4px}
+#md textarea{width:100%;border:1px solid var(--bd);border-radius:10px;padding:9px;background:var(--card);color:var(--tx);font:inherit}
 .sec{font-weight:600;margin:14px 0 6px;color:var(--mut);font-size:13px}
 #ov{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:20}#ov.on{display:flex}
 #md{background:var(--bg);width:100%;max-width:520px;max-height:90vh;overflow:auto;border-radius:16px 16px 0 0;padding:16px}
@@ -69,6 +70,9 @@ function render(){
   if(!projects.length){$("#app").innerHTML=h+`<div class="msg">${admin()?"No projects yet. Add your first project to start tracking units.":"No projects yet. Ask your admin to add one."}</div>`;return}
   h+=`<div class="row"><select id="ps" style="flex:1">${projects.map(p=>`<option value="${p.id}" ${p.id===pid?"selected":""}>${esc(p.name)}${p.city?" · "+esc(p.city):""}</option>`).join("")}</select>${admin()?`<button class="sm" data-a="editp">Edit</button>`:""}</div>`;
   if(P&&P.reraNumber)h+=`<div class="mut" style="margin:-4px 0 8px">RERA: ${esc(P.reraNumber)} · holds expire after ${P.holdHours}h</div>`;
+  if(P&&P.published){const link=location.origin+"/property/"+P.pub+"?ref="+me.id;
+    h+=`<div class="row"><button class="sm p" data-a="copy" data-l="${esc(link)}">🔗 Copy page link</button><a class="btn sm" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(P.name+" - check availability and prices: "+link)}">💬 Share on WhatsApp</a><a class="btn sm" target="_blank" rel="noopener" href="${esc(link)}">Preview</a></div>${admin()?`<div class="mut" style="margin:-4px 0 8px">👁 ${P.views||0} views · 📩 ${P.enquiries||0} enquiries from this page. Each person's link credits them with the enquiry.</div>`:""}`}
+  else if(P&&admin())h+=`<div class="mut" style="margin:-2px 0 8px">No public page yet. Tap Edit and turn on “Public page” to get a shareable link with an enquiry form.</div>`;
   h+=`<div class="stats">${[["Total",us.length,"#64748b"],["Available",cnt("available"),STC.available[0]],["On hold",cnt("soft_hold")+cnt("hard_hold"),STC.soft_hold[0]],["Booked",cnt("booked"),STC.booked[0]],["Sold",cnt("sold"),STC.sold[0]]].map(x=>`<div class="stat" style="--c:${x[2]}"><b>${x[1]}</b><span>${x[0]}</span></div>`).join("")}</div>`;
   if(admin())h+=`<div class="row"><button class="sm p" data-a="addu">＋ Unit</button><button class="sm" data-a="many">＋ Many units</button><button class="sm" data-a="csv">📥 Import CSV</button></div>`;
   h+=`<div class="chips">${[["all","All"],["available","Available"],["soft_hold","On hold"],["hard_hold","Blocked"],["booked","Booked"],["sold","Sold"]].map(x=>`<button data-f="${x[0]}" class="${filt===x[0]?"on":""}">${x[1]}</button>`).join("")}<input id="q" placeholder="Search unit…" value="${esc(q)}" style="min-width:120px"></div>`;
@@ -85,15 +89,21 @@ document.addEventListener("click",e=>{
   const u=e.target.closest("[data-u]");if(u){openUnit(u.dataset.u);return}
   const a=e.target.closest("[data-a]");if(!a)return;const k=a.dataset.a;
   if(k==="newp")openProject();else if(k==="editp")openProject(projects.find(p=>p.id===pid));else if(k==="addu")openUnitForm();else if(k==="many")openMany();else if(k==="csv")openCsv();
+  else if(k==="copy"){const l=a.dataset.l;(navigator.clipboard?navigator.clipboard.writeText(l):Promise.reject()).then(()=>{a.textContent="✓ Copied"}).catch(()=>prompt("Copy this link",l))}
   else if(k==="close")close();
 });
 const err=m=>{const x=$("#er");if(x)x.textContent=m};
 async function run(fn){try{await fn();close();await load()}catch(e){err(e.message)}}
 
 function openProject(p){p=p||{name:"",city:"",locality:"",type:"residential",reraNumber:"",holdHours:48};
-  open_(`<h3 style="margin:0">${p.id?"Edit":"New"} project</h3><label class="l">Project name</label><input id="pn" value="${esc(p.name)}"><div class="r2"><div><label class="l">City</label><input id="pc" value="${esc(p.city)}"></div><div><label class="l">Locality</label><input id="pl" value="${esc(p.locality)}"></div></div><div class="r2"><div><label class="l">Type</label><select id="pt">${["residential","commercial","plot","rental"].map(t=>`<option ${p.type===t?"selected":""}>${t}</option>`).join("")}</select></div><div><label class="l">Hold expires after (hours)</label><input id="ph" type="number" min="1" value="${p.holdHours||48}"></div></div><div class="r2"><div><label class="l">RERA number (optional)</label><input id="pr" value="${esc(p.reraNumber)}"></div><div><label class="l">Partner commission %</label><input id="pcm" type="number" min="0" max="100" step="0.1" value="${p.commissionPct??""}" placeholder="e.g. 2"></div></div><div id="er" class="er"></div>
+  open_(`<h3 style="margin:0">${p.id?"Edit":"New"} project</h3><label class="l">Project name</label><input id="pn" value="${esc(p.name)}"><div class="r2"><div><label class="l">City</label><input id="pc" value="${esc(p.city)}"></div><div><label class="l">Locality</label><input id="pl" value="${esc(p.locality)}"></div></div><div class="r2"><div><label class="l">Type</label><select id="pt">${["residential","commercial","plot","rental"].map(t=>`<option ${p.type===t?"selected":""}>${t}</option>`).join("")}</select></div><div><label class="l">Hold expires after (hours)</label><input id="ph" type="number" min="1" value="${p.holdHours||48}"></div></div><div class="r2"><div><label class="l">RERA number (optional)</label><input id="pr" value="${esc(p.reraNumber)}"></div><div><label class="l">Partner commission %</label><input id="pcm" type="number" min="0" max="100" step="0.1" value="${p.commissionPct??""}" placeholder="e.g. 2"></div></div><div class="sec" style="margin-top:14px">Public page (shareable link with enquiry form)</div>
+  <label class="l" style="display:flex;gap:8px;align-items:center;margin:4px 0"><input id="ppub" type="checkbox" style="width:auto;min-height:0" ${p.published?"checked":""}> Publish this project’s public page</label>
+  <label class="l">About the project</label><textarea id="pab" rows="3" maxlength="1500">${esc(p.about||"")}</textarea>
+  <label class="l">Amenities (comma separated)</label><input id="pam" value="${esc((p.amenities||[]).join(", "))}" placeholder="Swimming pool, Gym, Garden">
+  <div class="r2"><div><label class="l">Cover image link (https)</label><input id="pcv" value="${esc(p.cover||"")}" placeholder="https://res.cloudinary.com/..."></div><div><label class="l">Contact number on page</label><input id="pcp" type="tel" value="${esc(p.contactPhone||"")}" placeholder="10-digit mobile"></div></div>
+  <div id="er" class="er"></div>
   <div class="acts"><button class="p" id="sv">Save</button>${p.id?`<button class="dg" id="dl">Delete</button>`:""}<button data-a="close">Cancel</button></div>`);
-  $("#sv").onclick=()=>run(async()=>{const r=await api("POST","project_save","",{id:p.id||"",name:$("#pn").value,city:$("#pc").value,locality:$("#pl").value,type:$("#pt").value,holdHours:$("#ph").value,reraNumber:$("#pr").value,commissionPct:$("#pcm").value});pid=r.id;LS("pid",pid)});
+  $("#sv").onclick=()=>run(async()=>{const r=await api("POST","project_save","",{id:p.id||"",name:$("#pn").value,city:$("#pc").value,locality:$("#pl").value,type:$("#pt").value,holdHours:$("#ph").value,reraNumber:$("#pr").value,commissionPct:$("#pcm").value,published:$("#ppub").checked,about:$("#pab").value,amenities:$("#pam").value,cover:$("#pcv").value,contactPhone:$("#pcp").value});pid=r.id;LS("pid",pid)});
   const d=$("#dl");if(d)d.onclick=()=>{if(confirm("Delete this project and ALL its units? This cannot be undone."))run(()=>api("POST","project_delete","",{id:p.id}))};
 }
 function openUnitForm(u){u=u||{no:"",tower:"",floor:"",bhk:"",area:"",price:""};

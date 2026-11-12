@@ -12,6 +12,7 @@ import {
   UNIT_STATUSES, UNIT_LIMITS, PROJECT_TYPES, canRelease, canTransition, cleanUnit, expiredHoldFilter,
   holdFilter, holdHours, modeOf, releaseUpdate, type UnitStatus,
 } from "@/lib/crm/realestate";
+import { cleanEnquiry, cleanPhone10, parseAmenities, safeHttpsUrl } from "@/lib/crm/publicPage";
 import { canChangeStatus, cleanPct, commissionAmount, effectiveRate, partnerLeadFields, partnerStats, shouldCreate, summarize } from "@/lib/crm/commission";
 import { addVisit, cleanOutcome, cleanVisit, listVisits, removeVisit, rescheduleVisit, stageOnDone, stageOnSchedule, updateVisit, visitNote } from "@/lib/crm/visits";
 
@@ -111,6 +112,7 @@ async function boot(c: C) {
   await c.units.createIndex({ ws: 1, status: 1 }).catch(() => {});
   await c.projects.createIndex({ ws: 1, name: 1 }).catch(() => {});
   await c.commissions.createIndex({ ws: 1, partnerId: 1, status: 1 }).catch(() => {});
+  await c.projects.createIndex({ pub: 1 }).catch(() => {});
   let w = await c.ws.findOne({ plan: "internal" });
   const old = await c.users.countDocuments({ ws: { $exists: false } });
   const list = (E.CRM_USERS || "").split(",").filter(Boolean);
@@ -167,13 +169,13 @@ function buildLead(raw: Record<string, string>, source: string, imp: string) {
   if (!name && !phone && !email) return null;
   return { name, phone, email, campaign, adset, ad, source, imp, raw, extra, status: "New", owner: "", created: isNaN(t) ? Date.now() : t, notes: [] as any[] };
 }
-async function addLead(c: C, w: any, d: any) {
+async function addLead(c: C, w: any, d: any, owner?: string) {
   const pk = digits(d.phone);
   if ((pk && (await c.leads.findOne({ ws: w._id, pk }))) || (d.email && (await c.leads.findOne({ ws: w._id, "data.email": d.email })))) return "dup";
   if ((await c.leads.countDocuments({ ws: w._id })) >= PLANS[w.plan].leads) return "limit";
   const names = await teamNames(c, w._id);
   const n = await c.leads.countDocuments({ ws: w._id });
-  d.owner = names.length ? names[n % names.length] : "";
+  d.owner = owner || (names.length ? names[n % names.length] : "");
   await c.leads.insertOne({ _id: rid(), ws: w._id, pk, created: d.created, data: d });
   return "ok";
 }
@@ -243,6 +245,29 @@ async function handle(req: NextRequest) {
       (await addLead(c, w, d)) === "ok" ? added++ : skipped++;
     }
     return json({ added, skipped });
+  }
+
+  // Public project page enquiry form (no login): creates a lead in the company that owns the project
+  if (r === "enquiry") {
+    if (!rateLimit(`enq:${clientIp(req)}`, 5, 36e5)) return json({ error: "Too many enquiries. Please call us instead." }, 429);
+    if (String(body.website || "")) return json({ ok: 1 }); // hidden spam-trap field was filled in by a bot
+    const pub = String(body.pub || "");
+    const proj = pub.length >= 10 ? await c.projects.findOne({ pub, published: true }) : null;
+    const w = proj ? await c.ws.findOne({ _id: proj.ws }) : null;
+    if (!proj || !w || w.status === "suspended" || modeOf(w) !== "realestate" || state(w).ro) return json({ error: "This project is not taking enquiries right now." }, 404);
+    if (!rateLimit(`enqp:${pub}`, 200, 36e5)) return json({ error: "We are very busy. Please try again later." }, 429);
+    const ce = cleanEnquiry(body);
+    if (!ce.ok) return json({ error: ce.error }, 400);
+    const refU = /^[a-f0-9]{8,40}$/.test(String(body.ref || "")) ? await c.users.findOne({ _id: String(body.ref), ws: w._id }) : null;
+    const d: any = { name: ce.name, phone: ce.phone, source: "Project page", campaign: proj.name, project: proj.name, status: "New", prio: "Warm", notes: ce.message ? [{ t: Date.now(), by: "Project page", x: ce.message }] : [], created: Date.now() };
+    if (refU?.role === "partner") { d.partnerId = refU._id; d.partner = refU.name; }
+    const res = await addLead(c, w, d, refU && refU.role !== "partner" ? refU.name : undefined);
+    if (res === "dup") {
+      const ex = await c.leads.findOne({ ws: w._id, pk: ce.phone });
+      if (ex) await c.leads.updateOne({ _id: ex._id, ws: w._id }, { $set: { "data.notes": [{ t: Date.now(), by: "Project page", x: `Enquired again about ${proj.name}${ce.message ? ": " + ce.message : ""}` }, ...(ex.data?.notes || [])] } });
+    } else if (res === "limit") return json({ error: "We could not take your enquiry online. Please call us." }, 503);
+    await c.projects.updateOne({ _id: proj._id }, { $inc: { enquiries: 1 } });
+    return json({ ok: 1 });
   }
 
   // Sign up a new company (creates a workspace on a 14-day trial)
@@ -399,7 +424,8 @@ async function handle(req: NextRequest) {
     }
     case "projects_list": {
       const ps = await c.projects.find({ ws }).sort({ name: 1 }).toArray();
-      return json(ps.map((p: any) => ({ id: p._id, name: p.name, city: p.city || "", locality: p.locality || "", type: p.type || "residential", reraNumber: p.reraNumber || "", holdHours: p.holdHours || 48, ...(admin ? { commissionPct: p.commissionPct ?? null } : {}) })));
+      for (const p of ps) if (!p.pub) { p.pub = rid(); await c.projects.updateOne({ _id: p._id, ws }, { $set: { pub: p.pub } }); } // older projects get their public link id
+      return json(ps.map((p: any) => ({ id: p._id, pub: p.pub, published: !!p.published, name: p.name, city: p.city || "", locality: p.locality || "", type: p.type || "residential", reraNumber: p.reraNumber || "", holdHours: p.holdHours || 48, ...(admin ? { commissionPct: p.commissionPct ?? null, about: p.about || "", amenities: p.amenities || [], cover: p.cover || "", contactPhone: p.contactPhone || "", views: p.views || 0, enquiries: p.enquiries || 0 } : {}) })));
     }
     case "project_save": {
       const x = only(); if (x) return x;
@@ -411,10 +437,11 @@ async function handle(req: NextRequest) {
         name, city: String(body.city || "").trim().slice(0, 60), locality: String(body.locality || "").trim().slice(0, 80),
         type: (PROJECT_TYPES as readonly string[]).includes(body.type) ? body.type : "residential",
         reraNumber: String(body.reraNumber || "").trim().slice(0, 40), holdHours: holdHours(body.holdHours), commissionPct: cleanPct(body.commissionPct),
+        published: !!body.published, about: String(body.about || "").trim().slice(0, 1500), amenities: parseAmenities(body.amenities), cover: safeHttpsUrl(body.cover), contactPhone: cleanPhone10(body.contactPhone),
       };
       if (pid) { const r2 = await c.projects.updateOne({ _id: pid, ws }, { $set: doc }); if (!r2.matchedCount) return json({ error: "nf" }, 404); return json({ id: pid }); }
       const nid = rid();
-      await c.projects.insertOne({ _id: nid, ws, created: Date.now(), ...doc });
+      await c.projects.insertOne({ _id: nid, ws, pub: rid(), created: Date.now(), ...doc });
       return json({ id: nid });
     }
     case "project_delete": {

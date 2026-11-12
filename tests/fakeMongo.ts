@@ -16,6 +16,7 @@ const unsetPath = (o: any, p: string) => {
 const applyUpdate = (d: Doc, u: Doc) => {
   for (const [k, v] of Object.entries<any>(u.$set ?? {})) setPath(d, k, v);
   for (const k of Object.keys(u.$unset ?? {})) unsetPath(d, k);
+  for (const [k, v] of Object.entries<any>(u.$inc ?? {})) setPath(d, k, (Number(getPath(d, k)) || 0) + v);
 };
 
 class Coll {
