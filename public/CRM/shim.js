@@ -1,5 +1,5 @@
 function makeDb(){
-  const api=(m,r,x,b)=>fetch("api.php?r="+r+(x||""),{method:m,headers:{"Content-Type":"application/json"},body:b?JSON.stringify(b):undefined,credentials:"same-origin"}).then(res=>{if(res.status===401){location.href="login.html";throw new Error("Session expired")}if(!res.ok){const j=await res.json().catch(()=>({}));if(m==="POST"&&j.error)alert(j.error);throw new Error(j.error||"Server error "+res.status)}return res.json()});
+  const api=(m,r,x,b)=>fetch("api.php?r="+r+(x||""),{method:m,headers:{"Content-Type":"application/json"},body:b?JSON.stringify(b):undefined,credentials:"same-origin"}).then(async res=>{if(res.status===401){location.href="login.html";throw new Error("Session expired")}if(!res.ok){const j=await res.json().catch(()=>({}));if(m==="POST"&&j.error)alert(j.error);throw new Error(j.error||"Server error "+res.status)}return res.json()});
   const watch=(r,x,cb,err,mk)=>{let last="";const tick=async()=>{try{const j=await api("GET",r,x);const s=JSON.stringify(j);if(s!==last){last=s;cb(mk(j))}}catch(e){err&&err({message:e.message})}};tick();const iv=setInterval(tick,5000);window.addEventListener("poke",tick);return()=>clearInterval(iv)};
   const poke=()=>setTimeout(()=>window.dispatchEvent(new Event("poke")),200);
   const key=p=>"&k="+p.split("/")[1];
