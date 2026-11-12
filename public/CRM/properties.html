@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Properties · LeadFlow CRM</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{--bg:#f3f5f8;--card:#fff;--tx:#1b1f24;--mut:#6b7280;--bd:#e3e6ea;--ac:#2563eb;--ok:#16a34a;--bad:#dc2626;--warn:#d97706;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1318;--card:#1a1f26;--tx:#e8eaed;--mut:#98a2b3;--bd:#2b323b;--ac:#6ea0ff;--ok:#4ade80;--bad:#f87171;--warn:#fbbf24}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#app{max-width:980px;margin:0 auto;padding:12px}
+button,select,input{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:9px 12px;min-height:40px}
+button,.btn{cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;color:var(--tx);font-weight:500}
+.p{background:var(--ac);color:#fff;border-color:var(--ac)}.dg{color:var(--bad);border-color:var(--bad)}.sm{padding:6px 10px;min-height:34px;font-size:13px}
+.top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}.top h1{font-size:19px;margin:0;flex:1}
+.mut{color:var(--mut);font-size:13px}.msg{padding:30px 12px;text-align:center;color:var(--mut)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:8px;margin-bottom:10px}
+.stat{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:8px 12px;border-top:3px solid var(--c,var(--bd))}.stat b{display:block;font-size:21px}.stat span{color:var(--mut);font-size:12px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px}.chips button{white-space:nowrap}.chips .on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.u{text-align:left;background:var(--card);border:1px solid var(--bd);border-left:5px solid var(--c);border-radius:12px;padding:9px 11px;display:block;min-height:0;width:100%}
+.u b{font-size:16px;display:block}.u small{display:block;color:var(--mut);font-size:12px;margin-top:2px}.u .st{font-size:12px;font-weight:600;color:var(--c);margin-top:4px}
+.sec{font-weight:600;margin:14px 0 6px;color:var(--mut);font-size:13px}
+#ov{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:20}#ov.on{display:flex}
+#md{background:var(--bg);width:100%;max-width:520px;max-height:90vh;overflow:auto;border-radius:16px 16px 0 0;padding:16px}
+@media(min-width:600px){#ov{align-items:center}#md{border-radius:16px}}
+label.l{display:block;font-size:13px;color:var(--mut);margin:10px 0 3px}#md input,#md select{width:100%}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.acts button{flex:1}
+.er{color:var(--bad);font-size:13px;margin-top:8px}
+</style>
+</head>
+<body>
+<div id="app"><div class="msg">Loading…</div></div>
+<div id="ov"><div id="md"></div></div>
+<script>
+const STC={available:["#16a34a","Available"],soft_hold:["#d97706","On hold"],hard_hold:["#7c3aed","Blocked"],booked:["#2563eb","Booked"],sold:["#6b7280","Sold"]};
+const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const api=async(m,r,x,b)=>{const res=await fetch("api.php?r="+r+(x||""),{method:m,headers:{"Content-Type":"application/json"},body:b?JSON.stringify(b):undefined,credentials:"same-origin"});
+  if(res.status===401){location.href="login.html";throw new Error("auth")}
+  const j=await res.json().catch(()=>({}));if(!res.ok)throw new Error(j.error||"Something went wrong");return j};
+const price=n=>n==null?"":n>=1e7?(+(n/1e7).toFixed(2))+" Cr":n>=1e5?(+(n/1e5).toFixed(2))+" L":"₹"+n.toLocaleString("en-IN");
+const left=t=>{const h=Math.max(0,Math.round((t-Date.now())/36e5));return h>=24?Math.floor(h/24)+"d "+(h%24)+"h left":h+"h left"};
+let me,projects=[],units=[],leads=[],pid=LS("pid"),filt="all",q="";
+function LS(k,v){try{if(v===undefined)return localStorage.getItem("re_"+k)||"";localStorage.setItem("re_"+k,v)}catch(e){return""}}
+const admin=()=>me.role==="admin";
+const open_=h=>{$("#md").innerHTML=h;$("#ov").classList.add("on")},close=()=>$("#ov").classList.remove("on");
+$("#ov").addEventListener("click",e=>{if(e.target.id==="ov")close()});
+
+async function init(){
+  try{me=await api("GET","me")}catch(e){return}
+  if(!me.ws||me.ws.mode!=="realestate"){
+    $("#app").innerHTML=`<div class="msg"><p>Real estate mode is off for this company.</p>${admin()?`<button class="p" id="on">Turn on Real estate mode</button>`:`<p>Ask your admin to turn it on in the menu.</p>`}<p><a href="./">← Back to leads</a></p></div>`;
+    const b=$("#on");if(b)b.onclick=async()=>{await api("POST","mode_set","",{mode:"realestate"});location.reload()};return}
+  await load();setInterval(()=>load(true),10000);
+}
+async function load(quiet){
+  try{
+    [projects,units,leads]=await Promise.all([api("GET","projects_list"),api("GET","units_list"),api("GET","leads")]);
+    if(!projects.find(p=>p.id===pid))pid=projects[0]?projects[0].id:"";
+    if(!quiet||!$("#ov").classList.contains("on"))render();
+  }catch(e){if(!quiet)$("#app").innerHTML=`<div class="msg">${esc(e.message)}</div>`}
+}
+function render(){
+  const P=projects.find(p=>p.id===pid),us=units.filter(u=>u.project===pid),cnt=s=>us.filter(u=>u.status===s).length;
+  let h=`<div class="top"><a class="btn sm" href="./">← Leads</a><h1>🏢 Properties</h1>${admin()?`<button class="sm p" data-a="newp">＋ Project</button>`:""}</div>`;
+  if(!projects.length){$("#app").innerHTML=h+`<div class="msg">${admin()?"No projects yet. Add your first project to start tracking units.":"No projects yet. Ask your admin to add one."}</div>`;return}
+  h+=`<div class="row"><select id="ps" style="flex:1">${projects.map(p=>`<option value="${p.id}" ${p.id===pid?"selected":""}>${esc(p.name)}${p.city?" · "+esc(p.city):""}</option>`).join("")}</select>${admin()?`<button class="sm" data-a="editp">Edit</button>`:""}</div>`;
+  if(P&&P.reraNumber)h+=`<div class="mut" style="margin:-4px 0 8px">RERA: ${esc(P.reraNumber)} · holds expire after ${P.holdHours}h</div>`;
+  h+=`<div class="stats">${[["Total",us.length,"#64748b"],["Available",cnt("available"),STC.available[0]],["On hold",cnt("soft_hold")+cnt("hard_hold"),STC.soft_hold[0]],["Booked",cnt("booked"),STC.booked[0]],["Sold",cnt("sold"),STC.sold[0]]].map(x=>`<div class="stat" style="--c:${x[2]}"><b>${x[1]}</b><span>${x[0]}</span></div>`).join("")}</div>`;
+  if(admin())h+=`<div class="row"><button class="sm p" data-a="addu">＋ Unit</button><button class="sm" data-a="many">＋ Many units</button><button class="sm" data-a="csv">📥 Import CSV</button></div>`;
+  h+=`<div class="chips">${[["all","All"],["available","Available"],["soft_hold","On hold"],["hard_hold","Blocked"],["booked","Booked"],["sold","Sold"]].map(x=>`<button data-f="${x[0]}" class="${filt===x[0]?"on":""}">${x[1]}</button>`).join("")}<input id="q" placeholder="Search unit…" value="${esc(q)}" style="min-width:120px"></div>`;
+  const vis=us.filter(u=>(filt==="all"||u.status===filt)&&(!q||(u.tower+" "+u.no).toLowerCase().includes(q.toLowerCase())));
+  if(!vis.length)h+=`<div class="msg">${us.length?"No units match.":"No units in this project yet."}</div>`;
+  const by={};vis.forEach(u=>(by[u.tower||"Units"]=by[u.tower||"Units"]||[]).push(u));
+  for(const [t,list] of Object.entries(by))h+=`<div class="sec">${esc(t)} (${list.length})</div><div class="grid">${list.map(u=>{const c=STC[u.status]||STC.available;return`<button class="u" style="--c:${c[0]}" data-u="${u.id}"><b>${esc(u.no)}</b><small>${[u.bhk,u.area?u.area+" sq ft":"",u.floor!=null?"Floor "+u.floor:""].filter(Boolean).map(esc).join(" · ")||"&nbsp;"}</small><small>${u.price!=null?price(u.price):""}</small><div class="st">${c[1]}${u.status==="soft_hold"?" · "+left(u.heldUntil):""}</div>${u.leadName?`<small>${esc(u.leadName)}</small>`:""}</button>`}).join("")}</div>`;
+  $("#app").innerHTML=h;
+  const ps=$("#ps");if(ps)ps.onchange=()=>{pid=ps.value;LS("pid",pid);render()};
+  const qi=$("#q");if(qi)qi.oninput=()=>{q=qi.value;const pos=qi.selectionStart;render();const n=$("#q");n.focus();n.setSelectionRange(pos,pos)};
+}
+document.addEventListener("click",e=>{
+  const f=e.target.closest("[data-f]");if(f){filt=f.dataset.f;render();return}
+  const u=e.target.closest("[data-u]");if(u){openUnit(u.dataset.u);return}
+  const a=e.target.closest("[data-a]");if(!a)return;const k=a.dataset.a;
+  if(k==="newp")openProject();else if(k==="editp")openProject(projects.find(p=>p.id===pid));else if(k==="addu")openUnitForm();else if(k==="many")openMany();else if(k==="csv")openCsv();
+  else if(k==="close")close();
+});
+const err=m=>{const x=$("#er");if(x)x.textContent=m};
+async function run(fn){try{await fn();close();await load()}catch(e){err(e.message)}}
+
+function openProject(p){p=p||{name:"",city:"",locality:"",type:"residential",reraNumber:"",holdHours:48};
+  open_(`<h3 style="margin:0">${p.id?"Edit":"New"} project</h3><label class="l">Project name</label><input id="pn" value="${esc(p.name)}"><div class="r2"><div><label class="l">City</label><input id="pc" value="${esc(p.city)}"></div><div><label class="l">Locality</label><input id="pl" value="${esc(p.locality)}"></div></div><div class="r2"><div><label class="l">Type</label><select id="pt">${["residential","commercial","plot","rental"].map(t=>`<option ${p.type===t?"selected":""}>${t}</option>`).join("")}</select></div><div><label class="l">Hold expires after (hours)</label><input id="ph" type="number" min="1" value="${p.holdHours||48}"></div></div><label class="l">RERA number (optional)</label><input id="pr" value="${esc(p.reraNumber)}"><div id="er" class="er"></div>
+  <div class="acts"><button class="p" id="sv">Save</button>${p.id?`<button class="dg" id="dl">Delete</button>`:""}<button data-a="close">Cancel</button></div>`);
+  $("#sv").onclick=()=>run(async()=>{const r=await api("POST","project_save","",{id:p.id||"",name:$("#pn").value,city:$("#pc").value,locality:$("#pl").value,type:$("#pt").value,holdHours:$("#ph").value,reraNumber:$("#pr").value});pid=r.id;LS("pid",pid)});
+  const d=$("#dl");if(d)d.onclick=()=>{if(confirm("Delete this project and ALL its units? This cannot be undone."))run(()=>api("POST","project_delete","",{id:p.id}))};
+}
+function openUnitForm(u){u=u||{no:"",tower:"",floor:"",bhk:"",area:"",price:""};
+  open_(`<h3 style="margin:0">${u.id?"Edit":"Add"} unit</h3><div class="r2"><div><label class="l">Unit number</label><input id="un" value="${esc(u.no)}"></div><div><label class="l">Tower / block</label><input id="ut" value="${esc(u.tower)}"></div></div><div class="r2"><div><label class="l">Floor</label><input id="uf" type="number" value="${esc(u.floor??"")}"></div><div><label class="l">BHK / type</label><input id="ub" value="${esc(u.bhk)}" placeholder="2BHK"></div></div><div class="r2"><div><label class="l">Area (sq ft)</label><input id="ua" type="number" value="${esc(u.area??"")}"></div><div><label class="l">Price (₹)</label><input id="up" type="number" value="${esc(u.price??"")}"></div></div><div id="er" class="er"></div>
+  <div class="acts"><button class="p" id="sv">Save</button><button data-a="close">Cancel</button></div>`);
+  $("#sv").onclick=()=>run(()=>api("POST","unit_save","",{id:u.id||"",project:pid,no:$("#un").value,tower:$("#ut").value,floor:$("#uf").value,bhk:$("#ub").value,area:$("#ua").value,price:$("#up").value}));
+}
+function openMany(){
+  open_(`<h3 style="margin:0">Add many units</h3><div class="mut">Creates one unit per number, e.g. 101 to 110. Existing numbers are skipped.</div><div class="r2"><div><label class="l">Prefix (optional)</label><input id="mp" placeholder="A-"></div><div><label class="l">Tower / block</label><input id="mt"></div></div><div class="r2"><div><label class="l">From</label><input id="mf" type="number" value="101"></div><div><label class="l">To</label><input id="mto" type="number" value="110"></div></div><div class="r2"><div><label class="l">BHK / type</label><input id="mb"></div><div><label class="l">Area (sq ft)</label><input id="ma" type="number"></div></div><label class="l">Price (₹)</label><input id="mpr" type="number"><div id="er" class="er"></div>
+  <div class="acts"><button class="p" id="sv">Create units</button><button data-a="close">Cancel</button></div>`);
+  $("#sv").onclick=()=>run(async()=>{const f=+$("#mf").value,t=+$("#mto").value;if(!(t>=f)||t-f>299)throw new Error("Enter a range of up to 300 units (From must be less than To).");
+    const rows=[];for(let i=f;i<=t;i++)rows.push({no:$("#mp").value+i,tower:$("#mt").value,bhk:$("#mb").value,area:$("#ma").value,price:$("#mpr").value});
+    const r=await api("POST","units_import","",{project:pid,rows});alert(`Added ${r.added}, skipped ${r.skipped}${r.overLimit?`, ${r.overLimit} over your plan limit`:""}.`)});
+}
+function parseCsv(t){const rows=[];let r=[],c="",q=false;for(let i=0;i<t.length;i++){const ch=t[i];if(q){if(ch==='"'&&t[i+1]==='"'){c+='"';i++}else if(ch==='"')q=false;else c+=ch}else if(ch==='"')q=true;else if(ch===","||ch==="\t"){r.push(c);c=""}else if(ch==="\n"||ch==="\r"){if(ch==="\r"&&t[i+1]==="\n")i++;r.push(c);c="";if(r.some(x=>x.trim()))rows.push(r);r=[]}else c+=ch}r.push(c);if(r.some(x=>x.trim()))rows.push(r);return rows}
+function openCsv(){
+  open_(`<h3 style="margin:0">Import units from CSV</h3><div class="mut">First row must be headers: <b>unit, tower, floor, bhk, area, price</b>. Paste from Excel/Google Sheets or choose a file.</div><input type="file" id="cf" accept=".csv,text/csv" style="margin-top:8px"><label class="l">Or paste here</label><textarea id="ct" rows="6" style="width:100%;border:1px solid var(--bd);border-radius:10px;padding:9px;background:var(--card);color:var(--tx)"></textarea><div id="er" class="er"></div>
+  <div class="acts"><button class="p" id="sv">Import</button><button data-a="close">Cancel</button></div>`);
+  $("#cf").onchange=async e=>{const f=e.target.files[0];if(f)$("#ct").value=await f.text()};
+  $("#sv").onclick=()=>run(async()=>{const rows=parseCsv($("#ct").value);if(rows.length<2)throw new Error("Add a header row and at least one unit.");
+    const hd=rows[0].map(x=>x.trim().toLowerCase().replace(/[^a-z]/g,""));const ix=n=>hd.findIndex(h=>n.includes(h)&&h);
+    const col={no:ix(["unit","unitno","unitnumber","no","flat","flatno"]),tower:ix(["tower","block","wing"]),floor:ix(["floor"]),bhk:ix(["bhk","type","config"]),area:ix(["area","areasqft","sqft","carpet"]),price:ix(["price","baseprice","cost"])};
+    if(col.no<0)throw new Error("Could not find a “unit” column in the header row.");
+    const data=rows.slice(1,1001).map(r=>({no:r[col.no],tower:col.tower>=0?r[col.tower]:"",floor:col.floor>=0?r[col.floor]:"",bhk:col.bhk>=0?r[col.bhk]:"",area:col.area>=0?r[col.area]:"",price:col.price>=0?r[col.price]:""}));
+    const r=await api("POST","units_import","",{project:pid,rows:data});alert(`Added ${r.added}, skipped ${r.skipped}${r.overLimit?`, ${r.overLimit} over your plan limit`:""}.`)});
+}
+function openUnit(id){
+  const u=units.find(x=>x.id===id);if(!u)return;const c=STC[u.status]||STC.available,ad=admin(),mineHold=u.status==="soft_hold"&&u.heldBy===me.name;
+  let h=`<h3 style="margin:0">${esc(u.tower?u.tower+" · ":"")}${esc(u.no)}</h3><div class="mut" style="color:${c[0]}"><b>${c[1]}</b>${u.status==="soft_hold"?" · "+left(u.heldUntil)+(u.heldBy?" · by "+esc(u.heldBy):""):""}${u.leadName?" · "+esc(u.leadName):""}</div><div class="mut">${[u.bhk,u.area?u.area+" sq ft":"",u.floor!=null?"Floor "+u.floor:"",u.price!=null?price(u.price):""].filter(Boolean).map(esc).join(" · ")}</div><div id="er" class="er"></div>`;
+  const lo=`<option value="">No lead</option>`+leads.filter(l=>!["Won","Lost"].includes(l.status)).slice(0,300).map(l=>`<option value="${l.id}">${esc(l.name||l.phone||"Lead")}${l.phone?" · "+esc(l.phone):""}</option>`).join("");
+  if(u.status==="available")h+=`<label class="l">Hold for lead</label><select id="hl">${lo}</select><label class="l">Hold for (hours)</label><input id="hh" type="number" min="1" value="${(projects.find(p=>p.id===u.project)||{}).holdHours||48}"><div class="acts"><button class="p" id="hold">Hold unit</button></div>`;
+  if((u.status==="soft_hold"&&(ad||mineHold))||(ad&&u.status==="hard_hold"))h+=`<div class="acts"><button id="rel">Release hold</button></div>`;
+  if(ad){
+    h+=`<label class="l">Lead for booking (optional)</label><select id="bl">${lo.replace(`value="${u.leadId}"`,`value="${u.leadId}" selected`)}</select><div class="acts">`;
+    if(u.status!=="booked")h+=`<button class="p" data-s="booked">Mark booked</button>`;
+    if(u.status!=="sold")h+=`<button data-s="sold">Mark sold</button>`;
+    if(u.status==="available")h+=`<button data-s="hard_hold">Block</button>`;
+    if(["booked","sold","hard_hold"].includes(u.status))h+=`<button data-s="available">Make available</button>`;
+    h+=`</div><div class="acts"><button id="ed">Edit</button><button class="dg" id="del">Delete</button></div>`;
+  }
+  h+=`<div class="acts"><button data-a="close">Close</button></div>`;open_(h);
+  const hb=$("#hold");if(hb)hb.onclick=()=>run(()=>api("POST","unit_hold","",{id,hours:$("#hh").value,leadId:$("#hl").value}));
+  const rb=$("#rel");if(rb)rb.onclick=()=>run(()=>api("POST","unit_release","",{id}));
+  document.querySelectorAll("#md [data-s]").forEach(b=>b.onclick=()=>run(()=>api("POST","unit_status","",{id,status:b.dataset.s,leadId:$("#bl")?$("#bl").value:""})));
+  const eb=$("#ed");if(eb)eb.onclick=()=>openUnitForm(u);
+  const db=$("#del");if(db)db.onclick=()=>{if(confirm("Delete unit "+u.no+"?"))run(()=>api("POST","unit_delete","",{id}))};
+}
+init();
+</script>
+</body>
+</html>

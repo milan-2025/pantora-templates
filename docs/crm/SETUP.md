@@ -6,6 +6,9 @@
 - Server code: `app/api/crm/route.ts`. Data: MongoDB collections `crm_workspaces`, `crm_users`, `crm_leads`, `crm_settings`.
   The shop, checkout, payments and Payload admin are untouched.
 
+## Real estate mode
+Admins can switch a company to real estate mode in one click (Menu). See `docs/crm/REAL_ESTATE.md`.
+
 ## How companies are separated
 Every user, lead and setting belongs to one workspace (company). Every database query is scoped to the logged-in user's workspace,
 so one company can never read or change another's data (covered by automated tests).

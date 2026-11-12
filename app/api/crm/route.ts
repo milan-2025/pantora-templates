@@ -8,6 +8,10 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { getPayloadClient } from "@/lib/cms/queries";
 import { clientIp, rateLimit } from "@/lib/rateLimit";
+import {
+  UNIT_STATUSES, UNIT_LIMITS, PROJECT_TYPES, canRelease, canTransition, cleanUnit, expiredHoldFilter,
+  holdFilter, holdHours, modeOf, releaseUpdate, type UnitStatus,
+} from "@/lib/crm/realestate";
 
 export const dynamic = "force-dynamic";
 
@@ -60,7 +64,7 @@ const state = (w: any) => {
 // ---------- database (re-uses Payload's MongoDB connection) ----------
 async function dbs() {
   const db = (await getPayloadClient()).db.connection.db as any;
-  return { users: db.collection("crm_users"), leads: db.collection("crm_leads"), settings: db.collection("crm_settings"), ws: db.collection("crm_workspaces") };
+  return { users: db.collection("crm_users"), leads: db.collection("crm_leads"), settings: db.collection("crm_settings"), ws: db.collection("crm_workspaces"), projects: db.collection("crm_projects"), units: db.collection("crm_units") };
 }
 type C = Awaited<ReturnType<typeof dbs>>;
 const teamNames = async (c: C, ws: string) => (await c.users.find({ ws }).sort({ name: 1 }).toArray()).map((u: any) => u.name as string);
@@ -77,6 +81,10 @@ let booted = false;
 async function boot(c: C) {
   if (booted) return;
   await c.users.createIndex({ email: 1 }, { unique: true }).catch(() => {});
+  // Real estate mode: one unit number per project per company, and fast status lookups
+  await c.units.createIndex({ ws: 1, project: 1, no: 1 }, { unique: true }).catch(() => {});
+  await c.units.createIndex({ ws: 1, status: 1 }).catch(() => {});
+  await c.projects.createIndex({ ws: 1, name: 1 }).catch(() => {});
   let w = await c.ws.findOne({ plan: "internal" });
   const old = await c.users.countDocuments({ ws: { $exists: false } });
   const list = (E.CRM_USERS || "").split(",").filter(Boolean);
@@ -154,7 +162,12 @@ async function ingestMeta(c: C, w: any, id: string) {
   if (d) await addLead(c, w, d);
 }
 
-const WRITES = new Set(["leads_add", "leads_update", "leads_delete", "settings_set", "user_save"]);
+const WRITES = new Set([
+  "leads_add", "leads_update", "leads_delete", "settings_set", "user_save",
+  "mode_set", "project_save", "project_delete", "unit_save", "units_import", "unit_delete", "unit_hold", "unit_release", "unit_status",
+]);
+// Only available when the company has switched Real estate mode on (Menu > Real estate mode).
+const RE_ACTIONS = new Set(["projects_list", "project_save", "project_delete", "units_list", "unit_save", "units_import", "unit_delete", "unit_hold", "unit_release", "unit_status"]);
 const setCookie = (res: NextResponse, u: any) => res.cookies.set("crm_t", makeToken(u), { httpOnly: true, secure: E.NODE_ENV === "production", sameSite: "lax", path: "/CRM", maxAge: 30 * 86400 });
 
 // ---------- the API ----------
@@ -246,6 +259,8 @@ async function handle(req: NextRequest) {
   const st = state(W);
   if (st.ro && WRITES.has(r)) return json({ error: "Your trial or subscription has ended. Your data is safe. Contact us to continue." }, 402);
   const ws = W._id as string;
+  const mode = modeOf(W);
+  if (RE_ACTIONS.has(r) && mode !== "realestate") return json({ error: "Real estate mode is off. Turn it on in the menu." }, 403);
   const admin = U.role === "admin";
   const sa = isSA(U.email);
   const only = () => (admin ? null : json({ error: "Admins only" }, 403));
@@ -255,7 +270,7 @@ async function handle(req: NextRequest) {
   const key = url.searchParams.get("k") || "";
 
   switch (r) {
-    case "me": return json({ id: U._id, name: U.name, role: U.role, sa, ws: { name: W.name, plan: W.plan, daysLeft: st.daysLeft, readonly: st.ro, sheetToken: admin ? W.sheetToken : undefined } });
+    case "me": return json({ id: U._id, name: U.name, role: U.role, sa, ws: { name: W.name, plan: W.plan, mode, daysLeft: st.daysLeft, readonly: st.ro, sheetToken: admin ? W.sheetToken : undefined } });
     case "leads": {
       const docs = await c.leads.find(admin ? { ws } : { ws, "data.owner": U.name }).sort({ created: -1 }).limit(5000).toArray();
       return json(docs.map(row));
@@ -320,17 +335,140 @@ async function handle(req: NextRequest) {
       await c.users.updateOne({ _id: U._id }, { $set: { pass: hash(String(body.new)) } });
       return json({ ok: 1 });
     }
+
+    // ----- Real estate mode (only reachable when the company has it switched on) -----
+    case "mode_set": {
+      const x = only(); if (x) return x;
+      const m = body.mode === "realestate" ? "realestate" : "general";
+      await c.ws.updateOne({ _id: ws }, { $set: { mode: m } }); // turning it off hides the features; no data is deleted
+      return json({ mode: m });
+    }
+    case "projects_list": {
+      const ps = await c.projects.find({ ws }).sort({ name: 1 }).toArray();
+      return json(ps.map((p: any) => ({ id: p._id, name: p.name, city: p.city || "", locality: p.locality || "", type: p.type || "residential", reraNumber: p.reraNumber || "", holdHours: p.holdHours || 48 })));
+    }
+    case "project_save": {
+      const x = only(); if (x) return x;
+      const name = String(body.name || "").trim().slice(0, 80);
+      if (!name) return json({ error: "Enter a project name" }, 400);
+      const pid = String(body.id || "");
+      if (await c.projects.findOne({ ws, name: { $regex: `^${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, $options: "i" }, _id: { $ne: pid } })) return json({ error: "A project with this name already exists" }, 400);
+      const doc = {
+        name, city: String(body.city || "").trim().slice(0, 60), locality: String(body.locality || "").trim().slice(0, 80),
+        type: (PROJECT_TYPES as readonly string[]).includes(body.type) ? body.type : "residential",
+        reraNumber: String(body.reraNumber || "").trim().slice(0, 40), holdHours: holdHours(body.holdHours),
+      };
+      if (pid) { const r2 = await c.projects.updateOne({ _id: pid, ws }, { $set: doc }); if (!r2.matchedCount) return json({ error: "nf" }, 404); return json({ id: pid }); }
+      const nid = rid();
+      await c.projects.insertOne({ _id: nid, ws, created: Date.now(), ...doc });
+      return json({ id: nid });
+    }
+    case "project_delete": {
+      const x = only(); if (x) return x;
+      const pid = String(body.id || "");
+      await c.units.deleteMany({ ws, project: pid });
+      await c.projects.deleteOne({ _id: pid, ws });
+      return json({ ok: 1 });
+    }
+    case "units_list": {
+      await c.units.updateMany(expiredHoldFilter(ws, Date.now()), releaseUpdate()); // unpaid soft holds free themselves
+      const q: any = { ws };
+      if (id) q.project = id;
+      const us = await c.units.find(q).sort({ project: 1, tower: 1, floor: 1, no: 1 }).limit(5000).toArray();
+      return json(us.map((u: any) => ({ id: u._id, project: u.project, no: u.no, tower: u.tower || "", floor: u.floor ?? null, bhk: u.bhk || "", area: u.area ?? null, price: u.price ?? null, status: u.status, heldUntil: u.heldUntil || null, heldBy: u.heldBy || "", leadId: u.leadId || "", leadName: u.leadName || "" })));
+    }
+    case "unit_save": {
+      const x = only(); if (x) return x;
+      const proj = await c.projects.findOne({ _id: String(body.project || ""), ws });
+      if (!proj) return json({ error: "Pick a project first" }, 400);
+      const cu = cleanUnit(body);
+      if (!cu.ok) return json({ error: cu.error }, 400);
+      const uid2 = String(body.id || "");
+      try {
+        if (uid2) {
+          const r2 = await c.units.updateOne({ _id: uid2, ws }, { $set: { ...cu.unit, project: proj._id, updated: Date.now() } });
+          if (!r2.matchedCount) return json({ error: "nf" }, 404);
+          return json({ id: uid2 });
+        }
+        if ((await c.units.countDocuments({ ws })) >= (UNIT_LIMITS[W.plan] ?? 0)) return json({ error: `Your plan allows ${UNIT_LIMITS[W.plan]} units. Contact us to upgrade.` }, 403);
+        const nid = rid();
+        await c.units.insertOne({ _id: nid, ws, project: proj._id, ...cu.unit, status: "available", created: Date.now(), updated: Date.now() });
+        return json({ id: nid });
+      } catch (e: any) {
+        if (e?.code === 11000) return json({ error: "That unit number already exists in this project" }, 400);
+        throw e;
+      }
+    }
+    case "units_import": {
+      const x = only(); if (x) return x;
+      const proj = await c.projects.findOne({ _id: String(body.project || ""), ws });
+      if (!proj) return json({ error: "Pick a project first" }, 400);
+      const rows: any[] = Array.isArray(body.rows) ? body.rows.slice(0, 1000) : [];
+      const have = new Set((await c.units.find({ ws, project: proj._id }, { projection: { no: 1 } }).toArray()).map((u: any) => u.no));
+      let room = (UNIT_LIMITS[W.plan] ?? 0) - (await c.units.countDocuments({ ws }));
+      const docs: any[] = []; let skipped = 0, capped = 0;
+      for (const row0 of rows) {
+        const cu = row0 && typeof row0 === "object" ? cleanUnit(row0) : ({ ok: false } as const);
+        if (!cu.ok || have.has(cu.unit.no)) { skipped++; continue; }
+        if (room <= 0) { capped++; continue; }
+        have.add(cu.unit.no); room--;
+        docs.push({ _id: rid(), ws, project: proj._id, ...cu.unit, status: "available", created: Date.now(), updated: Date.now() });
+      }
+      if (docs.length) { try { await c.units.insertMany(docs, { ordered: false }); } catch (e: any) { if (e?.code !== 11000 && !e?.writeErrors) throw e; } }
+      return json({ added: docs.length, skipped, overLimit: capped });
+    }
+    case "unit_delete": { const x = only(); if (x) return x; await c.units.deleteOne({ _id: String(body.id || ""), ws }); return json({ ok: 1 }); }
+    case "unit_hold": {
+      await c.units.updateMany(expiredHoldFilter(ws, Date.now()), releaseUpdate());
+      const unit = await c.units.findOne({ _id: String(body.id || ""), ws });
+      if (!unit) return json({ error: "nf" }, 404);
+      if (!canTransition(unit.status as UnitStatus, "soft_hold", admin)) return json({ error: "This unit is not available" }, 409);
+      const proj = await c.projects.findOne({ _id: unit.project, ws });
+      let lead: any = null;
+      if (body.leadId) {
+        lead = await c.leads.findOne({ _id: String(body.leadId), ws });
+        if (!lead || !mine(lead.data)) return json({ error: "Lead not found" }, 404);
+      }
+      const hrs = holdHours(body.hours, proj?.holdHours || 48);
+      const r2 = await c.units.updateOne(holdFilter(ws, unit._id), { $set: { status: "soft_hold", heldUntil: Date.now() + hrs * 36e5, heldBy: U.name, leadId: lead?._id || "", leadName: lead?.data?.name || "", updated: Date.now() } });
+      if (!r2.matchedCount) return json({ error: "Someone else just held this unit" }, 409);
+      return json({ ok: 1 });
+    }
+    case "unit_release": {
+      const unit = await c.units.findOne({ _id: String(body.id || ""), ws });
+      if (!unit) return json({ error: "nf" }, 404);
+      if (!canRelease(unit, { name: U.name, admin })) return json({ error: "Only the person who placed the hold, or an admin, can release it" }, 403);
+      await c.units.updateOne({ _id: unit._id, ws }, releaseUpdate());
+      return json({ ok: 1 });
+    }
+    case "unit_status": {
+      const x = only(); if (x) return x;
+      const to = String(body.status || "") as UnitStatus;
+      if (!(UNIT_STATUSES as readonly string[]).includes(to) || to === "soft_hold") return json({ error: "Invalid status" }, 400);
+      const unit = await c.units.findOne({ _id: String(body.id || ""), ws });
+      if (!unit) return json({ error: "nf" }, 404);
+      if (!canTransition(unit.status as UnitStatus, to, true)) return json({ error: `A ${unit.status.replace("_", " ")} unit cannot be changed to ${to.replace("_", " ")}` }, 409);
+      let lead: any = null;
+      if (body.leadId) { lead = await c.leads.findOne({ _id: String(body.leadId), ws }); if (!lead) return json({ error: "Lead not found" }, 404); }
+      const upd: any = to === "available" ? releaseUpdate() : { $set: { status: to, updated: Date.now(), ...(lead ? { leadId: lead._id, leadName: lead.data?.name || "" } : {}) }, $unset: { heldUntil: "", heldBy: "" } };
+      const r2 = await c.units.updateOne({ _id: unit._id, ws, status: unit.status }, upd); // fails if someone changed it in the meantime
+      if (!r2.matchedCount) return json({ error: "This unit was just changed by someone else. Refresh and try again." }, 409);
+      if (lead && to === "booked" && lead.data?.status !== "Won") await c.leads.updateOne({ _id: lead._id, ws }, { $set: { "data.status": "Booked", "data.unit": `${unit.tower ? unit.tower + " " : ""}${unit.no}` } });
+      return json({ ok: 1 });
+    }
+
     // ----- platform admin (you): manage every customer company -----
     case "sa_list": {
       if (!sa) return json({ error: "Not allowed" }, 403);
       const all = await c.ws.find({}).sort({ createdAt: -1 }).toArray();
-      return json(await Promise.all(all.map(async (w: any) => ({ id: w._id, name: w.name, plan: w.plan, status: w.status, createdAt: w.createdAt, trialEnds: w.trialEnds, validUntil: w.validUntil || null, users: await c.users.countDocuments({ ws: w._id }), leads: await c.leads.countDocuments({ ws: w._id }) }))));
+      return json(await Promise.all(all.map(async (w: any) => ({ id: w._id, name: w.name, plan: w.plan, status: w.status, createdAt: w.createdAt, trialEnds: w.trialEnds, validUntil: w.validUntil || null, mode: modeOf(w), users: await c.users.countDocuments({ ws: w._id }), leads: await c.leads.countDocuments({ ws: w._id }) }))));
     }
     case "sa_update": {
       if (!sa) return json({ error: "Not allowed" }, 403);
       const set: any = {};
       if (body.plan) { if (!PLANS[body.plan]) return json({ error: "Unknown plan" }, 400); set.plan = body.plan; }
       if (body.status === "active" || body.status === "suspended") set.status = body.status;
+      if (body.mode === "realestate" || body.mode === "general") set.mode = body.mode;
       if ("validUntil" in body) { const t = body.validUntil ? Date.parse(`${body.validUntil}T23:59:59`) : NaN; set.validUntil = isNaN(t) ? null : t; }
       if (+body.extendDays > 0) set.trialEnds = Math.max(Date.now(), (await c.ws.findOne({ _id: String(body.id) }))?.trialEnds || 0) + Math.min(+body.extendDays, 365) * 864e5;
       await c.ws.updateOne({ _id: String(body.id || "") }, { $set: set });
