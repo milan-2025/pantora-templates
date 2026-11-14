@@ -760,6 +760,10 @@ export interface InviteRsvp {
   events?: string | null;
   meal?: string | null;
   /**
+   * Which side the guest is on (story templates)
+   */
+  side?: ('bride' | 'groom') | null;
+  /**
    * Which guest link they replied from (if any)
    */
   guest?: string | null;
@@ -1481,6 +1485,7 @@ export interface InviteRsvpsSelect<T extends boolean = true> {
   guests?: T;
   events?: T;
   meal?: T;
+  side?: T;
   guest?: T;
   message?: T;
   updatedAt?: T;
