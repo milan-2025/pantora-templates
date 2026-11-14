@@ -57,6 +57,9 @@ const left=t=>{const h=Math.max(0,Math.round((t-Date.now())/36e5));return h>=24?
 let me,projects=[],units=[],leads=[],pid=LS("pid"),filt="all",q="",view="units",pimgs=[];
 const deepU=new URLSearchParams(location.search).get("unit");const deepP=new URLSearchParams(location.search).get("property");if(deepP){pid=deepP;view=new URLSearchParams(location.search).get("view")==="leads"?"leads":"units"}
 const pnum=c=>/^PR-\d{3,}$/.test(c||"")?+c.slice(3):1e15;
+const shareRow=(link,text,label)=>`<div class="row"><button class="sm p" data-a="copy" data-l="${esc(link)}">🔗 Copy ${label} link</button><a class="btn sm" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(text+" "+link)}">💬 Share on WhatsApp</a><a class="btn sm" target="_blank" rel="noopener" href="${esc(link)}">Preview</a></div>`;
+const vidLinks=v=>(v||[]).join("\n");
+const kb=b=>b>=1048576?(b/1048576).toFixed(1)+" MB":b>=1024?Math.round(b/1024)+" KB":b?b+" B":"";
 const sorted=()=>[...projects].sort((a,b)=>pnum(a.code)-pnum(b.code)||a.name.localeCompare(b.name));
 /** Leads for a project: linked by id, or (older leads) by the same project name. */
 const inP=(l,P)=>l.projectId?l.projectId===P.id:!!l.project&&String(l.project).trim().toLowerCase()===P.name.trim().toLowerCase();
@@ -85,6 +88,8 @@ async function load(quiet){
 function render(){
   const P=projects.find(p=>p.id===pid),us=units.filter(u=>u.project===pid),cnt=s=>us.filter(u=>u.status===s).length;
   let h=`<div class="top"><a class="btn sm" href="./">← Leads</a><h1>🏢 Properties</h1>${admin()?`<button class="sm p" data-a="newp">＋ Project</button>`:""}</div>`;
+  const anyPub=projects.some(p=>p.published);
+  if(me.ws.catPub&&anyPub)h+=`<details class="card" style="margin-bottom:10px"><summary><b>📚 Share your whole catalogue</b> <span class="mut">(${projects.filter(p=>p.published).length} published)</span></summary><div class="mut" style="margin:6px 0">One link to all your published projects, for clients. Enquiries from it are credited to you.</div>${shareRow(location.origin+"/catalogue/"+me.ws.catPub+"?ref="+me.id,"Our properties:","catalogue")}</details>`;
   if(!projects.length){$("#app").innerHTML=h+`<div class="msg">${admin()?"No projects yet. Add your first project to start tracking units.":"No projects yet. Ask your admin to add one."}</div>`;return}
   h+=`<div class="row"><select id="ps" style="flex:2;min-width:180px">${sorted().map(p=>`<option value="${p.id}" ${p.id===pid?"selected":""}>${esc(p.code||"")} · ${esc(p.name)}${p.city?" · "+esc(p.city):""}</option>`).join("")}</select><input id="pfind" placeholder="Find PR-001, PR-001-U003 or name" style="flex:1;min-width:130px">${admin()?`<button class="sm" data-a="editp">Edit</button>`:""}</div>`;
   if(P){const nL=leads.filter(l=>inP(l,P)).length;
@@ -136,6 +141,7 @@ function openProject(p){p=p||{name:"",city:"",locality:"",type:"residential",rer
   <div class="sec" style="margin-top:14px">Photos (up to 12, the first is the cover)</div><div id="pimg"></div>
   ${p.id?`<div class="row" style="margin-top:8px"><label class="btn sm p" style="cursor:pointer">📷 Upload photos<input id="pup" type="file" accept="image/*" multiple hidden></label><span id="upst" class="mut"></span></div>`:`<div class="mut" style="margin-top:6px">Save the project first to upload photos from your phone or computer. You can paste image links now.</div>`}
   <div class="row" style="margin-top:6px"><input id="plink" type="url" placeholder="Or paste an image link (https://…)" style="flex:1"><button class="sm" id="padd">Add link</button></div>
+  <label class="l">YouTube videos (one link per line, up to 10)</label><textarea id="pvid" rows="2" placeholder="https://youtu.be/...">${esc(vidLinks(p.videos))}</textarea>
   <div class="sec" style="margin-top:14px">Public page (shareable link with enquiry form)</div>
   <label class="l" style="display:flex;gap:8px;align-items:center;margin:4px 0"><input id="ppub" type="checkbox" style="width:auto;min-height:0" ${p.published?"checked":""}> Publish this project’s public page</label>
   <label class="l">About the project</label><textarea id="pab" rows="3" maxlength="1500">${esc(p.about||"")}</textarea>
@@ -143,7 +149,7 @@ function openProject(p){p=p||{name:"",city:"",locality:"",type:"residential",rer
   <label class="l">Contact number on page</label><input id="pcp" type="tel" value="${esc(p.contactPhone||"")}" placeholder="10-digit mobile">
   <div id="er" class="er"></div>
   <div class="acts"><button class="p" id="sv">Save</button>${p.id?`<button class="dg" id="dl">Delete</button>`:""}<button data-a="close">Cancel</button></div>`);
-  $("#sv").onclick=()=>run(async()=>{const r=await api("POST","project_save","",{id:p.id||"",name:$("#pn").value,city:$("#pc").value,locality:$("#pl").value,type:$("#pt").value,holdHours:$("#ph").value,reraNumber:$("#pr").value,commissionPct:$("#pcm").value,published:$("#ppub").checked,about:$("#pab").value,amenities:$("#pam").value,cover:"",images:pimgs,mapUrl:$("#pmap").value.trim(),contactPhone:$("#pcp").value});pid=r.id;LS("pid",pid)});
+  $("#sv").onclick=()=>run(async()=>{const r=await api("POST","project_save","",{id:p.id||"",name:$("#pn").value,city:$("#pc").value,locality:$("#pl").value,type:$("#pt").value,holdHours:$("#ph").value,reraNumber:$("#pr").value,commissionPct:$("#pcm").value,published:$("#ppub").checked,about:$("#pab").value,amenities:$("#pam").value,cover:"",images:pimgs,mapUrl:$("#pmap").value.trim(),videos:$("#pvid").value,contactPhone:$("#pcp").value});pid=r.id;LS("pid",pid)});
   const d=$("#dl");if(d)d.onclick=()=>{if(confirm("Delete this project and ALL its units? This cannot be undone."))run(()=>api("POST","project_delete","",{id:p.id}))};
   pimgs=[...(p.images||[])];if(!pimgs.length&&p.cover)pimgs=[p.cover];drawImgs();
   $("#padd").onclick=()=>{const u=$("#plink").value.trim();if(!/^https:\/\//i.test(u)){err("Image links must start with https://");return}if(pimgs.length>=12){err("You can add up to 12 photos.");return}if(!pimgs.includes(u))pimgs.push(u);$("#plink").value="";err("");drawImgs()};
@@ -175,10 +181,29 @@ async function uploadPhotos(projectId,files){
   }
   st.textContent=done?`${done} photo${done>1?"s":""} added. Tap Save to keep them.`:"";
 }
+async function refreshUnit(id){await load(true);openUnit(id)}
+const DOC_OK=/\.(pdf|docx?|xlsx?|csv|txt|jpe?g|png|webp|heic|pptx?|dwg|zip)$/i;
+async function uploadDocs(unitId,files){
+  const st=$("#dst"),errs=[];let done=0;
+  for(const f of files){
+    if(!DOC_OK.test(f.name)){errs.push(`${f.name}: this file type is not allowed.`);continue}
+    if(f.size>10*1024*1024){errs.push(`${f.name} is larger than 10 MB.`);continue}
+    if(st)st.textContent=`Uploading ${f.name}…`;
+    try{
+      const sg=await api("POST","unit_doc_sign","",{unit:unitId});
+      const fd=new FormData();Object.entries(sg.fields).forEach(([k,v])=>fd.append(k,v));fd.append("file",f);
+      const r=await fetch(sg.url,{method:"POST",body:fd});const j=await r.json().catch(()=>({}));
+      if(!r.ok||!j.public_id)throw new Error((j.error&&j.error.message)||"Upload failed");
+      await api("POST","unit_doc_add","",{unit:unitId,public_id:j.public_id,version:j.version,signature:j.signature,name:f.name,bytes:f.size});done++;
+    }catch(e){errs.push(`${f.name}: ${e.message}`)}
+  }
+  if(done)await refreshUnit(unitId);else if(st)st.textContent="";
+  if(errs.length)err(errs.join(" "));
+}
 function openUnitForm(u){u=u||{no:"",tower:"",floor:"",bhk:"",area:"",price:""};
-  open_(`<h3 style="margin:0">${u.id?"Edit":"Add"} unit</h3><div class="r2"><div><label class="l">Unit number</label><input id="un" value="${esc(u.no)}"></div><div><label class="l">Tower / block</label><input id="ut" value="${esc(u.tower)}"></div></div><div class="r2"><div><label class="l">Floor</label><input id="uf" type="number" value="${esc(u.floor??"")}"></div><div><label class="l">BHK / type</label><input id="ub" value="${esc(u.bhk)}" placeholder="2BHK"></div></div><div class="r2"><div><label class="l">Area (sq ft)</label><input id="ua" type="number" value="${esc(u.area??"")}"></div><div><label class="l">Price (₹)</label><input id="up" type="number" value="${esc(u.price??"")}"></div></div><div id="er" class="er"></div>
+  open_(`<h3 style="margin:0">${u.id?"Edit":"Add"} unit</h3><div class="r2"><div><label class="l">Unit number</label><input id="un" value="${esc(u.no)}"></div><div><label class="l">Tower / block</label><input id="ut" value="${esc(u.tower)}"></div></div><div class="r2"><div><label class="l">Floor</label><input id="uf" type="number" value="${esc(u.floor??"")}"></div><div><label class="l">BHK / type</label><input id="ub" value="${esc(u.bhk)}" placeholder="2BHK"></div></div><div class="r2"><div><label class="l">Area (sq ft)</label><input id="ua" type="number" value="${esc(u.area??"")}"></div><div><label class="l">Price (₹)</label><input id="up" type="number" value="${esc(u.price??"")}"></div></div><label class="l">YouTube videos for this unit (one link per line)</label><textarea id="uvid" rows="2" placeholder="e.g. a walkthrough of this flat">${esc(vidLinks(u.videos))}</textarea><div id="er" class="er"></div>
   <div class="acts"><button class="p" id="sv">Save</button><button data-a="close">Cancel</button></div>`);
-  $("#sv").onclick=()=>run(()=>api("POST","unit_save","",{id:u.id||"",project:pid,no:$("#un").value,tower:$("#ut").value,floor:$("#uf").value,bhk:$("#ub").value,area:$("#ua").value,price:$("#up").value}));
+  $("#sv").onclick=()=>run(()=>api("POST","unit_save","",{id:u.id||"",project:pid,no:$("#un").value,tower:$("#ut").value,floor:$("#uf").value,bhk:$("#ub").value,area:$("#ua").value,price:$("#up").value,videos:$("#uvid").value}));
 }
 function openMany(){
   open_(`<h3 style="margin:0">Add many units</h3><div class="mut">Creates one unit per number, e.g. 101 to 110. Existing numbers are skipped.</div><div class="r2"><div><label class="l">Prefix (optional)</label><input id="mp" placeholder="A-"></div><div><label class="l">Tower / block</label><input id="mt"></div></div><div class="r2"><div><label class="l">From</label><input id="mf" type="number" value="101"></div><div><label class="l">To</label><input id="mto" type="number" value="110"></div></div><div class="r2"><div><label class="l">BHK / type</label><input id="mb"></div><div><label class="l">Area (sq ft)</label><input id="ma" type="number"></div></div><label class="l">Price (₹)</label><input id="mpr" type="number"><div id="er" class="er"></div>
@@ -214,8 +239,19 @@ function openUnit(id){
     if(["booked","sold","hard_hold"].includes(u.status))h+=`<button data-s="available">Make available</button>`;
     h+=`</div><div class="acts"><button id="ed">Edit</button><button class="dg" id="del">Delete</button></div>`;
   }
+  const P=projects.find(p=>p.id===u.project)||{};
+  h+=`<div class="sec">Share this unit with a client</div>`+(P.published?shareRow(location.origin+"/unit/"+u.pub+"?ref="+me.id,`${u.bhk?u.bhk+" ":""}Unit ${u.tower?u.tower+" ":""}${u.no} at ${P.name||""}:`,"unit")+`<div class="mut">👁 ${u.views||0} views · 📩 ${u.enquiries||0} enquiries${(u.videos||[]).length?` · ▶️ ${u.videos.length} video${u.videos.length>1?"s":""}`:""}</div>`:`<div class="mut">Publish this project's public page (Edit project) to share single units.</div>`);
+  if(me.role!=="partner"){
+    const docs=u.docs||[];
+    h+=`<div class="sec">🔒 Documents (${docs.length}) <span class="mut" style="font-weight:400">· private, only your team can see these</span></div>`;
+    h+=docs.length?docs.map(d=>`<div class="lt" style="padding:6px 0;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;gap:8px;align-items:center"><span style="overflow-wrap:anywhere">📄 ${esc(d.name)}<br><small class="mut">${[kb(d.bytes),d.by,d.t?new Date(d.t).toLocaleDateString("en-IN"):""].filter(Boolean).map(esc).join(" · ")}</small></span><span style="display:flex;gap:4px;flex:0 0 auto"><button class="sm" data-dopen="${d.id}">Open</button>${ad||d.by===me.name?`<button class="sm dg" data-ddel="${d.id}">✕</button>`:""}</span></div>`).join(""):`<div class="mut">No documents yet. Add agreements, floor plans, KYC or payment receipts.</div>`;
+    h+=docs.length<20?`<div class="row" style="margin-top:8px"><label class="btn sm" style="cursor:pointer">📎 Add documents<input id="dup" type="file" multiple hidden accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.jpg,.jpeg,.png,.webp,.heic,.ppt,.pptx,.dwg,.zip"></label><span id="dst" class="mut"></span></div>`:"";
+  }
   h+=`<div class="sec">Leads for this unit (${ul.length})</div>`+(ul.length?ul.map(l=>`<a class="card" style="--c:${STG[l.status]||"#64748b"};display:block;color:inherit;text-decoration:none;margin-bottom:6px" href="./?lead=${encodeURIComponent(l.id)}"><div class="h"><div><b>${esc(l.name||l.phone||"Lead")}</b><span class="mut">${esc(l.phone||"")}${l.owner?" · "+esc(l.owner):""}</span></div><span class="tag" style="--c:${STG[l.status]||"#64748b"}">${esc(l.status||"New")}</span></div></a>`).join("")+`<a class="btn sm" href="./?unit=${encodeURIComponent(u.id)}">Open in Leads screen</a>`:`<div class="mut">No leads picked this unit yet. Choose it on a lead (Unit), or book it for a lead.</div>`);
   h+=`<div class="acts"><button data-a="close">Close</button></div>`;open_(h);
+  document.querySelectorAll("#md [data-dopen]").forEach(b=>b.onclick=async()=>{const w=window.open("","_blank");try{const r=await api("POST","unit_doc_url","",{unit:id,doc:b.dataset.dopen});if(w)w.location=r.url;else location.href=r.url}catch(e){if(w)w.close();err(e.message)}});
+  document.querySelectorAll("#md [data-ddel]").forEach(b=>b.onclick=async()=>{if(!confirm("Delete this document? This cannot be undone."))return;try{await api("POST","unit_doc_delete","",{unit:id,doc:b.dataset.ddel});await refreshUnit(id)}catch(e){err(e.message)}});
+  const du=$("#dup");if(du)du.onchange=()=>uploadDocs(id,[...du.files]).finally(()=>{if($("#dup"))$("#dup").value=""});
   const hb=$("#hold");if(hb)hb.onclick=()=>run(()=>api("POST","unit_hold","",{id,hours:$("#hh").value,leadId:$("#hl").value}));
   const rb=$("#rel");if(rb)rb.onclick=()=>run(()=>api("POST","unit_release","",{id}));
   document.querySelectorAll("#md [data-s]").forEach(b=>b.onclick=()=>run(()=>api("POST","unit_status","",{id,status:b.dataset.s,leadId:$("#bl")?$("#bl").value:""})));

@@ -26,6 +26,20 @@ Your platform admin screen can also set the mode for any company.
 - **Photos:** up to 12 per project (Properties → Edit). Upload from phone/computer (direct to Cloudinary, signed by the server, images only, into `crm/<company>/projects/<project>`; needs `CLOUDINARY_URL`) or paste https links. ★ makes a photo the cover. Photos show on the public page as a gallery.
 - **Google Maps link:** only real Google Maps links are accepted (maps.app.goo.gl, google.com/maps …). Shown as a button in Properties and on the public page.
 
+## Sharing with clients: unit pages and the whole catalogue
+- **Single unit:** Properties → tap a unit → *Share this unit* (copy link, WhatsApp, preview). The page `/unit/<id>` shows the unit (type, area, floor, price, Unit ID, status), project photos, the unit's and project's videos, location and an "Ask about this unit" form. Enquiries become leads linked to that unit (source "Unit page"). Booked or sold units say "No longer available" (no price) and point to the project. Buyer and hold details are never shown.
+- **Whole catalogue:** Properties → *Share your whole catalogue*. `/catalogue/<id>` lists every **published** project (cover, location, starting price, available types) and links to each project page. Unit numbers are not listed.
+- Units and the catalogue can only be shared for projects whose public page is published. Every link carries the sharer's `ref`, so enquiries are credited to them (partners included). Views and enquiries are counted per unit.
+- All public pages go offline if real estate mode is switched off or the subscription ends.
+
+## YouTube videos
+- Up to 10 YouTube links per project (Edit project) and per unit (Edit unit), one per line. Watch, youtu.be, Shorts, Live and embed links work; anything else is dropped. Videos play on the public pages through YouTube's privacy-enhanced player (no cookies until play).
+
+## Private unit documents
+- Properties → unit → **🔒 Documents**: upload agreements, KYC, floor plans, receipts (PDF, Word, Excel, images, PowerPoint, DWG, ZIP, up to 10 MB each, 20 per unit).
+- Files are stored as **private** files in Cloudinary under `crm/<company>/units/<unit>/docs`. Uploads are signed by the server and the result is verified before it is saved. Files open only from the CRM through a signed link that expires in 5 minutes.
+- Visible to the company's admins and agents. Never shown to channel partners, other companies, or on any public page. Admins (or the person who uploaded) can delete; deleting a unit or project deletes its files too. Needs `CLOUDINARY_URL`.
+
 ## Pinned notes (normal and real estate mode)
 - Each lead can have one **pinned note**, shown at the top of the lead and on its card (even when Notes are switched off). Add it with *📌 Add pinned note*, edit it, or unpin it; or tap 📌 on any note to pin it.
 - Every note in the history can be edited with ✏️ (admins: any note; agents: their own). Edited notes are marked "edited by …". Channel partners can read a pinned note but not change notes.
@@ -65,8 +79,8 @@ Leads received in the chosen period (7/30/90 days or all time) followed through 
 - Pure logic + tests: `lib/crm/realestate.ts`, `tests/realestate.test.ts`
 - API: `app/api/crm/route.ts` (actions `mode_set`, `projects_list`, `project_save`, `units_list`, `unit_save`, `units_import`, `unit_hold`, `unit_release`, `unit_status` ...)
 - Screens: `public/CRM/properties.html`, `visits.html`, `partners.html`, `reports.html` (shared styles in `re.css`), and mode-aware parts of `public/CRM/index.html`
-- Logic (pure, tested): `lib/crm/realestate.ts`, `property.ts`, `notes.ts`, `visits.ts`, `commission.ts`, `publicPage.ts`, `reports.ts`
-- Public page: `app/property/[pub]/route.ts`; enquiry form posts to the `enquiry` action in `app/api/crm/route.ts`
+- Logic (pure, tested): `lib/crm/realestate.ts`, `property.ts`, `notes.ts`, `media.ts`, `visits.ts`, `commission.ts`, `publicPage.ts`, `reports.ts`
+- Public pages: `app/property/[pub]`, `app/unit/[pub]`, `app/catalogue/[pub]` (shared helpers in `lib/crm/publicRoute.ts`, rendering in `lib/crm/publicPage.ts`); enquiry form posts to the `enquiry` action in `app/api/crm/route.ts`
 - Tests: `npm test` (runs against an in-memory database; no MongoDB needed)
 
 ## Not built yet

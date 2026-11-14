@@ -15,6 +15,7 @@ import {
 import { buildReport } from "@/lib/crm/reports";
 import { cleanImages, cleanMapUrl, formatCode, reservedCodes, resolveProject, unitLabel } from "@/lib/crm/property";
 import { cleanPinned } from "@/lib/crm/notes";
+import { MAX_DOCS, cleanDocName, cleanVideos, docFolder, docInFolder } from "@/lib/crm/media";
 import { v2 as cloudinary } from "cloudinary";
 import { cleanEnquiry, cleanPhone10, parseAmenities, safeHttpsUrl } from "@/lib/crm/publicPage";
 import { canChangeStatus, cleanPct, commissionAmount, effectiveRate, partnerLeadFields, partnerStats, shouldCreate, summarize } from "@/lib/crm/commission";
@@ -103,6 +104,11 @@ async function nextCode(c: C, ws: string) {
   const doc = r && "value" in r && r.value !== undefined && !("propSeq" in r) ? r.value : r;
   return formatCode(doc?.propSeq || 1);
 }
+/** Best-effort removal of a unit's private files from Cloudinary (used when units or projects are deleted). */
+async function dropDocs(list: any[]) {
+  for (const d of list || []) { try { await cloudinary.uploader.destroy(d.pid, { resource_type: "raw", type: "private", invalidate: true }); } catch (e) { console.error("[crm] doc delete", e); } }
+}
+
 /** Reserve `count` unit IDs (PR-001-U001 ...) in one project. Gives the project a Property ID first if it has none. */
 async function reserveUnitCodes(c: C, ws: string, proj: any, count: number): Promise<string[]> {
   if (count <= 0) return [];
@@ -148,6 +154,8 @@ async function boot(c: C) {
   await c.projects.createIndex({ pub: 1 }).catch(() => {});
   await c.projects.createIndex({ ws: 1, code: 1 }, { unique: true, partialFilterExpression: { code: { $type: "string" } } }).catch(() => {});
   await c.leads.createIndex({ ws: 1, "data.projectId": 1 }).catch(() => {});
+  await c.units.createIndex({ pub: 1 }).catch(() => {});
+  await c.ws.createIndex({ catPub: 1 }).catch(() => {});
   let w = await c.ws.findOne({ plan: "internal" });
   const old = await c.users.countDocuments({ ws: { $exists: false } });
   const list = (E.CRM_USERS || "").split(",").filter(Boolean);
@@ -228,10 +236,10 @@ async function ingestMeta(c: C, w: any, id: string) {
 const WRITES = new Set([
   "leads_add", "leads_update", "leads_delete", "settings_set", "user_save",
   "mode_set", "project_save", "project_delete", "unit_save", "units_import", "unit_delete", "unit_hold", "unit_release", "unit_status",
-  "visit_save", "visit_done", "visit_delete", "commission_update",
+  "visit_save", "visit_done", "visit_delete", "commission_update", "unit_doc_sign", "unit_doc_add", "unit_doc_delete",
 ]);
 // Only available when the company has switched Real estate mode on (Menu > Real estate mode).
-const RE_ACTIONS = new Set(["projects_list", "project_save", "project_delete", "units_list", "unit_save", "units_import", "unit_delete", "unit_hold", "unit_release", "unit_status", "visits_list", "visit_save", "visit_done", "visit_delete", "partners_list", "commissions_list", "commission_update", "report", "upload_sign"]);
+const RE_ACTIONS = new Set(["projects_list", "project_save", "project_delete", "units_list", "unit_save", "units_import", "unit_delete", "unit_hold", "unit_release", "unit_status", "visits_list", "visit_save", "visit_done", "visit_delete", "partners_list", "commissions_list", "commission_update", "report", "upload_sign", "unit_doc_sign", "unit_doc_add", "unit_doc_url", "unit_doc_delete"]);
 // Channel partners can only use these (their own leads, the project list, and their own commissions).
 const PARTNER_OK = new Set(["me", "leads", "leads_add", "leads_update", "settings", "projects_list", "units_list", "commissions_list", "password"]);
 const setCookie = (res: NextResponse, u: any) => res.cookies.set("crm_t", makeToken(u), { httpOnly: true, secure: E.NODE_ENV === "production", sameSite: "lax", path: "/CRM", maxAge: 30 * 86400 });
@@ -293,15 +301,18 @@ async function handle(req: NextRequest) {
     if (!rateLimit(`enqp:${pub}`, 200, 36e5)) return json({ error: "We are very busy. Please try again later." }, 429);
     const ce = cleanEnquiry(body);
     if (!ce.ok) return json({ error: ce.error }, 400);
+    // asked from a single-unit page: the unit must belong to this project
+    const un = /^[a-f0-9]{10,40}$/.test(String(body.unit || "")) ? await c.units.findOne({ pub: String(body.unit), ws: w._id, project: proj._id }) : null;
     const refU = /^[a-f0-9]{8,40}$/.test(String(body.ref || "")) ? await c.users.findOne({ _id: String(body.ref), ws: w._id }) : null;
-    const d: any = { name: ce.name, phone: ce.phone, source: "Project page", campaign: proj.name, project: proj.name, projectId: proj._id, status: "New", prio: "Warm", notes: ce.message ? [{ t: Date.now(), by: "Project page", x: ce.message }] : [], created: Date.now() };
+    const d: any = { name: ce.name, phone: ce.phone, source: "Project page", campaign: proj.name, project: proj.name, projectId: proj._id, ...(un ? { unitId: un._id, unitCode: un.code || "", unit: unitLabel(un), source: "Unit page" } : {}), status: "New", prio: "Warm", notes: [...(ce.message ? [{ t: Date.now(), by: un ? "Unit page" : "Project page", x: ce.message }] : []), ...(un ? [{ t: Date.now(), by: "Unit page", x: `Asked about unit ${unitLabel(un)}${un.code ? " (" + un.code + ")" : ""}` }] : [])], created: Date.now() };
     if (refU?.role === "partner") { d.partnerId = refU._id; d.partner = refU.name; }
     const res = await addLead(c, w, d, refU && refU.role !== "partner" ? refU.name : undefined);
     if (res === "dup") {
       const ex = await c.leads.findOne({ ws: w._id, pk: ce.phone });
-      if (ex) await c.leads.updateOne({ _id: ex._id, ws: w._id }, { $set: { "data.notes": [{ t: Date.now(), by: "Project page", x: `Enquired again about ${proj.name}${ce.message ? ": " + ce.message : ""}` }, ...(ex.data?.notes || [])] } });
+      if (ex) await c.leads.updateOne({ _id: ex._id, ws: w._id }, { $set: { "data.notes": [{ t: Date.now(), by: "Project page", x: `Enquired again about ${un ? "unit " + unitLabel(un) + (un.code ? " (" + un.code + ")" : "") + " at " : ""}${proj.name}${ce.message ? ": " + ce.message : ""}` }, ...(ex.data?.notes || [])] } });
     } else if (res === "limit") return json({ error: "We could not take your enquiry online. Please call us." }, 503);
     await c.projects.updateOne({ _id: proj._id }, { $inc: { enquiries: 1 } });
+    if (un) await c.units.updateOne({ _id: un._id }, { $inc: { enquiries: 1 } });
     return json({ ok: 1 });
   }
 
@@ -362,7 +373,8 @@ async function handle(req: NextRequest) {
   const key = url.searchParams.get("k") || "";
 
   switch (r) {
-    case "me": return json({ id: U._id, name: U.name, role: U.role, sa, ws: { name: W.name, plan: W.plan, mode, daysLeft: st.daysLeft, readonly: st.ro, sheetToken: admin ? W.sheetToken : undefined } });
+    case "me": if (mode === "realestate" && !W.catPub) { W.catPub = rid(); await c.ws.updateOne({ _id: ws, catPub: { $exists: false } }, { $set: { catPub: W.catPub } }); W.catPub = (await c.ws.findOne({ _id: ws }))?.catPub || W.catPub; }
+      return json({ id: U._id, name: U.name, role: U.role, sa, ws: { name: W.name, plan: W.plan, mode, catPub: mode === "realestate" ? W.catPub : undefined, daysLeft: st.daysLeft, readonly: st.ro, sheetToken: admin ? W.sheetToken : undefined } });
     case "leads": {
       const docs = await c.leads.find(admin ? { ws } : partner ? { ws, "data.partnerId": U._id } : { ws, "data.owner": U.name }).sort({ created: -1 }).limit(5000).toArray();
       return json(docs.map(row));
@@ -482,7 +494,7 @@ async function handle(req: NextRequest) {
         p.code = await nextCode(c, ws);
         await c.projects.updateOne({ _id: p._id, ws }, { $set: { code: p.code } });
       }
-      return json(ps.map((p: any) => ({ id: p._id, code: p.code, pub: p.pub, published: !!p.published, name: p.name, images: p.images || [], mapUrl: p.mapUrl || "", city: p.city || "", locality: p.locality || "", type: p.type || "residential", reraNumber: p.reraNumber || "", holdHours: p.holdHours || 48, ...(admin ? { commissionPct: p.commissionPct ?? null, about: p.about || "", amenities: p.amenities || [], cover: p.cover || "", contactPhone: p.contactPhone || "", views: p.views || 0, enquiries: p.enquiries || 0 } : {}) })));
+      return json(ps.map((p: any) => ({ id: p._id, code: p.code, pub: p.pub, published: !!p.published, name: p.name, images: p.images || [], mapUrl: p.mapUrl || "", videos: p.videos || [], city: p.city || "", locality: p.locality || "", type: p.type || "residential", reraNumber: p.reraNumber || "", holdHours: p.holdHours || 48, ...(admin ? { commissionPct: p.commissionPct ?? null, about: p.about || "", amenities: p.amenities || [], cover: p.cover || "", contactPhone: p.contactPhone || "", views: p.views || 0, enquiries: p.enquiries || 0 } : {}) })));
     }
     case "project_save": {
       const x = only(); if (x) return x;
@@ -495,7 +507,7 @@ async function handle(req: NextRequest) {
         type: (PROJECT_TYPES as readonly string[]).includes(body.type) ? body.type : "residential",
         reraNumber: String(body.reraNumber || "").trim().slice(0, 40), holdHours: holdHours(body.holdHours), commissionPct: cleanPct(body.commissionPct),
         published: !!body.published, about: String(body.about || "").trim().slice(0, 1500), amenities: parseAmenities(body.amenities), cover: safeHttpsUrl(body.cover), contactPhone: cleanPhone10(body.contactPhone),
-        images: cleanImages(body.images), mapUrl: cleanMapUrl(body.mapUrl),
+        images: cleanImages(body.images), mapUrl: cleanMapUrl(body.mapUrl), videos: cleanVideos(body.videos),
       };
       if (body.mapUrl && !doc.mapUrl) return json({ error: "Paste a Google Maps link (it starts with https://maps.app.goo.gl/ or https://www.google.com/maps/)" }, 400);
       if (!doc.cover && doc.images.length) doc.cover = doc.images[0];
@@ -512,8 +524,11 @@ async function handle(req: NextRequest) {
     case "project_delete": {
       const x = only(); if (x) return x;
       const pid = String(body.id || "");
+      if (!(await c.projects.findOne({ _id: pid, ws }))) return json({ ok: 1 });
+      const gone = await c.units.find({ ws, project: pid }).toArray();
       await c.units.deleteMany({ ws, project: pid });
       await c.projects.deleteOne({ _id: pid, ws });
+      await dropDocs(gone.flatMap((u: any) => u.docs || []));
       await c.leads.updateMany({ ws, "data.projectId": pid }, { $set: { "data.projectId": "", "data.unitId": "", "data.unitCode": "" } });
       return json({ ok: 1 });
     }
@@ -522,6 +537,7 @@ async function handle(req: NextRequest) {
       const q: any = { ws };
       if (id) q.project = id;
       const us = await c.units.find(q).sort({ project: 1, tower: 1, floor: 1, no: 1 }).limit(5000).toArray();
+      for (const u of us) if (!u.pub) { u.pub = rid(); await c.units.updateOne({ _id: u._id, ws }, { $set: { pub: u.pub } }); } // share-link id
       const missing = us.filter((u: any) => !u.code);
       if (missing.length) { // older units get their unit ID, in the order they were added
         const byP = new Map<string, any[]>();
@@ -534,7 +550,7 @@ async function handle(req: NextRequest) {
           for (let i = 0; i < list.length; i++) { list[i].code = codes[i]; await c.units.updateOne({ _id: list[i]._id, ws }, { $set: { code: codes[i] } }); }
         }
       }
-      return json(us.map((u: any) => ({ id: u._id, code: u.code || "", project: u.project, no: u.no, tower: u.tower || "", floor: u.floor ?? null, bhk: u.bhk || "", area: u.area ?? null, price: u.price ?? null, status: u.status, heldUntil: u.heldUntil || null, ...(partner ? {} : { heldBy: u.heldBy || "", leadId: u.leadId || "", leadName: u.leadName || "" }) })));
+      return json(us.map((u: any) => ({ id: u._id, code: u.code || "", pub: u.pub, videos: u.videos || [], views: u.views || 0, enquiries: u.enquiries || 0, ...(partner ? {} : { docs: (u.docs || []).map((d: any) => ({ id: d.id, name: d.name, bytes: d.bytes || 0, by: d.by || "", t: d.t })) }), project: u.project, no: u.no, tower: u.tower || "", floor: u.floor ?? null, bhk: u.bhk || "", area: u.area ?? null, price: u.price ?? null, status: u.status, heldUntil: u.heldUntil || null, ...(partner ? {} : { heldBy: u.heldBy || "", leadId: u.leadId || "", leadName: u.leadName || "" }) })));
     }
     case "unit_save": {
       const x = only(); if (x) return x;
@@ -548,7 +564,7 @@ async function handle(req: NextRequest) {
           const cur = await c.units.findOne({ _id: uid2, ws });
           if (!cur) return json({ error: "nf" }, 404);
           if (cur.project !== proj._id) return json({ error: "A unit cannot be moved to another project" }, 400);
-          await c.units.updateOne({ _id: uid2, ws }, { $set: { ...cu.unit, updated: Date.now() } });
+          await c.units.updateOne({ _id: uid2, ws }, { $set: { ...cu.unit, ...("videos" in body ? { videos: cleanVideos(body.videos) } : {}), updated: Date.now() } });
           await c.leads.updateMany({ ws, "data.unitId": uid2 }, { $set: { "data.unit": unitLabel(cu.unit) } }); // keep lead labels in step
           return json({ id: uid2 });
         }
@@ -556,7 +572,7 @@ async function handle(req: NextRequest) {
         if (await c.units.findOne({ ws, project: proj._id, no: cu.unit.no })) return json({ error: "That unit number already exists in this project" }, 400);
         const nid = rid();
         const [code] = await reserveUnitCodes(c, ws, proj, 1);
-        await c.units.insertOne({ _id: nid, ws, project: proj._id, code, ...cu.unit, status: "available", created: Date.now(), updated: Date.now() });
+        await c.units.insertOne({ _id: nid, ws, project: proj._id, code, pub: rid(), ...cu.unit, videos: cleanVideos(body.videos), status: "available", created: Date.now(), updated: Date.now() });
         return json({ id: nid, code });
       } catch (e: any) {
         if (e?.code === 11000) return json({ error: "That unit number already exists in this project" }, 400);
@@ -579,14 +595,16 @@ async function handle(req: NextRequest) {
         docs.push({ _id: rid(), ws, project: proj._id, ...cu.unit, status: "available", created: Date.now(), updated: Date.now() });
       }
       const codes = await reserveUnitCodes(c, ws, proj, docs.length);
-      docs.forEach((d, i) => { d.code = codes[i]; });
+      docs.forEach((d, i) => { d.code = codes[i]; d.pub = rid(); });
       if (docs.length) { try { await c.units.insertMany(docs, { ordered: false }); } catch (e: any) { if (e?.code !== 11000 && !e?.writeErrors) throw e; } }
       return json({ added: docs.length, skipped, overLimit: capped });
     }
     case "unit_delete": {
       const x = only(); if (x) return x;
       const uidD = String(body.id || "");
+      const before = await c.units.findOne({ _id: uidD, ws });
       const del = await c.units.deleteOne({ _id: uidD, ws });
+      if (del.deletedCount) await dropDocs(before?.docs || []);
       if (del.deletedCount) await c.leads.updateMany({ ws, "data.unitId": uidD }, { $set: { "data.unitId": "", "data.unitCode": "" } });
       return json({ ok: 1 });
     }
@@ -748,6 +766,54 @@ async function handle(req: NextRequest) {
       const allowed_formats = "jpg,jpeg,png,webp,heic,avif";
       const signature = cloudinary.utils.api_sign_request({ allowed_formats, folder, timestamp }, cfg.api_secret);
       return json({ url: `https://api.cloudinary.com/v1_1/${cfg.cloud_name}/image/upload`, fields: { api_key: cfg.api_key, timestamp, folder, allowed_formats, signature } });
+    }
+
+
+    // ----- Private unit documents: Cloudinary "private" files, only opened through short-lived signed links -----
+    case "unit_doc_sign": {
+      const unit = await c.units.findOne({ _id: String(body.unit || ""), ws });
+      if (!unit) return json({ error: "nf" }, 404);
+      if ((unit.docs || []).length >= MAX_DOCS) return json({ error: `A unit can have up to ${MAX_DOCS} documents. Delete one first.` }, 400);
+      if (!rateLimit(`crm-doc:${ws}`, 300, 36e5)) return json({ error: "Too many uploads. Please try again later." }, 429);
+      const cfg = cloudinary.config();
+      if (!cfg.cloud_name || !cfg.api_key || !cfg.api_secret) return json({ error: "Document uploads are not set up yet (CLOUDINARY_URL is missing)." }, 503);
+      const timestamp = Math.floor(Date.now() / 1000);
+      const p = { folder: docFolder(ws, unit._id), timestamp, type: "private", use_filename: "true", unique_filename: "true" };
+      return json({ url: `https://api.cloudinary.com/v1_1/${cfg.cloud_name}/raw/upload`, fields: { ...p, api_key: cfg.api_key, signature: cloudinary.utils.api_sign_request(p, cfg.api_secret) } });
+    }
+    case "unit_doc_add": {
+      const unit = await c.units.findOne({ _id: String(body.unit || ""), ws });
+      if (!unit) return json({ error: "nf" }, 404);
+      const cfg = cloudinary.config();
+      const pid = String(body.public_id || ""), ver = String(body.version || "");
+      // the upload result is signed by Cloudinary: this proves the file was uploaded with our signature, into this unit's folder
+      const okSig = !!cfg.api_secret && /^\d{1,14}$/.test(ver) && String(body.signature || "") === cloudinary.utils.api_sign_request({ public_id: pid, version: ver }, cfg.api_secret);
+      if (!okSig || !docInFolder(pid, ws, unit._id)) return json({ error: "This upload could not be verified. Please try again." }, 400);
+      const name = cleanDocName(body.name);
+      if (!name) return json({ error: "This file type is not allowed. Use PDF, Word, Excel, images or similar." }, 400);
+      if ((unit.docs || []).some((d: any) => d.pid === pid)) return json({ ok: 1 });
+      const doc = { id: rid(), pid, name, bytes: Math.max(0, Math.min(Number(body.bytes) || 0, 1e9)), by: U.name, t: Date.now() };
+      const r2 = await c.units.updateOne({ _id: unit._id, ws, [`docs.${MAX_DOCS - 1}`]: { $exists: false } }, { $push: { docs: doc } } as any);
+      if (!r2.matchedCount) return json({ error: `A unit can have up to ${MAX_DOCS} documents.` }, 400);
+      return json({ id: doc.id });
+    }
+    case "unit_doc_url": {
+      const unit = await c.units.findOne({ _id: String(body.unit || ""), ws });
+      const doc = unit?.docs?.find((d: any) => d.id === String(body.doc || ""));
+      if (!doc) return json({ error: "nf" }, 404);
+      const cfg = cloudinary.config();
+      if (!cfg.api_secret) return json({ error: "Documents are not set up yet." }, 503);
+      const url = cloudinary.utils.private_download_url(doc.pid, "", { resource_type: "raw", type: "private", attachment: !!body.download, expires_at: Math.floor(Date.now() / 1000) + 5 * 60 });
+      return json({ url });
+    }
+    case "unit_doc_delete": {
+      const unit = await c.units.findOne({ _id: String(body.unit || ""), ws });
+      const doc = unit?.docs?.find((d: any) => d.id === String(body.doc || ""));
+      if (!doc) return json({ error: "nf" }, 404);
+      if (!admin && doc.by !== U.name) return json({ error: "Only an admin or the person who added it can delete this document" }, 403);
+      await c.units.updateOne({ _id: unit._id, ws }, { $pull: { docs: { id: doc.id } } } as any);
+      try { await cloudinary.uploader.destroy(doc.pid, { resource_type: "raw", type: "private", invalidate: true }); } catch (e) { console.error("[crm] doc delete", e); }
+      return json({ ok: 1 });
     }
 
     // ----- platform admin (you): manage every customer company -----
