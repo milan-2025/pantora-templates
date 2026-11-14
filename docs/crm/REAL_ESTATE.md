@@ -19,8 +19,16 @@ Your platform admin screen can also set the mode for any company.
 - **Leads ↔ property:** pick the property on a lead (add form or lead detail). Booking a unit, a public-page enquiry or a partner registration links the lead automatically. Older leads with a typed project name are matched by name until someone picks the property.
 - **Leads screen:** filter by property (or "No property"), sort *All leads* by Property ID, and see the Property ID on each lead card. Saved views remember the property filter. Links: `/CRM/?property=<project id>` opens the filtered list, `/CRM/?lead=<lead id>` opens one lead.
 - **Properties screen:** find a project by Property ID or name; each project has a **Leads** tab listing every lead for it (agents see their own, partners their own customers), with a button to open the filtered Leads screen.
+- **Unit IDs:** every unit gets an ID made of its Property ID plus a unit number, e.g. `PR-001-U007`. Older units get one automatically; IDs never change, even if the flat number is edited.
+- **Leads ↔ unit:** pick the unit on a lead (it also sets the property). Booking a unit links the lead to it. Changing a lead's property drops a unit from the old property; renaming a unit updates its leads; deleting a unit or project clears the links.
+- **Leads screen:** when a property is selected, a second filter narrows to one unit (or "No unit"). *By Property / Unit ID* sorts by property, then unit. Search finds Property and Unit IDs. `/CRM/?unit=<unit id>` opens the filtered list.
+- **Properties screen:** unit tiles show the unit ID and how many leads picked it; the unit sheet lists those leads. The find box accepts a unit ID (e.g. PR-001-U003) and opens that unit.
 - **Photos:** up to 12 per project (Properties → Edit). Upload from phone/computer (direct to Cloudinary, signed by the server, images only, into `crm/<company>/projects/<project>`; needs `CLOUDINARY_URL`) or paste https links. ★ makes a photo the cover. Photos show on the public page as a gallery.
 - **Google Maps link:** only real Google Maps links are accepted (maps.app.goo.gl, google.com/maps …). Shown as a button in Properties and on the public page.
+
+## Pinned notes (normal and real estate mode)
+- Each lead can have one **pinned note**, shown at the top of the lead and on its card (even when Notes are switched off). Add it with *📌 Add pinned note*, edit it, or unpin it; or tap 📌 on any note to pin it.
+- Every note in the history can be edited with ✏️ (admins: any note; agents: their own). Edited notes are marked "edited by …". Channel partners can read a pinned note but not change notes.
 
 ## Site visits (menu: 📍 Site visits)
 - Schedule a visit for a lead (project, optional unit, time). Early-stage leads move to *Site visit scheduled*; later stages never move backwards.
@@ -57,7 +65,7 @@ Leads received in the chosen period (7/30/90 days or all time) followed through 
 - Pure logic + tests: `lib/crm/realestate.ts`, `tests/realestate.test.ts`
 - API: `app/api/crm/route.ts` (actions `mode_set`, `projects_list`, `project_save`, `units_list`, `unit_save`, `units_import`, `unit_hold`, `unit_release`, `unit_status` ...)
 - Screens: `public/CRM/properties.html`, `visits.html`, `partners.html`, `reports.html` (shared styles in `re.css`), and mode-aware parts of `public/CRM/index.html`
-- Logic (pure, tested): `lib/crm/realestate.ts`, `property.ts`, `visits.ts`, `commission.ts`, `publicPage.ts`, `reports.ts`
+- Logic (pure, tested): `lib/crm/realestate.ts`, `property.ts`, `notes.ts`, `visits.ts`, `commission.ts`, `publicPage.ts`, `reports.ts`
 - Public page: `app/property/[pub]/route.ts`; enquiry form posts to the `enquiry` action in `app/api/crm/route.ts`
 - Tests: `npm test` (runs against an in-memory database; no MongoDB needed)
 

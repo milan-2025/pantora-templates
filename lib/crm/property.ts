@@ -55,3 +55,23 @@ export function resolveProject(projects: P[], input: { projectId?: unknown; proj
 /** Does this lead belong to this project? Uses the stored id, or the name for older leads without one. */
 export const leadInProject = (lead: { projectId?: string; project?: string }, p: P): boolean =>
   lead.projectId ? lead.projectId === p.id : !!lead.project && norm(lead.project) === norm(p.name);
+
+/** Unit ID: the Property ID plus a per-project unit number, e.g. PR-001-U007. Never changes, even if the flat number is edited. */
+export const formatUnitCode = (projectCode: string, n: number): string => `${projectCode}-U${String(Math.max(1, Math.floor(n))).padStart(3, "0")}`;
+export const isUnitCode = (s: unknown): boolean => /^PR-\d{3,}-U\d{3,}$/.test(String(s ?? ""));
+
+/** Sort key for Property ID then unit: [property number, unit number]. Missing parts sort last. */
+export function codeKey(projectCode: unknown, unitCode?: unknown): [number, number] {
+  const m = /^PR-(\d{3,})-U(\d{3,})$/.exec(String(unitCode ?? ""));
+  if (m) return [Number(m[1]), Number(m[2])];
+  return [codeNumber(projectCode), Number.MAX_SAFE_INTEGER];
+}
+export const compareCodes = (a: [number, number], b: [number, number]) => a[0] - b[0] || a[1] - b[1];
+
+/** Label shown for a unit on a lead: "A A-101" (tower + number), matching what bookings already store. */
+export const unitLabel = (u: { tower?: string; no: string }) => `${u.tower ? u.tower + " " : ""}${u.no}`;
+
+/** Codes for `count` new units, given the project's counter after reserving them. */
+export function reservedCodes(projectCode: string, endSeq: number, count: number): string[] {
+  return Array.from({ length: count }, (_, i) => formatUnitCode(projectCode, endSeq - count + 1 + i));
+}

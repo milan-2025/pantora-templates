@@ -13,7 +13,8 @@ import {
   holdFilter, holdHours, modeOf, releaseUpdate, type UnitStatus,
 } from "@/lib/crm/realestate";
 import { buildReport } from "@/lib/crm/reports";
-import { cleanImages, cleanMapUrl, formatCode, resolveProject } from "@/lib/crm/property";
+import { cleanImages, cleanMapUrl, formatCode, reservedCodes, resolveProject, unitLabel } from "@/lib/crm/property";
+import { cleanPinned } from "@/lib/crm/notes";
 import { v2 as cloudinary } from "cloudinary";
 import { cleanEnquiry, cleanPhone10, parseAmenities, safeHttpsUrl } from "@/lib/crm/publicPage";
 import { canChangeStatus, cleanPct, commissionAmount, effectiveRate, partnerLeadFields, partnerStats, shouldCreate, summarize } from "@/lib/crm/commission";
@@ -102,6 +103,23 @@ async function nextCode(c: C, ws: string) {
   const doc = r && "value" in r && r.value !== undefined && !("propSeq" in r) ? r.value : r;
   return formatCode(doc?.propSeq || 1);
 }
+/** Reserve `count` unit IDs (PR-001-U001 ...) in one project. Gives the project a Property ID first if it has none. */
+async function reserveUnitCodes(c: C, ws: string, proj: any, count: number): Promise<string[]> {
+  if (count <= 0) return [];
+  let code = proj.code;
+  if (!code) { code = await nextCode(c, ws); await c.projects.updateOne({ _id: proj._id, ws, code: { $exists: false } }, { $set: { code } }); code = (await c.projects.findOne({ _id: proj._id, ws }))?.code || code; }
+  const r: any = await c.projects.findOneAndUpdate({ _id: proj._id, ws }, { $inc: { unitSeq: count } }, { returnDocument: "after" });
+  const doc = r && "value" in r && r.value !== undefined && !("unitSeq" in r) ? r.value : r;
+  return reservedCodes(code, doc?.unitSeq || count, count);
+}
+/** Link a lead to a unit (and so to its project). An unknown or other-company unit clears the link. */
+async function linkUnit(c: C, ws: string, unitId: unknown) {
+  const u = unitId ? await c.units.findOne({ _id: String(unitId), ws }) : null;
+  if (!u) return { unitId: "", unitCode: "", unit: "" } as Record<string, string>;
+  const pr = await c.projects.findOne({ _id: u.project, ws });
+  return { unitId: u._id, unitCode: u.code || "", unit: unitLabel(u), ...(pr ? { projectId: pr._id, project: pr.name } : {}) } as Record<string, string>;
+}
+
 /** Links a lead to one of the company's projects (by id, or by typed name for older data). */
 async function linkProject(c: C, ws: string, input: { projectId?: unknown; project?: unknown }) {
   const ps = await c.projects.find({ ws }, { projection: { name: 1 } }).toArray();
@@ -353,6 +371,7 @@ async function handle(req: NextRequest) {
       if ((await c.leads.countDocuments({ ws })) >= PLANS[W.plan].leads) return json({ error: `Your plan allows ${PLANS[W.plan].leads} leads. Contact us to upgrade.` }, 403);
       let d = clean(body) as any;
       delete d.partnerId; delete d.partner;
+      if ("pinned" in d) d.pinned = cleanPinned(d.pinned);
       if (partner) {
         // A partner registers a buyer: first registration wins, and the lead is assigned to the sales team.
         const pk = digits(d.phone);
@@ -366,7 +385,9 @@ async function handle(req: NextRequest) {
         const pu = await c.users.findOne({ _id: String(body.partnerId), ws, role: "partner" });
         if (pu) { d.partnerId = pu._id; d.partner = pu.name; }
       }
+      delete d.unitId; delete d.unitCode;
       if (mode === "realestate" && ("projectId" in body || "project" in body)) Object.assign(d, await linkProject(c, ws, body));
+      if (mode === "realestate" && body.unitId) Object.assign(d, await linkUnit(c, ws, body.unitId));
       const nid = rid();
       await c.leads.insertOne({ _id: nid, ws, pk: digits(d.phone), created: d.created || Date.now(), data: d });
       return json({ id: nid });
@@ -379,11 +400,20 @@ async function handle(req: NextRequest) {
       const fields: Record<string, any> = partner ? partnerLeadFields(body) : { ...clean(body) };
       delete fields.partnerId; delete fields.partner; // attribution can only be changed below, by an admin
       delete fields.projectId; delete fields.project; // the project link is checked below
+      if ("pinned" in fields) fields.pinned = cleanPinned(fields.pinned);
       for (const [k, v] of Object.entries(fields)) set[`data.${k}`] = v;
+      delete fields.unitId; delete fields.unitCode; delete fields.unit; // unit link is checked below
       if (mode === "realestate" && ("projectId" in body || "project" in body)) {
         const lp = await linkProject(c, ws, body);
         set["data.projectId"] = lp.projectId; set["data.project"] = lp.project;
+        // a unit from another project no longer fits
+        if (!("unitId" in body) && old.data?.unitId) {
+          const ou = await c.units.findOne({ _id: old.data.unitId, ws });
+          if (!ou || ou.project !== lp.projectId) { set["data.unitId"] = ""; set["data.unitCode"] = ""; set["data.unit"] = ""; }
+        }
       }
+      if (mode === "realestate" && "unitId" in body) for (const [k, v] of Object.entries(await linkUnit(c, ws, body.unitId))) set[`data.${k}`] = v;
+      else if ("unit" in body && !partner && mode !== "realestate") set["data.unit"] = String(body.unit ?? "").slice(0, 60);
       if ("phone" in fields) set.pk = digits(fields.phone);
       if (admin && "partnerId" in body) {
         const pu = body.partnerId ? await c.users.findOne({ _id: String(body.partnerId), ws, role: "partner" }) : null;
@@ -484,6 +514,7 @@ async function handle(req: NextRequest) {
       const pid = String(body.id || "");
       await c.units.deleteMany({ ws, project: pid });
       await c.projects.deleteOne({ _id: pid, ws });
+      await c.leads.updateMany({ ws, "data.projectId": pid }, { $set: { "data.projectId": "", "data.unitId": "", "data.unitCode": "" } });
       return json({ ok: 1 });
     }
     case "units_list": {
@@ -491,7 +522,19 @@ async function handle(req: NextRequest) {
       const q: any = { ws };
       if (id) q.project = id;
       const us = await c.units.find(q).sort({ project: 1, tower: 1, floor: 1, no: 1 }).limit(5000).toArray();
-      return json(us.map((u: any) => ({ id: u._id, project: u.project, no: u.no, tower: u.tower || "", floor: u.floor ?? null, bhk: u.bhk || "", area: u.area ?? null, price: u.price ?? null, status: u.status, heldUntil: u.heldUntil || null, ...(partner ? {} : { heldBy: u.heldBy || "", leadId: u.leadId || "", leadName: u.leadName || "" }) })));
+      const missing = us.filter((u: any) => !u.code);
+      if (missing.length) { // older units get their unit ID, in the order they were added
+        const byP = new Map<string, any[]>();
+        for (const u of missing) (byP.get(u.project) || byP.set(u.project, []).get(u.project)!).push(u);
+        for (const [pId, list] of byP) {
+          const proj = await c.projects.findOne({ _id: pId, ws });
+          if (!proj) continue;
+          list.sort((a: any, b: any) => (a.created || 0) - (b.created || 0) || String(a.no).localeCompare(String(b.no), undefined, { numeric: true }));
+          const codes = await reserveUnitCodes(c, ws, proj, list.length);
+          for (let i = 0; i < list.length; i++) { list[i].code = codes[i]; await c.units.updateOne({ _id: list[i]._id, ws }, { $set: { code: codes[i] } }); }
+        }
+      }
+      return json(us.map((u: any) => ({ id: u._id, code: u.code || "", project: u.project, no: u.no, tower: u.tower || "", floor: u.floor ?? null, bhk: u.bhk || "", area: u.area ?? null, price: u.price ?? null, status: u.status, heldUntil: u.heldUntil || null, ...(partner ? {} : { heldBy: u.heldBy || "", leadId: u.leadId || "", leadName: u.leadName || "" }) })));
     }
     case "unit_save": {
       const x = only(); if (x) return x;
@@ -502,14 +545,19 @@ async function handle(req: NextRequest) {
       const uid2 = String(body.id || "");
       try {
         if (uid2) {
-          const r2 = await c.units.updateOne({ _id: uid2, ws }, { $set: { ...cu.unit, project: proj._id, updated: Date.now() } });
-          if (!r2.matchedCount) return json({ error: "nf" }, 404);
+          const cur = await c.units.findOne({ _id: uid2, ws });
+          if (!cur) return json({ error: "nf" }, 404);
+          if (cur.project !== proj._id) return json({ error: "A unit cannot be moved to another project" }, 400);
+          await c.units.updateOne({ _id: uid2, ws }, { $set: { ...cu.unit, updated: Date.now() } });
+          await c.leads.updateMany({ ws, "data.unitId": uid2 }, { $set: { "data.unit": unitLabel(cu.unit) } }); // keep lead labels in step
           return json({ id: uid2 });
         }
         if ((await c.units.countDocuments({ ws })) >= (UNIT_LIMITS[W.plan] ?? 0)) return json({ error: `Your plan allows ${UNIT_LIMITS[W.plan]} units. Contact us to upgrade.` }, 403);
+        if (await c.units.findOne({ ws, project: proj._id, no: cu.unit.no })) return json({ error: "That unit number already exists in this project" }, 400);
         const nid = rid();
-        await c.units.insertOne({ _id: nid, ws, project: proj._id, ...cu.unit, status: "available", created: Date.now(), updated: Date.now() });
-        return json({ id: nid });
+        const [code] = await reserveUnitCodes(c, ws, proj, 1);
+        await c.units.insertOne({ _id: nid, ws, project: proj._id, code, ...cu.unit, status: "available", created: Date.now(), updated: Date.now() });
+        return json({ id: nid, code });
       } catch (e: any) {
         if (e?.code === 11000) return json({ error: "That unit number already exists in this project" }, 400);
         throw e;
@@ -530,10 +578,18 @@ async function handle(req: NextRequest) {
         have.add(cu.unit.no); room--;
         docs.push({ _id: rid(), ws, project: proj._id, ...cu.unit, status: "available", created: Date.now(), updated: Date.now() });
       }
+      const codes = await reserveUnitCodes(c, ws, proj, docs.length);
+      docs.forEach((d, i) => { d.code = codes[i]; });
       if (docs.length) { try { await c.units.insertMany(docs, { ordered: false }); } catch (e: any) { if (e?.code !== 11000 && !e?.writeErrors) throw e; } }
       return json({ added: docs.length, skipped, overLimit: capped });
     }
-    case "unit_delete": { const x = only(); if (x) return x; await c.units.deleteOne({ _id: String(body.id || ""), ws }); return json({ ok: 1 }); }
+    case "unit_delete": {
+      const x = only(); if (x) return x;
+      const uidD = String(body.id || "");
+      const del = await c.units.deleteOne({ _id: uidD, ws });
+      if (del.deletedCount) await c.leads.updateMany({ ws, "data.unitId": uidD }, { $set: { "data.unitId": "", "data.unitCode": "" } });
+      return json({ ok: 1 });
+    }
     case "unit_hold": {
       await c.units.updateMany(expiredHoldFilter(ws, Date.now()), releaseUpdate());
       const unit = await c.units.findOne({ _id: String(body.id || ""), ws });
@@ -572,7 +628,7 @@ async function handle(req: NextRequest) {
       await syncCommission(c, ws, unit, lead, to);
       if (lead && to === "booked" && lead.data?.status !== "Won") {
         const pr = await c.projects.findOne({ _id: unit.project, ws });
-        await c.leads.updateOne({ _id: lead._id, ws }, { $set: { "data.status": "Booked", "data.unit": `${unit.tower ? unit.tower + " " : ""}${unit.no}`, ...(pr ? { "data.projectId": pr._id, "data.project": pr.name } : {}) } });
+        await c.leads.updateOne({ _id: lead._id, ws }, { $set: { "data.status": "Booked", "data.unit": unitLabel(unit), "data.unitId": unit._id, "data.unitCode": unit.code || "", ...(pr ? { "data.projectId": pr._id, "data.project": pr.name } : {}) } });
       }
       return json({ ok: 1 });
     }

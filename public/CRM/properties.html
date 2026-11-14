@@ -31,6 +31,7 @@ button,.btn{cursor:pointer;display:inline-flex;align-items:center;justify-conten
 label.l{display:block;font-size:13px;color:var(--mut);margin:10px 0 3px}#md input,#md select{width:100%}
 .r2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.acts button{flex:1}
 .er{color:var(--bad);font-size:13px;margin-top:8px}
+.u .uc{font-size:11px;color:var(--mut);font-weight:600;letter-spacing:.2px}
 .tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:10px}.tabs button{white-space:nowrap}.tabs .on{background:var(--ac);color:#fff;border-color:var(--ac)}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin-bottom:8px;border-left:5px solid var(--c,var(--bd))}
 .card .h{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.card b{font-size:16px}.card .mut{display:block}
@@ -54,7 +55,7 @@ const api=async(m,r,x,b)=>{const res=await fetch("api.php?r="+r+(x||""),{method:
 const price=n=>n==null?"":n>=1e7?(+(n/1e7).toFixed(2))+" Cr":n>=1e5?(+(n/1e5).toFixed(2))+" L":"₹"+n.toLocaleString("en-IN");
 const left=t=>{const h=Math.max(0,Math.round((t-Date.now())/36e5));return h>=24?Math.floor(h/24)+"d "+(h%24)+"h left":h+"h left"};
 let me,projects=[],units=[],leads=[],pid=LS("pid"),filt="all",q="",view="units",pimgs=[];
-const deepP=new URLSearchParams(location.search).get("property");if(deepP){pid=deepP;view=new URLSearchParams(location.search).get("view")==="leads"?"leads":"units"}
+const deepU=new URLSearchParams(location.search).get("unit");const deepP=new URLSearchParams(location.search).get("property");if(deepP){pid=deepP;view=new URLSearchParams(location.search).get("view")==="leads"?"leads":"units"}
 const pnum=c=>/^PR-\d{3,}$/.test(c||"")?+c.slice(3):1e15;
 const sorted=()=>[...projects].sort((a,b)=>pnum(a.code)-pnum(b.code)||a.name.localeCompare(b.name));
 /** Leads for a project: linked by id, or (older leads) by the same project name. */
@@ -75,15 +76,17 @@ async function init(){
 async function load(quiet){
   try{
     [projects,units,leads]=await Promise.all([api("GET","projects_list"),api("GET","units_list"),api("GET","leads")]);
+    if(deepU&&!quiet){const u=units.find(x=>x.id===deepU);if(u){pid=u.project;view="units"}}
     if(!projects.find(p=>p.id===pid))pid=sorted()[0]?sorted()[0].id:"";
     if(!quiet||!$("#ov").classList.contains("on"))render();
   }catch(e){if(!quiet)$("#app").innerHTML=`<div class="msg">${esc(e.message)}</div>`}
+  if(deepU&&!quiet&&units.some(x=>x.id===deepU)){history.replaceState(null,"","properties.html");openUnit(deepU)}
 }
 function render(){
   const P=projects.find(p=>p.id===pid),us=units.filter(u=>u.project===pid),cnt=s=>us.filter(u=>u.status===s).length;
   let h=`<div class="top"><a class="btn sm" href="./">← Leads</a><h1>🏢 Properties</h1>${admin()?`<button class="sm p" data-a="newp">＋ Project</button>`:""}</div>`;
   if(!projects.length){$("#app").innerHTML=h+`<div class="msg">${admin()?"No projects yet. Add your first project to start tracking units.":"No projects yet. Ask your admin to add one."}</div>`;return}
-  h+=`<div class="row"><select id="ps" style="flex:2;min-width:180px">${sorted().map(p=>`<option value="${p.id}" ${p.id===pid?"selected":""}>${esc(p.code||"")} · ${esc(p.name)}${p.city?" · "+esc(p.city):""}</option>`).join("")}</select><input id="pfind" placeholder="Find PR-001 or name" style="flex:1;min-width:130px">${admin()?`<button class="sm" data-a="editp">Edit</button>`:""}</div>`;
+  h+=`<div class="row"><select id="ps" style="flex:2;min-width:180px">${sorted().map(p=>`<option value="${p.id}" ${p.id===pid?"selected":""}>${esc(p.code||"")} · ${esc(p.name)}${p.city?" · "+esc(p.city):""}</option>`).join("")}</select><input id="pfind" placeholder="Find PR-001, PR-001-U003 or name" style="flex:1;min-width:130px">${admin()?`<button class="sm" data-a="editp">Edit</button>`:""}</div>`;
   if(P){const nL=leads.filter(l=>inP(l,P)).length;
     h+=`<div class="row" style="align-items:center"><span class="tag" style="--c:#475569;font-size:14px">Property ID ${esc(P.code||"")}</span>${P.mapUrl?`<a class="btn sm" target="_blank" rel="noopener" href="${esc(P.mapUrl)}">📍 Google Maps</a>`:""}${(P.images||[]).length?`<span class="mut">📷 ${P.images.length} photo${P.images.length>1?"s":""}</span>`:""}</div>`;
     if((P.images||[]).length)h+=`<div class="thumbs">${P.images.slice(0,8).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="" loading="lazy"></a>`).join("")}</div>`;
@@ -95,16 +98,16 @@ function render(){
   if(P&&view==="leads"){$("#app").innerHTML=h+leadsView(P);wire();return}
   h+=`<div class="stats">${[["Total",us.length,"#64748b"],["Available",cnt("available"),STC.available[0]],["On hold",cnt("soft_hold")+cnt("hard_hold"),STC.soft_hold[0]],["Booked",cnt("booked"),STC.booked[0]],["Sold",cnt("sold"),STC.sold[0]]].map(x=>`<div class="stat" style="--c:${x[2]}"><b>${x[1]}</b><span>${x[0]}</span></div>`).join("")}</div>`;
   if(admin())h+=`<div class="row"><button class="sm p" data-a="addu">＋ Unit</button><button class="sm" data-a="many">＋ Many units</button><button class="sm" data-a="csv">📥 Import CSV</button></div>`;
-  h+=`<div class="chips">${[["all","All"],["available","Available"],["soft_hold","On hold"],["hard_hold","Blocked"],["booked","Booked"],["sold","Sold"]].map(x=>`<button data-f="${x[0]}" class="${filt===x[0]?"on":""}">${x[1]}</button>`).join("")}<input id="q" placeholder="Search unit…" value="${esc(q)}" style="min-width:120px"></div>`;
-  const vis=us.filter(u=>(filt==="all"||u.status===filt)&&(!q||(u.tower+" "+u.no).toLowerCase().includes(q.toLowerCase())));
+  h+=`<div class="chips">${[["all","All"],["available","Available"],["soft_hold","On hold"],["hard_hold","Blocked"],["booked","Booked"],["sold","Sold"]].map(x=>`<button data-f="${x[0]}" class="${filt===x[0]?"on":""}">${x[1]}</button>`).join("")}<input id="q" placeholder="Search unit or ID…" value="${esc(q)}" style="min-width:120px"></div>`;
+  const vis=us.filter(u=>(filt==="all"||u.status===filt)&&(!q||(u.tower+" "+u.no+" "+(u.code||"")).toLowerCase().includes(q.toLowerCase())));
   if(!vis.length)h+=`<div class="msg">${us.length?"No units match.":"No units in this project yet."}</div>`;
   const by={};vis.forEach(u=>(by[u.tower||"Units"]=by[u.tower||"Units"]||[]).push(u));
-  for(const [t,list] of Object.entries(by))h+=`<div class="sec">${esc(t)} (${list.length})</div><div class="grid">${list.map(u=>{const c=STC[u.status]||STC.available;return`<button class="u" style="--c:${c[0]}" data-u="${u.id}"><b>${esc(u.no)}</b><small>${[u.bhk,u.area?u.area+" sq ft":"",u.floor!=null?"Floor "+u.floor:""].filter(Boolean).map(esc).join(" · ")||"&nbsp;"}</small><small>${u.price!=null?price(u.price):""}</small><div class="st">${c[1]}${u.status==="soft_hold"?" · "+left(u.heldUntil):""}</div>${u.leadName?`<small>${esc(u.leadName)}</small>`:""}</button>`}).join("")}</div>`;
+  for(const [t,list] of Object.entries(by))h+=`<div class="sec">${esc(t)} (${list.length})</div><div class="grid">${list.map(u=>{const c=STC[u.status]||STC.available;const nl=leads.filter(l=>l.unitId===u.id).length;return`<button class="u" style="--c:${c[0]}" data-u="${u.id}"><b>${esc(u.no)}</b>${u.code?`<small class="uc">${esc(u.code)}${nl?` · 👤 ${nl}`:""}</small>`:""}<small>${[u.bhk,u.area?u.area+" sq ft":"",u.floor!=null?"Floor "+u.floor:""].filter(Boolean).map(esc).join(" · ")||"&nbsp;"}</small><small>${u.price!=null?price(u.price):""}</small><div class="st">${c[1]}${u.status==="soft_hold"?" · "+left(u.heldUntil):""}</div>${u.leadName?`<small>${esc(u.leadName)}</small>`:""}</button>`}).join("")}</div>`;
   $("#app").innerHTML=h;wire();
 }
 function wire(){
   const ps=$("#ps");if(ps)ps.onchange=()=>{pid=ps.value;LS("pid",pid);render()};
-  const pf=$("#pfind");if(pf)pf.onchange=()=>{const t=pf.value.trim().toLowerCase();if(!t)return;const m=projects.find(p=>(p.code||"").toLowerCase()===t||(p.code||"").toLowerCase()==="pr-"+t.replace(/^pr-?/,"").padStart(3,"0"))||projects.find(p=>p.name.toLowerCase().includes(t));if(m){pid=m.id;LS("pid",pid);render()}else{pf.value="";pf.placeholder="No match for “"+t+"”"}};
+  const pf=$("#pfind");if(pf)pf.onchange=()=>{const t=pf.value.trim().toLowerCase();if(!t)return;const fu=units.find(u=>(u.code||"").toLowerCase()===t);if(fu){pid=fu.project;LS("pid",pid);view="units";render();openUnit(fu.id);return}const m=projects.find(p=>(p.code||"").toLowerCase()===t||(p.code||"").toLowerCase()==="pr-"+t.replace(/^pr-?/,"").padStart(3,"0"))||projects.find(p=>p.name.toLowerCase().includes(t));if(m){pid=m.id;LS("pid",pid);render()}else{pf.value="";pf.placeholder="No match for “"+t+"”"}};
   const qi=$("#q");if(qi)qi.oninput=()=>{q=qi.value;const pos=qi.selectionStart;render();const n=$("#q");n.focus();n.setSelectionRange(pos,pos)};
 }
 function leadsView(P){
@@ -114,7 +117,7 @@ function leadsView(P){
   const by={};ls.forEach(l=>{by[l.status||"New"]=(by[l.status||"New"]||0)+1});
   h+=`<div class="chips">${Object.entries(by).map(([k,n])=>`<span class="tag" style="--c:${STG[k]||"#64748b"}">${esc(k)} ${n}</span>`).join("")}</div>`;
   return h+ls.map(l=>{const c=STG[l.status]||"#64748b",ph=String(l.phone||"").replace(/\D/g,"").slice(-10);
-    return`<a class="card" style="--c:${c};display:block;color:inherit;text-decoration:none" href="./?lead=${encodeURIComponent(l.id)}"><div class="h"><div><b>${esc(l.name||l.phone||"Lead")}</b><span class="mut">${esc(l.phone||"")}${l.unit?" · Unit "+esc(l.unit):""}${l.budget?" · "+esc(l.budget):""}</span></div><span class="tag" style="--c:${c}">${esc(l.status||"New")}</span></div><div class="mut">${[l.owner?"Agent: "+l.owner:"",l.partner?"Partner: "+l.partner:"",l.source||"",l.created?new Date(l.created).toLocaleDateString("en-IN"):""].filter(Boolean).map(esc).join(" · ")}</div></a>`}).join("");
+    return`<a class="card" style="--c:${c};display:block;color:inherit;text-decoration:none" href="./?lead=${encodeURIComponent(l.id)}"><div class="h"><div><b>${esc(l.name||l.phone||"Lead")}</b><span class="mut">${esc(l.phone||"")}${l.unitCode?" · "+esc(l.unitCode):""}${l.unit?" · Unit "+esc(l.unit):""}${l.budget?" · "+esc(l.budget):""}</span></div><span class="tag" style="--c:${c}">${esc(l.status||"New")}</span></div><div class="mut">${[l.owner?"Agent: "+l.owner:"",l.partner?"Partner: "+l.partner:"",l.source||"",l.created?new Date(l.created).toLocaleDateString("en-IN"):""].filter(Boolean).map(esc).join(" · ")}</div></a>`}).join("");
 }
 document.addEventListener("click",e=>{
   const tv=e.target.closest("[data-v]");if(tv){view=tv.dataset.v;render();return}
@@ -198,7 +201,8 @@ function openCsv(){
 }
 function openUnit(id){
   const u=units.find(x=>x.id===id);if(!u)return;const c=STC[u.status]||STC.available,ad=admin(),mineHold=u.status==="soft_hold"&&u.heldBy===me.name;
-  let h=`<h3 style="margin:0">${esc(u.tower?u.tower+" · ":"")}${esc(u.no)}</h3><div class="mut" style="color:${c[0]}"><b>${c[1]}</b>${u.status==="soft_hold"?" · "+left(u.heldUntil)+(u.heldBy?" · by "+esc(u.heldBy):""):""}${u.leadName?" · "+esc(u.leadName):""}</div><div class="mut">${[u.bhk,u.area?u.area+" sq ft":"",u.floor!=null?"Floor "+u.floor:"",u.price!=null?price(u.price):""].filter(Boolean).map(esc).join(" · ")}</div><div id="er" class="er"></div>`;
+  const ul=leads.filter(l=>l.unitId===u.id).sort((a,b)=>(b.created||0)-(a.created||0));
+  let h=`<h3 style="margin:0">${esc(u.tower?u.tower+" · ":"")}${esc(u.no)}</h3>${u.code?`<div><span class="tag" style="--c:#475569">Unit ID ${esc(u.code)}</span></div>`:""}<div class="mut" style="color:${c[0]}"><b>${c[1]}</b>${u.status==="soft_hold"?" · "+left(u.heldUntil)+(u.heldBy?" · by "+esc(u.heldBy):""):""}${u.leadName?" · "+esc(u.leadName):""}</div><div class="mut">${[u.bhk,u.area?u.area+" sq ft":"",u.floor!=null?"Floor "+u.floor:"",u.price!=null?price(u.price):""].filter(Boolean).map(esc).join(" · ")}</div><div id="er" class="er"></div>`;
   const lo=`<option value="">No lead</option>`+leads.filter(l=>!["Won","Lost"].includes(l.status)).slice(0,300).map(l=>`<option value="${l.id}">${esc(l.name||l.phone||"Lead")}${l.phone?" · "+esc(l.phone):""}</option>`).join("");
   if(u.status==="available"&&me.role!=="partner")h+=`<label class="l">Hold for lead</label><select id="hl">${lo}</select><label class="l">Hold for (hours)</label><input id="hh" type="number" min="1" value="${(projects.find(p=>p.id===u.project)||{}).holdHours||48}"><div class="acts"><button class="p" id="hold">Hold unit</button></div>`;
   if((u.status==="soft_hold"&&(ad||mineHold))||(ad&&u.status==="hard_hold"))h+=`<div class="acts"><button id="rel">Release hold</button></div>`;
@@ -210,6 +214,7 @@ function openUnit(id){
     if(["booked","sold","hard_hold"].includes(u.status))h+=`<button data-s="available">Make available</button>`;
     h+=`</div><div class="acts"><button id="ed">Edit</button><button class="dg" id="del">Delete</button></div>`;
   }
+  h+=`<div class="sec">Leads for this unit (${ul.length})</div>`+(ul.length?ul.map(l=>`<a class="card" style="--c:${STG[l.status]||"#64748b"};display:block;color:inherit;text-decoration:none;margin-bottom:6px" href="./?lead=${encodeURIComponent(l.id)}"><div class="h"><div><b>${esc(l.name||l.phone||"Lead")}</b><span class="mut">${esc(l.phone||"")}${l.owner?" · "+esc(l.owner):""}</span></div><span class="tag" style="--c:${STG[l.status]||"#64748b"}">${esc(l.status||"New")}</span></div></a>`).join("")+`<a class="btn sm" href="./?unit=${encodeURIComponent(u.id)}">Open in Leads screen</a>`:`<div class="mut">No leads picked this unit yet. Choose it on a lead (Unit), or book it for a lead.</div>`);
   h+=`<div class="acts"><button data-a="close">Close</button></div>`;open_(h);
   const hb=$("#hold");if(hb)hb.onclick=()=>run(()=>api("POST","unit_hold","",{id,hours:$("#hh").value,leadId:$("#hl").value}));
   const rb=$("#rel");if(rb)rb.onclick=()=>run(()=>api("POST","unit_release","",{id}));
