@@ -7,9 +7,11 @@
  * marked Lost keeps credit only for visits it had, because the system does not store stage history.
  */
 
-export type RLead = { id: string; created?: number; status?: string; source?: string; owner?: string; partnerId?: string; partner?: string; project?: string; appts?: unknown };
+import { leadInProject } from "./property";
+
+export type RLead = { id: string; created?: number; status?: string; source?: string; owner?: string; partnerId?: string; partner?: string; project?: string; projectId?: string; appts?: unknown };
 export type RUnit = { id?: string; project: string; status: string; price?: number | null; leadId?: string };
-export type RProject = { id: string; name: string; views?: number; enquiries?: number };
+export type RProject = { id: string; name: string; code?: string; views?: number; enquiries?: number };
 export type RCommission = { partnerId: string; status: string; amount?: number; created?: number };
 
 const RANK: Record<string, number> = {
@@ -59,10 +61,10 @@ export function buildReport(input: { leads: RLead[]; units: RUnit[]; projects: R
     const us = input.units.filter((u) => u.project === p.id);
     const count = (s: string[]) => us.filter((u) => s.includes(u.status)).length;
     return {
-      id: p.id, name: p.name, total: us.length, available: count(["available"]), held: count(["soft_hold", "hard_hold"]),
+      id: p.id, code: p.code || "", name: p.name, total: us.length, available: count(["available"]), held: count(["soft_hold", "hard_hold"]),
       booked: count(["booked"]), sold: count(["sold"]),
       soldValue: us.filter(isSold).reduce((a, u) => a + (u.price || 0), 0),
-      leads: cohort.filter((l) => (l.project || "").trim().toLowerCase() === p.name.trim().toLowerCase()).length,
+      leads: cohort.filter((l) => leadInProject(l, p)).length,
       views: p.views || 0, enquiries: p.enquiries || 0,
     };
   });

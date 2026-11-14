@@ -54,7 +54,7 @@ describe("buildReport (last 30 days)", () => {
     expect(r.agents.find((a) => a.name === "Unassigned")!.leads).toBe(1);
   });
   it("summarises inventory and project demand", () => {
-    expect(r.projects[0]).toEqual({ id: "P1", name: "Sunrise", total: 5, available: 1, held: 1, booked: 2, sold: 1, soldValue: 15000000, leads: 1, views: 120, enquiries: 9 });
+    expect(r.projects[0]).toEqual({ id: "P1", code: "", name: "Sunrise", total: 5, available: 1, held: 1, booked: 2, sold: 1, soldValue: 15000000, leads: 1, views: 120, enquiries: 9 });
   });
   it("shows partner results with commission in the period, ignoring cancelled", () => {
     expect(r.partners).toEqual([{ id: "p1", name: "Anil", leads: 1, booked: 0, conversion: 0, value: 0, due: 100, paid: 0 }]);

@@ -35,6 +35,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ pub: string }> 
     renderProjectPage({
       pub, company: w.name, name: proj.name, city: proj.city, locality: proj.locality, type: proj.type, rera: proj.reraNumber,
       about: proj.about, amenities: proj.amenities, cover: proj.cover, phone: proj.contactPhone, mix: unitMix(units), ref,
+      images: proj.images, mapUrl: proj.mapUrl, code: proj.code,
     }),
   );
 }

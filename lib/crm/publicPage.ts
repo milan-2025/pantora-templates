@@ -54,11 +54,15 @@ export function unitMix(units: { status: string; bhk?: string; price?: number | 
 export type PageData = {
   pub: string; company: string; name: string; city?: string; locality?: string; type?: string; rera?: string; about?: string;
   amenities?: string[]; cover?: string; phone?: string; mix: ReturnType<typeof unitMix>; ref?: string; url?: string;
+  images?: string[]; mapUrl?: string; code?: string;
 };
 
 export function renderProjectPage(d: PageData): string {
   const E = escapeHtml;
-  const cover = safeHttpsUrl(d.cover);
+  const imgs = (d.images || []).map(safeHttpsUrl).filter(Boolean).slice(0, 12);
+  const cover = safeHttpsUrl(d.cover) || imgs[0] || "";
+  const map = safeHttpsUrl(d.mapUrl);
+  const code = /^PR-\d{3,}$/.test(d.code || "") ? d.code! : "";
   const from = d.mix.map((m) => m.from).filter((x): x is number => x !== null);
   const startsAt = from.length ? Math.min(...from) : null;
   const where = [d.locality, d.city].filter(Boolean).join(", ");
@@ -80,10 +84,14 @@ export function renderProjectPage(d: PageData): string {
 label{display:block;font-size:14px;color:var(--mut);margin:10px 0 3px}input,textarea{width:100%;font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:11px}
 button,.btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px 16px;background:var(--ac);color:#fff;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
 .btn.o{background:transparent;color:var(--ac);border:1px solid var(--ac)}.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}.hp{position:absolute;left:-9999px}.ok{color:#16a34a;font-weight:600}.er{color:#dc2626}
-.f{color:var(--mut);font-size:13px;text-align:center;padding:12px 0 32px}</style></head><body>
-<div class="hero"><div class="w"><h1>${E(d.name)}</h1><div class="sub">${E(where)}${d.type ? (where ? " · " : "") + E(d.type) : ""}</div></div></div>
+.f{color:var(--mut);font-size:13px;text-align:center;padding:12px 0 32px}
+.gal{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:4px}.gal a{flex:0 0 auto;scroll-snap-align:start}.gal img{display:block;height:180px;width:auto;max-width:82vw;border-radius:10px;object-fit:cover;background:var(--bd)}
+.loc{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}</style></head><body>
+<div class="hero"><div class="w"><h1>${E(d.name)}</h1><div class="sub">${E(where)}${d.type ? (where ? " · " : "") + E(d.type) : ""}${code ? " · Property ID " + E(code) : ""}</div></div></div>
 <div class="w">
 ${startsAt !== null ? `<div class="card"><div class="mut" style="color:var(--mut);font-size:13px">Starting from</div><div class="price">${E(formatPrice(startsAt))}</div>${d.rera ? `<div style="color:var(--mut);font-size:13px;margin-top:4px">RERA: ${E(d.rera)}</div>` : ""}</div>` : d.rera ? `<div class="card" style="color:var(--mut)">RERA: ${E(d.rera)}</div>` : ""}
+${imgs.length ? `<div class="card"><h2>Photos</h2><div class="gal">${imgs.map((u, i) => `<a href="${E(u)}" target="_blank" rel="noopener"><img src="${E(u)}" alt="${E(d.name)} photo ${i + 1}" loading="lazy" decoding="async"></a>`).join("")}</div></div>` : ""}
+${map || where ? `<div class="card loc"><div><h2 style="margin:0">Location</h2><div style="color:var(--mut)">${E(where || d.name)}</div></div>${map ? `<a class="btn o" href="${E(map)}" target="_blank" rel="noopener">📍 View on Google Maps</a>` : ""}</div>` : ""}
 ${d.about ? `<div class="card"><h2>About</h2><div style="white-space:pre-line">${E(d.about)}</div></div>` : ""}
 ${d.amenities?.length ? `<div class="card"><h2>Amenities</h2><div class="chips">${d.amenities.map((a) => `<span class="chip">${E(a)}</span>`).join("")}</div></div>` : ""}
 ${total ? `<div class="card"><h2>Available now</h2><table><tr><th>Type</th><th>Units</th><th>Price</th></tr>${d.mix.map((m) => `<tr><td>${E(m.bhk)}</td><td>${m.count}</td><td>${m.from === null ? "On request" : m.from === m.to ? E(formatPrice(m.from)) : E(formatPrice(m.from)) + " – " + E(formatPrice(m.to!))}</td></tr>`).join("")}</table></div>` : ""}

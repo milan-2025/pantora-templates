@@ -14,6 +14,14 @@ Your platform admin screen can also set the mode for any company.
 - **Lead stages:** adds *Site visit scheduled*, *Site visit done*, *Negotiation*, *Booked* to the normal stages.
 - **Lead fields:** project interested in, budget, type/BHK (also available as columns).
 
+## Property IDs, photos and map
+- Every project gets a **Property ID** (PR-001, PR-002 …), numbered per company. Older projects get one automatically the first time Properties is opened. IDs cannot be edited.
+- **Leads ↔ property:** pick the property on a lead (add form or lead detail). Booking a unit, a public-page enquiry or a partner registration links the lead automatically. Older leads with a typed project name are matched by name until someone picks the property.
+- **Leads screen:** filter by property (or "No property"), sort *All leads* by Property ID, and see the Property ID on each lead card. Saved views remember the property filter. Links: `/CRM/?property=<project id>` opens the filtered list, `/CRM/?lead=<lead id>` opens one lead.
+- **Properties screen:** find a project by Property ID or name; each project has a **Leads** tab listing every lead for it (agents see their own, partners their own customers), with a button to open the filtered Leads screen.
+- **Photos:** up to 12 per project (Properties → Edit). Upload from phone/computer (direct to Cloudinary, signed by the server, images only, into `crm/<company>/projects/<project>`; needs `CLOUDINARY_URL`) or paste https links. ★ makes a photo the cover. Photos show on the public page as a gallery.
+- **Google Maps link:** only real Google Maps links are accepted (maps.app.goo.gl, google.com/maps …). Shown as a button in Properties and on the public page.
+
 ## Site visits (menu: 📍 Site visits)
 - Schedule a visit for a lead (project, optional unit, time). Early-stage leads move to *Site visit scheduled*; later stages never move backwards.
 - Mark done with an outcome (interested, still thinking, not interested, did not come) and feedback. The lead moves to *Site visit done*, a note is added, and "not interested" marks it Cold. A no-show keeps the stage and can be rescheduled.
@@ -49,7 +57,7 @@ Leads received in the chosen period (7/30/90 days or all time) followed through 
 - Pure logic + tests: `lib/crm/realestate.ts`, `tests/realestate.test.ts`
 - API: `app/api/crm/route.ts` (actions `mode_set`, `projects_list`, `project_save`, `units_list`, `unit_save`, `units_import`, `unit_hold`, `unit_release`, `unit_status` ...)
 - Screens: `public/CRM/properties.html`, `visits.html`, `partners.html`, `reports.html` (shared styles in `re.css`), and mode-aware parts of `public/CRM/index.html`
-- Logic (pure, tested): `lib/crm/realestate.ts`, `visits.ts`, `commission.ts`, `publicPage.ts`, `reports.ts`
+- Logic (pure, tested): `lib/crm/realestate.ts`, `property.ts`, `visits.ts`, `commission.ts`, `publicPage.ts`, `reports.ts`
 - Public page: `app/property/[pub]/route.ts`; enquiry form posts to the `enquiry` action in `app/api/crm/route.ts`
 - Tests: `npm test` (runs against an in-memory database; no MongoDB needed)
 

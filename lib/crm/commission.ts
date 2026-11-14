@@ -63,7 +63,7 @@ export function partnerStats(
 }
 
 /** Fields a channel partner may set on their own leads (they never change stage, owner or attribution). */
-export const PARTNER_LEAD_FIELDS = ["name", "phone", "email", "budget", "project", "bhk"] as const;
+export const PARTNER_LEAD_FIELDS = ["name", "phone", "email", "budget", "project", "projectId", "bhk"] as const;
 export function partnerLeadFields(body: Record<string, unknown>): Record<string, string> {
   const out: Record<string, string> = {};
   for (const k of PARTNER_LEAD_FIELDS) if (k in body) out[k] = String(body[k] ?? "").trim().slice(0, 120);

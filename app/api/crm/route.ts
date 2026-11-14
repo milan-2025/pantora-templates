@@ -13,6 +13,8 @@ import {
   holdFilter, holdHours, modeOf, releaseUpdate, type UnitStatus,
 } from "@/lib/crm/realestate";
 import { buildReport } from "@/lib/crm/reports";
+import { cleanImages, cleanMapUrl, formatCode, resolveProject } from "@/lib/crm/property";
+import { v2 as cloudinary } from "cloudinary";
 import { cleanEnquiry, cleanPhone10, parseAmenities, safeHttpsUrl } from "@/lib/crm/publicPage";
 import { canChangeStatus, cleanPct, commissionAmount, effectiveRate, partnerLeadFields, partnerStats, shouldCreate, summarize } from "@/lib/crm/commission";
 import { addVisit, cleanOutcome, cleanVisit, listVisits, removeVisit, rescheduleVisit, stageOnDone, stageOnSchedule, updateVisit, visitNote } from "@/lib/crm/visits";
@@ -94,6 +96,18 @@ async function syncCommission(c: C, ws: string, unit: any, lead: any, to: string
   });
 }
 
+/** Next Property ID for a company (PR-001, PR-002 ...). Atomic, so two admins adding projects at once never clash. */
+async function nextCode(c: C, ws: string) {
+  const r: any = await c.ws.findOneAndUpdate({ _id: ws }, { $inc: { propSeq: 1 } }, { returnDocument: "after" });
+  const doc = r && "value" in r && r.value !== undefined && !("propSeq" in r) ? r.value : r;
+  return formatCode(doc?.propSeq || 1);
+}
+/** Links a lead to one of the company's projects (by id, or by typed name for older data). */
+async function linkProject(c: C, ws: string, input: { projectId?: unknown; project?: unknown }) {
+  const ps = await c.projects.find({ ws }, { projection: { name: 1 } }).toArray();
+  return resolveProject(ps.map((p: any) => ({ id: p._id, name: p.name })), input);
+}
+
 const teamNames = async (c: C, ws: string) => (await c.users.find({ ws, role: { $ne: "partner" } }).sort({ name: 1 }).toArray()).map((u: any) => u.name as string);
 const row = (d: any) => ({ id: d._id, ...d.data });
 const sk = (ws: string, k: string) => `${ws}:${k}`;
@@ -114,6 +128,8 @@ async function boot(c: C) {
   await c.projects.createIndex({ ws: 1, name: 1 }).catch(() => {});
   await c.commissions.createIndex({ ws: 1, partnerId: 1, status: 1 }).catch(() => {});
   await c.projects.createIndex({ pub: 1 }).catch(() => {});
+  await c.projects.createIndex({ ws: 1, code: 1 }, { unique: true, partialFilterExpression: { code: { $type: "string" } } }).catch(() => {});
+  await c.leads.createIndex({ ws: 1, "data.projectId": 1 }).catch(() => {});
   let w = await c.ws.findOne({ plan: "internal" });
   const old = await c.users.countDocuments({ ws: { $exists: false } });
   const list = (E.CRM_USERS || "").split(",").filter(Boolean);
@@ -197,7 +213,7 @@ const WRITES = new Set([
   "visit_save", "visit_done", "visit_delete", "commission_update",
 ]);
 // Only available when the company has switched Real estate mode on (Menu > Real estate mode).
-const RE_ACTIONS = new Set(["projects_list", "project_save", "project_delete", "units_list", "unit_save", "units_import", "unit_delete", "unit_hold", "unit_release", "unit_status", "visits_list", "visit_save", "visit_done", "visit_delete", "partners_list", "commissions_list", "commission_update", "report"]);
+const RE_ACTIONS = new Set(["projects_list", "project_save", "project_delete", "units_list", "unit_save", "units_import", "unit_delete", "unit_hold", "unit_release", "unit_status", "visits_list", "visit_save", "visit_done", "visit_delete", "partners_list", "commissions_list", "commission_update", "report", "upload_sign"]);
 // Channel partners can only use these (their own leads, the project list, and their own commissions).
 const PARTNER_OK = new Set(["me", "leads", "leads_add", "leads_update", "settings", "projects_list", "units_list", "commissions_list", "password"]);
 const setCookie = (res: NextResponse, u: any) => res.cookies.set("crm_t", makeToken(u), { httpOnly: true, secure: E.NODE_ENV === "production", sameSite: "lax", path: "/CRM", maxAge: 30 * 86400 });
@@ -260,7 +276,7 @@ async function handle(req: NextRequest) {
     const ce = cleanEnquiry(body);
     if (!ce.ok) return json({ error: ce.error }, 400);
     const refU = /^[a-f0-9]{8,40}$/.test(String(body.ref || "")) ? await c.users.findOne({ _id: String(body.ref), ws: w._id }) : null;
-    const d: any = { name: ce.name, phone: ce.phone, source: "Project page", campaign: proj.name, project: proj.name, status: "New", prio: "Warm", notes: ce.message ? [{ t: Date.now(), by: "Project page", x: ce.message }] : [], created: Date.now() };
+    const d: any = { name: ce.name, phone: ce.phone, source: "Project page", campaign: proj.name, project: proj.name, projectId: proj._id, status: "New", prio: "Warm", notes: ce.message ? [{ t: Date.now(), by: "Project page", x: ce.message }] : [], created: Date.now() };
     if (refU?.role === "partner") { d.partnerId = refU._id; d.partner = refU.name; }
     const res = await addLead(c, w, d, refU && refU.role !== "partner" ? refU.name : undefined);
     if (res === "dup") {
@@ -350,6 +366,7 @@ async function handle(req: NextRequest) {
         const pu = await c.users.findOne({ _id: String(body.partnerId), ws, role: "partner" });
         if (pu) { d.partnerId = pu._id; d.partner = pu.name; }
       }
+      if (mode === "realestate" && ("projectId" in body || "project" in body)) Object.assign(d, await linkProject(c, ws, body));
       const nid = rid();
       await c.leads.insertOne({ _id: nid, ws, pk: digits(d.phone), created: d.created || Date.now(), data: d });
       return json({ id: nid });
@@ -361,7 +378,12 @@ async function handle(req: NextRequest) {
       const set: any = {};
       const fields: Record<string, any> = partner ? partnerLeadFields(body) : { ...clean(body) };
       delete fields.partnerId; delete fields.partner; // attribution can only be changed below, by an admin
+      delete fields.projectId; delete fields.project; // the project link is checked below
       for (const [k, v] of Object.entries(fields)) set[`data.${k}`] = v;
+      if (mode === "realestate" && ("projectId" in body || "project" in body)) {
+        const lp = await linkProject(c, ws, body);
+        set["data.projectId"] = lp.projectId; set["data.project"] = lp.project;
+      }
       if ("phone" in fields) set.pk = digits(fields.phone);
       if (admin && "partnerId" in body) {
         const pu = body.partnerId ? await c.users.findOne({ _id: String(body.partnerId), ws, role: "partner" }) : null;
@@ -426,7 +448,11 @@ async function handle(req: NextRequest) {
     case "projects_list": {
       const ps = await c.projects.find({ ws }).sort({ name: 1 }).toArray();
       for (const p of ps) if (!p.pub) { p.pub = rid(); await c.projects.updateOne({ _id: p._id, ws }, { $set: { pub: p.pub } }); } // older projects get their public link id
-      return json(ps.map((p: any) => ({ id: p._id, pub: p.pub, published: !!p.published, name: p.name, city: p.city || "", locality: p.locality || "", type: p.type || "residential", reraNumber: p.reraNumber || "", holdHours: p.holdHours || 48, ...(admin ? { commissionPct: p.commissionPct ?? null, about: p.about || "", amenities: p.amenities || [], cover: p.cover || "", contactPhone: p.contactPhone || "", views: p.views || 0, enquiries: p.enquiries || 0 } : {}) })));
+      for (const p of [...ps].filter((x: any) => !x.code).sort((a: any, b: any) => (a.created || 0) - (b.created || 0))) { // and their Property ID
+        p.code = await nextCode(c, ws);
+        await c.projects.updateOne({ _id: p._id, ws }, { $set: { code: p.code } });
+      }
+      return json(ps.map((p: any) => ({ id: p._id, code: p.code, pub: p.pub, published: !!p.published, name: p.name, images: p.images || [], mapUrl: p.mapUrl || "", city: p.city || "", locality: p.locality || "", type: p.type || "residential", reraNumber: p.reraNumber || "", holdHours: p.holdHours || 48, ...(admin ? { commissionPct: p.commissionPct ?? null, about: p.about || "", amenities: p.amenities || [], cover: p.cover || "", contactPhone: p.contactPhone || "", views: p.views || 0, enquiries: p.enquiries || 0 } : {}) })));
     }
     case "project_save": {
       const x = only(); if (x) return x;
@@ -439,10 +465,18 @@ async function handle(req: NextRequest) {
         type: (PROJECT_TYPES as readonly string[]).includes(body.type) ? body.type : "residential",
         reraNumber: String(body.reraNumber || "").trim().slice(0, 40), holdHours: holdHours(body.holdHours), commissionPct: cleanPct(body.commissionPct),
         published: !!body.published, about: String(body.about || "").trim().slice(0, 1500), amenities: parseAmenities(body.amenities), cover: safeHttpsUrl(body.cover), contactPhone: cleanPhone10(body.contactPhone),
+        images: cleanImages(body.images), mapUrl: cleanMapUrl(body.mapUrl),
       };
-      if (pid) { const r2 = await c.projects.updateOne({ _id: pid, ws }, { $set: doc }); if (!r2.matchedCount) return json({ error: "nf" }, 404); return json({ id: pid }); }
+      if (body.mapUrl && !doc.mapUrl) return json({ error: "Paste a Google Maps link (it starts with https://maps.app.goo.gl/ or https://www.google.com/maps/)" }, 400);
+      if (!doc.cover && doc.images.length) doc.cover = doc.images[0];
+      if (pid) {
+        const r2 = await c.projects.updateOne({ _id: pid, ws }, { $set: doc });
+        if (!r2.matchedCount) return json({ error: "nf" }, 404);
+        await c.leads.updateMany({ ws, "data.projectId": pid }, { $set: { "data.project": name } }); // keep lead labels in step with a renamed project
+        return json({ id: pid });
+      }
       const nid = rid();
-      await c.projects.insertOne({ _id: nid, ws, pub: rid(), created: Date.now(), ...doc });
+      await c.projects.insertOne({ _id: nid, ws, pub: rid(), code: await nextCode(c, ws), created: Date.now(), ...doc });
       return json({ id: nid });
     }
     case "project_delete": {
@@ -536,7 +570,10 @@ async function handle(req: NextRequest) {
       const r2 = await c.units.updateOne({ _id: unit._id, ws, status: unit.status }, upd); // fails if someone changed it in the meantime
       if (!r2.matchedCount) return json({ error: "This unit was just changed by someone else. Refresh and try again." }, 409);
       await syncCommission(c, ws, unit, lead, to);
-      if (lead && to === "booked" && lead.data?.status !== "Won") await c.leads.updateOne({ _id: lead._id, ws }, { $set: { "data.status": "Booked", "data.unit": `${unit.tower ? unit.tower + " " : ""}${unit.no}` } });
+      if (lead && to === "booked" && lead.data?.status !== "Won") {
+        const pr = await c.projects.findOne({ _id: unit.project, ws });
+        await c.leads.updateOne({ _id: lead._id, ws }, { $set: { "data.status": "Booked", "data.unit": `${unit.tower ? unit.tower + " " : ""}${unit.no}`, ...(pr ? { "data.projectId": pr._id, "data.project": pr.name } : {}) } });
+      }
       return json({ ok: 1 });
     }
 
@@ -634,11 +671,27 @@ async function handle(req: NextRequest) {
       ]);
       return json(buildReport({
         from: ts("from"), to: ts("to"),
-        leads: ls.map((l: any) => ({ id: l._id, created: l.created, status: l.data?.status, source: l.data?.source, owner: l.data?.owner, partnerId: l.data?.partnerId, partner: l.data?.partner, project: l.data?.project, appts: l.data?.appts })),
+        leads: ls.map((l: any) => ({ id: l._id, created: l.created, status: l.data?.status, source: l.data?.source, owner: l.data?.owner, partnerId: l.data?.partnerId, partner: l.data?.partner, project: l.data?.project, projectId: l.data?.projectId, appts: l.data?.appts })),
         units: us.map((u: any) => ({ id: u._id, project: u.project, status: u.status, price: u.price, leadId: u.leadId })),
-        projects: ps.map((p: any) => ({ id: p._id, name: p.name, views: p.views, enquiries: p.enquiries })),
+        projects: ps.map((p: any) => ({ id: p._id, code: p.code, name: p.name, views: p.views, enquiries: p.enquiries })),
         commissions: cs.map((m: any) => ({ partnerId: m.partnerId, status: m.status, amount: m.amount, created: m.created })),
       }));
+    }
+
+
+    // ----- Project photos: signs a direct browser-to-Cloudinary upload (images only, into this company's folder) -----
+    case "upload_sign": {
+      const x = only(); if (x) return x;
+      if (!rateLimit(`crm-upload:${ws}`, 200, 36e5)) return json({ error: "Too many uploads. Please try again later." }, 429);
+      const proj = await c.projects.findOne({ _id: String(body.project || ""), ws });
+      if (!proj) return json({ error: "Save the project first, then add photos" }, 400);
+      const cfg = cloudinary.config();
+      if (!cfg.cloud_name || !cfg.api_key || !cfg.api_secret) return json({ error: "Photo uploads are not set up yet (CLOUDINARY_URL is missing). You can paste image links instead." }, 503);
+      const timestamp = Math.floor(Date.now() / 1000);
+      const folder = `crm/${ws}/projects/${proj._id}`;
+      const allowed_formats = "jpg,jpeg,png,webp,heic,avif";
+      const signature = cloudinary.utils.api_sign_request({ allowed_formats, folder, timestamp }, cfg.api_secret);
+      return json({ url: `https://api.cloudinary.com/v1_1/${cfg.cloud_name}/image/upload`, fields: { api_key: cfg.api_key, timestamp, folder, allowed_formats, signature } });
     }
 
     // ----- platform admin (you): manage every customer company -----

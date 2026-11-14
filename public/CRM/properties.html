@@ -31,6 +31,15 @@ button,.btn{cursor:pointer;display:inline-flex;align-items:center;justify-conten
 label.l{display:block;font-size:13px;color:var(--mut);margin:10px 0 3px}#md input,#md select{width:100%}
 .r2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.acts button{flex:1}
 .er{color:var(--bad);font-size:13px;margin-top:8px}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:10px}.tabs button{white-space:nowrap}.tabs .on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin-bottom:8px;border-left:5px solid var(--c,var(--bd))}
+.card .h{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.card b{font-size:16px}.card .mut{display:block}
+.tag{display:inline-block;font-size:12px;font-weight:600;border-radius:99px;padding:2px 9px;background:color-mix(in srgb,var(--c,#64748b) 16%,transparent);color:var(--c,#64748b);white-space:nowrap}
+.thumbs{display:flex;gap:6px;overflow-x:auto;margin-bottom:10px}.thumbs img{height:72px;width:auto;border-radius:8px;display:block;background:var(--bd)}
+.pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:6px}.pg div{position:relative}.pg img{width:100%;height:80px;object-fit:cover;border-radius:8px;display:block;background:var(--bd)}
+.pg .x{position:absolute;top:4px;right:4px;min-height:0;padding:2px 7px;font-size:12px;border-radius:99px;background:rgba(0,0,0,.6);color:#fff;border:0}
+.pg .mv{position:absolute;top:4px;left:4px;min-height:0;padding:2px 7px;font-size:12px;border-radius:99px;background:rgba(0,0,0,.6);color:#fff;border:0}
+.pg .cv{position:absolute;bottom:4px;left:4px;font-size:11px;background:var(--ac);color:#fff;border-radius:99px;padding:1px 7px}
 </style>
 </head>
 <body>
@@ -44,7 +53,13 @@ const api=async(m,r,x,b)=>{const res=await fetch("api.php?r="+r+(x||""),{method:
   const j=await res.json().catch(()=>({}));if(!res.ok)throw new Error(j.error||"Something went wrong");return j};
 const price=n=>n==null?"":n>=1e7?(+(n/1e7).toFixed(2))+" Cr":n>=1e5?(+(n/1e5).toFixed(2))+" L":"₹"+n.toLocaleString("en-IN");
 const left=t=>{const h=Math.max(0,Math.round((t-Date.now())/36e5));return h>=24?Math.floor(h/24)+"d "+(h%24)+"h left":h+"h left"};
-let me,projects=[],units=[],leads=[],pid=LS("pid"),filt="all",q="";
+let me,projects=[],units=[],leads=[],pid=LS("pid"),filt="all",q="",view="units",pimgs=[];
+const deepP=new URLSearchParams(location.search).get("property");if(deepP){pid=deepP;view=new URLSearchParams(location.search).get("view")==="leads"?"leads":"units"}
+const pnum=c=>/^PR-\d{3,}$/.test(c||"")?+c.slice(3):1e15;
+const sorted=()=>[...projects].sort((a,b)=>pnum(a.code)-pnum(b.code)||a.name.localeCompare(b.name));
+/** Leads for a project: linked by id, or (older leads) by the same project name. */
+const inP=(l,P)=>l.projectId?l.projectId===P.id:!!l.project&&String(l.project).trim().toLowerCase()===P.name.trim().toLowerCase();
+const STG={New:"#2563eb",Contacted:"#7c3aed",Qualified:"#0d9488","Site visit scheduled":"#ea580c","Site visit done":"#c2410c",Proposal:"#b45309",Negotiation:"#a21caf",Booked:"#0891b2",Won:"#16a34a",Lost:"#6b7280"};
 function LS(k,v){try{if(v===undefined)return localStorage.getItem("re_"+k)||"";localStorage.setItem("re_"+k,v)}catch(e){return""}}
 const admin=()=>me.role==="admin";
 const open_=h=>{$("#md").innerHTML=h;$("#ov").classList.add("on")},close=()=>$("#ov").classList.remove("on");
@@ -60,7 +75,7 @@ async function init(){
 async function load(quiet){
   try{
     [projects,units,leads]=await Promise.all([api("GET","projects_list"),api("GET","units_list"),api("GET","leads")]);
-    if(!projects.find(p=>p.id===pid))pid=projects[0]?projects[0].id:"";
+    if(!projects.find(p=>p.id===pid))pid=sorted()[0]?sorted()[0].id:"";
     if(!quiet||!$("#ov").classList.contains("on"))render();
   }catch(e){if(!quiet)$("#app").innerHTML=`<div class="msg">${esc(e.message)}</div>`}
 }
@@ -68,11 +83,16 @@ function render(){
   const P=projects.find(p=>p.id===pid),us=units.filter(u=>u.project===pid),cnt=s=>us.filter(u=>u.status===s).length;
   let h=`<div class="top"><a class="btn sm" href="./">← Leads</a><h1>🏢 Properties</h1>${admin()?`<button class="sm p" data-a="newp">＋ Project</button>`:""}</div>`;
   if(!projects.length){$("#app").innerHTML=h+`<div class="msg">${admin()?"No projects yet. Add your first project to start tracking units.":"No projects yet. Ask your admin to add one."}</div>`;return}
-  h+=`<div class="row"><select id="ps" style="flex:1">${projects.map(p=>`<option value="${p.id}" ${p.id===pid?"selected":""}>${esc(p.name)}${p.city?" · "+esc(p.city):""}</option>`).join("")}</select>${admin()?`<button class="sm" data-a="editp">Edit</button>`:""}</div>`;
+  h+=`<div class="row"><select id="ps" style="flex:2;min-width:180px">${sorted().map(p=>`<option value="${p.id}" ${p.id===pid?"selected":""}>${esc(p.code||"")} · ${esc(p.name)}${p.city?" · "+esc(p.city):""}</option>`).join("")}</select><input id="pfind" placeholder="Find PR-001 or name" style="flex:1;min-width:130px">${admin()?`<button class="sm" data-a="editp">Edit</button>`:""}</div>`;
+  if(P){const nL=leads.filter(l=>inP(l,P)).length;
+    h+=`<div class="row" style="align-items:center"><span class="tag" style="--c:#475569;font-size:14px">Property ID ${esc(P.code||"")}</span>${P.mapUrl?`<a class="btn sm" target="_blank" rel="noopener" href="${esc(P.mapUrl)}">📍 Google Maps</a>`:""}${(P.images||[]).length?`<span class="mut">📷 ${P.images.length} photo${P.images.length>1?"s":""}</span>`:""}</div>`;
+    if((P.images||[]).length)h+=`<div class="thumbs">${P.images.slice(0,8).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="" loading="lazy"></a>`).join("")}</div>`;
+    h+=`<div class="tabs"><button data-v="units" class="${view==="units"?"on":""}">Units (${us.length})</button><button data-v="leads" class="${view==="leads"?"on":""}">Leads (${nL})</button></div>`}
   if(P&&P.reraNumber)h+=`<div class="mut" style="margin:-4px 0 8px">RERA: ${esc(P.reraNumber)} · holds expire after ${P.holdHours}h</div>`;
   if(P&&P.published){const link=location.origin+"/property/"+P.pub+"?ref="+me.id;
     h+=`<div class="row"><button class="sm p" data-a="copy" data-l="${esc(link)}">🔗 Copy page link</button><a class="btn sm" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(P.name+" - check availability and prices: "+link)}">💬 Share on WhatsApp</a><a class="btn sm" target="_blank" rel="noopener" href="${esc(link)}">Preview</a></div>${admin()?`<div class="mut" style="margin:-4px 0 8px">👁 ${P.views||0} views · 📩 ${P.enquiries||0} enquiries from this page. Each person's link credits them with the enquiry.</div>`:""}`}
   else if(P&&admin())h+=`<div class="mut" style="margin:-2px 0 8px">No public page yet. Tap Edit and turn on “Public page” to get a shareable link with an enquiry form.</div>`;
+  if(P&&view==="leads"){$("#app").innerHTML=h+leadsView(P);wire();return}
   h+=`<div class="stats">${[["Total",us.length,"#64748b"],["Available",cnt("available"),STC.available[0]],["On hold",cnt("soft_hold")+cnt("hard_hold"),STC.soft_hold[0]],["Booked",cnt("booked"),STC.booked[0]],["Sold",cnt("sold"),STC.sold[0]]].map(x=>`<div class="stat" style="--c:${x[2]}"><b>${x[1]}</b><span>${x[0]}</span></div>`).join("")}</div>`;
   if(admin())h+=`<div class="row"><button class="sm p" data-a="addu">＋ Unit</button><button class="sm" data-a="many">＋ Many units</button><button class="sm" data-a="csv">📥 Import CSV</button></div>`;
   h+=`<div class="chips">${[["all","All"],["available","Available"],["soft_hold","On hold"],["hard_hold","Blocked"],["booked","Booked"],["sold","Sold"]].map(x=>`<button data-f="${x[0]}" class="${filt===x[0]?"on":""}">${x[1]}</button>`).join("")}<input id="q" placeholder="Search unit…" value="${esc(q)}" style="min-width:120px"></div>`;
@@ -80,11 +100,24 @@ function render(){
   if(!vis.length)h+=`<div class="msg">${us.length?"No units match.":"No units in this project yet."}</div>`;
   const by={};vis.forEach(u=>(by[u.tower||"Units"]=by[u.tower||"Units"]||[]).push(u));
   for(const [t,list] of Object.entries(by))h+=`<div class="sec">${esc(t)} (${list.length})</div><div class="grid">${list.map(u=>{const c=STC[u.status]||STC.available;return`<button class="u" style="--c:${c[0]}" data-u="${u.id}"><b>${esc(u.no)}</b><small>${[u.bhk,u.area?u.area+" sq ft":"",u.floor!=null?"Floor "+u.floor:""].filter(Boolean).map(esc).join(" · ")||"&nbsp;"}</small><small>${u.price!=null?price(u.price):""}</small><div class="st">${c[1]}${u.status==="soft_hold"?" · "+left(u.heldUntil):""}</div>${u.leadName?`<small>${esc(u.leadName)}</small>`:""}</button>`}).join("")}</div>`;
-  $("#app").innerHTML=h;
+  $("#app").innerHTML=h;wire();
+}
+function wire(){
   const ps=$("#ps");if(ps)ps.onchange=()=>{pid=ps.value;LS("pid",pid);render()};
+  const pf=$("#pfind");if(pf)pf.onchange=()=>{const t=pf.value.trim().toLowerCase();if(!t)return;const m=projects.find(p=>(p.code||"").toLowerCase()===t||(p.code||"").toLowerCase()==="pr-"+t.replace(/^pr-?/,"").padStart(3,"0"))||projects.find(p=>p.name.toLowerCase().includes(t));if(m){pid=m.id;LS("pid",pid);render()}else{pf.value="";pf.placeholder="No match for “"+t+"”"}};
   const qi=$("#q");if(qi)qi.oninput=()=>{q=qi.value;const pos=qi.selectionStart;render();const n=$("#q");n.focus();n.setSelectionRange(pos,pos)};
 }
+function leadsView(P){
+  const ls=leads.filter(l=>inP(l,P)).sort((a,b)=>(b.created||0)-(a.created||0));
+  let h=`<div class="row"><a class="btn sm p" href="./?property=${encodeURIComponent(P.id)}">Open in Leads screen</a><span class="mut">${me.role==="admin"?"All leads for this property.":"Your leads for this property."}</span></div>`;
+  if(!ls.length)return h+`<div class="msg">No leads for ${esc(P.code||P.name)} yet. Pick this property on a lead, or share the project page.</div>`;
+  const by={};ls.forEach(l=>{by[l.status||"New"]=(by[l.status||"New"]||0)+1});
+  h+=`<div class="chips">${Object.entries(by).map(([k,n])=>`<span class="tag" style="--c:${STG[k]||"#64748b"}">${esc(k)} ${n}</span>`).join("")}</div>`;
+  return h+ls.map(l=>{const c=STG[l.status]||"#64748b",ph=String(l.phone||"").replace(/\D/g,"").slice(-10);
+    return`<a class="card" style="--c:${c};display:block;color:inherit;text-decoration:none" href="./?lead=${encodeURIComponent(l.id)}"><div class="h"><div><b>${esc(l.name||l.phone||"Lead")}</b><span class="mut">${esc(l.phone||"")}${l.unit?" · Unit "+esc(l.unit):""}${l.budget?" · "+esc(l.budget):""}</span></div><span class="tag" style="--c:${c}">${esc(l.status||"New")}</span></div><div class="mut">${[l.owner?"Agent: "+l.owner:"",l.partner?"Partner: "+l.partner:"",l.source||"",l.created?new Date(l.created).toLocaleDateString("en-IN"):""].filter(Boolean).map(esc).join(" · ")}</div></a>`}).join("");
+}
 document.addEventListener("click",e=>{
+  const tv=e.target.closest("[data-v]");if(tv){view=tv.dataset.v;render();return}
   const f=e.target.closest("[data-f]");if(f){filt=f.dataset.f;render();return}
   const u=e.target.closest("[data-u]");if(u){openUnit(u.dataset.u);return}
   const a=e.target.closest("[data-a]");if(!a)return;const k=a.dataset.a;
@@ -96,15 +129,48 @@ const err=m=>{const x=$("#er");if(x)x.textContent=m};
 async function run(fn){try{await fn();close();await load()}catch(e){err(e.message)}}
 
 function openProject(p){p=p||{name:"",city:"",locality:"",type:"residential",reraNumber:"",holdHours:48};
-  open_(`<h3 style="margin:0">${p.id?"Edit":"New"} project</h3><label class="l">Project name</label><input id="pn" value="${esc(p.name)}"><div class="r2"><div><label class="l">City</label><input id="pc" value="${esc(p.city)}"></div><div><label class="l">Locality</label><input id="pl" value="${esc(p.locality)}"></div></div><div class="r2"><div><label class="l">Type</label><select id="pt">${["residential","commercial","plot","rental"].map(t=>`<option ${p.type===t?"selected":""}>${t}</option>`).join("")}</select></div><div><label class="l">Hold expires after (hours)</label><input id="ph" type="number" min="1" value="${p.holdHours||48}"></div></div><div class="r2"><div><label class="l">RERA number (optional)</label><input id="pr" value="${esc(p.reraNumber)}"></div><div><label class="l">Partner commission %</label><input id="pcm" type="number" min="0" max="100" step="0.1" value="${p.commissionPct??""}" placeholder="e.g. 2"></div></div><div class="sec" style="margin-top:14px">Public page (shareable link with enquiry form)</div>
+  open_(`<h3 style="margin:0">${p.id?"Edit":"New"} project</h3><label class="l">Project name</label><input id="pn" value="${esc(p.name)}"><div class="r2"><div><label class="l">City</label><input id="pc" value="${esc(p.city)}"></div><div><label class="l">Locality</label><input id="pl" value="${esc(p.locality)}"></div></div><div class="r2"><div><label class="l">Type</label><select id="pt">${["residential","commercial","plot","rental"].map(t=>`<option ${p.type===t?"selected":""}>${t}</option>`).join("")}</select></div><div><label class="l">Hold expires after (hours)</label><input id="ph" type="number" min="1" value="${p.holdHours||48}"></div></div><div class="r2"><div><label class="l">RERA number (optional)</label><input id="pr" value="${esc(p.reraNumber)}"></div><div><label class="l">Partner commission %</label><input id="pcm" type="number" min="0" max="100" step="0.1" value="${p.commissionPct??""}" placeholder="e.g. 2"></div></div><label class="l">Google Maps link (optional)</label><input id="pmap" type="url" value="${esc(p.mapUrl||"")}" placeholder="https://maps.app.goo.gl/...">
+  <div class="sec" style="margin-top:14px">Photos (up to 12, the first is the cover)</div><div id="pimg"></div>
+  ${p.id?`<div class="row" style="margin-top:8px"><label class="btn sm p" style="cursor:pointer">📷 Upload photos<input id="pup" type="file" accept="image/*" multiple hidden></label><span id="upst" class="mut"></span></div>`:`<div class="mut" style="margin-top:6px">Save the project first to upload photos from your phone or computer. You can paste image links now.</div>`}
+  <div class="row" style="margin-top:6px"><input id="plink" type="url" placeholder="Or paste an image link (https://…)" style="flex:1"><button class="sm" id="padd">Add link</button></div>
+  <div class="sec" style="margin-top:14px">Public page (shareable link with enquiry form)</div>
   <label class="l" style="display:flex;gap:8px;align-items:center;margin:4px 0"><input id="ppub" type="checkbox" style="width:auto;min-height:0" ${p.published?"checked":""}> Publish this project’s public page</label>
   <label class="l">About the project</label><textarea id="pab" rows="3" maxlength="1500">${esc(p.about||"")}</textarea>
   <label class="l">Amenities (comma separated)</label><input id="pam" value="${esc((p.amenities||[]).join(", "))}" placeholder="Swimming pool, Gym, Garden">
-  <div class="r2"><div><label class="l">Cover image link (https)</label><input id="pcv" value="${esc(p.cover||"")}" placeholder="https://res.cloudinary.com/..."></div><div><label class="l">Contact number on page</label><input id="pcp" type="tel" value="${esc(p.contactPhone||"")}" placeholder="10-digit mobile"></div></div>
+  <label class="l">Contact number on page</label><input id="pcp" type="tel" value="${esc(p.contactPhone||"")}" placeholder="10-digit mobile">
   <div id="er" class="er"></div>
   <div class="acts"><button class="p" id="sv">Save</button>${p.id?`<button class="dg" id="dl">Delete</button>`:""}<button data-a="close">Cancel</button></div>`);
-  $("#sv").onclick=()=>run(async()=>{const r=await api("POST","project_save","",{id:p.id||"",name:$("#pn").value,city:$("#pc").value,locality:$("#pl").value,type:$("#pt").value,holdHours:$("#ph").value,reraNumber:$("#pr").value,commissionPct:$("#pcm").value,published:$("#ppub").checked,about:$("#pab").value,amenities:$("#pam").value,cover:$("#pcv").value,contactPhone:$("#pcp").value});pid=r.id;LS("pid",pid)});
+  $("#sv").onclick=()=>run(async()=>{const r=await api("POST","project_save","",{id:p.id||"",name:$("#pn").value,city:$("#pc").value,locality:$("#pl").value,type:$("#pt").value,holdHours:$("#ph").value,reraNumber:$("#pr").value,commissionPct:$("#pcm").value,published:$("#ppub").checked,about:$("#pab").value,amenities:$("#pam").value,cover:"",images:pimgs,mapUrl:$("#pmap").value.trim(),contactPhone:$("#pcp").value});pid=r.id;LS("pid",pid)});
   const d=$("#dl");if(d)d.onclick=()=>{if(confirm("Delete this project and ALL its units? This cannot be undone."))run(()=>api("POST","project_delete","",{id:p.id}))};
+  pimgs=[...(p.images||[])];if(!pimgs.length&&p.cover)pimgs=[p.cover];drawImgs();
+  $("#padd").onclick=()=>{const u=$("#plink").value.trim();if(!/^https:\/\//i.test(u)){err("Image links must start with https://");return}if(pimgs.length>=12){err("You can add up to 12 photos.");return}if(!pimgs.includes(u))pimgs.push(u);$("#plink").value="";err("");drawImgs()};
+  const up=$("#pup");if(up)up.onchange=()=>uploadPhotos(p.id,[...up.files]).finally(()=>{up.value=""});
+}
+function drawImgs(){
+  const el=$("#pimg");if(!el)return;
+  el.innerHTML=pimgs.length?`<div class="pg">${pimgs.map((u,i)=>`<div><img src="${esc(u)}" alt="" loading="lazy">${i?`<button class="mv" data-mv="${i}" title="Make this the cover">★</button>`:`<span class="cv">Cover</span>`}<button class="x" data-rm="${i}" title="Remove">✕</button></div>`).join("")}</div>`:`<div class="mut">No photos yet.</div>`;
+  el.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{pimgs.splice(+b.dataset.rm,1);drawImgs()});
+  el.querySelectorAll("[data-mv]").forEach(b=>b.onclick=()=>{const [x]=pimgs.splice(+b.dataset.mv,1);pimgs.unshift(x);drawImgs()});
+}
+async function uploadPhotos(projectId,files){
+  const st=$("#upst"),room=12-pimgs.length;
+  if(!files.length)return;
+  if(room<=0){err("You already have 12 photos. Remove one to add another.");return}
+  if(files.length>room)err(`Only the first ${room} photo${room>1?"s":""} will be added (12 maximum).`);else err("");
+  let done=0,failed=0;
+  for(const f of files.slice(0,room)){
+    if(!f.type.startsWith("image/")){failed++;continue}
+    if(f.size>10*1024*1024){failed++;err(`${f.name} is larger than 10 MB.`);continue}
+    st.textContent=`Uploading ${done+failed+1} of ${Math.min(files.length,room)}…`;
+    try{
+      const sg=await api("POST","upload_sign","",{project:projectId});
+      const fd=new FormData();Object.entries(sg.fields).forEach(([k,v])=>fd.append(k,v));fd.append("file",f);
+      const r=await fetch(sg.url,{method:"POST",body:fd});const j=await r.json().catch(()=>({}));
+      if(!r.ok||!j.secure_url)throw new Error((j.error&&j.error.message)||"Upload failed");
+      pimgs.push(j.secure_url);done++;drawImgs();
+    }catch(e){failed++;err(e.message)}
+  }
+  st.textContent=done?`${done} photo${done>1?"s":""} added. Tap Save to keep them.`:"";
 }
 function openUnitForm(u){u=u||{no:"",tower:"",floor:"",bhk:"",area:"",price:""};
   open_(`<h3 style="margin:0">${u.id?"Edit":"Add"} unit</h3><div class="r2"><div><label class="l">Unit number</label><input id="un" value="${esc(u.no)}"></div><div><label class="l">Tower / block</label><input id="ut" value="${esc(u.tower)}"></div></div><div class="r2"><div><label class="l">Floor</label><input id="uf" type="number" value="${esc(u.floor??"")}"></div><div><label class="l">BHK / type</label><input id="ub" value="${esc(u.bhk)}" placeholder="2BHK"></div></div><div class="r2"><div><label class="l">Area (sq ft)</label><input id="ua" type="number" value="${esc(u.area??"")}"></div><div><label class="l">Price (₹)</label><input id="up" type="number" value="${esc(u.price??"")}"></div></div><div id="er" class="er"></div>

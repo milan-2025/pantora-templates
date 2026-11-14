@@ -64,6 +64,20 @@ describe("page", () => {
     expect(h).toContain('ref:""'); // unsafe ref dropped
     expect(h.match(/<script/g)).toHaveLength(1); // only our own script
   });
+  it("shows a photo gallery, map button and Property ID, and drops unsafe links", () => {
+    const h = renderProjectPage({ ...base, code: "PR-007", images: ["https://res.cloudinary.com/x/1.jpg", "javascript:alert(1)", "http://x.com/2.jpg"], mapUrl: "https://maps.app.goo.gl/abc", city: "Pune" });
+    expect(h).toContain("Property ID PR-007");
+    expect(h.match(/<img /g)).toHaveLength(1);
+    expect(h).toContain('href="https://maps.app.goo.gl/abc"');
+    expect(h).not.toContain("javascript:");
+    expect(h).not.toContain("http://x.com");
+    const bad = renderProjectPage({ ...base, code: "<b>x</b>", mapUrl: "javascript:alert(1)" });
+    expect(bad).not.toContain("Property ID");
+    expect(bad).not.toContain("Google Maps");
+  });
+  it("uses the first photo as the cover when none is set", () => {
+    expect(renderProjectPage({ ...base, images: ["https://a.com/1.jpg"] })).toContain("url('https://a.com/1.jpg')");
+  });
   it("reads form fields by id (form.name clashes with the form's own name property)", () => {
     const h = renderProjectPage(base);
     expect(h).not.toMatch(/f\.(name|phone|message)\.value/);
