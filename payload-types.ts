@@ -694,7 +694,7 @@ export interface Affiliate {
   createdAt: string;
 }
 /**
- * Open a couple's invite at pandoratemplates.com/i/<link>. Their design data is stored privately.
+ * Every invite has Preview, Edit and Live links. To give a couple a package without an online payment: open the invite, set Payment status to Paid (live), choose the package and save.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "invites".
@@ -716,18 +716,35 @@ export interface Invite {
    */
   slug: string;
   names?: string | null;
+  /**
+   * Paid (live) makes the invite public and unlocks sharing.
+   */
   paymentStatus?: ('created' | 'paid' | 'refunded') | null;
+  /**
+   * Upgrade or downgrade any time.
+   */
   plan?: ('basic' | 'premium' | 'royal') | null;
+  /**
+   * Set automatically when marked Paid. You can change it.
+   */
   paidAt?: string | null;
   /**
-   * The invite stops showing after this date (12 months from payment). Change it to extend.
+   * The invite stops showing after this date (set automatically when marked Paid). Change it to extend.
    */
   expiresAt?: string | null;
-  contactEmail?: string | null;
   /**
-   * Rupees charged for the selected plan
+   * Rupees received. Razorpay fills this in; type it yourself for cash, UPI or complimentary packages.
    */
   amount?: number | null;
+  /**
+   * Optional, only you see it. E.g. “Paid ₹1,999 by UPI on 14 Nov” or “Complimentary”.
+   */
+  manualNote?: string | null;
+  /**
+   * Tick and save. Needs Payment status = Paid (live) and their email below.
+   */
+  emailLive?: boolean | null;
+  contactEmail?: string | null;
   promoCode?: string | null;
   orderId?: string | null;
   /**
@@ -1464,8 +1481,10 @@ export interface InvitesSelect<T extends boolean = true> {
   plan?: T;
   paidAt?: T;
   expiresAt?: T;
-  contactEmail?: T;
   amount?: T;
+  manualNote?: T;
+  emailLive?: T;
+  contactEmail?: T;
   promoCode?: T;
   orderId?: T;
   orderPlan?: T;
