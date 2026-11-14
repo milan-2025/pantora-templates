@@ -152,7 +152,8 @@ export async function quoteFor(payload: Payload, plan: PlanId, coupon?: string, 
 const siteUrl = () => process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
-async function sendInviteLiveEmail(invite: Invite, months: number) {
+/** Emails the couple their live link and private edit link. Also used from /admin ▸ Invites (manual packages). */
+export async function sendInviteLiveEmail(invite: Invite, months: number) {
   if (!invite.contactEmail || !invite.editToken) return;
   const live = `${siteUrl()}/i/${invite.slug}`;
   const edit = `${siteUrl()}/shaadi?edit=${invite.slug}.${invite.editToken}`;
