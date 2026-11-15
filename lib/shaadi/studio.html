@@ -498,6 +498,11 @@ body.view .ed,body.view .tabs,body.view .cta,body.view .wm,body.view .xf{display
 .rosew{background:none!important;-webkit-mask:none!important;mask:none!important;border:0!important;box-shadow:0 0 34px color-mix(in srgb,var(--a) 35%,transparent)}.rosew svg{width:100%;height:100%;display:block}
 /* scratch card hint readable on the foil */
 .scp{left:0;right:0;margin:auto;width:max-content;padding:3px 12px;border-radius:99px;background:rgba(255,255,255,.8);font-size:13px}
+/* ===== v14: guest page loader (no editor / sample invite flash) ===== */
+body.boot .phone{opacity:0}body.view .phone{transition:opacity .35s ease}
+body.boot::after{content:"";position:fixed;left:50%;top:50%;width:38px;height:38px;margin:-19px 0 0 -19px;border-radius:50%;border:3px solid rgba(240,192,74,.22);border-top-color:#f0c04a;animation:bootspin .9s linear infinite;z-index:99}
+@keyframes bootspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){body.boot::after{animation-duration:2.5s}}
 </style><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script></head>
 <body data-v="ed">
 <div class="app">
@@ -780,6 +785,9 @@ function queueSave(){if(!LIVE||VIEW||!touched)return;clearTimeout(saveT);ss("Sav
 var _rd=render;render=function(){_rd();queueSave()};
 ["input","change","click"].forEach(function(ev){document.querySelector(".ed").addEventListener(ev,function(){touched=true},true)});
 function syncUI(){["lang","th","b","g","fam","date","story","wa","gl","pk","vol","os"].forEach(function(k){var e=$(k);if(e)e.value=S[k]});$("mu").checked=S.mu;$("cs").checked=S.cs;$("aw").style.display=S.pk=="custom"?"":"none";["upi","live","tag"].forEach(function(k){$(k).value=S[k]||""});jsUI();evUI();swUI();hsUI();ordUI();gpUI()}
+/* Guest links: load the invite straight away (not after the server check) and keep a loader up until it is in. */
+var GM=location.pathname.match(/^\/i\/([^\/]+)(?:\/([^\/]+))?/);if(GM)document.body.classList.add("view","boot");
+var PUB=GM?api("GET","/public/"+GM[1]+(GM[2]?"?guest="+encodeURIComponent(GM[2]):"")):null;if(PUB)PUB.catch(function(){});
 function view(sg,guest){VIEW=true;SLUGP=sg;document.body.classList.add("view");
  return api("GET","/public/"+sg).then(function(r){Object.assign(S,r.state);fixOrd();S.paid=true;S.fin=sg;if(guest){var g=guests().filter(function(x){return slug(x)==guest})[0];if(g)S.gst=g}reset()}).catch(function(){document.body.innerHTML='<div class="nl"><h1>This invite isn’t live yet</h1><p>Please check the link, or ask the couple to finish publishing.</p></div>'})}
 api("GET","/ping").then(function(j){LIVE=true;loadPlans();
@@ -787,7 +795,7 @@ api("GET","/ping").then(function(j){LIVE=true;loadPlans();
  var s1=document.createElement("script");s1.src="https://checkout.razorpay.com/v1/checkout.js";document.head.appendChild(s1);
  var q0=new URLSearchParams(location.search),pc=q0.get("code");if(pc)cp=pc.toUpperCase().replace(/[^A-Z0-9_-]/g,"");var pv0=q0.get("pv")=="1",e=q0.get("edit");if(e){var p=e.split(".");setCred({slug:p[0],token:p[1]});history.replaceState(null,"",location.pathname)}
  var c=cred();if(!c.slug){payUI();return}
- return api("GET","/mine/"+c.slug,null,c.token).then(function(r){Object.assign(S,r.state);fixOrd();S.fin=r.slug;if(r.slug!==c.slug)setCred({slug:r.slug,token:c.token});S.paid=r.paid;S.plan=r.plan||"";syncUI();payUI();render();if(pv0)setTimeout(fsOn,400)}).catch(function(){setCred({})})}).catch(function(){});
+ return api("GET","/mine/"+c.slug,null,c.token).then(function(r){Object.assign(S,r.state);fixOrd();S.fin=r.slug;if(r.slug!==c.slug)setCred({slug:r.slug,token:c.token});S.paid=r.paid;S.plan=r.plan||"";syncUI();payUI();render();if(pv0)setTimeout(fsOn,400)}).catch(function(){setCred({})})}).catch(function(){if(GM&&!VIEW)view(GM[1],GM[2])});
 setInterval(function(){if(LIVE&&!VIEW&&S.paid)dashUI()},60000);
 /* ===== v7: richer hero art, new sections, admin-driven plans, upgrade flow ===== */
 var BANNER="",MONTHS=12;
@@ -949,7 +957,7 @@ SEC.gallery=function(t,c){var h='<section class="sec'+c+'"><h2>'+t.ph+'</h2><div
 /* ===== viewing a live invite (server filters guest list and events) ===== */
 var GUEST="";
 function view(sg,guest){VIEW=true;SLUGP=sg;GUEST=guest||"";document.body.classList.add("view");
- return api("GET","/public/"+sg+(guest?"?guest="+encodeURIComponent(guest):"")).then(function(r){Object.assign(S,r.state);fixOrd();S.paid=true;S.plan=r.plan||"basic";S.fin=sg;var reel=/[?&]reel/.test(location.search)&&S.plan=="royal";reset();if(reel)setTimeout(function(){rlOpen(true)},400)}).catch(function(){document.body.innerHTML='<div class="nl"><h1>This invite isn’t live yet</h1><p>Please check the link, or ask the couple to finish publishing.</p></div>'})}
+ return (PUB&&GM[1]===sg&&(GM[2]||"")===(guest||"")?PUB:api("GET","/public/"+sg+(guest?"?guest="+encodeURIComponent(guest):""))).then(function(r){Object.assign(S,r.state);fixOrd();S.paid=true;S.plan=r.plan||"basic";S.fin=sg;var reel=/[?&]reel/.test(location.search)&&S.plan=="royal";reset();requestAnimationFrame(function(){document.body.classList.remove("boot")});if(reel)setTimeout(function(){rlOpen(true)},400)}).catch(function(){document.body.innerHTML='<div class="nl"><h1>This invite isn’t live yet</h1><p>Please check the link, or ask the couple to finish publishing.</p></div>'})}
 function afterRender2(){$("inv").setAttribute("data-l",S.lang);if(VIEW&&S.gst&&$("gn")&&!$("gn").value)$("gn").value=S.gst}
 var _rd5=render;render=function(){_rd5();afterRender2()};
 /* ===== email capture + promo links ===== */
