@@ -46,11 +46,31 @@ export async function getPlanConfig(payload: Payload): Promise<PlanConfig> {
   };
 }
 
-const RESERVED = new Set(["admin", "api", "demo", "test", "shaadi", "wedding", "studio"]);
+const RESERVED = new Set(["admin", "api", "demo", "test", "shaadi", "wedding", "studio", "i", "planner", "invite", "invites", "new", "edit"]);
 export const isReservedSlug = (s: string) => RESERVED.has(s);
 export const slugify = (s: unknown) =>
   String(s ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
 export const randomSuffix = () => randomBytes(2).toString("hex");
+
+/** Shape rules for a chosen link (the part after /i/). Returns the cleaned link and, if it can't be used, why. */
+export function checkSlugShape(raw: unknown): { slug: string; error?: string } {
+  const slug = slugify(raw);
+  if (slug.length < 3) return { slug, error: "Use at least 3 letters or numbers." };
+  if (isReservedSlug(slug)) return { slug, error: "That link is reserved. Please choose another." };
+  return { slug };
+}
+
+/** Is this link used by another invite, either now or as one of its old links (which still forward guests)? */
+export async function slugTaken(payload: Payload, slug: string, exceptId?: string | number | null) {
+  const res = await payload.find({
+    collection: "invites",
+    where: { or: [{ slug: { equals: slug } }, { previousSlugs: { equals: slug } }] },
+    limit: 5,
+    depth: 0,
+    overrideAccess: true,
+  });
+  return res.docs.some((d) => String(d.id) !== String(exceptId ?? ""));
+}
 export const newToken = () => randomBytes(16).toString("hex");
 
 export type InviteState = Record<string, unknown>;
@@ -128,9 +148,12 @@ export function publicView(state: InviteState, guestSlug?: string | null, plan?:
 
 export const coupleNames = (st: InviteState) => `${String(st.b ?? "")} & ${String(st.g ?? "")}`.slice(0, 190);
 
+/** The invite at this link. Old links (after a rename) still find it, so shared links and edit links never break. */
 export async function findInvite(payload: Payload, slug: string) {
   const res = await payload.find({ collection: "invites", where: { slug: { equals: slug } }, limit: 1, depth: 0, overrideAccess: true });
-  return res.docs[0] ?? null;
+  if (res.docs[0]) return res.docs[0];
+  const old = await payload.find({ collection: "invites", where: { previousSlugs: { equals: slug } }, limit: 1, depth: 0, overrideAccess: true });
+  return old.docs[0] ?? null;
 }
 
 export const isLive = (i: Pick<Invite, "paymentStatus" | "expiresAt"> | null | undefined) =>
