@@ -19,5 +19,5 @@ export async function inviteResponse(req: Request, slug: string) {
   } catch {
     // keep the generic title
   }
-  return studioResponse(title, url.pathname);
+  return studioResponse(title, url.pathname, true);
 }
