@@ -23,7 +23,7 @@ a{color:var(--teal)}
 .nav a .ic{width:18px;text-align:center;font-size:15px}
 .nav a .bd{margin-left:auto;background:var(--coral);color:#fff;border-radius:999px;font-size:10.5px;padding:0 7px;font-weight:600}
 .side .foot{margin-top:auto;padding:14px 8px 0;font-size:11px;opacity:.65}
-.main{flex:1;min-width:0;padding:22px 28px 60px;max-width:1280px}
+.main{flex:1;min-width:0;padding:22px 28px 60px;max-width:1760px}
 .top{display:none}
 .page-h{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:14px}
 .page-h h1{font-size:32px;line-height:1.1}
@@ -237,6 +237,9 @@ table.g th.cu{background:var(--plum2)}
 .ro .yc{pointer-events:none}
 .ro a[data-act=wa]{display:inline-block!important}
 @media (max-width:760px){
+  .g3,.g32{grid-template-columns:minmax(0,1fr)}
+  .card{min-width:0}
+  .print-sheet{overflow-x:auto}
   .page-h h1{font-size:26px}
   .page-h{gap:8px}
   .kpi .v{font-size:23px}
