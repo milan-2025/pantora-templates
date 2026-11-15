@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 import { withPayload } from "@payloadcms/next/withPayload";
 
 const nextConfig: NextConfig = {
+  experimental: { cpus: 2 },
   // LeadFlow CRM lives at /CRM (static screens in public/CRM, server code in app/api/crm).
   async rewrites() {
     return {
