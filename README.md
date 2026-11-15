@@ -24,6 +24,7 @@ Log in at **pandoratemplates.com/admin**. Every change is live a few seconds aft
 | Show a sales counter | Product → **Offer** tab → **Sales counter**: tick "Show the sales counter". It counts real paid orders on the website (refunds excluded); add genuine earlier sales (WhatsApp/Instagram) under "Real sales made before this website". It stays hidden until it reaches the minimum you set. |
 | Add an affiliate | **Shop → Affiliates → Create new**: name, code, customer discount %, commission %. Share `pandoratemplates.com/wedding_planner?ref=CODE`; visitors from that link see the discounted price on the product page, and the code is applied automatically at checkout. |
 | See what you owe affiliates | **💰 Affiliate earnings** in the menu. Pay them, then click **Mark as paid**. |
+| Manage the online wedding planner (plans, trial, customers) | **Wedding planner** in the menu. See "Online wedding planner" below. |
 | See orders | **Shop → Orders** |
 | Read contact-form messages | **Inbox → Contact messages** (also emailed to you) |
 | Change WhatsApp number, menu, footer links, Meta Pixel | **Settings → Site settings** |
@@ -33,6 +34,48 @@ Tips:
 - A page or post saved as **Draft** isn't visible to the public until you click **Publish**.
 - Sections with no content are hidden automatically (e.g. Testimonials stays hidden until you add real reviews).
 - If a section has no image uploaded, product pages show an animated spreadsheet preview instead.
+
+---
+
+## Online wedding planner (`/planner`)
+
+The upgrade to the Excel planner: the same guest list, budget, vendors, payments, stay, transport, rituals, shagun and the rest, saved to the cloud, shared with family, on any phone.
+
+### How customers use it
+1. They open **pandoratemplates.com/planner**, type their email and get a 6-digit code (sent through Brevo, no passwords).
+2. They start a **free trial**: an empty plan, the sample data, their filled-in Pandora Excel, or what they already typed on that device.
+3. Everything saves automatically. Other devices and family members see changes within a few seconds; edits to different rows never overwrite each other.
+4. **Upgrade** opens Razorpay from inside the planner. The plan switches as soon as payment is confirmed (also via the webhook).
+5. On a paid plan the owner can invite family under **Sharing** ("Can edit" or "View only"). Each person signs in with their own email.
+6. **Activity & Restore** shows who changed what, and can put the planner back to an earlier restore point (kept automatically every 30 minutes of editing, before imports and before deleting 5+ rows).
+7. Every list has a **⚙ Columns** button: show/hide, rename, reorder, and add their own columns (text, number, date, dropdown, yes/no). Dropdown choices are editable under **Setup & Data**.
+8. On phones, lists become tap-to-open cards; no sideways scrolling.
+
+When a trial or plan ends, the planner turns **read-only**: nothing is deleted, it can still be viewed and exported, and editing resumes the moment they upgrade or renew. "Explore the sample planner" works without an account and stays on that device.
+
+### Running it from /admin (Wedding planner)
+| I want to… | Do this |
+|---|---|
+| Change trial length (7 or 14 days) or trial limits | **Planner plans → Free trial**: "Valid for (days)" and the Limits. |
+| Change prices, limits, how many family members a plan allows | **Planner plans → (plan)**. Empty limit = unlimited. Applies at once to everyone on that plan. |
+| Add a new plan / stop selling one | **Planner plans → Create new**, or untick "Show on the upgrade screen". Keep exactly one plan ticked as the free trial. |
+| Change a customer's plan | **Customer planners → (customer)** → pick the plan → Save. Validity restarts from today unless you also type a "Valid until" date. |
+| Extend or shorten validity | Same page → change **Valid until** → Save. |
+| Give someone extra family seats | Add them under **Collaborators** on that customer's planner. |
+| Pause a customer | Set **Status** to Suspended (read-only). |
+| See a customer's planner (support) | **Customer planners → View** (opens it read-only for 2 hours). |
+| See who changed what | **Planner activity**. |
+
+The starting plans (Free trial 14 days/30 guests, Family ₹1,499, Grand ₹2,999) are created automatically the first time the planner is opened; edit them freely.
+
+No new environment variables: the planner uses `PAYLOAD_SECRET`, `BREVO_API_KEY` (sign-in codes and invites), the Razorpay keys and the existing Razorpay webhook. Without `BREVO_API_KEY`, in development the sign-in code is filled in for you.
+
+### For developers
+- App source: `planner-app/` (plain JS + CSS, no build tools). After editing, run `npm run build-planner` to regenerate `public/planner/index.html`, and commit both.
+- Server: `lib/planner/core.ts` (merge, limits, tokens; pure and unit-tested), `lib/planner/server.ts` (Payload), routes in `app/api/planner/*`.
+- Collections: `planners`, `planner-plans`, `planner-history`, `planner-logins` (hidden).
+- Sync model: the app sends row-level changes (`{c, id, r}` / `{k, v}` / `{replace}`) with each save; the server applies them under an optimistic lock on `rev` and logs them, so other devices fetch just the changes since their last `rev` (polling every 7 s while visible). Plan limits and read-only states are enforced on the server.
+- Tests: `tests/planner.test.ts` (`npm test`).
 
 ---
 

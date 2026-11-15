@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getPayloadClient } from "@/lib/cms/queries";
 import { markOrderPaid } from "@/lib/fulfil";
 import { markInvitePaid } from "@/lib/invites";
+import { markPlannerPaid } from "@/lib/planner/server";
 import { hmacHex, signaturesMatch } from "@/lib/payments";
 
 /**
@@ -42,7 +43,9 @@ export async function POST(req: Request) {
       if (!result.found) {
         // Not a shop order: it may be a wedding invite payment.
         const invite = await markInvitePaid(payload, orderId, payment?.id);
-        if (!invite.found) console.log(`[webhook] no order ${orderId} on this site; ignored`);
+        // Or an online wedding planner upgrade.
+        const planner = invite.found ? null : await markPlannerPaid(payload, orderId, payment?.id);
+        if (!invite.found && !planner?.found) console.log(`[webhook] no order ${orderId} on this site; ignored`);
       }
     }
   }

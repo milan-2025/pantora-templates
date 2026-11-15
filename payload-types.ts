@@ -71,6 +71,10 @@ export interface Config {
     orders: Order;
     invites: Invite;
     'invite-rsvps': InviteRsvp;
+    planners: Planner;
+    'planner-plans': PlannerPlan;
+    'planner-history': PlannerHistory;
+    'planner-logins': PlannerLogin;
     affiliates: Affiliate;
     pages: Page;
     posts: Post;
@@ -89,6 +93,10 @@ export interface Config {
     orders: OrdersSelect<false> | OrdersSelect<true>;
     invites: InvitesSelect<false> | InvitesSelect<true>;
     'invite-rsvps': InviteRsvpsSelect<false> | InviteRsvpsSelect<true>;
+    planners: PlannersSelect<false> | PlannersSelect<true>;
+    'planner-plans': PlannerPlansSelect<false> | PlannerPlansSelect<true>;
+    'planner-history': PlannerHistorySelect<false> | PlannerHistorySelect<true>;
+    'planner-logins': PlannerLoginsSelect<false> | PlannerLoginsSelect<true>;
     affiliates: AffiliatesSelect<false> | AffiliatesSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
@@ -792,6 +800,187 @@ export interface InviteRsvp {
   createdAt: string;
 }
 /**
+ * Every customer's planner. To change a plan or extend validity: open it, pick the plan and/or type a new expiry date, and save. Changing the plan alone restarts its validity from today.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "planners".
+ */
+export interface Planner {
+  id: string;
+  /**
+   * From the couple's details in the planner.
+   */
+  names?: string | null;
+  /**
+   * Signs in with this email. Change it to transfer the planner.
+   */
+  ownerEmail: string;
+  plan: string | PlannerPlan;
+  status?: ('trial' | 'paid' | 'suspended') | null;
+  /**
+   * After this the planner turns read-only until they upgrade or renew.
+   */
+  expiresAt?: string | null;
+  paidAt?: string | null;
+  amount?: number | null;
+  promoCode?: string | null;
+  /**
+   * Only you see this. E.g. “Paid ₹1,499 by UPI”.
+   */
+  adminNote?: string | null;
+  /**
+   * Family members who can open this planner with their own email. The plan decides how many the owner may add themselves; you can add more here.
+   */
+  collaborators?:
+    | {
+        email: string;
+        role?: ('editor' | 'viewer') | null;
+        addedAt?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  guestCount?: number | null;
+  lastActivityAt?: string | null;
+  /**
+   * Increases with every save.
+   */
+  rev?: number | null;
+  orderId?: string | null;
+  /**
+   * Plan being paid for; becomes the plan once payment is confirmed.
+   */
+  orderPlan?: (string | null) | PlannerPlan;
+  orderAmount?: number | null;
+  paymentId?: string | null;
+  /**
+   * Ticked once this order's payment was applied.
+   */
+  orderPaid?: boolean | null;
+  state?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The free trial and the paid plans for the online wedding planner. Changes apply immediately to everyone on the plan. Leave a limit empty for unlimited. Exactly one plan should be ticked as the free trial.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "planner-plans".
+ */
+export interface PlannerPlan {
+  id: string;
+  name: string;
+  /**
+   * Short code, e.g. family. Don't change it once people have bought the plan.
+   */
+  planId: string;
+  /**
+   * Lower shows first.
+   */
+  sortOrder?: number | null;
+  /**
+   * New sign-ups start on this plan.
+   */
+  isTrial?: boolean | null;
+  /**
+   * Untick to stop selling it. People already on it keep it.
+   */
+  active?: boolean | null;
+  price?: number | null;
+  /**
+   * Trial length for the trial plan, e.g. 7 or 14.
+   */
+  durationDays: number;
+  /**
+   * Extra family emails the owner can invite (0 = none).
+   */
+  collaborators?: number | null;
+  tagline?: string | null;
+  /**
+   * E.g. “Most chosen”.
+   */
+  badge?: string | null;
+  features?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Most rows a planner on this plan can have in each list. People already above a limit (after a downgrade) can still edit and delete, just not add more.
+   */
+  limits?: {
+    guests?: number | null;
+    vendors?: number | null;
+    payments?: number | null;
+    tasks?: number | null;
+    functions?: number | null;
+    hotels?: number | null;
+    vehicles?: number | null;
+    shopping?: number | null;
+    shagun?: number | null;
+    runsheet?: number | null;
+    rituals?: number | null;
+    milni?: number | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Every save in every planner. Customers see their own planner's activity and restore points in the app.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "planner-history".
+ */
+export interface PlannerHistory {
+  id: string;
+  planner: string | Planner;
+  rev: number;
+  by?: string | null;
+  summary?: string | null;
+  hasSnapshot?: boolean | null;
+  ops?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  snapshot?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "planner-logins".
+ */
+export interface PlannerLogin {
+  id: string;
+  email: string;
+  codeHash: string;
+  expiresAt: string;
+  attempts?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Build any page from blocks. The page with slug 'home' is the homepage.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1123,6 +1312,22 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'invite-rsvps';
         value: string | InviteRsvp;
+      } | null)
+    | ({
+        relationTo: 'planners';
+        value: string | Planner;
+      } | null)
+    | ({
+        relationTo: 'planner-plans';
+        value: string | PlannerPlan;
+      } | null)
+    | ({
+        relationTo: 'planner-history';
+        value: string | PlannerHistory;
+      } | null)
+    | ({
+        relationTo: 'planner-logins';
+        value: string | PlannerLogin;
       } | null)
     | ({
         relationTo: 'affiliates';
@@ -1507,6 +1712,107 @@ export interface InviteRsvpsSelect<T extends boolean = true> {
   side?: T;
   guest?: T;
   message?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "planners_select".
+ */
+export interface PlannersSelect<T extends boolean = true> {
+  names?: T;
+  ownerEmail?: T;
+  plan?: T;
+  status?: T;
+  expiresAt?: T;
+  paidAt?: T;
+  amount?: T;
+  promoCode?: T;
+  adminNote?: T;
+  collaborators?:
+    | T
+    | {
+        email?: T;
+        role?: T;
+        addedAt?: T;
+        id?: T;
+      };
+  guestCount?: T;
+  lastActivityAt?: T;
+  rev?: T;
+  orderId?: T;
+  orderPlan?: T;
+  orderAmount?: T;
+  paymentId?: T;
+  orderPaid?: T;
+  state?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "planner-plans_select".
+ */
+export interface PlannerPlansSelect<T extends boolean = true> {
+  name?: T;
+  planId?: T;
+  sortOrder?: T;
+  isTrial?: T;
+  active?: T;
+  price?: T;
+  durationDays?: T;
+  collaborators?: T;
+  tagline?: T;
+  badge?: T;
+  features?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  limits?:
+    | T
+    | {
+        guests?: T;
+        vendors?: T;
+        payments?: T;
+        tasks?: T;
+        functions?: T;
+        hotels?: T;
+        vehicles?: T;
+        shopping?: T;
+        shagun?: T;
+        runsheet?: T;
+        rituals?: T;
+        milni?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "planner-history_select".
+ */
+export interface PlannerHistorySelect<T extends boolean = true> {
+  planner?: T;
+  rev?: T;
+  by?: T;
+  summary?: T;
+  hasSnapshot?: T;
+  ops?: T;
+  snapshot?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "planner-logins_select".
+ */
+export interface PlannerLoginsSelect<T extends boolean = true> {
+  email?: T;
+  codeHash?: T;
+  expiresAt?: T;
+  attempts?: T;
   updatedAt?: T;
   createdAt?: T;
 }

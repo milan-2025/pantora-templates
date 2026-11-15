@@ -12,7 +12,8 @@
     "seed": "npm run payload run scripts/seed.ts",
     "fill-preview": "npm run payload run scripts/fill-preview.ts",
     "build-studio": "node scripts/build-studio.mjs",
-    "test": "vitest run"
+    "test": "vitest run",
+    "build-planner": "node scripts/build-planner.mjs"
   },
   "dependencies": {
     "@payloadcms/db-mongodb": "^3.90.2",
