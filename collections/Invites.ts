@@ -4,6 +4,27 @@ import { authenticated, nobody } from "@/lib/cms/access";
 type BeforeChange = NonNullable<NonNullable<CollectionConfig["hooks"]>["beforeChange"]>[number];
 
 /**
+ * Changing an invite's link (from /admin or the couple's editor): clean it up, check it's free, and remember the
+ * old link so guest links and the couple's edit link keep working (they forward to the new one).
+ */
+const changeLink: BeforeChange = async ({ data, originalDoc, req, operation }) => {
+  if (operation !== "update" || !data || data.slug === undefined || !originalDoc || data.slug === originalDoc.slug) return data;
+  // Loaded on demand so the Payload CLI (which loads this file) never imports server-only code.
+  const { checkSlugShape, slugTaken } = await import("@/lib/invites");
+  const { slug, error } = checkSlugShape(data.slug);
+  if (error) throw new APIError(error, 400);
+  if (slug === originalDoc.slug) {
+    data.slug = slug;
+    return data;
+  }
+  if (await slugTaken(req.payload, slug, originalDoc.id)) throw new APIError("That link is already taken. Please choose another.", 400);
+  const before = ((originalDoc.previousSlugs as string[] | null) ?? []).filter((s) => s !== slug && s !== originalDoc.slug);
+  data.slug = slug;
+  data.previousSlugs = [...before, originalDoc.slug].slice(-10);
+  return data;
+};
+
+/**
  * Package set by hand in /admin (no Razorpay payment): when an invite is switched to Paid, fill in the
  * package, paid date and expiry if they were left empty. Razorpay-confirmed payments also pass through here;
  * they already carry these values, so nothing changes for them.
@@ -77,7 +98,7 @@ export const Invites: CollectionConfig = {
   },
   defaultSort: "-createdAt",
   access: { read: authenticated, create: nobody, update: authenticated, delete: authenticated },
-  hooks: { beforeChange: [setPackageManually, emailCoupleNow] },
+  hooks: { beforeChange: [setPackageManually, emailCoupleNow, changeLink] },
   fields: [
     {
       name: "links",
@@ -101,7 +122,26 @@ export const Invites: CollectionConfig = {
         { name: "reminderCount", type: "number", defaultValue: 0, admin: { readOnly: true } },
       ],
     },
-    { name: "slug", type: "text", required: true, unique: true, index: true, admin: { readOnly: true, description: "The invite link: /i/<slug>" } },
+    {
+      name: "slug",
+      type: "text",
+      label: "Invite link",
+      required: true,
+      unique: true,
+      index: true,
+      admin: {
+        description:
+          "pandoratemplates.com/i/<this>. Change it any time, e.g. aanya-weds-rohan (letters, numbers and dashes). The old link keeps working and forwards to the new one.",
+      },
+    },
+    {
+      name: "previousSlugs",
+      type: "text",
+      hasMany: true,
+      index: true,
+      label: "Old links",
+      admin: { readOnly: true, description: "Earlier links for this invite. They still open it." },
+    },
     { name: "names", type: "text", admin: { readOnly: true } },
     {
       type: "collapsible",
