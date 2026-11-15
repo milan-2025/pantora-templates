@@ -66,11 +66,19 @@ function mediaOk(u: unknown) {
   return Boolean(cloud && u.startsWith(`https://res.cloudinary.com/${cloud}/`));
 }
 
+/** An uploaded song: only our own Cloudinary audio (stored under video/upload). */
+function audioOk(u: unknown) {
+  if (typeof u !== "string" || u.length > 600) return false;
+  const cloud = process.env.CLOUDINARY_URL?.split("@")[1]?.trim();
+  return Boolean(cloud && u.startsWith(`https://res.cloudinary.com/${cloud}/video/upload/`));
+}
+
 /** The design the editor sends, minus things the browser must not decide (payment state, local-only files). */
 export function cleanState(input: unknown): InviteState | null {
   if (!input || typeof input !== "object" || Array.isArray(input)) return null;
   const o = { ...(input as InviteState) };
-  for (const k of ["paid", "plan", "au", "fin", "code"]) delete o[k];
+  for (const k of ["paid", "plan", "fin", "code"]) delete o[k];
+  if (!audioOk(o.au)) delete o.au;
   if (Array.isArray(o.ph)) o.ph = o.ph.filter(mediaOk).slice(0, 14);
   if (Array.isArray(o.gu)) {
     o.gu = (o.gu as Record<string, unknown>[]).slice(0, 600).map((g) => ({
@@ -101,7 +109,8 @@ export function guestSlugs(gu: { n: string }[]) {
  * What guests may see: no guest list, no phone numbers, and only the events they are invited to.
  * A guest link shows that guest's events and greets them; the plain link shows events open to everyone.
  */
-export function publicView(state: InviteState, guestSlug?: string | null) {
+/** What a guest receives. Uploaded songs are a Premium/Royal feature; Basic invites play the built-in Raga track. */
+export function publicView(state: InviteState, guestSlug?: string | null, plan?: string | null) {
   const gu = (Array.isArray(state.gu) ? state.gu : []) as Guest[];
   const idx = guestSlug ? guestSlugs(gu).indexOf(guestSlug) : -1;
   const guest = idx >= 0 ? gu[idx] : null;
@@ -111,6 +120,8 @@ export function publicView(state: InviteState, guestSlug?: string | null) {
   });
   const out: InviteState = { ...state, ev: events };
   for (const k of ["gu", "gl", "grp", "gst", "dom", "wm"]) delete out[k];
+  if (plan !== "premium" && plan !== "royal") delete out.au;
+  if (out.pk === "custom" && !out.au) out.pk = "raga";
   if (guest) out.gst = guest.n;
   return { state: out, guest: guest ? { n: guest.n, g: guest.g } : null };
 }
