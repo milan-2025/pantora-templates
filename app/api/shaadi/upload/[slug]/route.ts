@@ -4,10 +4,11 @@ import { getPayloadClient } from "@/lib/cms/queries";
 import { authorize } from "@/lib/invites";
 import { clientIp, rateLimit } from "@/lib/rateLimit";
 
-const ALLOWED = "jpg,jpeg,png,webp,gif,heic,mp4,mov,webm";
+// Photos, videos, and songs (Cloudinary stores audio as resource type "video").
+const ALLOWED = "jpg,jpeg,png,webp,gif,heic,mp4,mov,webm,mp3,m4a,aac,wav,ogg,oga,opus,flac";
 
 /**
- * Signs a direct browser-to-Cloudinary upload for a couple's photo or video, so big files never pass through
+ * Signs a direct browser-to-Cloudinary upload for a couple's photo, video or song, so big files never pass through
  * this server (Vercel limits request bodies to 4.5 MB). Files land in the invites/<link> folder.
  */
 export async function POST(req: Request, { params }: { params: Promise<{ slug: string }> }) {
