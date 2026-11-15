@@ -11,6 +11,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
   const invite = await findInvite(await getPayloadClient(), slug);
   if (!invite || !isLive(invite)) return NextResponse.json({ error: "not_live" }, { status: 404 });
   const guest = new URL(req.url).searchParams.get("guest");
-  const view = publicView(invite.state as InviteState, guest);
+  const view = publicView(invite.state as InviteState, guest, invite.plan);
   return NextResponse.json({ state: view.state, guest: view.guest, plan: invite.plan ?? "basic" }, { headers: { "cache-control": "public, s-maxage=60, stale-while-revalidate=300" } });
 }
