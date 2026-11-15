@@ -745,9 +745,9 @@ function done(){S.paid=true;S.plan=cur;sfx("burst");conf();payUI();
  mdo('<div class="cen"><div class="ok">✓</div><h3>Your invite is live!</h3><p style="font-weight:600;word-break:break-all">'+esc(LINK())+'</p><p class="ms">Valid 12 months · edit anytime, the link stays the same</p><div id="qrs" style="margin:12px 0"></div>'+EDL()+'<button type="button" class="p" id="cpy">Copy link</button><button type="button" id="wsh" style="width:100%;margin-top:8px">Share on WhatsApp</button><button type="button" id="cls" style="border:0;background:none;width:100%;margin-top:6px;color:var(--mut)">Continue editing</button></div>');
  qr($("qrs"));$("cpy").onclick=cpl;$("wsh").onclick=wsh;$("cls").onclick=mdx}
 function linkUI(){if(!$("lkt"))return;$("lkt").textContent=LINK();$("slst").textContent=S.sl?(TK.indexOf(S.sl)>=0?"Taken, try another.":"Available ✓"):"";}
-function pubUI(){var ok=S.paid,pl=pf(S.plan),h='<div class="lkb'+(ok?" on":"")+'"><span>'+(ok?"✅":"🔒")+'</span><span id="lkt"></span></div><label for="sl">Choose your link (optional)</label><input id="sl" value="'+esc(S.sl)+'" placeholder="aanya-weds-rohan"><label><b id="slst"></b> Preview of your link; it goes live on pandoratemplates.com after payment.</label><label for="dm">Custom domain (Royal plan)</label><input id="dm" value="'+esc(S.dom)+'" placeholder="aanyaandrohan.in">';
+function pubUI(){var ok=S.paid,pl=pf(S.plan),h='<div class="lkb'+(ok?" on":"")+'"><span>'+(ok?"✅":"🔒")+'</span><span id="lkt"></span></div><label for="sl">Choose your link</label><div class="row" style="gap:8px;align-items:center"><input id="sl" value="'+esc(S.sl||S.fin||"")+'" placeholder="aanya-weds-rohan" autocomplete="off" style="flex:1"><button type="button" id="slsv" style="display:none;white-space:nowrap">Save link</button></div><label><b id="slst" aria-live="polite"></b> '+(ok?"Your old link keeps working and forwards guests to the new one.":"Letters, numbers and dashes. It goes live after payment.")+'</label><label for="dm">Custom domain (Royal plan)</label><input id="dm" value="'+esc(S.dom)+'" placeholder="aanyaandrohan.in">';
  h+=ok?'<p class="ok2" style="font-weight:600;margin:12px 0 4px">'+pl.n+' plan active · valid 12 months</p><div class="row"><button type="button" id="pc">Copy link</button><button type="button" id="pw">Share on WhatsApp</button></div><div id="pq" style="text-align:center;margin-top:10px"></div>'+(LIVE?"":'<button type="button" id="rst" style="font-size:12px;margin-top:8px">Reset demo payment</button>')+'':'<p style="margin:12px 0 4px;font-size:13px">🔒 Sharing unlocks after payment. Designing and previewing stay free.</p>';
- $("pubst").innerHTML=h;linkUI();$("sl").oninput=function(){S.sl=slug(this.value);linkUI()};$("dm").oninput=function(){S.dom=this.value};
+ $("pubst").innerHTML=h;linkUI();$("sl").oninput=function(){S.sl=slug(this.value);linkUI();slCheck()};$("slsv").onclick=slSave;slCheck();$("dm").oninput=function(){S.dom=this.value};
  if(ok){$("pc").onclick=cpl;$("pw").onclick=wsh;qr($("pq"));if($("rst"))$("rst").onclick=function(){S.paid=false;S.plan="";payUI()}}}
 function gpUI(){var g=guests();$("gp").innerHTML='<option value="">No greeting</option>'+g.map(function(x){return"<option>"+esc(x)+"</option>"}).join("");if(g.indexOf(S.gst)<0)S.gst="";$("gp").value=S.gst}
 function gsUI(){var ok=S.paid&&S.plan!="basic",g=guests();
@@ -787,7 +787,7 @@ api("GET","/ping").then(function(j){LIVE=true;loadPlans();
  var s1=document.createElement("script");s1.src="https://checkout.razorpay.com/v1/checkout.js";document.head.appendChild(s1);
  var q0=new URLSearchParams(location.search),pc=q0.get("code");if(pc)cp=pc.toUpperCase().replace(/[^A-Z0-9_-]/g,"");var pv0=q0.get("pv")=="1",e=q0.get("edit");if(e){var p=e.split(".");setCred({slug:p[0],token:p[1]});history.replaceState(null,"",location.pathname)}
  var c=cred();if(!c.slug){payUI();return}
- return api("GET","/mine/"+c.slug,null,c.token).then(function(r){Object.assign(S,r.state);fixOrd();S.fin=r.slug;S.paid=r.paid;S.plan=r.plan||"";syncUI();payUI();render();if(pv0)setTimeout(fsOn,400)}).catch(function(){setCred({})})}).catch(function(){});
+ return api("GET","/mine/"+c.slug,null,c.token).then(function(r){Object.assign(S,r.state);fixOrd();S.fin=r.slug;if(r.slug!==c.slug)setCred({slug:r.slug,token:c.token});S.paid=r.paid;S.plan=r.plan||"";syncUI();payUI();render();if(pv0)setTimeout(fsOn,400)}).catch(function(){setCred({})})}).catch(function(){});
 setInterval(function(){if(LIVE&&!VIEW&&S.paid)dashUI()},60000);
 /* ===== v7: richer hero art, new sections, admin-driven plans, upgrade flow ===== */
 var BANNER="",MONTHS=12;
@@ -1223,4 +1223,18 @@ var _rd11=render;render=function(){_rd11();pzObs();sfont()};
 
 /* ===== v12: uploaded-song status in the editor ===== */
 var _sy12=syncUI;syncUI=function(){_sy12();auUI(/^https:/.test(S.au||"")?"✓ Your song is saved. Guests will hear it.":"")};
+
+/* ===== v13: choose or change the invite link any time ===== */
+var slT=0,slOk=false;
+function slMsg(t,good){var e=$("slst");if(!e)return;e.textContent=t;e.style.color=good===false?"#b42318":good?"#1a7f37":""}
+function slBtn(){var b=$("slsv");if(!b)return;var c=cred(),show=LIVE&&!!c.slug&&!!S.sl&&S.sl!==S.fin;b.style.display=show?"":"none";b.disabled=!slOk}
+function slCheck(){clearTimeout(slT);slOk=false;slBtn();var w=S.sl;if(!w){slMsg("");return}
+ if(w.length<3){slMsg("Use at least 3 letters or numbers.",false);return}
+ if(w===S.fin){slMsg("This is your current link ✓",true);return}
+ if(!LIVE){slOk=TK.indexOf(w)<0;slMsg(slOk?"Available ✓":"Taken, try another.",slOk);return}
+ slMsg("Checking…");slT=setTimeout(function(){api("GET","/invites?want="+encodeURIComponent(w)+"&mine="+encodeURIComponent(S.fin||"")).then(function(r){if(S.sl!==w)return;slOk=r.ok;slMsg(r.ok?(r.current?"This is your current link ✓":"Available ✓"+(cred().slug?" Tap Save link.":"")):r.error,r.ok);slBtn()}).catch(function(){slMsg("")})},350)}
+function slSave(){var c=cred(),w=S.sl,b=$("slsv");if(!c.slug||!w||!slOk)return;b.disabled=true;b.textContent="Saving…";
+ api("PATCH","/invites/"+c.slug,{want:w},c.token).then(function(r){setCred({slug:r.slug,token:c.token});S.fin=r.slug;S.sl=r.slug;b.textContent="Save link";slMsg("Saved ✓ Your link is now /i/"+r.slug,true);linkUI();slBtn();if($("edl"))$("edl").value=location.origin+"/shaadi?edit="+r.slug+"."+c.token;toast("Your link is now pandoratemplates.com/i/"+r.slug)})
+ .catch(function(e){b.textContent="Save link";b.disabled=false;slMsg((e&&e.error)||"Couldn't save. Please try again.",false)})}
+function linkUI(){if(!$("lkt"))return;$("lkt").textContent=LINK()}
 </script></body></html>
