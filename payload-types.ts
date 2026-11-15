@@ -720,9 +720,13 @@ export interface Invite {
   lastEmailedAt?: string | null;
   reminderCount?: number | null;
   /**
-   * The invite link: /i/<slug>
+   * pandoratemplates.com/i/<this>. Change it any time, e.g. aanya-weds-rohan (letters, numbers and dashes). The old link keeps working and forwards to the new one.
    */
   slug: string;
+  /**
+   * Earlier links for this invite. They still open it.
+   */
+  previousSlugs?: string[] | null;
   names?: string | null;
   /**
    * Paid (live) makes the invite public and unlocks sharing.
@@ -1681,6 +1685,7 @@ export interface InvitesSelect<T extends boolean = true> {
   lastEmailedAt?: T;
   reminderCount?: T;
   slug?: T;
+  previousSlugs?: T;
   names?: T;
   paymentStatus?: T;
   plan?: T;
