@@ -2282,6 +2282,23 @@ export interface PlannerLanding {
   whatsappNumber?: string | null;
   whatsappMessage?: string | null;
   /**
+   * Shown above the prices. Leave empty to hide.
+   */
+  offerText?: string | null;
+  /**
+   * Fixed ₹ discounts that work only on planner upgrades (not the shop or invites). Customers type the code when they upgrade. Shop/affiliate codes still work too.
+   */
+  promoCodes?:
+    | {
+        code: string;
+        amountOff: number;
+        validUntil?: string | null;
+        active?: boolean | null;
+        note?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
    * Only rows ticked “Show on page” appear, and the section is hidden while none are ticked. The rows filled in for you are samples showing the format: replace them with real customer words (with their permission) before ticking.
    */
   testimonials?:
@@ -2375,6 +2392,17 @@ export interface PlannerLandingSelect<T extends boolean = true> {
   metaPixelId?: T;
   whatsappNumber?: T;
   whatsappMessage?: T;
+  offerText?: T;
+  promoCodes?:
+    | T
+    | {
+        code?: T;
+        amountOff?: T;
+        validUntil?: T;
+        active?: T;
+        note?: T;
+        id?: T;
+      };
   testimonials?:
     | T
     | {

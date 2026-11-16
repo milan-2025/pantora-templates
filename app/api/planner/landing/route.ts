@@ -20,6 +20,7 @@ export const GET = route(async () => {
   return {
     plans,
     metaPixelId: pixel || null,
+    offerText: String(g.offerText ?? "").trim() || null,
     whatsapp: wa ? { number: wa, message: String(g.whatsappMessage ?? "") } : null,
     testimonials: (g.testimonials ?? [])
       .filter((t: Doc) => t.show && t.name && t.quote)

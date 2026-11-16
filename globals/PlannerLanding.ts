@@ -7,7 +7,7 @@ import { authenticated } from "@/lib/cms/access";
  */
 export const PlannerLanding: GlobalConfig = {
   slug: "planner-landing",
-  label: "Planner landing page",
+  label: "Planner landing page & promo codes",
   admin: {
     group: "Wedding planner",
     description:
@@ -43,6 +43,37 @@ export const PlannerLanding: GlobalConfig = {
           fields: [
             { name: "whatsappNumber", type: "text", label: "WhatsApp number", admin: { width: "40%", placeholder: "e.g. 919876543210", description: "With country code, digits only. Leave empty to hide the button." } },
             { name: "whatsappMessage", type: "text", label: "Pre-filled message", defaultValue: "Hi! I have a question about the Pandora wedding planner.", admin: { width: "60%" } },
+          ],
+        },
+      ],
+    },
+    {
+      type: "collapsible",
+      label: "Promo codes (planner only)",
+      admin: { initCollapsed: false },
+      fields: [
+        {
+          name: "offerText",
+          type: "text",
+          label: "Offer line on the landing page (optional)",
+          admin: { placeholder: "e.g. Launch offer: ₹500 off the Family plan with code SHAADI500", description: "Shown above the prices. Leave empty to hide." },
+        },
+        {
+          name: "promoCodes",
+          type: "array",
+          labels: { singular: "Promo code", plural: "Promo codes" },
+          admin: { description: "Fixed ₹ discounts that work only on planner upgrades (not the shop or invites). Customers type the code when they upgrade. Shop/affiliate codes still work too." },
+          fields: [
+            {
+              type: "row",
+              fields: [
+                { name: "code", type: "text", required: true, admin: { width: "25%", placeholder: "SHAADI500" }, hooks: { beforeValidate: [({ value }) => (typeof value === "string" ? value.trim().toUpperCase() : value)] } },
+                { name: "amountOff", type: "number", required: true, min: 1, label: "₹ off", admin: { width: "15%" } },
+                { name: "validUntil", type: "date", label: "Valid until (optional)", admin: { width: "25%" } },
+                { name: "active", type: "checkbox", defaultValue: true, admin: { width: "15%" } },
+              ],
+            },
+            { name: "note", type: "text", admin: { placeholder: "Who it's for, e.g. Excel planner buyers" } },
           ],
         },
       ],

@@ -173,6 +173,7 @@ function lpFill(root, c) {
   $('.lp-plans', root).innerHTML = (trial ? '<div class="lp-plan"><h3>' + esc(trial.name) + '</h3><div class="lp-pp">Free</div><div class="lp-pn">for ' + days + ' days</div><ul class="lp-ticks">' + (trial.features || []).map(f => '<li>' + esc(f) + '</li>').join('') + '</ul><button class="lp-btn ghost wide" data-lp-start>Start free</button></div>' : '') +
     paid.map(p => '<div class="lp-plan' + (p.badge ? ' hot' : '') + '">' + (p.badge ? '<span class="lp-badge">' + esc(p.badge) + '</span>' : '') + '<h3>' + esc(p.name) + '</h3><div class="lp-pp">' + inr(p.price) + '</div><div class="lp-pn">one-time · valid ' + valid(p) + (p.tagline ? ' · ' + esc(p.tagline) : '') + '</div><ul class="lp-ticks">' + (p.features || []).map(f => '<li>' + esc(f) + '</li>').join('') + '</ul><button class="lp-btn' + (p.badge ? '' : ' ghost') + ' wide" data-lp-start>Start free, upgrade later</button></div>').join('') ||
     '<div class="lp-empty">Plans will appear here.</div>';
+  if (c.offerText) $('.lp-plans', root).insertAdjacentHTML('beforebegin', '<div class="lp-offer">🎉 ' + esc(c.offerText) + '</div>');
   $$('.lp-plans [data-lp-start]', root).forEach(b => b.onclick = () => signInScreen('', true));
 
   // testimonials: only real ones ticked "Show on page" in the admin

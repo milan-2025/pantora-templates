@@ -348,6 +348,14 @@ export async function removeCollaborator(payload: Payload, doc: Doc, rawEmail: u
 
 export async function quotePlan(payload: Payload, plan: PlanView, coupon?: string) {
   if (!coupon) return { total: plan.price, discount: 0 };
+  // Planner-only fixed ₹ codes (Admin → Planner landing page & promo codes) come first.
+  const g = (await payload.findGlobal({ slug: "planner-landing" as never, depth: 0, overrideAccess: true }).catch(() => null)) as Doc | null;
+  const own = (g?.promoCodes ?? []).find((c: Doc) => String(c.code ?? "").toUpperCase() === coupon.toUpperCase());
+  if (own) {
+    if (!own.active || (own.validUntil && new Date(own.validUntil).getTime() < Date.now())) return { total: plan.price, discount: 0, error: "That code has expired" };
+    const total = Math.max(1, plan.price - Math.max(0, Math.round(Number(own.amountOff) || 0))); // Razorpay needs at least ₹1
+    return { total, discount: plan.price - total };
+  }
   const affiliate = await findAffiliate(payload, coupon);
   if (!affiliate) return { total: plan.price, discount: 0, error: "That code isn’t valid" };
   return applyPromo(plan.price, affiliate);
