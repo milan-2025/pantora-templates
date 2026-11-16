@@ -514,12 +514,25 @@ body.boot::after{content:"";position:fixed;left:50%;top:50%;width:38px;height:38
 .edlockc h3{margin:8px 0;font:700 20px 'Cormorant Garamond',serif}.edlockc p{margin:0 0 18px;font-size:14px;line-height:1.5;color:#555}.edlocki{font-size:28px}
 .edlockc button{display:block;width:100%;margin-top:9px;padding:12px;border-radius:12px;border:1px solid #d9cbb4;background:#fff;font:600 14px Inter,sans-serif;cursor:pointer;color:#2a2a2a}
 .edlockc button.p{background:linear-gradient(135deg,#8a1c2b,#5e0f20);border-color:#5e0f20;color:#f6e1a0}
+/* ===== v16: event photos, icon picker, link preview card, reel controls ===== */
+.ec.hasim{flex-wrap:wrap}.ecim{flex:0 0 100%;margin:-12px -14px 4px;border-radius:16px 16px 0 0;overflow:hidden;aspect-ratio:16/9;background:#eee}.ecim img,.evpic img{width:100%;height:100%;object-fit:cover;display:block}
+.evpic{width:100%;aspect-ratio:4/3;border-radius:18px;overflow:hidden;margin:0 0 12px;box-shadow:0 8px 20px rgba(0,0,0,.18);background:#eee}
+.arche.im{padding:8px}.arche.im .evpic{margin:0;border-radius:110px 110px 8px 8px;aspect-ratio:3/4}
+.bnr .evpic{aspect-ratio:16/10;border:2px solid #f0c04a}
+.evem{width:92px;height:92px;margin:0 auto 6px;border-radius:50%;display:grid;place-items:center;font-size:46px;background:rgba(255,255,255,.65);box-shadow:inset 0 0 0 2px rgba(212,168,75,.7)}
+.icp{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 6px}.icp button{width:auto;min-width:40px;height:40px;padding:0 9px;border-radius:12px;font-size:19px;line-height:1;margin:0}.icp button.on{outline:2px solid #8a1c2b;background:#fff3e0}.icp button.au{font:600 12px Inter,sans-serif}
+.evup{display:flex;align-items:center;gap:10px;margin:4px 0 6px}.evup img{width:72px;height:54px;object-fit:cover;border-radius:10px}.evup label{margin:0}.evup button{width:auto;margin:0;font-size:12px}
+.ogb{display:inline-flex!important;align-items:center;justify-content:center;flex:1;margin:0!important;padding:10px;border:1px solid var(--line,#ddd);border-radius:10px;background:#fff;cursor:pointer;font:600 13px Inter,sans-serif}
+.ogc{border:1px solid #d9d2c3;border-radius:12px;overflow:hidden;background:#f5f1ea;font-family:Inter,sans-serif}.ogc .im{aspect-ratio:1200/630;background:#ddd center/cover}.ogc .tx{padding:8px 10px;background:#e7f7dc}.ogc b{display:block;font-size:13px;color:#111}.ogc span{display:block;font-size:12px;color:#555;margin-top:2px}.ogc small{display:block;font-size:11px;color:#777;margin-top:3px}
+.mph{margin:2px 0 6px;font-size:12px}.mph.bad{color:#b42318}.mph.ok{color:#1a7f37}
+.rlx{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:6px}.rlx a,.rlx button{width:auto}
 </style><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script></head>
 <body data-v="ed">
 <div class="app">
 <form class="ed" onsubmit="return false">
  <div class="brand"><div class="logo">श</div><div><h1>Shaadi Studio</h1><p>Design an invite guests will remember</p></div></div>
  <fieldset class="pubf"><legend>Publish and share</legend><div id="pubst"></div><button type="button" class="p" id="fsb">▶ Preview with your changes (full screen)</button><button type="button" class="p" id="unl" style="background:linear-gradient(135deg,#c9972b,#8a6212);border-color:#8a6212;color:#fff">Unlock and share · from ₹799</button><label id="trust" style="text-align:center">Free to design and preview</label><label id="svs" style="text-align:center"></label></fieldset>
+ <fieldset><legend>Link preview (WhatsApp, Facebook…)</legend><p class="hint" style="margin-top:0">The picture people see when your invite link is shared.</p><div class="ogc" id="ogc"></div><div class="row" style="gap:8px;margin-top:8px"><label class="ogb">Upload picture<input id="ogf" type="file" accept="image/*" hidden></label><button type="button" id="ogx">Use first photo</button></div><p class="hint" id="ogs" aria-live="polite"></p></fieldset>
  <fieldset><legend>Style</legend>
   <div class="row"><div><label for="lang">Language</label><select id="lang"><option value="en">English</option><option value="hi">हिन्दी (Hindi)</option><option value="gu">ગુજરાતી (Gujarati)</option><option value="mr">मराठी (Marathi)</option><option value="ta">தமிழ் (Tamil)</option><option value="te">తెలుగు (Telugu)</option><option value="bn">বাংলা (Bengali)</option><option value="pa">ਪੰਜਾਬੀ (Punjabi)</option><option value="kn">ಕನ್ನಡ (Kannada)</option><option value="ml">മലയാളം (Malayalam)</option></select></div>
   <div><label for="th">Theme</label><select id="th"><option value="rajwada">Rajwada – royal doors, mandala</option><option value="floral">Phool – garden florals</option><option value="minimal">Minimal – modern editorial</option><option value="nikah">Mehrab – arch and crescent</option><option value="starry">Sitara – starry night</option><option value="temple">Kasavu – temple lotus</option><option value="retro">Filmy – retro poster</option><option value="sikh">Anand – Sikh phulkari</option><option value="christian">Chapel – rose window, doves</option><option value="bengali">Shubho – Bengali alpona</option><option value="mandir">Mandir – temple garden story (reel style)</option><option value="utsav">Utsav – arch door, event scenes (reel style)</option><option value="mahal">Mahal – palace, scratch the date (reel style)</option><option value="shahi">Shahi – jharokha, peacock blue (reel style)</option></select></div></div><label>Colours</label><div class="sw" id="sw"></div>
@@ -653,7 +666,7 @@ function nl(x){return x.split("\n").filter(function(y){return y.trim()})}
 var SEC={
 hosts:function(t,c){return'<section class="sec'+c+'"><h2>'+t.hs+'</h2><div class="orn">'+OR()+'</div><div class="hs">'+S.hs.map(function(b){var ls=nl(b.l);return ls.length||b.t?'<div '+rv("",.05)+'><div class="hb"><h4>'+esc(b.t)+'</h4>'+ls.map(function(x){return'<p>'+esc(x)+'</p>'}).join("")+'</div></div>':""}).join("")+'</div></section>'},
 story:function(t,c){return'<section class="sec'+c+'"><div class="orn">'+OR()+'</div><p '+rv("",0)+' style="margin:0"><span class="q" style="display:block">'+S.story.split(" ").map(function(w,i){return'<span class="w" style="--i:'+i+'">'+esc(w)+'</span>'}).join(" ")+'</span></p><div class="cd rv'+(seen.c?" in":"")+'" data-k="c" id="cd"></div></section>'},
-events:function(t,c){var h='<section class="sec'+c+'"><h2>'+t.ce+'</h2><div class="orn">'+OR()+'</div>'+(S.live?'<p><a class="btn live" target="_blank" rel="noopener" href="'+esc(S.live)+'">● '+t.wl+'</a></p>':"")+'<div class="tl">';EVS().forEach(function(e,i){var d=new Date(e.d);h+='<div '+rv("ec "+(i%2?"fr":"fl"),.05)+'><div class="dd"><b>'+d.getDate()+'</b><span>'+esc(d.toLocaleDateString(loc(),{month:"short"}))+'</span></div><div><h3>'+ico(e.n)+" "+esc(e.n)+'</h3><p>'+esc(d.toLocaleDateString(loc(),{weekday:"long"})+", "+d.toLocaleTimeString(loc(),{hour:"numeric",minute:"2-digit"}))+'</p><p>'+esc(e.v)+'</p>'+(e.x?'<p class="nt">'+esc(e.x)+'</p>':"")+(e.v?'<a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(e.v)+'">'+t.map+'</a>':"")+' <a target="_blank" rel="noopener" href="'+gc(e)+'">'+t.cal+'</a></div></div>'});return h+'</div></section>'},
+events:function(t,c){var h='<section class="sec'+c+'"><h2>'+t.ce+'</h2><div class="orn">'+OR()+'</div>'+(S.live?'<p><a class="btn live" target="_blank" rel="noopener" href="'+esc(S.live)+'">● '+t.wl+'</a></p>':"")+'<div class="tl">';EVS().forEach(function(e,i){var d=new Date(e.d);h+='<div '+rv("ec "+(i%2?"fr":"fl")+(e.im?" hasim":""),.05)+'>'+evPic(e,"ecim")+'<div class="dd"><b>'+d.getDate()+'</b><span>'+esc(d.toLocaleDateString(loc(),{month:"short"}))+'</span></div><div><h3>'+evIco(e)+" "+esc(e.n)+'</h3><p>'+esc(d.toLocaleDateString(loc(),{weekday:"long"})+", "+d.toLocaleTimeString(loc(),{hour:"numeric",minute:"2-digit"}))+'</p><p>'+esc(e.v)+'</p>'+(e.x?'<p class="nt">'+esc(e.x)+'</p>':"")+(e.v||mapsOk(e.mp)?'<a target="_blank" rel="noopener" href="'+esc(mapUrl(e))+'">'+t.map+'</a>':"")+' <a target="_blank" rel="noopener" href="'+gc(e)+'">'+t.cal+'</a></div></div>'});return h+'</div></section>'},
 gallery:function(t,c){var h='<section class="sec'+c+'"><h2>'+t.ph+'</h2><div class="orn">'+OR()+'</div><div class="gal">';if(S.ph.length)S.ph.forEach(function(p,i){h+='<img '+rv("",i*.12)+' alt="" src="'+p+'">'});else for(var i=0;i<4;i++)h+='<div '+rv("ph",i*.12)+'>'+MG+'</div>';return h+'</div>'+(S.ph.length?'':'<p class="cap">Add your photos in the editor</p>')+'</section>'},
 rsvp:function(t,c){return'<section id="rsvpsec" class="sec'+c+'"><h2>'+t.rs+'</h2><div class="orn">'+OR()+'</div><div '+rv("",0)+'><div class="rs"><input type="text" id="gn" placeholder="'+t.nm+'" aria-label="'+t.nm+'"><label for="gc" style="margin-top:10px">'+t.gu+'</label><input type="number" id="gc" min="1" value="2"><label for="gm" style="margin-top:10px">'+t.ml+'</label><select id="gm"><option value="">—</option><option>'+t.vg+'</option><option>'+t.nv+'</option><option>'+t.jn+'</option></select><p style="margin:12px 0 2px;font-weight:600">'+t.at+'</p>'+EVS().map(function(e,i){return'<label><input type="checkbox" class="ea" value="'+i+'" checked>'+esc(e.n)+'</label>'}).join("")+'<textarea id="gt" rows="2" maxlength="500" placeholder="'+t.ms+'" aria-label="'+t.ms+'" style="width:100%;margin-top:10px"></textarea><button class="btn wa" id="rsb">'+t.send+'</button></div></div></section>'}};
 /* render */
@@ -1035,7 +1048,7 @@ function rlLoad(cb){RL.pal=rlPal();var cf=rlCfg(),P=RL.pal,nm=document.querySele
 function rlOk(im){return im&&im.complete&&im.naturalWidth>0}
 function rlBack(c,W,H,t,P){var cf=rlCfg();
  if(rlOk(RL.mand)){c.save();var b=cf.back;c.globalAlpha=b=="moon"?.95:P.light?.22:.28;if(b=="moon"){c.translate(W*.78,H*.12);c.drawImage(RL.mand,-70,-70,140,140)}else{c.translate(W/2,H*.42);c.rotate(t*(b=="sunburst"?.05:.1));var z=b=="sunburst"?W*1.3:W*.75;c.drawImage(RL.mand,-z,-z,z*2,z*2)}c.restore()}
- if(rlOk(RL.scene)){var sa=Math.max(rlA(t,0,.8,10.6,11.6),rlA(t,21.6,22.6,RL.dur+1,RL.dur+2));if(sa>0){c.save();c.globalAlpha=sa;var sh=W*280/540;c.drawImage(RL.scene,0,H-sh+(1-sa)*30+Math.sin(t*1.6)*2,W,sh);c.restore()}}
+ if(rlOk(RL.scene)){var sa=RL.artA?RL.artA(t):Math.max(rlA(t,0,.8,10.6,11.6),rlA(t,21.6,22.6,RL.dur+1,RL.dur+2));if(sa>0){c.save();c.globalAlpha=sa;var sh=W*280/540;c.drawImage(RL.scene,0,H-sh+(1-sa)*30+Math.sin(t*1.6)*2,W,sh);c.restore()}}
  if(rlOk(RL.top)){c.save();var th=S.th=="nikah"||S.th=="utsav"?W*90/400:W*100/400;c.translate(W/2,0);c.rotate(Math.sin(t*1.4)*.01);c.drawImage(RL.top,-W/2,-4,W,th);c.restore()}}
 function rlPart(c,W,H,t,P){var k=rlCfg().part;if(!k)return;
  for(var i=0;i<46;i++){var x=(i*97%W)+Math.sin(t*.6+i)*14,y;
@@ -1160,7 +1173,7 @@ function fl(){var d=new Date(S.date),it=[[X("dy"),d.getDate()],[X("mo"),sdt(d,{m
 function cdBlk(t){return'<div class="cdb"><h3 class="sch">'+esc(t.cdt)+'</h3><div class="cd rv" data-k="c" id="cd"></div></div>'}
 function sideBlk(){return'<p class="sdq">'+X("wsd")+'</p><div class="sds"><label><input type="radio" name="sd" value="bride" checked><span>'+X("sbr")+'</span></label><label><input type="radio" name="sd" value="groom"><span>'+X("sgr")+'</span></label></div>'}
 function rsvpBlk(t){return'<div class="rs">'+sideBlk()+'<input type="text" id="gn" placeholder="'+t.nm+'" aria-label="'+t.nm+'"><label for="gc" style="margin-top:10px">'+t.gu+'</label><input type="number" id="gc" min="1" value="2"><label for="gm" style="margin-top:10px">'+t.ml+'</label><select id="gm"><option value="">—</option><option>'+t.vg+'</option><option>'+t.nv+'</option><option>'+t.jn+'</option></select><p style="margin:12px 0 2px;font-weight:600">'+t.at+'</p>'+EVS().map(function(e,i){return'<label><input type="checkbox" class="ea" value="'+i+'" checked>'+esc(e.n)+'</label>'}).join("")+'<textarea id="gt" rows="2" maxlength="500" placeholder="'+t.ms+'" aria-label="'+t.ms+'" style="width:100%;margin-top:10px"></textarea><button class="btn wa" id="rsb">'+t.send+'</button></div>'}
-function evLinks(e,t){return(e.v?'<a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(e.v)+'">'+t.map+'</a> ':"")+'<a target="_blank" rel="noopener" href="'+gc(e)+'">'+t.cal+'</a>'}
+function evLinks(e,t){return(e.v||mapsOk(e.mp)?'<a target="_blank" rel="noopener" href="'+esc(mapUrl(e))+'">'+t.map+'</a> ':"")+'<a target="_blank" rel="noopener" href="'+gc(e)+'">'+t.cal+'</a>'}
 function evWhen(e){var d=new Date(e.d);return sdt(d,{weekday:"long",day:"numeric",month:"long"})+" · "+d.toLocaleTimeString(loc(),{hour:"numeric",minute:"2-digit"})}
 function hostLines(){return S.hs.map(function(b){var ls=nl(b.l);return ls.length||b.t?'<div class="hsb"><h4>'+esc(b.t)+'</h4>'+ls.map(function(x){return'<p>'+esc(x)+'</p>'}).join("")+'</div>':""}).join("")}
 function journeyList(t){var js=S.js.filter(function(j){return j.t||j.x});return js.map(function(j,i){return'<div '+rv("ji2",i*.1)+'><b>'+esc(j.y)+'</b><h3>'+esc(j.t)+'</h3><p>'+esc(j.x)+'</p></div>'}).join("")}
@@ -1178,7 +1191,7 @@ ST.mandir={
  story:function(t){return secT(t,"",'<div '+rv("",0)+'><p class="q2">'+esc(S.story)+'</p></div>'+cdBlk(t),"s-mandir s-grass",A(elephant(0),"e3")+A(lotus(80,1),"lo1"))},
  journey:function(t){return secT(t,"",'<h2 class="h2s">'+t.js+'</h2>'+journeyList(t),"s-mandir s-cream")},
  calendar:function(t){return secT(t,"",'<h2 class="h2s">'+X("svd")+'</h2>'+fl()+'<p class="hint2">'+esc(sdt(S.date,{weekday:"long"}))+' · '+esc(new Date(S.date).toLocaleTimeString(loc(),{hour:"numeric",minute:"2-digit"}))+'</p>',"s-mandir s-sky",twinkle(0))},
- events:function(t){return secT(t,"",'<h2 class="h2s">'+t.ce+'</h2>'+EVS().map(function(e,i){return'<div '+rv("evc",i*.1)+'><div class="evi">'+evArt(e.n)+'</div><h3>'+ico(e.n)+' '+esc(e.n)+'</h3><p>'+esc(evWhen(e))+'</p><p>'+esc(e.v)+'</p>'+(e.x?'<p class="nt">'+esc(e.x)+'</p>':"")+'<div class="lk">'+evLinks(e,t)+'</div></div>'}).join(""),"s-mandir s-cream")},
+ events:function(t){return secT(t,"",'<h2 class="h2s">'+t.ce+'</h2>'+EVS().map(function(e,i){return'<div '+rv("evc",i*.1)+'>'+(e.im?evPic(e,"evpic"):'<div class="evi">'+evArt2(e)+'</div>')+'<h3>'+evIco(e)+' '+esc(e.n)+'</h3><p>'+esc(evWhen(e))+'</p><p>'+esc(e.v)+'</p>'+(e.x?'<p class="nt">'+esc(e.x)+'</p>':"")+'<div class="lk">'+evLinks(e,t)+'</div></div>'}).join(""),"s-mandir s-cream")},
  gallery:function(t){return secT(t,"",'<h2 class="h2s">'+X("mbg")+'</h2>'+brideGroom(t)+'<h2 class="h2s sp">'+t.ph+'</h2>'+galGrid(),"s-mandir s-grass")},
  gifts:function(t){return giftBlk(t,"s-mandir s-cream")},
  rsvp:function(t){return'<section id="rsvpsec" class="scn s-mandir s-sky"><div class="scc"><h2 class="h2s">'+t.rs+'</h2><div '+rv("",0)+'>'+rsvpBlk(t)+'</div></div></section>'},
@@ -1191,7 +1204,7 @@ ST.utsav={
  story:function(t){return secT(t,"",'<div '+rv("",0)+'><p class="q2">'+esc(S.story)+'</p></div>'+cdBlk(t),"s-utsav s-blue",twinkle(12))},
  journey:function(t){return secT(t,"",'<h2 class="h2s">'+t.js+'</h2>'+journeyList(t),"s-utsav s-cream")},
  calendar:function(t){return secT(t,"",'<h2 class="h2s">'+X("svd")+'</h2>'+fl(),"s-utsav s-blue",twinkle(10))},
- events:function(t){return EVS().map(function(e,i){return'<section class="scn s-utsav '+(i%2?"s-blue":"s-cream")+' evs"><div class="scc"><div '+rv("",0)+'><div class="arche"><div class="evi">'+evArt(e.n)+'</div>'+couple("sm")+'</div><h2 class="h2s">'+ico(e.n)+' '+esc(e.n)+'</h2><p>'+esc(evWhen(e))+'</p><p>'+esc(e.v)+'</p>'+(e.x?'<p class="nt">'+esc(e.x)+'</p>':"")+'<div class="lk">'+evLinks(e,t)+'</div></div></div></section>'}).join("")},
+ events:function(t){return EVS().map(function(e,i){return'<section class="scn s-utsav '+(i%2?"s-blue":"s-cream")+' evs"><div class="scc"><div '+rv("",0)+'><div class="arche'+(e.im?" im":"")+'">'+(e.im?evPic(e,"evpic"):'<div class="evi">'+evArt2(e)+'</div>'+couple("sm"))+'</div><h2 class="h2s">'+evIco(e)+' '+esc(e.n)+'</h2><p>'+esc(evWhen(e))+'</p><p>'+esc(e.v)+'</p>'+(e.x?'<p class="nt">'+esc(e.x)+'</p>':"")+'<div class="lk">'+evLinks(e,t)+'</div></div></div></section>'}).join("")},
  gallery:function(t){return secT(t,"",'<h2 class="h2s">'+X("mbg")+'</h2>'+brideGroom(t)+'<h2 class="h2s sp">'+t.ph+'</h2>'+galGrid(),"s-utsav s-cream")},
  gifts:function(t){return giftBlk(t,"s-utsav s-cream")},
  rsvp:function(t){return'<section id="rsvpsec" class="scn s-utsav s-blue"><div class="scc"><div '+rv("",0)+'><div class="arcr"><h2 class="h2s">'+t.rs+'</h2>'+rsvpBlk(t)+'</div></div></div></section>'},
@@ -1205,7 +1218,7 @@ ST.mahal={
  story:function(t){return secT(t,"",'<div '+rv("",0)+'><p class="q2">'+esc(S.story)+'</p></div>'+cdBlk(t),"s-mahal s-blush",petals(8,["#f4a0b8","#fbd0dc"]))},
  journey:function(t){return secT(t,"",'<h2 class="h2s">'+t.js+'</h2>'+journeyList(t),"s-mahal s-rose")},
  calendar:function(t){return secT(t,"",'<h2 class="h2s">'+X("svd")+'</h2>'+scratch(t),"s-mahal s-blush")},
- events:function(t){return EVS().map(function(e,i){return'<section class="scn s-mahal '+(i%2?"s-rose":"s-blush")+' evs"><div class="scc"><div '+rv("",0)+'><div class="pbox"><div class="evi">'+evArt(e.n)+'</div><h2 class="h2s">'+ico(e.n)+' '+esc(e.n)+'</h2><p>'+esc(evWhen(e))+'</p><p>'+esc(e.v)+'</p>'+(e.x?'<p class="nt">'+esc(e.x)+'</p>':"")+'<div class="lk">'+evLinks(e,t)+'</div></div>'+couple("sm")+'</div></div></section>'}).join("")},
+ events:function(t){return EVS().map(function(e,i){return'<section class="scn s-mahal '+(i%2?"s-rose":"s-blush")+' evs"><div class="scc"><div '+rv("",0)+'><div class="pbox">'+(e.im?evPic(e,"evpic"):'<div class="evi">'+evArt2(e)+'</div>')+'<h2 class="h2s">'+evIco(e)+' '+esc(e.n)+'</h2><p>'+esc(evWhen(e))+'</p><p>'+esc(e.v)+'</p>'+(e.x?'<p class="nt">'+esc(e.x)+'</p>':"")+'<div class="lk">'+evLinks(e,t)+'</div></div>'+couple("sm")+'</div></div></section>'}).join("")},
  gallery:function(t){return secT(t,"",'<h2 class="h2s">'+X("mbg")+'</h2>'+brideGroom(t)+'<h2 class="h2s sp">'+t.ph+'</h2>'+galGrid(),"s-mahal s-blush")},
  gifts:function(t){return giftBlk(t,"s-mahal s-blush")},
  rsvp:function(t){return'<section id="rsvpsec" class="scn s-mahal s-night">'+twinkle(26)+'<div class="scc"><h2 class="h2s">'+X("bls")+'</h2><div '+rv("",0)+'>'+rsvpBlk(t)+'</div></div></section>'},
@@ -1219,7 +1232,7 @@ ST.shahi={
  story:function(t){return secT(t,"",'<div '+rv("",0)+'><p class="q2">'+esc(S.story)+'</p></div><h3 class="sch">'+esc(t.cdt)+'</h3><div class="tls rv" data-k="c" id="cd"></div>',"s-shahi s-blue",twinkle(14))},
  journey:function(t){return secT(t,"",'<h2 class="h2s">'+t.js+'</h2>'+journeyList(t),"s-shahi s-sand")},
  calendar:function(t){return secT(t,"",'<h2 class="h2s">'+X("svd")+'</h2>'+scratch(t),"s-shahi s-blue",twinkle(10))},
- events:function(t){return secT(t,"",'<h2 class="h2s">'+t.ce+'</h2>'+EVS().map(function(e,i){return'<div '+rv("ban",i*.1)+'><div class="rope"></div><div class="bnr"><div class="evi">'+evArt(e.n)+'</div><h3>'+ico(e.n)+' '+esc(e.n)+'</h3><p>'+esc(evWhen(e))+'</p><p>'+esc(e.v)+'</p>'+(e.x?'<p class="nt">'+esc(e.x)+'</p>':"")+'<div class="lk">'+evLinks(e,t)+'</div></div></div>'}).join(""),"s-shahi s-sand")},
+ events:function(t){return secT(t,"",'<h2 class="h2s">'+t.ce+'</h2>'+EVS().map(function(e,i){return'<div '+rv("ban",i*.1)+'><div class="rope"></div><div class="bnr">'+(e.im?evPic(e,"evpic"):'<div class="evi">'+evArt2(e)+'</div>')+'<h3>'+evIco(e)+' '+esc(e.n)+'</h3><p>'+esc(evWhen(e))+'</p><p>'+esc(e.v)+'</p>'+(e.x?'<p class="nt">'+esc(e.x)+'</p>':"")+'<div class="lk">'+evLinks(e,t)+'</div></div></div>'}).join(""),"s-shahi s-sand")},
  gallery:function(t){return secT(t,"",'<h2 class="h2s">'+X("mbg")+'</h2>'+brideGroom(t)+'<h2 class="h2s sp">'+t.ph+'</h2>'+galGrid(),"s-shahi s-blue")},
  gifts:function(t){return giftBlk(t,"s-shahi s-sand")},
  rsvp:function(t){return'<section id="rsvpsec" class="scn s-shahi s-sand"><div class="scc"><div '+rv("",0)+'><div class="arcr"><h2 class="h2s">'+t.rs+'</h2>'+rsvpBlk(t)+'</div></div></div></section>'},
@@ -1306,4 +1319,109 @@ function lockUI(k,ago){var o=$("edlock");if(!k){if(o)o.remove();saveUI();return}
  $("lkh").onclick=function(){this.disabled=true;this.textContent="Opening…";lockTick(true)};$("lkx").onclick=lockClose;saveUI()}
 function lockClose(){clearInterval(lkT);var sl=(cred().slug||"");try{window.close()}catch(e){}
  setTimeout(function(){document.body.className="";document.body.innerHTML='<div class="nl"><h1>Editing continues in your other tab</h1><p style="font-family:Inter,sans-serif;font-size:15px">You can close this tab.</p>'+(sl?'<p><a style="color:#f0c04a" href="/i/'+encodeURIComponent(sl)+'">View the invite</a></p>':"")+'</div>'},150)}
+
+/* ===== v16: event icons, photos, Google Maps links; link preview image; the reel covers the whole invite ===== */
+var ICN=[["ring","💍","Engagement"],["puja","🪔","Puja"],["haldi","🌼","Haldi"],["mehendi","🌿","Mehendi"],["sangeet","🎶","Sangeet"],["dance","💃","Dance night"],["baraat","🐎","Baraat"],["pheras","🔥","Pheras"],["varmala","💐","Varmala"],["wedding","🪷","Wedding"],["nikah","🌙","Nikah"],["church","⛪","Church"],["temple","🛕","Temple"],["reception","🥂","Reception"],["dinner","🍽️","Dinner"],["cocktail","🍸","Cocktail"],["party","🎉","Party"],["brunch","☕","Brunch"]];
+function icnOf(k){for(var i=0;i<ICN.length;i++)if(ICN[i][0]==k)return ICN[i];return null}
+function evIco(e){var x=e&&e.ic&&icnOf(e.ic);return x?x[1]:ico((e&&e.n)||"")}
+/* Story-theme art follows the chosen icon; other icons show as a medallion. */
+function evArt2(e){var k=e.ic;if(!k||!icnOf(k))return evArt(e.n);return k=="haldi"?haldi():k=="mehendi"?henna():/sangeet|dance|baraat/.test(k)?dhol():/pheras|wedding|varmala|temple|nikah|church/.test(k)?mand():'<div class="evem">'+evIco(e)+'</div>'}
+function evPic(e,cls){return e.im?'<div class="'+cls+'"><img alt="" loading="lazy" decoding="async" src="'+esc(ou(e.im,900))+'"></div>':""}
+function mapsOk(u){return typeof u=="string"&&/^https:\/\/(maps\.app\.goo\.gl\/|goo\.gl\/maps\/|(www\.)?google\.[a-z.]{2,8}\/maps|maps\.google\.[a-z.]{2,8}\/)/i.test(u)}
+function mapUrl(e){return mapsOk(e.mp)?e.mp:"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(e.v||"")}
+/* event editor additions: icon picker, photo, maps link */
+function upImg(f,max){return resizeImg(f,max).then(function(b){if(!LIVE)return new Promise(function(res){var r=new FileReader();r.onload=function(){res(r.result)};r.readAsDataURL(b)});return ensureInvite().then(function(c){return cloudUpload(b,(f.name||"photo").replace(/\.\w+$/,"")+".jpg",c)})})}
+var _evUI16=evUI;evUI=function(){_evUI16();[].forEach.call($("evs").querySelectorAll(".ev"),function(box,i){var e=S.ev[i];if(!e)return;var rm=box.querySelector("[data-rm]"),w=document.createElement("div");
+ w.innerHTML='<label>Icon</label><div class="icp"><button type="button" class="au'+(e.ic?"":" on")+'" data-ic="">Auto '+ico(e.n||"")+'</button>'+ICN.map(function(x){return'<button type="button" data-ic="'+x[0]+'" title="'+x[2]+'" aria-label="'+x[2]+'" class="'+(e.ic==x[0]?"on":"")+'">'+x[1]+'</button>'}).join("")+'</div>'
+ +'<label>Event photo (shown above the date and venue)</label><div class="evup">'+(e.im?'<img alt="" src="'+esc(ou(e.im,160))+'">':"")+'<label class="ogb" style="flex:none;padding:8px 12px">'+(e.im?"Change photo":"Upload photo")+'<input type="file" accept="image/*" hidden data-eim="'+i+'"></label>'+(e.im?'<button type="button" data-erm="'+i+'">Remove</button>':"")+'<span class="hint" data-eps="'+i+'"></span></div>'
+ +'<label>Google Maps link</label><input data-mp="'+i+'" value="'+esc(e.mp||"")+'" placeholder="https://maps.app.goo.gl/…" inputmode="url" autocomplete="off"><p class="mph" data-mph="'+i+'"></p>';
+ box.insertBefore(w,rm);
+ var hint=function(){var v=(e.mp||"").trim(),p=w.querySelector("[data-mph]");p.className="mph"+(v?(mapsOk(v)?" ok":" bad"):"");p.textContent=!v?"In Google Maps, open the place, tap Share, then Copy link and paste it here. Without it, guests get a search for the venue name.":mapsOk(v)?"✓ Guests will open this exact location.":"That doesn’t look like a Google Maps link. Copy it from Google Maps → Share."};hint();
+ w.querySelector("[data-mp]").oninput=function(){var v=this.value.trim();if(v)e.mp=v;else delete e.mp;hint();render()};
+ [].forEach.call(w.querySelectorAll("[data-ic]"),function(b){b.onclick=function(){if(b.dataset.ic)e.ic=b.dataset.ic;else delete e.ic;[].forEach.call(w.querySelectorAll("[data-ic]"),function(x){x.classList.toggle("on",x===b)});render()}});
+ var rmb=w.querySelector("[data-erm]");if(rmb)rmb.onclick=function(){delete e.im;evUI();render()};
+ w.querySelector("[data-eim]").onchange=function(){var f=this.files[0];this.value="";if(!f)return;var st=w.querySelector("[data-eps]");st.textContent="Uploading…";upImg(f,1600).then(function(u){e.im=u;evUI();render();toast("Event photo added")}).catch(function(x){st.textContent="";toast((x&&x.error)||"Couldn’t upload the photo. Please try again.")})}})};
+/* link preview image */
+function ogUI(){var c=$("ogc");if(!c)return;var first=S.ph.filter(function(u){return!isVid(u)})[0],img=S.og?ou(S.og,600):first?ou(first,600):"/shaadi/og.jpg",d=new Date(S.date);
+ c.innerHTML='<div class="im" style="background-image:url(\''+esc(img)+'\')"></div><div class="tx"><b>'+esc(S.b+" & "+S.g)+' are getting married</b><span>'+esc(isNaN(d)?"":d.toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long",year:"numeric"})+" · ")+'Tap to open your invitation</span><small>'+esc(location.host||"pandoratemplates.com")+'</small></div>';
+ $("ogx").style.display=S.og?"":"none";$("ogs").textContent=S.og?"Your own picture is used. Press Save to update it for new shares.":first?"Using your first photo. Upload a picture to choose your own.":"Upload a picture, or add photos, to replace the default."}
+$("ogf").onchange=function(){var f=this.files[0];this.value="";if(!f)return;$("ogs").textContent="Uploading…";upImg(f,1600).then(function(u){S.og=u;ogUI();render();toast("Preview picture set. Press Save so new shares use it.")}).catch(function(x){ogUI();toast((x&&x.error)||"Couldn’t upload the picture. Please try again.")})};
+$("ogx").onclick=function(){delete S.og;ogUI();render()};
+var _rd16=render;render=function(){_rd16();ogUI()};
+try{evUI();ogUI()}catch(e){}
+
+/* ---------- reel: built from the invite itself, in its section order ---------- */
+function rlE(lt,a,b){return lt<=a?0:lt>=b?1:(lt-a)/(b-a)}
+function rlName(c,s,x,y,max,col,t0,lt,mw,A){var sz=max;while(sz>40){c.font="400 "+sz+"px "+RL.nf;if(c.measureText(s).width<=mw)break;sz-=4}c.font="400 "+sz+"px "+RL.nf;var ch=seg(s),ws=ch.map(function(k){return c.measureText(k).width}),px=x-ws.reduce(function(a,b){return a+b},0)/2;c.save();c.textAlign="left";c.textBaseline="middle";c.fillStyle=col;ch.forEach(function(k,i){var a=Math.max(0,Math.min(1,(lt-t0-i*.07)/.45))*A;if(a>0){c.globalAlpha=a;c.fillText(k,px,y+(1-a)*26)}px+=ws[i]});c.restore()}
+function rlCover(c,im,x,y,w,h,z){var sc=Math.max(w/im.width,h/im.height)*(z||1);c.drawImage(im,x+w/2-im.width*sc/2,y+h/2-im.height*sc/2,im.width*sc,im.height*sc)}
+function rlRound(c,x,y,w,h,r){c.beginPath();if(c.roundRect)c.roundRect(x,y,w,h,r);else c.rect(x,y,w,h)}
+function rlHostPages(){var pages=[],cur=[],n=0;S.hs.forEach(function(b){var ls=nl(b.l);if(!ls.length&&!b.t)return;var k=ls.length+(b.t?1:0);if(cur.length&&n+k>10){pages.push({b:cur,n:n});cur=[];n=0}cur.push(b);n+=k});if(cur.length)pages.push({b:cur,n:n});return pages}
+var RLS={
+ intro:function(c,lt,A,o,W,H,P,L,bf,mw){rlT(c,OM()||L.om,W/2,H*.22,bf(28),P.hl,A*rlE(lt,.1,.9),18);rlW(c,L.bl,W/2,H*.32,bf(24),P.tx,A*rlE(lt,.6,1.4),32,mw);if(S.fam)rlW(c,S.fam,W/2,H*.39,"italic "+bf(34),P.hl,A*rlE(lt,1.1,1.9),42,mw)},
+ names:function(c,lt,A,o,W,H,P,L,bf,mw){var d=new Date(S.date);rlW(c,L.inv,W/2,H*.24,bf(24),P.tx,A*rlE(lt,.1,.8),32,mw);rlName(c,S.b,W/2,H*.42,120,P.hl,.9,lt,mw,A);rlT(c,L.and,W/2,H*.51,"italic "+bf(34),P.tx,A*rlE(lt,2.2,2.9),12);rlName(c,S.g,W/2,H*.6,120,P.hl,2.6,lt,mw,A);if(!isNaN(d))rlT(c,d.toLocaleDateString(loc(),{weekday:"long",day:"numeric",month:"long",year:"numeric"}),W/2,H*.73,bf(28,"600"),P.hl,A*rlE(lt,4,4.8),14)},
+ hosts:function(c,lt,A,o,W,H,P,L,bf,mw){rlT(c,L.hs,W/2,H*.14,"italic "+bf(38),P.hl,A*rlE(lt,0,.6),10);var lh=42,tot=o.p.n*lh+(o.p.b.length-1)*26,y=Math.max(H*.24,H*.52-tot/2),k=0;
+  o.p.b.forEach(function(b){if(b.t){rlT(c,b.t.toUpperCase(),W/2,y,bf(19,"600"),P.hl,A*rlE(lt,.3+k*.15,.9+k*.15),12);y+=lh;k++}nl(b.l).forEach(function(l){y=rlW(c,l,W/2,y,bf(28),P.tx,A*rlE(lt,.3+k*.15,.9+k*.15),lh,mw);k++});y+=26})},
+ story:function(c,lt,A,o,W,H,P,L,bf,mw){var y=rlW(c,"“"+S.story.trim()+"”",W/2,H*.26,"italic "+bf(32),P.tx,A*rlE(lt,.2,1),46,mw-20),d=new Date(S.date),days=Math.ceil((d-new Date())/864e5);
+  if(days>0){var a2=A*rlE(lt,1.2,2);rlT(c,String(days),W/2,Math.max(y+90,H*.66),bf(110,"700"),P.hl,a2,16);rlT(c,(L.d||"Days").toUpperCase()+" TO GO",W/2,Math.max(y+90,H*.66)+76,bf(22,"600"),P.tx,a2,10)}},
+ journey:function(c,lt,A,o,W,H,P,L,bf,mw){var j=o.j;rlT(c,L.js,W/2,H*.14,"italic "+bf(38),P.hl,A*rlE(lt,0,.6),10);if(j.y)rlT(c,String(j.y),W/2,H*.33,bf(86,"700"),P.a,A*rlE(lt,.3,1),18);rlW(c,j.t||"",W/2,H*.45,bf(36,"700"),P.hl,A*rlE(lt,.6,1.3),44,mw);rlW(c,j.x||"",W/2,H*.55,bf(26),P.tx,A*rlE(lt,1,1.7),38,mw);
+  for(var i=0;i<o.n;i++){c.save();c.globalAlpha=A*.9;c.fillStyle=i==o.i?P.hl:P.a;c.beginPath();c.arc(W/2+(i-(o.n-1)/2)*22,H*.86,i==o.i?6:4,0,7);c.fill();c.restore()}},
+ date:function(c,lt,A,o,W,H,P,L,bf,mw){var d=new Date(S.date);if(isNaN(d))return;c.save();c.globalAlpha=A;var pulse=1+.05*Math.sin(lt*4);c.translate(W/2,H*.45);c.scale(pulse,pulse);c.fillStyle=P.a;c.beginPath();c.arc(0,0,130,0,7);c.fill();rlT(c,String(d.getDate()),0,-6,bf(130,"700"),P.on||P.bg2,1,0);rlT(c,d.toLocaleDateString(loc(),{month:"long",year:"numeric"}),0,86,bf(26,"600"),P.on||P.bg2,1,0);c.restore();rlT(c,L.sd,W/2,H*.2,"italic "+bf(42),P.hl,A,0)},
+ event:function(c,lt,A,o,W,H,P,L,bf,mw){var e=o.e,d=new Date(e.d),im=e.im&&RL.imgMap[e.im];rlT(c,L.ce+(o.n>1?"  ·  "+(o.i+1)+"/"+o.n:""),W/2,H*.075,"italic "+bf(28),P.hl,A*rlE(lt,0,.5),0);
+  var a1=A*rlE(lt,.1,.8);if(im&&a1>0){var x=W*.11,y=H*.11,w=W*.78,h=H*.36;c.save();c.globalAlpha=a1;rlRound(c,x,y,w,h,26);c.save();c.clip();rlCover(c,im,x,y,w,h,1.04+.06*rlE(lt,0,o.d||5));c.restore();c.strokeStyle=P.a;c.lineWidth=4;rlRound(c,x,y,w,h,26);c.stroke();c.restore()}
+  else if(a1>0){c.save();c.globalAlpha=a1;c.fillStyle=P.light?"rgba(255,255,255,.7)":"rgba(255,255,255,.12)";c.strokeStyle=P.a;c.lineWidth=3;c.beginPath();c.arc(W/2,H*.29,112,0,7);c.fill();c.stroke();c.fillStyle="#000";c.font="104px serif";c.textAlign="center";c.textBaseline="middle";c.fillText(evIco(e),W/2,H*.29+6);c.restore()}
+  var nm=e.n||"";rlT(c,nm,W/2,H*.545,"700 "+Math.min(52,rlFitB(c,nm,52,mw,bf))+"px "+RL.bf,P.hl,A*rlE(lt,.5,1.1),14);
+  if(!isNaN(d))rlT(c,d.toLocaleDateString(loc(),{weekday:"long",day:"numeric",month:"long"})+" · "+d.toLocaleTimeString(loc(),{hour:"numeric",minute:"2-digit"}),W/2,H*.615,bf(26,"600"),P.tx,A*rlE(lt,.8,1.4),10);
+  var y=H*.675;if(e.v)y=rlW(c,"📍 "+e.v,W/2,y,bf(25),P.tx,A*rlE(lt,1,1.6),36,mw);if(e.x)rlW(c,e.x,W/2,y+14,"italic "+bf(24),P.hl,A*rlE(lt,1.3,1.9),34,mw)},
+ gallery:function(c,lt,A,o,W,H,P,L,bf,mw){var n=RL.gal.length;if(!n)return;var per=o.per,k=Math.min(n-1,Math.floor(lt/per)),fr=(lt-k*per)/per,im=RL.gal[k],ax=W*.12,ay=H*.18,aw=W*.76,ah=H*.6,r=aw/2,ia=A*Math.min(1,Math.min(fr*per/.45,(per-fr*per)/.35+.15));
+  rlT(c,L.ph,W/2,H*.12,"italic "+bf(38),P.hl,A,0);c.save();c.globalAlpha=Math.max(0,Math.min(1,ia));c.beginPath();c.moveTo(ax,ay+ah);c.lineTo(ax,ay+r);c.arc(ax+r,ay+r,r,Math.PI,0);c.lineTo(ax+aw,ay+ah);c.closePath();c.save();c.clip();rlCover(c,im,ax,ay,aw,ah,1.04+.1*fr);c.restore();c.strokeStyle=P.a;c.lineWidth=4;c.stroke();c.restore();
+  rlT(c,(k+1)+" / "+n,W/2,H*.83,bf(20,"600"),P.tx,A*.8,0)},
+ close:function(c,lt,A,o,W,H,P,L,bf,mw){rlW(c,L.fo,W/2,H*.24,"italic "+bf(34),P.tx,A*rlE(lt,0,.8),44,mw);var nm=S.b+" & "+S.g;rlT(c,nm,W/2,H*.44,"400 "+rlFit(c,nm,76,mw)+"px "+RL.nf,P.hl,A*rlE(lt,.4,1.2),24);rlT(c,"♥",W/2,H*.53,bf(40),P.pt2,A*rlE(lt,1,1.5),0);
+  if(S.tag)rlT(c,S.tag,W/2,H*.6,bf(26,"600"),P.hl,A*rlE(lt,1.3,1.9),10);rlT(c,L.rs,W/2,H*.69,"italic "+bf(28),P.tx,A*rlE(lt,1.6,2.2),10);rlT(c,LINK(),W/2,H*.75,bf(24,"600"),P.hl,A*rlE(lt,1.9,2.5),10)}
+};
+function rlFitB(c,s,max,mw,bf){var z=max;while(z>24){c.font="700 "+z+"px "+RL.bf;if(c.measureText(s).width<=mw)break;z-=2}return z}
+function rlBuild(){var sc=[],add=function(k,d,o){sc.push({k:k,d:d,o:o||{}})},L=T[S.lang];
+ if(OM()||S.fam)add("intro",4.4,{art:1});add("names",6.6,{art:1});
+ S.ord.forEach(function(o){if(!o.on)return;
+  if(o.k=="hosts")rlHostPages().forEach(function(p){add("hosts",3.6+.3*p.n,{p:p})});
+  else if(o.k=="story"&&S.story&&S.story.trim())add("story",Math.min(9,4.2+S.story.trim().length/45));
+  else if(o.k=="journey"){var js=S.js.filter(function(j){return j.t||j.x}).slice(0,8);js.forEach(function(j,i){add("journey",3.6+Math.min(3,(j.x||"").length/70),{j:j,i:i,n:js.length})})}
+  else if(o.k=="calendar"&&!isNaN(new Date(S.date)))add("date",3.8);
+  else if(o.k=="events"){var ev=EVS();ev.forEach(function(e,i){add("event",4.6+(e.x?1:0)+(e.v&&e.v.length>40?.6:0),{e:e,i:i,n:ev.length})})}
+  else if(o.k=="gallery"&&RL.gal.length){var per=RL.gal.length>8?2.2:2.6;add("gallery",per*RL.gal.length+.4,{per:per})}});
+ add("close",6.2,{art:1});
+ var t=0;sc.forEach(function(s){s.s=t;t+=s.d;s.o.d=s.d});RL.sc=sc;RL.dur=Math.round(t*10)/10;
+ RL.artA=function(tt){var m=0;sc.forEach(function(s){if(s.o.art)m=Math.max(m,rlA(tt,s.s,s.s+.8,s.s+s.d-.4,s.s+s.d+.6))});return m}}
+function rlLoadMore(cb){var left=1,fin=function(){if(--left==0)cb()},get=function(u,w,kind){var im=new Image();left++;im.crossOrigin="anonymous";im.onload=fin;im.onerror=function(){im.bad=1;fin()};im.src=ou(u,w,kind);return im};
+ RL.gal=[];RL.imgMap={};S.ph.slice(0,12).forEach(function(u){var im=get(u,900,isVid(u)?"poster":"");RL.gal.push(im)});
+ EVS().forEach(function(e){if(e.im&&!RL.imgMap[e.im])RL.imgMap[e.im]=get(e.im,900)});
+ fin()}
+var _rlLoad16=rlLoad;rlLoad=function(cb){_rlLoad16(function(){rlLoadMore(function(){RL.gal=RL.gal.filter(function(im){return!im.bad&&im.naturalWidth});Object.keys(RL.imgMap).forEach(function(k){var im=RL.imgMap[k];if(im.bad||!im.naturalWidth)delete RL.imgMap[k]});rlBuild();cb()})})};
+rlDraw=function(t){var cv=$("reelc"),c=cv.getContext("2d"),W=cv.width,H=cv.height,P=RL.pal,L=T[S.lang],bf=function(sz,w){return(w||"400")+" "+sz+"px "+RL.bf},mw=W-110;
+ var g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,P.bg1);g.addColorStop(1,P.bg2);c.fillStyle=g;c.fillRect(0,0,W,H);
+ var rg=c.createRadialGradient(W/2,H*.42,10,W/2,H*.42,W*.85);rg.addColorStop(0,P.light?"rgba(255,255,255,.55)":"rgba(224,182,87,.24)");rg.addColorStop(1,"rgba(0,0,0,0)");c.fillStyle=rg;c.fillRect(0,0,W,H);
+ rlBack(c,W,H,t,P);rlPart(c,W,H,t,P);rlFrame(c,W,H,t,P);
+ (RL.sc||[]).forEach(function(s,i){var last=i==RL.sc.length-1,A=rlA(t,s.s,s.s+.55,s.s+s.d-(last?-2:.45),s.s+s.d+(last?3:.05));if(A>0)RLS[s.k](c,t-s.s,A,s.o,W,H,P,L,bf,mw)})};
+/* ---------- recording: MP4 where possible, screen kept awake, song captured, share or save ---------- */
+function rlFmt(s){s=Math.max(0,Math.round(s));return Math.floor(s/60)+":"+(s%60<10?"0":"")+s%60}
+rlRecord=function(){var cv=$("reelc");if(!cv.captureStream||!window.MediaRecorder){toast("This browser can’t record video. Please use Chrome on Android or a computer, or Safari on iPhone.");return}
+ var mime=rlMime(),stream=cv.captureStream(30),dest=null,recA=null,chunks=[],lock=null,broke=false,tk=0,t0=0;
+ try{var a=ctx();dest=a.createMediaStreamDestination();master.connect(dest);
+  if(S.pk=="custom"&&S.au){recA=new Audio();recA.crossOrigin="anonymous";recA.loop=true;recA.src=auSrc(S.au);a.createMediaElementSource(recA).connect(dest);recA.play().catch(function(){})}
+  dest.stream.getAudioTracks().forEach(function(t){stream.addTrack(t)})}catch(e){}
+ var rec=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:2500000}:{videoBitsPerSecond:2500000});
+ var hid=function(){if(document.hidden&&rec.state=="recording"){broke=true;rec.stop()}};
+ document.addEventListener("visibilitychange",hid);
+ try{navigator.wakeLock&&navigator.wakeLock.request("screen").then(function(l){lock=l}).catch(function(){})}catch(e){}
+ rec.ondataavailable=function(e){if(e.data&&e.data.size)chunks.push(e.data)};
+ rec.onstop=function(){clearInterval(tk);document.removeEventListener("visibilitychange",hid);try{lock&&lock.release()}catch(e){}if(recA){recA.pause();recA=null}if(dest)try{master.disconnect(dest)}catch(e){}prev=false;stopMusic();$("rdl").disabled=false;
+  if(broke){rlStatus("Recording stopped because the screen was switched or locked. Keep this screen open until it finishes, then try again.");rlPlay(false);return}
+  var type=(rec.mimeType||mime||"video/webm").split(";")[0],ext=type.indexOf("mp4")>=0?"mp4":"webm",name=(slug(S.b+"-weds-"+S.g)||"invite")+"-video."+ext,blob=new Blob(chunks,{type:type}),file=null,u=URL.createObjectURL(blob);
+  try{file=new File([blob],name,{type:type})}catch(e){}
+  var canShare=file&&navigator.canShare&&navigator.canShare({files:[file]});
+  $("rls").innerHTML='Your video is ready ('+(blob.size/1048576).toFixed(1)+' MB, '+rlFmt(RL.dur)+')'+(ext=="webm"?'. This browser saves WebM; for WhatsApp, record on a phone or in Chrome.':"")+'<span class="rlx">'+(canShare?'<button type="button" class="p" id="rlsh">Share video</button>':"")+'<a class="btn" id="rlsv" href="'+u+'" download="'+esc(name)+'">Save video</a></span>';
+  if(canShare)$("rlsh").onclick=function(){navigator.share({files:[file],title:S.b+" & "+S.g,text:"https://"+LINK()}).catch(function(){})};
+  rlPlay(false)};
+ $("rdl").disabled=true;prev=true;restartMusic();rlPlay(false);rec.start(1000);t0=performance.now();
+ var left=function(){return RL.dur+1.2-(performance.now()-t0)/1000};rlStatus("Recording… keep this screen open ("+rlFmt(left())+" left)");
+ tk=setInterval(function(){if(rec.state!="recording")return;var l=left();if(l<=0){rec.stop();return}rlStatus("Recording… keep this screen open ("+rlFmt(l)+" left)")},500)};
 </script></body></html>

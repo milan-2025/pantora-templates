@@ -86,6 +86,26 @@ function mediaOk(u: unknown) {
   return Boolean(cloud && u.startsWith(`https://res.cloudinary.com/${cloud}/`));
 }
 
+/** A Google Maps link the couple pasted for an event (share links and full map URLs only). */
+export const mapsOk = (u: unknown): u is string =>
+  typeof u === "string" && u.length <= 500 && /^https:\/\/(maps\.app\.goo\.gl\/|goo\.gl\/maps\/|(www\.)?google\.[a-z.]{2,8}\/maps|maps\.google\.[a-z.]{2,8}\/)/i.test(u);
+
+/** The link-preview image: one of our own Cloudinary images. */
+const cloudImageOk = (u: unknown): u is string => {
+  const cloud = process.env.CLOUDINARY_URL?.split("@")[1]?.trim();
+  return typeof u === "string" && u.length <= 600 && Boolean(cloud) && u.startsWith(`https://res.cloudinary.com/${cloud}/image/upload/`);
+};
+
+/**
+ * Image for link previews (WhatsApp, Facebook…): the couple's chosen image, else their first photo, cropped by
+ * Cloudinary to the 1200×630 shape those apps expect. Null means use the site's default.
+ */
+export function ogImage(st: InviteState): string | null {
+  const ph = (Array.isArray(st.ph) ? st.ph : []) as unknown[];
+  const pick = [st.og, ...ph].find(cloudImageOk);
+  return pick ? pick.replace("/image/upload/", "/image/upload/c_fill,g_auto,w_1200,h_630,q_auto:good,f_jpg/") : null;
+}
+
 /** An uploaded song: only our own Cloudinary audio (stored under video/upload). */
 function audioOk(u: unknown) {
   if (typeof u !== "string" || u.length > 600) return false;
@@ -100,6 +120,17 @@ export function cleanState(input: unknown): InviteState | null {
   for (const k of ["paid", "plan", "fin", "code"]) delete o[k];
   if (!audioOk(o.au)) delete o.au;
   if (Array.isArray(o.ph)) o.ph = o.ph.filter(mediaOk).slice(0, 14);
+  if (o.og !== undefined && !cloudImageOk(o.og)) delete o.og;
+  // Events: photo must be our own upload, map link must be Google Maps, icon is a short key.
+  if (Array.isArray(o.ev)) {
+    o.ev = (o.ev as Record<string, unknown>[]).slice(0, 30).map((raw) => {
+      const e = { ...raw };
+      if (e.im !== undefined && !mediaOk(e.im)) delete e.im;
+      if (e.mp !== undefined && !mapsOk(e.mp)) delete e.mp;
+      if (e.ic !== undefined && !(typeof e.ic === "string" && /^[a-z]{2,12}$/.test(e.ic))) delete e.ic;
+      return e;
+    });
+  }
   if (Array.isArray(o.gu)) {
     o.gu = (o.gu as Record<string, unknown>[]).slice(0, 600).map((g) => ({
       n: str(g.n, 80),
