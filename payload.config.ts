@@ -24,6 +24,7 @@ import { PlannerHistory } from "./collections/PlannerHistory";
 import { PlannerLogins } from "./collections/PlannerLogins";
 import { SiteSettings } from "./globals/SiteSettings";
 import { InvitePlans } from "./globals/InvitePlans";
+import { PlannerLanding } from "./globals/PlannerLanding";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -77,7 +78,7 @@ export default buildConfig({
     },
   },
   collections: [Products, Orders, Invites, InviteRsvps, Planners, PlannerPlans, PlannerHistory, PlannerLogins, Affiliates, Pages, Posts, Media, ProductFiles, ContactSubmissions, Users],
-  globals: [SiteSettings, InvitePlans],
+  globals: [SiteSettings, InvitePlans, PlannerLanding],
   editor: lexicalEditor(),
   // Admin emails (e.g. "forgot password") go through Brevo, like the rest of the site's email.
   email: brevoAdapter,

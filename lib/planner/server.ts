@@ -197,7 +197,7 @@ export async function listMine(payload: Payload, email: string) {
 }
 
 /** A new planner on the free trial. One per email: more weddings need a word with us (or the admin). */
-export async function createPlanner(payload: Payload, email: string, state: State) {
+export async function createPlanner(payload: Payload, email: string, state: State, source = "") {
   const owned = await payload.count({ collection: "planners", where: { ownerEmail: { equals: email } }, overrideAccess: true });
   if (owned.totalDocs > 0) throw new PlannerError("You already have a planner. Open it from the list.", 409);
   const plan = await trialPlan(payload);
@@ -206,6 +206,7 @@ export async function createPlanner(payload: Payload, email: string, state: Stat
     data: {
       ownerEmail: email, plan: plan.id, status: "trial", expiresAt: new Date(Date.now() + plan.durationDays * 864e5).toISOString(),
       state, rev: 0, names: namesOf(state), guestCount: counts(state).guests, lastActivityAt: new Date().toISOString(),
+      ...(source ? { source } : {}),
     } as never,
     overrideAccess: true,
   });
@@ -347,6 +348,14 @@ export async function removeCollaborator(payload: Payload, doc: Doc, rawEmail: u
 
 export async function quotePlan(payload: Payload, plan: PlanView, coupon?: string) {
   if (!coupon) return { total: plan.price, discount: 0 };
+  // Planner-only fixed ₹ codes (Admin → Planner landing page & promo codes) come first.
+  const g = (await payload.findGlobal({ slug: "planner-landing" as never, depth: 0, overrideAccess: true }).catch(() => null)) as Doc | null;
+  const own = (g?.promoCodes ?? []).find((c: Doc) => String(c.code ?? "").toUpperCase() === coupon.toUpperCase());
+  if (own) {
+    if (!own.active || (own.validUntil && new Date(own.validUntil).getTime() < Date.now())) return { total: plan.price, discount: 0, error: "That code has expired" };
+    const total = Math.max(1, plan.price - Math.max(0, Math.round(Number(own.amountOff) || 0))); // Razorpay needs at least ₹1
+    return { total, discount: plan.price - total };
+  }
   const affiliate = await findAffiliate(payload, coupon);
   if (!affiliate) return { total: plan.price, discount: 0, error: "That code isn’t valid" };
   return applyPromo(plan.price, affiliate);

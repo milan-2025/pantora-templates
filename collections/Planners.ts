@@ -86,6 +86,7 @@ export const Planners: CollectionConfig = {
             { name: "promoCode", type: "text", admin: { width: "33%", readOnly: true } },
           ],
         },
+        { name: "source", type: "text", label: "Came from", admin: { readOnly: true, description: "The ad or link that brought them (utm_source / campaign / content), when known." } },
         { name: "adminNote", type: "textarea", label: "Admin note", admin: { description: "Only you see this. E.g. “Paid ₹1,499 by UPI”." } },
       ],
     },

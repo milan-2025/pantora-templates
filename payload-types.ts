@@ -116,10 +116,12 @@ export interface Config {
   globals: {
     'site-settings': SiteSetting;
     'invite-plans': InvitePlan;
+    'planner-landing': PlannerLanding;
   };
   globalsSelect: {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     'invite-plans': InvitePlansSelect<false> | InvitePlansSelect<true>;
+    'planner-landing': PlannerLandingSelect<false> | PlannerLandingSelect<true>;
   };
   locale: null;
   widgets: {
@@ -843,6 +845,10 @@ export interface Planner {
   paidAt?: string | null;
   amount?: number | null;
   promoCode?: string | null;
+  /**
+   * The ad or link that brought them (utm_source / campaign / content), when known.
+   */
+  source?: string | null;
   /**
    * Only you see this. E.g. “Paid ₹1,499 by UPI”.
    */
@@ -1752,6 +1758,7 @@ export interface PlannersSelect<T extends boolean = true> {
   paidAt?: T;
   amount?: T;
   promoCode?: T;
+  source?: T;
   adminNote?: T;
   collaborators?:
     | T
@@ -2258,6 +2265,59 @@ export interface InvitePlan {
   createdAt?: string | null;
 }
 /**
+ * The page at pandoratemplates.com/planner that visitors and ad clicks see before signing in. Prices come from Planner plans. Changes show within a minute.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "planner-landing".
+ */
+export interface PlannerLanding {
+  id: string;
+  /**
+   * Numbers only, from Meta Events Manager. When set, the page reports PageView, Lead (sign-in code requested), StartTrial (planner created) and Purchase (plan paid). Leave empty to turn the Pixel off.
+   */
+  metaPixelId?: string | null;
+  /**
+   * With country code, digits only. Leave empty to hide the button.
+   */
+  whatsappNumber?: string | null;
+  whatsappMessage?: string | null;
+  /**
+   * Shown above the prices. Leave empty to hide.
+   */
+  offerText?: string | null;
+  /**
+   * Fixed ₹ discounts that work only on planner upgrades (not the shop or invites). Customers type the code when they upgrade. Shop/affiliate codes still work too.
+   */
+  promoCodes?:
+    | {
+        code: string;
+        amountOff: number;
+        validUntil?: string | null;
+        active?: boolean | null;
+        note?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Only rows ticked “Show on page” appear, and the section is hidden while none are ticked. The rows filled in for you are samples showing the format: replace them with real customer words (with their permission) before ticking.
+   */
+  testimonials?:
+    | {
+        name: string;
+        detail?: string | null;
+        show?: boolean | null;
+        /**
+         * Keep it to 1–3 sentences.
+         */
+        quote: string;
+        id?: string | null;
+      }[]
+    | null;
+  seededAt?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings_select".
  */
@@ -2320,6 +2380,39 @@ export interface InvitePlansSelect<T extends boolean = true> {
             };
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "planner-landing_select".
+ */
+export interface PlannerLandingSelect<T extends boolean = true> {
+  metaPixelId?: T;
+  whatsappNumber?: T;
+  whatsappMessage?: T;
+  offerText?: T;
+  promoCodes?:
+    | T
+    | {
+        code?: T;
+        amountOff?: T;
+        validUntil?: T;
+        active?: T;
+        note?: T;
+        id?: T;
+      };
+  testimonials?:
+    | T
+    | {
+        name?: T;
+        detail?: T;
+        show?: T;
+        quote?: T;
+        id?: T;
+      };
+  seededAt?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
