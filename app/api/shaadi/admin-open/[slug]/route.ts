@@ -17,7 +17,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
   const to = new URL(req.url).searchParams.get("to");
   let location = `/i/${encodeURIComponent(invite.slug)}`;
   if ((to === "edit" || to === "preview") && invite.editToken) {
-    location = `/shaadi?edit=${encodeURIComponent(invite.slug)}.${invite.editToken}${to === "preview" ? "&pv=1" : ""}`;
+    location = `/i/${encodeURIComponent(invite.slug)}/edit#k=${invite.editToken}${to === "preview" ? "&pv=1" : ""}`;
   }
   // Relative redirect, so it works behind Hostinger's proxy whatever host Next sees.
   return new Response(null, {
