@@ -41,8 +41,11 @@ Tips:
 
 The upgrade to the Excel planner: the same guest list, budget, vendors, payments, stay, transport, rituals, shagun and the rest, saved to the cloud, shared with family, on any phone.
 
+### Landing page
+First-time visitors to `/planner` (and every ad click) see a landing page: hero, features with real screenshots, family sharing, pricing (read live from **Planner plans**), FAQ and a sticky "Start free trial" button on phones. Signed-in customers skip it and go straight to their planner. Links in emails can use `/planner#signin` to open sign-in directly. Code: `planner-app/landing.js` and `landing.css`; screenshots in `public/planner/lp/`.
+
 ### How customers use it
-1. They open **pandoratemplates.com/planner**, type their email and get a 6-digit code (sent through Brevo, no passwords).
+1. They open **pandoratemplates.com/planner**, tap "Start free trial", type their email and get a 6-digit code (sent through Brevo, no passwords).
 2. They start a **free trial**: an empty plan, the sample data, their filled-in Pandora Excel, or what they already typed on that device.
 3. Everything saves automatically. Other devices and family members see changes within a few seconds; edits to different rows never overwrite each other.
 4. **Upgrade** opens Razorpay from inside the planner. The plan switches as soon as payment is confirmed (also via the webhook).
@@ -65,6 +68,10 @@ When a trial or plan ends, the planner turns **read-only**: nothing is deleted, 
 | Pause a customer | Set **Status** to Suspended (read-only). |
 | See a customer's planner (support) | **Customer planners → View** (opens it read-only for 2 hours). |
 | See who changed what | **Planner activity**. |
+| Add the Meta Pixel | **Planner landing page → Meta Pixel ID**. Sends PageView, Lead (code requested), StartTrial (planner created), Purchase (plan paid) and Contact (WhatsApp tap). Empty = off. |
+| Change the WhatsApp button | **Planner landing page → WhatsApp number** (country code, digits only). Empty hides it. |
+| Show testimonials | **Planner landing page → Testimonials**: replace a sample with a real customer's words and tick **Show on page**. The section is hidden while none are ticked. |
+| See which ad brought a customer | **Customer planners → (customer) → Came from** (utm_source / campaign / content of their first visit). |
 
 The starting plans (Free trial 14 days/30 guests, Family ₹1,499, Grand ₹2,999) are created automatically the first time the planner is opened; edit them freely.
 

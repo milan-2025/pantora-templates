@@ -175,8 +175,8 @@ function gate(html) {
 }
 function ungate() { document.body.classList.remove('gated'); $('#gate').style.display = 'none'; $('#gate').innerHTML = ''; }
 
-function signInScreen(msg) {
-  const g = gate('<h1>Plan your wedding,<br>together.</h1><p class="note">Guests, budget, vendors, stay, rituals and more, saved to the cloud and shared with family. Start with a free trial.</p>' + (msg ? '<div class="banner">' + esc(msg) + '</div>' : '') +
+function signInScreen(msg, fromLanding) {
+  const g = gate((fromLanding ? '<button class="gx" data-gx aria-label="Close">×</button>' : '') + '<h1>Plan your wedding,<br>together.</h1><p class="note">Guests, budget, vendors, stay, rituals and more, saved to the cloud and shared with family. Start with a free trial.</p>' + (msg ? '<div class="banner">' + esc(msg) + '</div>' : '') +
     '<form data-f1><label class="field">Your email<input class="inp" type="email" name="email" autocomplete="email" required placeholder="you@example.com"></label><button class="btn pri wide">Send me a sign-in code</button></form>' +
     '<form data-f2 style="display:none"><p class="note">We sent a 6-digit code to <b data-em></b>. It may take a minute; check spam too.</p><label class="field">Code<input class="inp code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required placeholder="••••••"></label><button class="btn pri wide">Sign in</button><button type="button" class="btn ghost wide" data-back>Use a different email</button></form>' +
     '<div class="or"><span>or</span></div><button class="btn wide" data-demo>Explore the sample planner first</button><p class="note" style="font-size:11.5px;margin-top:10px">The sample stays on this device. No sign-up needed.</p>');
@@ -184,7 +184,7 @@ function signInScreen(msg) {
   let email = '';
   f1.onsubmit = async e => {
     e.preventDefault(); const b = $('button', f1); b.disabled = true; b.textContent = 'Sending…';
-    try { const r = await api('/auth/start', { method: 'POST', body: { email: f1.email.value } }); email = r.email; $('[data-em]', g).textContent = email; f1.style.display = 'none'; f2.style.display = ''; if (r.devCode) f2.code.value = r.devCode; f2.code.focus(); }
+    try { const r = await api('/auth/start', { method: 'POST', body: { email: f1.email.value } }); email = r.email; track('Lead'); $('[data-em]', g).textContent = email; f1.style.display = 'none'; f2.style.display = ''; if (r.devCode) f2.code.value = r.devCode; f2.code.focus(); }
     catch (err) { toast(err.message); } finally { b.disabled = false; b.textContent = 'Send me a sign-in code'; }
   };
   f2.onsubmit = async e => {
@@ -193,6 +193,8 @@ function signInScreen(msg) {
     catch (err) { toast(err.message); } finally { b.disabled = false; }
   };
   $('[data-back]', g).onclick = () => { f2.style.display = 'none'; f1.style.display = ''; };
+  const gx = $('[data-gx]', g); if (gx) gx.onclick = () => ungate();
+  if (fromLanding) setTimeout(() => { try { f1.email.focus(); } catch (e) { /* ignore */ } }, 50);
   $('[data-demo]', g).onclick = () => startLocal();
 }
 
@@ -214,10 +216,12 @@ function trialScreen() {
     '<button class="pitem" data-s="demo"><b>🎁 Start with the sample data</b><small>Ananya &amp; Arjun’s example, to edit into your own</small></button></div><button class="btn ghost wide" data-out>Sign out</button>');
   const create = async st => {
     $$('.pitem', g).forEach(b => { b.style.opacity = .5; b.style.pointerEvents = 'none'; });
-    try { const r = await api('/planners', { method: 'POST', body: { state: stripLocal(st) } }); await openPlanner(r.meta.id, r); }
+    try { const r = await api('/planners', { method: 'POST', body: { state: stripLocal(st), source: lpSource() } }); track('StartTrial', { value: 0, currency: 'INR' }); await openPlanner(r.meta.id, r); }
     catch (err) { toast(err.message); $$('.pitem', g).forEach(b => { b.style.opacity = ''; b.style.pointerEvents = ''; }); if (err.data && err.data.reason === 'limit') toast(err.message); }
   };
-  $$('[data-s]', g).forEach(b => b.onclick = () => { const s = b.dataset.s; const st = s === 'fresh' ? freshState() : s === 'demo' ? demoState() : normalize(local); st.demo = false; create(st); });
+  $$('[data-s]', g).forEach(b => b.onclick = () => { const s = b.dataset.s; const st = s === 'fresh' ? freshState() : s === 'demo' ? demoState() : normalize(local); st.demo = false;
+    const lpDate = store.get('pp_lp_date'); if (s === 'fresh' && lpDate && st.settings && !st.settings.date) st.settings.date = lpDate; // date picked on the landing page
+    create(st); });
   $('[data-file]', g).onchange = async e => { const f = e.target.files[0]; if (!f) return; try { const st = /\.json$/i.test(f.name) ? normalize(JSON.parse(await f.text())) : importWorkbook(await f.arrayBuffer()); create(st); } catch (err) { toast('Could not read that file: ' + err.message); } };
   $('[data-out]', g).onclick = () => signOut();
 }
@@ -234,7 +238,7 @@ async function openPlanner(id, preload) {
     else if (r.state) { CLOUD.base = stripLocal(normalize(copy(r.state))); S = normalize(copy(r.state)); }
     else { CLOUD.base = null; S = freshState(); }
     S.demo = false; CLOUD.rev = r.rev || 0; D = null;
-    ungate(); renderAll(); setSync(CLOUD.readOnly ? 'ro' : 'saved'); startPolling();
+    hideLanding(); ungate(); renderAll(); setSync(CLOUD.readOnly ? 'ro' : 'saved'); startPolling();
     if (!CLOUD.readOnly && diffOps(CLOUD.base, stripLocal(S)).length) schedulePush();
   } catch (e) {
     if (e.status === 401) return signOut(true);
@@ -261,7 +265,7 @@ async function startCloud(noAuto) {
 
 function startLocal(msg) {
   clearInterval(CLOUD.pollT); CLOUD.on = false; CLOUD.readOnly = false; document.body.classList.remove('ro');
-  S = load(); D = null; ungate(); renderAll(); setSync('local');
+  S = load(); D = null; hideLanding(); ungate(); renderAll(); setSync('local');
   if (msg) toast(msg);
 }
 
@@ -280,7 +284,9 @@ async function cloudBoot() {
   if (token()) return startCloud();
   // Server reachable? If not (offline / preview), just open the local planner.
   try { await api('/plans'); } catch (e) { if (e.status === 0 || e.status === 404) return startLocal(); }
-  signInScreen();
+  // First visit: the landing page. Links in emails can use /planner#signin to go straight to sign-in.
+  if (h === '#signin') { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* ignore */ } return signInScreen(); }
+  landingScreen();
 }
 
 /* ---------- upgrade ---------- */
@@ -314,7 +320,7 @@ async function upgradeModal(reason) {
         });
       }
       await api('/planners/' + CLOUD.id + '/verify', { method: 'POST', body: res });
-      m.remove(); await poll(true); renderAll(); toast('🎉 Your plan is active. Thank you!');
+      m.remove(); track('Purchase', { value: o.total || 0, currency: 'INR' }); await poll(true); renderAll(); toast('🎉 Your plan is active. Thank you!');
     } catch (e) { toast(e.message); b.disabled = false; b.textContent = label; }
   });
 }

@@ -4,9 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#3B1F4A">
-<meta name="robots" content="noindex">
-<title>Pandora Indian Wedding Planner · Pandora Templates</title>
-<meta name="description" content="Plan your Indian wedding online: guests and RSVPs, budget, vendors, payments, stay, transport, rituals and shagun, shared with your family.">
+<title>Online Indian Wedding Planner: guests, budget, vendors & shagun · Pandora</title>
+<meta name="description" content="Plan your Indian wedding online, from Roka to Vidaai: guests and RSVPs, budget, vendors, payments, stay, transport and shagun, shared with your family. Start a free trial.">
+<link rel="canonical" href="https://pandoratemplates.com/planner">
+<meta property="og:type" content="website"><meta property="og:url" content="https://pandoratemplates.com/planner">
+<meta property="og:title" content="Shaadi ki poori planning, ek jagah · Pandora Wedding Planner">
+<meta property="og:description" content="Guests, functions, budget, vendors, payments and shagun, shared with your family. Free trial, no card needed.">
+<meta property="og:image" content="https://pandoratemplates.com/planner/lp/og.jpg"><meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
@@ -289,6 +293,207 @@ table.g th.cu{background:var(--plum2)}
   .page-h p{font-size:12.5px}
   .grid.g4{gap:8px}
 }
+
+/* ===== landing page (/planner before sign-in) ===== */
+#lp{display:none}
+.lp-on #lp{display:block}
+.lp-on .app,.lp-on .top{display:none}
+#lp{--lpw:1160px;color:var(--ink);font-size:16px;line-height:1.6;overflow-x:hidden}
+#lp h1,#lp h2,#lp h3{color:var(--plum)}
+#lp em{font-style:normal;color:var(--coral)}
+.lp-w{max-width:var(--lpw);margin:0 auto;padding:0 22px}
+.lp-narrow{max-width:760px}
+#lp .c{text-align:center}
+#lp .sp{flex:1}
+
+/* buttons */
+.lp-btn{display:inline-block;text-align:center;border:0;border-radius:999px;background:var(--marigold);color:var(--plum);font-weight:600;padding:12px 22px;cursor:pointer;text-decoration:none;box-shadow:0 6px 18px rgba(242,169,59,.35);transition:transform .15s,box-shadow .15s;font-size:15px}
+.lp-btn:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(242,169,59,.45)}
+.lp-btn.big{padding:15px 28px;font-size:16.5px}
+.lp-btn.sm{padding:8px 16px;font-size:14px;box-shadow:none}
+.lp-btn.ghost{background:transparent;color:var(--plum);box-shadow:inset 0 0 0 2px var(--plum)}
+.lp-btn.ghost:hover{background:var(--plum-soft)}
+.lp-btn.wide{width:100%}
+.lp-link{background:none;border:0;color:var(--plum);font-weight:600;cursor:pointer;padding:8px 10px;font-size:14.5px}
+.lp-link:hover{text-decoration:underline}
+
+/* nav */
+.lp-nav{position:sticky;top:0;z-index:20;background:rgba(251,245,234,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.lp-nav .lp-w{display:flex;align-items:center;gap:8px;height:64px}
+.lp-logo{display:flex;align-items:center;gap:10px;color:var(--plum);text-decoration:none}
+.lp-logo b{font-family:var(--serif);font-weight:400;font-size:21px;display:block;line-height:1}
+.lp-logo small{letter-spacing:.32em;font-size:8.5px;display:block}
+.lp-logo svg rect:first-child{fill:#3B1F4A}.lp-logo svg text{fill:#FBF5EA}
+
+/* hero */
+.lp-hero{background:radial-gradient(1200px 500px at 85% -10%,rgba(242,169,59,.28),transparent 60%),radial-gradient(800px 400px at -10% 110%,rgba(224,103,90,.14),transparent 60%),var(--cream);padding:56px 0 64px}
+.lp-hero-in{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:40px;align-items:center}
+.lp-eyebrow{text-transform:uppercase;letter-spacing:.16em;font-size:12.5px;font-weight:600;color:var(--teal);margin:0 0 10px}
+.lp-hero h1{font-size:clamp(38px,5.4vw,64px);line-height:1.06;margin-bottom:18px}
+.lp-hero h1 em{display:block}
+.lp-lead{font-size:clamp(16.5px,1.6vw,19px);color:#4b4350;max-width:560px;margin:0 0 26px}
+.lp-ctas{display:flex;flex-wrap:wrap;gap:12px}
+.lp-micro{font-size:13px;color:var(--muted);margin:14px 0 0}
+.lp-hero-vis{position:relative;display:flex;justify-content:center;padding:10px 0}
+.lp-phone{width:min(300px,78vw);border-radius:38px;padding:9px;background:#1e1424;box-shadow:0 30px 70px rgba(59,31,74,.35),0 0 0 1px rgba(0,0,0,.08);position:relative}
+.lp-phone:before{content:"";position:absolute;top:16px;left:50%;transform:translateX(-50%);width:84px;height:20px;border-radius:12px;background:#1e1424;z-index:2}
+.lp-phone img{display:block;width:100%;height:auto;aspect-ratio:300/649;border-radius:30px;background:var(--cream);object-fit:cover;object-position:top}
+.lp-hero .lp-phone{transform:rotate(2deg)}
+.lp-float{position:absolute;background:#fff;border-radius:14px;padding:10px 14px;font-size:13.5px;box-shadow:0 12px 30px rgba(59,31,74,.18);white-space:nowrap;animation:lpbob 5s ease-in-out infinite}
+.lp-float b{color:var(--plum);font-family:var(--serif);font-weight:400;font-size:18px;margin-right:4px}
+.lp-float.f1{left:0;top:18%}
+.lp-float.f2{right:0;top:48%;animation-delay:-1.6s}
+.lp-float.f3{left:4%;bottom:10%;animation-delay:-3.2s}
+@keyframes lpbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@media (prefers-reduced-motion:reduce){.lp-float{animation:none}}
+
+/* sections */
+.lp-sec{padding:76px 0}
+.lp-sec h2,.lp-final h2{font-size:clamp(30px,3.6vw,44px);line-height:1.12;margin-bottom:14px}
+.lp-sub{color:var(--muted);max-width:620px;margin:0 auto 34px}
+.lp-g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.lp-ticks{list-style:none;padding:0;margin:14px 0}
+.lp-ticks li{position:relative;padding-left:30px;margin:9px 0}
+.lp-ticks li:before{content:"✓";position:absolute;left:0;top:1px;width:20px;height:20px;border-radius:50%;background:var(--teal-soft);color:var(--teal);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+/* problem */
+.lp-prob{background:#fff;border-block:1px solid var(--line)}
+.lp-prob h2{text-align:center;margin-bottom:28px}
+.lp-pcard{background:var(--cream);border-radius:20px;padding:24px;border:1px solid var(--line)}
+.lp-pcard span{font-size:30px;display:block;margin-bottom:8px}
+.lp-pcard b{display:block;font-size:17px;color:var(--plum);line-height:1.35}
+.lp-pcard p{margin:6px 0 0;color:var(--muted);font-size:14.5px}
+.lp-sum{text-align:center;font-family:var(--serif);font-size:clamp(20px,2.2vw,26px);color:var(--plum);margin:34px auto 0;max-width:640px;line-height:1.3}
+
+/* features */
+.lp-tabs{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:26px 0 34px}
+.lp-tabs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 16px;cursor:pointer;font-weight:500;font-size:14px;color:var(--plum)}
+.lp-tabs button[aria-selected=true]{background:var(--plum);color:var(--cream);border-color:var(--plum)}
+.lp-feat{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:48px;align-items:center;max-width:920px;margin:0 auto}
+.lp-feat-vis{display:flex;justify-content:center}
+.lp-feat-txt h3{font-size:34px;margin-bottom:4px}
+.lp-hing{font-family:var(--serif);font-size:21px;color:var(--coral);margin:0 0 6px}
+.lp-feat-txt .lp-link{padding-left:0;margin-top:6px}
+.lp-also{max-width:820px;margin:40px auto 0;text-align:center;background:var(--gold-soft);border-radius:16px;padding:16px 20px;font-size:14.5px;color:#5b4f3a}
+.lp-also b{color:var(--plum)}
+
+/* family */
+.lp-fam{background:var(--plum);color:var(--cream);position:relative;overflow:hidden}
+.lp-fam:before{content:"";position:absolute;right:-160px;top:-160px;width:460px;height:460px;border-radius:50%;background:var(--marigold);opacity:.12}
+.lp-fam h2{color:var(--cream)!important}
+.lp-fam em{color:var(--marigold)!important}
+.lp-fam .lp-eyebrow{color:var(--marigold)}
+.lp-fam p{color:#e6dcec}
+.lp-fam .lp-ticks li:before{background:rgba(242,169,59,.2);color:var(--marigold)}
+.lp-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;align-items:center;position:relative}
+.lp-famcard{background:var(--cream);border-radius:22px;padding:10px 18px;box-shadow:0 24px 60px rgba(0,0,0,.3);color:var(--ink)}
+.lp-act{display:flex;gap:12px;align-items:flex-start;padding:13px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.lp-act:last-child{border:0}
+.lp-act i{flex:none;width:36px;height:36px;border-radius:50%;color:#fff;font-style:normal;font-weight:600;display:flex;align-items:center;justify-content:center}
+.lp-act b{color:var(--plum)}
+.lp-act small{display:block;color:var(--muted);font-size:12.5px}
+
+/* steps */
+.lp-steps{margin-top:30px}
+.lp-steps>div{background:#fff;border:1px solid var(--line);border-radius:20px;padding:26px}
+.lp-steps span{width:40px;height:40px;border-radius:50%;background:var(--marigold);color:var(--plum);font-family:var(--serif);font-size:22px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.lp-steps b{display:block;color:var(--plum);font-size:17px}
+.lp-steps p{margin:6px 0 0;color:var(--muted);font-size:14.5px}
+
+/* devices */
+.lp-dev{background:#fff;border-block:1px solid var(--line)}
+.lp-browser{max-width:980px;margin:0 auto;border-radius:16px;overflow:hidden;box-shadow:0 30px 70px rgba(59,31,74,.22);border:1px solid var(--line);background:#fff}
+.lp-bbar{display:flex;align-items:center;gap:6px;padding:10px 14px;background:var(--grey);border-bottom:1px solid var(--line)}
+.lp-bbar i{width:11px;height:11px;border-radius:50%;background:#e2d6c2}
+.lp-bbar span{margin-left:10px;background:#fff;border-radius:8px;padding:3px 12px;font-size:12px;color:var(--muted)}
+.lp-browser img{display:block;width:100%;height:auto;aspect-ratio:16/10}
+.lp-excel{display:flex;gap:16px;align-items:flex-start;max-width:760px;margin:40px auto 0;background:var(--teal-soft);border-radius:18px;padding:20px 22px}
+.lp-excel span{font-size:30px}
+.lp-excel b{color:var(--plum);font-size:17px}
+.lp-excel p{margin:4px 0 0;font-size:14.5px;color:#36524f}
+
+/* pricing */
+.lp-plans{display:flex;flex-wrap:wrap;justify-content:center;gap:18px;align-items:stretch}
+.lp-plan{flex:1 1 260px;max-width:340px;background:#fff;border:1px solid var(--line);border-radius:22px;padding:26px 24px;position:relative;display:flex;flex-direction:column}
+.lp-plan.hot{border:2px solid var(--marigold);box-shadow:0 20px 50px rgba(242,169,59,.22)}
+.lp-plan h3{font-size:24px}
+.lp-pp{font-family:var(--serif);font-size:40px;color:var(--plum);line-height:1.1;margin-top:6px}
+.lp-pn{color:var(--muted);font-size:13.5px}
+.lp-plan .lp-ticks{flex:1;font-size:14.5px}
+.lp-badge{position:absolute;top:-13px;left:24px;background:var(--marigold);color:var(--plum);font-size:12px;font-weight:600;padding:4px 12px;border-radius:999px}
+.lp-empty{color:var(--muted);text-align:center;padding:30px}
+
+/* testimonials */
+.lp-tst{background:#fff;border-block:1px solid var(--line)}
+.lp-quotes{margin-top:28px}
+.lp-q{margin:0;background:var(--cream);border-radius:20px;padding:24px;border:1px solid var(--line)}
+.lp-q blockquote{margin:0 0 14px;font-size:15.5px}
+.lp-q b{color:var(--plum);display:block}
+.lp-q small{color:var(--muted)}
+
+/* faq */
+.lp-faq{margin-top:22px}
+.lp-faq details{background:#fff;border:1px solid var(--line);border-radius:16px;margin:10px 0;padding:0 20px}
+.lp-faq summary{cursor:pointer;padding:16px 0;font-weight:600;color:var(--plum);list-style:none;display:flex;justify-content:space-between;gap:12px}
+.lp-faq summary::-webkit-details-marker{display:none}
+.lp-faq summary:after{content:"+";font-size:22px;line-height:1;color:var(--marigold)}
+.lp-faq details[open] summary:after{content:"–"}
+.lp-faq p{margin:0 0 16px;color:#4b4350}
+
+/* final */
+.lp-final{background:linear-gradient(160deg,var(--plum),var(--plum2));color:var(--cream);padding:76px 0}
+.lp-final h2{color:var(--cream)!important}
+.lp-final p{color:#e6dcec}
+.lp-date{margin:18px auto 22px;max-width:360px}
+.lp-date .inp{width:100%;font-size:17px;padding:12px 14px;border-radius:14px;border:0;text-align:center;color:var(--plum)}
+.lp-left{min-height:26px;margin-top:10px;color:var(--cream)}
+.lp-left b{color:var(--marigold)}
+.lp-final .lp-micro{color:#cdbfd6}
+.lp-foot{padding:26px 0 90px;text-align:center;font-size:13px;color:var(--muted)}
+.lp-foot a{color:var(--plum)}
+
+/* sticky CTA (phones) + WhatsApp */
+.lp-sticky{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:rgba(251,245,234,.95);backdrop-filter:blur(8px);border-top:1px solid var(--line);display:none;transform:translateY(110%);transition:transform .25s}
+.lp-sticky .lp-btn{width:100%}
+.lp-sticky.on{transform:none}
+.lp-wa{position:fixed;right:18px;bottom:18px;z-index:31;width:58px;height:58px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 26px rgba(0,0,0,.25);transition:bottom .25s}
+.lp-wa[hidden]{display:none}
+
+/* close button on the sign-in card when opened from the landing page */
+.gx{position:absolute;top:10px;right:12px;width:36px;height:36px;border-radius:50%;border:0;background:var(--grey);color:var(--plum);font-size:22px;line-height:1;cursor:pointer}
+
+@media (max-width:900px){
+  .lp-hero{padding:34px 0 48px}
+  .lp-hero-in,.lp-split,.lp-feat{grid-template-columns:minmax(0,1fr);gap:34px}
+  .lp-hero-txt{text-align:center}
+  .lp-lead{margin-left:auto;margin-right:auto}
+  .lp-ctas{justify-content:center}
+  .lp-feat-vis{order:2}
+  .lp-feat-txt{max-width:560px;margin:0 auto}
+}
+@media (max-width:760px){
+  #lp{font-size:15.5px}
+  .lp-w{padding:0 18px}
+  .lp-nav .lp-w{height:58px}
+  .lp-sec{padding:56px 0}
+  .lp-g3{grid-template-columns:minmax(0,1fr)}
+  .lp-ctas .lp-btn{width:100%}
+  .lp-micro{font-size:12.5px}
+  .lp-hero .lp-phone{width:min(250px,64vw);transform:none}
+  .lp-hero-vis{max-height:440px;overflow:hidden;padding-top:6px;-webkit-mask-image:linear-gradient(#000 78%,transparent);mask-image:linear-gradient(#000 78%,transparent)}
+  .lp-float{font-size:12px;padding:8px 10px}
+  .lp-float.f3{display:none}
+  .lp-float b{font-size:16px}
+  .lp-float.f1{left:-4px}.lp-float.f2{right:-4px}.lp-float.f3{left:0}
+  .lp-tabs{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;margin:20px -18px 26px;padding:0 18px 4px;scrollbar-width:none}
+  .lp-tabs::-webkit-scrollbar{display:none}
+  .lp-tabs button{flex:none}
+  .lp-feat-txt h3{font-size:28px}
+  .lp-feat .lp-phone{width:min(260px,70vw)}
+  .lp-excel{flex-direction:column;gap:6px}
+  .lp-sticky{display:block}
+  .lp-sticky.on~.lp-wa{bottom:84px}
+}
 </style>
 </head>
 <body>
@@ -305,6 +510,7 @@ table.g th.cu{background:var(--plum2)}
   </aside>
   <main class="main" id="main"></main>
 </div>
+<div id="lp"></div>
 <div id="gate"></div>
 <datalist id="dl-groups"></datalist><datalist id="dl-vendors"></datalist>
 <script src="/planner/xlsx.mini.min.js" defer></script>
@@ -1250,8 +1456,8 @@ function gate(html) {
 }
 function ungate() { document.body.classList.remove('gated'); $('#gate').style.display = 'none'; $('#gate').innerHTML = ''; }
 
-function signInScreen(msg) {
-  const g = gate('<h1>Plan your wedding,<br>together.</h1><p class="note">Guests, budget, vendors, stay, rituals and more, saved to the cloud and shared with family. Start with a free trial.</p>' + (msg ? '<div class="banner">' + esc(msg) + '</div>' : '') +
+function signInScreen(msg, fromLanding) {
+  const g = gate((fromLanding ? '<button class="gx" data-gx aria-label="Close">×</button>' : '') + '<h1>Plan your wedding,<br>together.</h1><p class="note">Guests, budget, vendors, stay, rituals and more, saved to the cloud and shared with family. Start with a free trial.</p>' + (msg ? '<div class="banner">' + esc(msg) + '</div>' : '') +
     '<form data-f1><label class="field">Your email<input class="inp" type="email" name="email" autocomplete="email" required placeholder="you@example.com"></label><button class="btn pri wide">Send me a sign-in code</button></form>' +
     '<form data-f2 style="display:none"><p class="note">We sent a 6-digit code to <b data-em></b>. It may take a minute; check spam too.</p><label class="field">Code<input class="inp code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required placeholder="••••••"></label><button class="btn pri wide">Sign in</button><button type="button" class="btn ghost wide" data-back>Use a different email</button></form>' +
     '<div class="or"><span>or</span></div><button class="btn wide" data-demo>Explore the sample planner first</button><p class="note" style="font-size:11.5px;margin-top:10px">The sample stays on this device. No sign-up needed.</p>');
@@ -1259,7 +1465,7 @@ function signInScreen(msg) {
   let email = '';
   f1.onsubmit = async e => {
     e.preventDefault(); const b = $('button', f1); b.disabled = true; b.textContent = 'Sending…';
-    try { const r = await api('/auth/start', { method: 'POST', body: { email: f1.email.value } }); email = r.email; $('[data-em]', g).textContent = email; f1.style.display = 'none'; f2.style.display = ''; if (r.devCode) f2.code.value = r.devCode; f2.code.focus(); }
+    try { const r = await api('/auth/start', { method: 'POST', body: { email: f1.email.value } }); email = r.email; track('Lead'); $('[data-em]', g).textContent = email; f1.style.display = 'none'; f2.style.display = ''; if (r.devCode) f2.code.value = r.devCode; f2.code.focus(); }
     catch (err) { toast(err.message); } finally { b.disabled = false; b.textContent = 'Send me a sign-in code'; }
   };
   f2.onsubmit = async e => {
@@ -1268,6 +1474,8 @@ function signInScreen(msg) {
     catch (err) { toast(err.message); } finally { b.disabled = false; }
   };
   $('[data-back]', g).onclick = () => { f2.style.display = 'none'; f1.style.display = ''; };
+  const gx = $('[data-gx]', g); if (gx) gx.onclick = () => ungate();
+  if (fromLanding) setTimeout(() => { try { f1.email.focus(); } catch (e) { /* ignore */ } }, 50);
   $('[data-demo]', g).onclick = () => startLocal();
 }
 
@@ -1289,10 +1497,12 @@ function trialScreen() {
     '<button class="pitem" data-s="demo"><b>🎁 Start with the sample data</b><small>Ananya &amp; Arjun’s example, to edit into your own</small></button></div><button class="btn ghost wide" data-out>Sign out</button>');
   const create = async st => {
     $$('.pitem', g).forEach(b => { b.style.opacity = .5; b.style.pointerEvents = 'none'; });
-    try { const r = await api('/planners', { method: 'POST', body: { state: stripLocal(st) } }); await openPlanner(r.meta.id, r); }
+    try { const r = await api('/planners', { method: 'POST', body: { state: stripLocal(st), source: lpSource() } }); track('StartTrial', { value: 0, currency: 'INR' }); await openPlanner(r.meta.id, r); }
     catch (err) { toast(err.message); $$('.pitem', g).forEach(b => { b.style.opacity = ''; b.style.pointerEvents = ''; }); if (err.data && err.data.reason === 'limit') toast(err.message); }
   };
-  $$('[data-s]', g).forEach(b => b.onclick = () => { const s = b.dataset.s; const st = s === 'fresh' ? freshState() : s === 'demo' ? demoState() : normalize(local); st.demo = false; create(st); });
+  $$('[data-s]', g).forEach(b => b.onclick = () => { const s = b.dataset.s; const st = s === 'fresh' ? freshState() : s === 'demo' ? demoState() : normalize(local); st.demo = false;
+    const lpDate = store.get('pp_lp_date'); if (s === 'fresh' && lpDate && st.settings && !st.settings.date) st.settings.date = lpDate; // date picked on the landing page
+    create(st); });
   $('[data-file]', g).onchange = async e => { const f = e.target.files[0]; if (!f) return; try { const st = /\.json$/i.test(f.name) ? normalize(JSON.parse(await f.text())) : importWorkbook(await f.arrayBuffer()); create(st); } catch (err) { toast('Could not read that file: ' + err.message); } };
   $('[data-out]', g).onclick = () => signOut();
 }
@@ -1309,7 +1519,7 @@ async function openPlanner(id, preload) {
     else if (r.state) { CLOUD.base = stripLocal(normalize(copy(r.state))); S = normalize(copy(r.state)); }
     else { CLOUD.base = null; S = freshState(); }
     S.demo = false; CLOUD.rev = r.rev || 0; D = null;
-    ungate(); renderAll(); setSync(CLOUD.readOnly ? 'ro' : 'saved'); startPolling();
+    hideLanding(); ungate(); renderAll(); setSync(CLOUD.readOnly ? 'ro' : 'saved'); startPolling();
     if (!CLOUD.readOnly && diffOps(CLOUD.base, stripLocal(S)).length) schedulePush();
   } catch (e) {
     if (e.status === 401) return signOut(true);
@@ -1336,7 +1546,7 @@ async function startCloud(noAuto) {
 
 function startLocal(msg) {
   clearInterval(CLOUD.pollT); CLOUD.on = false; CLOUD.readOnly = false; document.body.classList.remove('ro');
-  S = load(); D = null; ungate(); renderAll(); setSync('local');
+  S = load(); D = null; hideLanding(); ungate(); renderAll(); setSync('local');
   if (msg) toast(msg);
 }
 
@@ -1355,7 +1565,9 @@ async function cloudBoot() {
   if (token()) return startCloud();
   // Server reachable? If not (offline / preview), just open the local planner.
   try { await api('/plans'); } catch (e) { if (e.status === 0 || e.status === 404) return startLocal(); }
-  signInScreen();
+  // First visit: the landing page. Links in emails can use /planner#signin to go straight to sign-in.
+  if (h === '#signin') { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* ignore */ } return signInScreen(); }
+  landingScreen();
 }
 
 /* ---------- upgrade ---------- */
@@ -1389,7 +1601,7 @@ async function upgradeModal(reason) {
         });
       }
       await api('/planners/' + CLOUD.id + '/verify', { method: 'POST', body: res });
-      m.remove(); await poll(true); renderAll(); toast('🎉 Your plan is active. Thank you!');
+      m.remove(); track('Purchase', { value: o.total || 0, currency: 'INR' }); await poll(true); renderAll(); toast('🎉 Your plan is active. Thank you!');
     } catch (e) { toast(e.message); b.disabled = false; b.textContent = label; }
   });
 }
@@ -1451,6 +1663,211 @@ VIEWS.account = function () {
   $('[data-out]', c).onclick = () => signOut();
   return [el('<div>' + ph('Account', '') + '</div>').firstChild, c];
 };
+
+/* ===== landing.js ===== */
+/* ---------- landing page: what visitors (and ad clicks) see at /planner before signing in ---------- */
+// Settings come from Admin → Wedding planner → Planner landing page (via /api/planner/landing); prices from Planner plans.
+
+let LP_CFG = null;
+const lpConfig = () => (LP_CFG = LP_CFG || api('/landing').catch(() => ({ plans: [], testimonials: [] })));
+
+/* Where the visitor came from (first touch, kept 30 days) — saved on their planner so you can see which ads bring trials. */
+(function rememberSource() {
+  try {
+    const q = new URLSearchParams(location.search);
+    const parts = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'].map(k => q.get(k)).filter(Boolean);
+    if (!parts.length && q.get('fbclid')) parts.push('facebook (fbclid)');
+    if (!parts.length && q.get('gclid')) parts.push('google (gclid)');
+    const old = JSON.parse(store.get('pp_src') || 'null');
+    if (parts.length && !(old && Date.now() - old.t < 30 * 864e5)) store.set('pp_src', JSON.stringify({ s: parts.join(' / ').slice(0, 200), t: Date.now() }));
+  } catch (e) { /* ignore */ }
+})();
+function lpSource() { try { const o = JSON.parse(store.get('pp_src') || 'null'); return o && Date.now() - o.t < 30 * 864e5 ? o.s : ''; } catch (e) { return ''; } }
+
+/* Meta Pixel: loaded only when an ID is set in the admin. Events: PageView, Lead, StartTrial, Purchase. */
+let PIXEL = null;
+function loadPixel(id) {
+  if (PIXEL || !id) return PIXEL;
+  /* eslint-disable */
+  !function (f, b, e, v, n, t, s) { if (f.fbq) return; n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments) }; if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0'; n.queue = []; t = b.createElement(e); t.async = !0; t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s) }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+  /* eslint-enable */
+  window.fbq('init', id); window.fbq('track', 'PageView');
+  return (PIXEL = id);
+}
+async function track(ev, params) {
+  try { const c = await lpConfig(); if (!c.metaPixelId) return; loadPixel(c.metaPixelId); if (ev !== 'PageView') window.fbq('track', ev, params || {}); } catch (e) { /* tracking must never break the app */ }
+}
+
+/* ---------- page ---------- */
+function hideLanding() { document.body.classList.remove('lp-on'); const l = $('#lp'); if (l) l.innerHTML = ''; }
+
+function lpPhone(src, alt, eager) {
+  return '<div class="lp-phone"><img src="/planner/lp/' + src + '.webp" alt="' + esc(alt) + '" width="300" height="649" ' + (eager ? 'fetchpriority="high"' : 'loading="lazy"') + ' decoding="async"></div>';
+}
+
+const LP_FEATURES = [
+  ['guests', 'Guests & RSVP', 'Har family, har function, ek list mein.', ['Families grouped by bride’s side and groom’s side', 'RSVP per function: who’s coming to Haldi, who’s only at the Reception', 'Send your invite on WhatsApp in one tap, and see who still hasn’t got it', 'Search by name, family, city or phone']],
+  ['functions', 'Every function', 'Roka se Vidaai tak, sab set.', ['Roka, Haldi, Mehndi, Sangeet, Baraat & Milni, Pheras, Reception…', 'Rename, switch off, or add your own functions', 'Date, time and countdown for each', 'Day-of run sheet: who does what, when']],
+  ['budget', 'Budget', 'Kitna socha, kitna pakka, kitna diya.', ['Your total budget split into categories, ready to adjust', 'Planned vs committed vs paid, for every line', 'Warns you before a category goes over']],
+  ['vendors', 'Vendors & quotes', 'Teen caterers, teen quotes? Compare side by side.', ['Log every quote with contact, rating and notes', 'Compare quotes for the same job and pick one', 'The chosen vendor flows straight into your budget']],
+  ['payments', 'Payments', 'Advance kisko diya, baaki kab dena hai.', ['Every advance and instalment with its due date', 'Overdue and due-soon alerts on the dashboard', 'Paid amounts update the budget automatically']],
+  ['stay', 'Stay, travel & food', 'Rooms, cars aur plates ka hisaab.', ['Allocate families to hotel rooms; see who still needs one', 'Cars and pickups, with who travels in which', 'Plates to order per function, worked out from your guest list']],
+  ['shagun', 'Shagun & len-den', 'Kisne kya diya, sab yaad rahega.', ['Shagun and gifts received and given, per function', 'Thank-yous still to send', 'Returns pending, so nothing gets missed']],
+  ['tasks', 'Tasks & timeline', '90+ tasks, already in order.', ['A ready checklist with deadlines worked out from your wedding date', 'Only a few weeks left? Express and emergency timelines squeeze it to fit', 'Assign tasks to family members and track what’s overdue']],
+];
+
+function landingScreen() {
+  document.body.classList.add('lp-on');
+  const root = $('#lp');
+  const brand = $('.brand').innerHTML;
+  const F = LP_FEATURES;
+  root.innerHTML =
+    '<header class="lp-nav"><div class="lp-w"><a class="lp-logo" href="/planner" aria-label="Pandora Wedding Planner">' + brand + '</a><span class="sp"></span><button class="lp-link" data-lp-signin>Sign in</button><button class="lp-btn sm" data-lp-start>Start free</button></div></header>' +
+
+    // HERO
+    '<section class="lp-hero"><div class="lp-w lp-hero-in"><div class="lp-hero-txt">' +
+      '<p class="lp-eyebrow">Online Indian Wedding Planner</p>' +
+      '<h1>Shaadi ki poori planning, <em>ek jagah.</em></h1>' +
+      '<p class="lp-lead">Guests, functions, budget, vendors, payments and shagun, from Roka to Vidaai. Shared with your family and in sync on every phone.</p>' +
+      '<div class="lp-ctas"><button class="lp-btn big" data-lp-start data-hero-cta>Start your <span data-trial-days>14</span>-day free trial</button><button class="lp-btn ghost big" data-lp-demo>See a sample wedding</button></div>' +
+      '<p class="lp-micro">✓ No card needed &nbsp; ✓ Sign in with just your email &nbsp; ✓ Up to <span data-trial-guests>30</span> guests free</p>' +
+    '</div><div class="lp-hero-vis">' + lpPhone('dash', 'Wedding dashboard: days to go, guests, budget and payments', true) +
+      '<div class="lp-float f1"><b>11</b> confirmed for Sangeet</div><div class="lp-float f2"><b>₹5.79 L</b> paid · ₹10.9 L to go</div><div class="lp-float f3">🔔 2 payments due this week</div>' +
+    '</div></div></section>' +
+
+    // PROBLEM
+    '<section class="lp-sec lp-prob"><div class="lp-w"><h2>Sound familiar?</h2><div class="lp-g3">' +
+      '<div class="lp-pcard"><span>📱</span><b>5 WhatsApp groups, 3 Excel sheets, 1 diary</b><p>And the latest guest list is… somewhere.</p></div>' +
+      '<div class="lp-pcard"><span>🙋‍♀️</span><b>“Beta, kitne guests final hue?”</b><p>Asked every evening, answered from memory.</p></div>' +
+      '<div class="lp-pcard"><span>💸</span><b>“Caterer ko advance kitna diya tha?”</b><p>Receipts in one place, promises in another.</p></div>' +
+    '</div><p class="lp-sum">Pandora puts the whole wedding in one planner that the whole family can open.</p></div></section>' +
+
+    // FEATURES (tabs)
+    '<section class="lp-sec" id="lp-features"><div class="lp-w"><p class="lp-eyebrow c">Everything inside</p><h2 class="c">Built for Indian weddings, not adapted to them.</h2>' +
+      '<div class="lp-tabs" role="tablist">' + F.map((f, i) => '<button role="tab" data-ft="' + i + '"' + (i ? '' : ' aria-selected="true"') + '>' + esc(f[1]) + '</button>').join('') + '</div>' +
+      '<div class="lp-feat"><div class="lp-feat-vis">' + lpPhone(F[0][0], F[0][1]) + '</div><div class="lp-feat-txt" aria-live="polite"></div></div>' +
+      '<div class="lp-also"><b>Also inside:</b> rituals & puja checklist · milni list · shopping & outfits · printable sheets for vendors and family · import & export to Excel · activity log & restore</div>' +
+    '</div></section>' +
+
+    // FAMILY
+    '<section class="lp-sec lp-fam"><div class="lp-w lp-split"><div><p class="lp-eyebrow">Plan together</p><h2>Mummy, Papa, Didi… <em>sab ek hi plan pe.</em></h2>' +
+      '<p>Invite your family with their email. Each person signs in on their own phone and sees the same planner, live.</p><ul class="lp-ticks">' +
+      '<li><b>Can edit</b> or <b>view only</b>: you decide for each person</li><li>Changes show on everyone’s phone within seconds</li><li>Activity log shows who changed what, and you can restore an earlier version</li><li data-fam-count></li></ul></div>' +
+      '<div class="lp-famcard" aria-hidden="true"><div class="lp-act"><i style="background:#F2A93B">M</i><div><b>Mummy</b> marked 4 guests as confirmed<small>Sangeet · just now</small></div></div><div class="lp-act"><i style="background:#1F7A74">P</i><div><b>Papa</b> added a payment of ₹50,000<small>Caterer advance · 3 min ago</small></div></div><div class="lp-act"><i style="background:#E0675A">D</i><div><b>Didi</b> finished “Book mehndi artist”<small>Tasks · 10 min ago</small></div></div><div class="lp-act"><i style="background:#552C69">A</i><div><b>You</b> invited Chacha ji as view only<small>Sharing · 1 hr ago</small></div></div></div>' +
+    '</div></section>' +
+
+    // HOW IT WORKS
+    '<section class="lp-sec"><div class="lp-w"><h2 class="c">Start in two minutes</h2><div class="lp-g3 lp-steps">' +
+      '<div><span>1</span><b>Sign in with your email</b><p>We send a 6-digit code. No password to remember.</p></div>' +
+      '<div><span>2</span><b>Pick how to start</b><p>A fresh plan with tasks and budget ready, the sample wedding to edit, or your Pandora Excel planner.</p></div>' +
+      '<div><span>3</span><b>Invite the family</b><p>Share it and plan together on phone and laptop.</p></div>' +
+    '</div></div></section>' +
+
+    // DEVICES + EXCEL
+    '<section class="lp-sec lp-dev"><div class="lp-w"><h2 class="c">Laptop pe plan karo, phone pe check karo.</h2><p class="c lp-sub">The same planner on every screen. Phones get a simple card view, with no sideways scrolling.</p>' +
+      '<div class="lp-browser"><div class="lp-bbar"><i></i><i></i><i></i><span>pandoratemplates.com/planner</span></div><img src="/planner/lp/desktop.webp" alt="The planner dashboard on a laptop" width="1280" height="800" loading="lazy" decoding="async"></div>' +
+      '<div class="lp-excel"><span>📊</span><div><b>Already using the Pandora Excel planner?</b><p>Import your filled-in workbook in one click and carry on online. You can export back to Excel any time.</p></div></div>' +
+    '</div></section>' +
+
+    // PRICING
+    '<section class="lp-sec lp-price" id="lp-pricing"><div class="lp-w"><p class="lp-eyebrow c">Simple pricing</p><h2 class="c">Try it free. Pay once if you love it.</h2><p class="c lp-sub">One-time payment for the whole wedding. No subscription, no auto-renewal.</p><div class="lp-plans"><div class="lp-empty">Loading plans…</div></div></div></section>' +
+
+    // TESTIMONIALS (filled only when some are ticked in the admin)
+    '<section class="lp-sec lp-tst" hidden><div class="lp-w"><h2 class="c">Families planning with Pandora</h2><div class="lp-g3 lp-quotes"></div></div></section>' +
+
+    // FAQ
+    '<section class="lp-sec"><div class="lp-w lp-narrow"><h2 class="c">Questions</h2><div class="lp-faq"></div></div></section>' +
+
+    // FINAL CTA
+    '<section class="lp-final"><div class="lp-w lp-narrow c"><h2>Shaadi kab hai?</h2><p>Pick the date and see how much time you have.</p>' +
+      '<div class="lp-date"><input type="date" class="inp" data-lp-date aria-label="Wedding date"><div class="lp-left" data-lp-left></div></div>' +
+      '<button class="lp-btn big" data-lp-start>Start planning free</button><p class="lp-micro">No card needed · <span data-trial-days>14</span> days free</p></div></section>' +
+
+    '<footer class="lp-foot"><div class="lp-w">© ' + new Date().getFullYear() + ' Pandora Templates · <a href="/">pandoratemplates.com</a> · Open the box. Everything’s ready.</div></footer>' +
+    '<div class="lp-sticky"><button class="lp-btn" data-lp-start>Start free trial</button></div>' +
+    '<a class="lp-wa" hidden target="_blank" rel="noopener" aria-label="Chat with us on WhatsApp"><svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><path fill="#fff" d="M16 3a13 13 0 0 0-11.2 19.6L3 29l6.6-1.7A13 13 0 1 0 16 3zm0 23.7a10.7 10.7 0 0 1-5.5-1.5l-.4-.2-3.9 1 1-3.8-.2-.4A10.7 10.7 0 1 1 16 26.7zm5.9-8c-.3-.2-1.9-.9-2.2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7.1a8.8 8.8 0 0 1-4.4-3.8c-.3-.6.3-.5.9-1.7.1-.2 0-.4 0-.5l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6a1.2 1.2 0 0 0-.9.4 3.6 3.6 0 0 0-1.1 2.7 6.3 6.3 0 0 0 1.3 3.3 14.3 14.3 0 0 0 5.5 4.9c2 .9 2.8.9 3.8.8a3.2 3.2 0 0 0 2.1-1.5 2.6 2.6 0 0 0 .2-1.5c-.1-.2-.3-.3-.5-.4z"/></svg></a>';
+
+  // buttons
+  $$('[data-lp-start]', root).forEach(b => b.onclick = () => signInScreen('', true));
+  $$('[data-lp-signin]', root).forEach(b => b.onclick = () => signInScreen('', true));
+  $$('[data-lp-demo]', root).forEach(b => b.onclick = () => startLocal());
+
+  // feature tabs
+  const showFeat = i => {
+    const f = F[i];
+    $$('[data-ft]', root).forEach(b => b.setAttribute('aria-selected', String(+b.dataset.ft === i)));
+    const img = $('.lp-feat-vis img', root); img.src = '/planner/lp/' + f[0] + '.webp'; img.alt = f[1];
+    $('.lp-feat-txt', root).innerHTML = '<h3>' + esc(f[1]) + '</h3><p class="lp-hing">' + esc(f[2]) + '</p><ul class="lp-ticks">' + f[3].map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>' +
+      (i < F.length - 1 ? '<button class="lp-link" data-ft-next>Next: ' + esc(F[i + 1][1]) + ' →</button>' : '');
+    const n = $('[data-ft-next]', root); if (n) n.onclick = () => { showFeat(i + 1); $('[data-ft="' + (i + 1) + '"]', root).scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' }); };
+  };
+  $$('[data-ft]', root).forEach(b => b.onclick = () => showFeat(+b.dataset.ft));
+  showFeat(0);
+  F.forEach(f => { const im = new Image(); im.loading = 'lazy'; im.src = '/planner/lp/' + f[0] + '.webp'; }); // warm the cache so tabs switch instantly
+
+  // countdown
+  const di = $('[data-lp-date]', root), left = $('[data-lp-left]', root);
+  const showLeft = () => {
+    const v = di.value; if (!v) { left.textContent = ''; return; }
+    const days = Math.ceil((new Date(v + 'T00:00:00') - new Date(new Date().toDateString())) / 864e5);
+    left.innerHTML = days < 0 ? 'That date has passed. Pick the wedding date.' : days === 0 ? '<b>It’s today!</b> Shubh vivah 🎉' : '<b>' + days + ' days to go</b> · ' + (days < 60 ? 'tight, but the express timeline was made for this.' : days < 180 ? 'perfect time to get organised.' : 'plenty of time, if you start early.');
+    try { store.set('pp_lp_date', v); } catch (e) { /* ignore */ }
+  };
+  di.min = new Date().toISOString().slice(0, 10); di.value = store.get('pp_lp_date') || ''; di.oninput = showLeft; showLeft();
+
+  // sticky CTA once the hero button scrolls away
+  const sticky = $('.lp-sticky', root), hero = $('[data-hero-cta]', root), fin = $('.lp-final', root);
+  if ('IntersectionObserver' in window) {
+    let heroGone = false, finIn = false; const upd = () => sticky.classList.toggle('on', heroGone && !finIn);
+    new IntersectionObserver(es => { heroGone = !es[0].isIntersecting && es[0].boundingClientRect.top < 0; upd(); }).observe(hero);
+    new IntersectionObserver(es => { finIn = es[0].isIntersecting; upd(); }).observe(fin);
+  }
+
+  lpConfig().then(c => lpFill(root, c));
+  track('PageView');
+}
+
+function lpFill(root, c) {
+  if (!root.isConnected || !document.body.classList.contains('lp-on')) return;
+  const plans = c.plans || [], trial = plans.find(p => p.isTrial), paid = plans.filter(p => !p.isTrial && p.active);
+  const days = trial ? trial.durationDays : 14, tg = trial && trial.limits ? trial.limits.guests : null;
+  $$('[data-trial-days]', root).forEach(e => { e.textContent = days; });
+  $$('[data-trial-guests]', root).forEach(e => { e.textContent = tg == null ? 'unlimited' : tg; });
+  const maxCol = paid.reduce((m, p) => Math.max(m, p.collaborators || 0), 0);
+  const fc = $('[data-fam-count]', root);
+  if (fc) { if (maxCol) fc.textContent = 'Paid plans include up to ' + maxCol + ' family members (the free trial is just you)'; else fc.remove(); }
+  const valid = p => p.durationDays % 365 === 0 ? (p.durationDays / 365) + ' year' + (p.durationDays > 365 ? 's' : '') : p.durationDays + ' days';
+  $('.lp-plans', root).innerHTML = (trial ? '<div class="lp-plan"><h3>' + esc(trial.name) + '</h3><div class="lp-pp">Free</div><div class="lp-pn">for ' + days + ' days</div><ul class="lp-ticks">' + (trial.features || []).map(f => '<li>' + esc(f) + '</li>').join('') + '</ul><button class="lp-btn ghost wide" data-lp-start>Start free</button></div>' : '') +
+    paid.map(p => '<div class="lp-plan' + (p.badge ? ' hot' : '') + '">' + (p.badge ? '<span class="lp-badge">' + esc(p.badge) + '</span>' : '') + '<h3>' + esc(p.name) + '</h3><div class="lp-pp">' + inr(p.price) + '</div><div class="lp-pn">one-time · valid ' + valid(p) + (p.tagline ? ' · ' + esc(p.tagline) : '') + '</div><ul class="lp-ticks">' + (p.features || []).map(f => '<li>' + esc(f) + '</li>').join('') + '</ul><button class="lp-btn' + (p.badge ? '' : ' ghost') + ' wide" data-lp-start>Start free, upgrade later</button></div>').join('') ||
+    '<div class="lp-empty">Plans will appear here.</div>';
+  $$('.lp-plans [data-lp-start]', root).forEach(b => b.onclick = () => signInScreen('', true));
+
+  // testimonials: only real ones ticked "Show on page" in the admin
+  const t = c.testimonials || [];
+  if (t.length) {
+    const sec = $('.lp-tst', root); sec.hidden = false;
+    $('.lp-quotes', sec).innerHTML = t.slice(0, 6).map(q => '<figure class="lp-q"><blockquote>“' + esc(q.quote) + '”</blockquote><figcaption><b>' + esc(q.name) + '</b>' + (q.detail ? '<small>' + esc(q.detail) + '</small>' : '') + '</figcaption></figure>').join('');
+  }
+
+  // FAQ (uses the live trial and plan settings)
+  const minPaid = paid.length ? Math.min.apply(null, paid.map(p => p.price)) : null;
+  const faq = [
+    ['Is the trial really free?', 'Yes. ' + days + ' days, every screen unlocked' + (tg != null ? ', up to ' + tg + ' guests' : '') + '. No card needed, just your email.'],
+    ['What happens when the trial ends?', 'Your planner turns read-only. Nothing is deleted: you can still open it and export it to Excel. Upgrade' + (minPaid != null ? ' (from ' + inr(minPaid) + ', one-time)' : '') + ' to keep editing.'],
+    ['Is it a subscription?', 'No. You pay once and the plan is valid for the time shown on it. Nothing renews automatically.'],
+    ['Can my family use it on their phones?', maxCol ? 'Yes. On a paid plan you can invite up to ' + maxCol + ' family members by email. Each one signs in on their own phone, and you choose who can edit and who can only view.' : 'Yes. On a paid plan you can invite family members by email, with edit or view-only access.'],
+    ['Do I need to install an app?', 'No. It runs in the browser on any phone or laptop. On your phone you can “Add to Home screen” to open it like an app.'],
+    ['Who can see my wedding details?', 'Only you and the people you invite. Your planner is saved to your account and opens only after signing in with an invited email. If you ask us for help, our support team can view it (read-only) to sort things out.'],
+    ['I already have the Pandora Excel planner. Can I use it?', 'Yes. When you start, choose “Import my Pandora Excel” and your guests, budget, vendors and the rest come across. You can export back to Excel any time.'],
+    ['How do I pay?', 'Inside the planner, with Razorpay: UPI, cards, netbanking and wallets.'],
+  ];
+  if (c.whatsapp) faq.push(['Still have a question?', 'Message us on WhatsApp with the green button, and we’ll help.']);
+  $('.lp-faq', root).innerHTML = faq.map((f, i) => '<details' + (i ? '' : ' open') + '><summary>' + esc(f[0]) + '</summary><p>' + esc(f[1]) + '</p></details>').join('');
+
+  // WhatsApp
+  const wa = $('.lp-wa', root);
+  if (c.whatsapp) { wa.href = 'https://wa.me/' + c.whatsapp.number + (c.whatsapp.message ? '?text=' + encodeURIComponent(c.whatsapp.message) : ''); wa.hidden = false; wa.onclick = () => track('Contact'); }
+}
 
 /* ===== views1.js ===== */
 /* ---------- Dashboard ---------- */
