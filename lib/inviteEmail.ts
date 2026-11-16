@@ -8,9 +8,9 @@ import type { Invite } from "@/payload-types";
 const siteUrl = () => process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
-/** Link that opens the couple's draft (and pre-fills a promo code at checkout). */
+/** Link that opens the couple's draft at /i/<link>/edit (and pre-fills a promo code at checkout). */
 export const draftLink = (invite: Pick<Invite, "slug" | "editToken">, promo?: string) =>
-  `${siteUrl()}/shaadi?edit=${invite.slug}.${invite.editToken}${promo ? `&code=${encodeURIComponent(promo)}` : ""}`;
+  `${siteUrl()}/i/${invite.slug}/edit${promo ? `?code=${encodeURIComponent(promo)}` : ""}#k=${invite.editToken}`;
 
 /**
  * Emails a couple about their draft invite.
