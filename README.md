@@ -42,7 +42,7 @@ Tips:
 The upgrade to the Excel planner: the same guest list, budget, vendors, payments, stay, transport, rituals, shagun and the rest, saved to the cloud, shared with family, on any phone.
 
 ### Landing page
-First-time visitors to `/planner` (and every ad click) see a landing page: hero, features with real screenshots, family sharing, pricing (read live from **Planner plans**), FAQ and a sticky "Start free trial" button on phones. Signed-in customers skip it and go straight to their planner. Links in emails can use `/planner#signin` to open sign-in directly. Code: `planner-app/landing.js` and `landing.css`; screenshots in `public/planner/lp/`.
+First-time visitors to `/planner` (and every ad click) see a landing page: hero, features with real screenshots, family sharing, pricing (read live from **Planner plans**), FAQ and a sticky "Start free trial" button on phones. Signed-in customers skip it and go straight to their planner. Every "Start free" button goes to **`/planner/signup`**; "Sign in" goes to **`/planner/login`** (use these in ads, emails and WhatsApp). Old `/planner#signin` links redirect to `/planner/login`. Code: `planner-app/landing.js` and `landing.css`; screenshots in `public/planner/lp/`.
 
 ### How customers use it
 1. They open **pandoratemplates.com/planner**, tap "Start free trial", type their email and get a 6-digit code (sent through Brevo, no passwords).

@@ -175,11 +175,18 @@ function gate(html) {
 }
 function ungate() { document.body.classList.remove('gated'); $('#gate').style.display = 'none'; $('#gate').innerHTML = ''; }
 
-function signInScreen(msg, fromLanding) {
-  const g = gate((fromLanding ? '<button class="gx" data-gx aria-label="Close">×</button>' : '') + '<h1>Plan your wedding,<br>together.</h1><p class="note">Guests, budget, vendors, stay, rituals and more, saved to the cloud and shared with family. Start with a free trial.</p>' + (msg ? '<div class="banner">' + esc(msg) + '</div>' : '') +
+// The sign-up / sign-in pages: /planner/signup and /planner/login (also used as an overlay inside the app).
+const SIGN_PAGE = () => (location.pathname.match(/^\/planner\/(signup|login)\/?$/) || [])[1] || '';
+function signInScreen(msg) {
+  const page = SIGN_PAGE(), login = page === 'login';
+  const head = login ? '<h1>Welcome back</h1><p class="note">Sign in with your email to open your wedding planner.</p>'
+    : '<h1>Start planning,<br><em class="gem">free for <span data-trial-days>14</span> days.</em></h1><ul class="gperks"><li>Every screen unlocked</li><li>No card needed</li><li>Your guests, budget and vendors saved to the cloud</li></ul>';
+  const g = gate((page ? '<a class="gx" href="/planner" aria-label="Back to the planner page">←</a>' : '') + head + (msg ? '<div class="banner">' + esc(msg) + '</div>' : '') +
     '<form data-f1><label class="field">Your email<input class="inp" type="email" name="email" autocomplete="email" required placeholder="you@example.com"></label><button class="btn pri wide">Send me a sign-in code</button></form>' +
     '<form data-f2 style="display:none"><p class="note">We sent a 6-digit code to <b data-em></b>. It may take a minute; check spam too.</p><label class="field">Code<input class="inp code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required placeholder="••••••"></label><button class="btn pri wide">Sign in</button><button type="button" class="btn ghost wide" data-back>Use a different email</button></form>' +
-    '<div class="or"><span>or</span></div><button class="btn wide" data-demo>Explore the sample planner first</button><p class="note" style="font-size:11.5px;margin-top:10px">The sample stays on this device. No sign-up needed.</p>');
+    '<div class="or"><span>or</span></div><button class="btn wide" data-demo>Explore the sample planner first</button><p class="note" style="font-size:11.5px;margin-top:10px">The sample stays on this device. No sign-up needed.</p>' +
+    (page ? '<p class="gswitch">' + (login ? 'New here? <a href="/planner/signup">Start a free trial</a>' : 'Already have a planner? <a href="/planner/login">Sign in</a>') + '</p>' : ''));
+  if (!login) lpConfig().then(c => { const t = (c.plans || []).find(p => p.isTrial); if (t) $$('[data-trial-days]', g).forEach(e => { e.textContent = t.durationDays; }); });
   const f1 = $('[data-f1]', g), f2 = $('[data-f2]', g);
   let email = '';
   f1.onsubmit = async e => {
@@ -193,8 +200,7 @@ function signInScreen(msg, fromLanding) {
     catch (err) { toast(err.message); } finally { b.disabled = false; }
   };
   $('[data-back]', g).onclick = () => { f2.style.display = 'none'; f1.style.display = ''; };
-  const gx = $('[data-gx]', g); if (gx) gx.onclick = () => ungate();
-  if (fromLanding) setTimeout(() => { try { f1.email.focus(); } catch (e) { /* ignore */ } }, 50);
+  if (page) setTimeout(() => { try { f1.email.focus(); } catch (e) { /* ignore */ } }, 50);
   $('[data-demo]', g).onclick = () => startLocal();
 }
 
@@ -282,10 +288,10 @@ async function cloudBoot() {
   if (h.indexOf('#support=') === 0) { try { sessionStorage.setItem('pp_support', h.slice(9)); } catch (e) { /* ignore */ } try { history.replaceState(null, '', '#dash'); } catch (e) { /* ignore */ } }
   if (location.protocol === 'file:') return startLocal();
   if (token()) return startCloud();
-  // Server reachable? If not (offline / preview), just open the local planner.
-  try { await api('/plans'); } catch (e) { if (e.status === 0 || e.status === 404) return startLocal(); }
-  // First visit: the landing page. Links in emails can use /planner#signin to go straight to sign-in.
-  if (h === '#signin') { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* ignore */ } return signInScreen(); }
+  // Sign-up / sign-in pages. Old email links using /planner#signin go to /planner/login.
+  if (h === '#signin') { location.replace('/planner/login' + location.search); return; }
+  if (SIGN_PAGE()) { track('PageView'); return signInScreen(); }
+  // Everyone else signed out: the landing page, shown straight away (no waiting on the server).
   landingScreen();
 }
 
