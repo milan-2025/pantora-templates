@@ -173,6 +173,7 @@ export const Invites: CollectionConfig = {
             { name: "expiresAt", type: "date", admin: { description: "The invite stops showing after this date (set automatically when marked Paid). Change it to extend." } },
           ],
         },
+        { name: "publishedAt", type: "date", label: "Last saved live", admin: { readOnly: true, description: "When the couple last pressed Save. Guests see that version; later edits stay a draft until the next Save." } },
         { name: "amount", type: "number", admin: { description: "Rupees received. Razorpay fills this in; type it yourself for cash, UPI or complimentary packages." } },
         { name: "manualNote", type: "textarea", label: "Admin note", admin: { description: "Optional, only you see it. E.g. “Paid ₹1,999 by UPI on 14 Nov” or “Complimentary”." } },
         { name: "emailLive", type: "checkbox", defaultValue: false, label: "Email the couple their live link and edit link", admin: { description: "Tick and save. Needs Payment status = Paid (live) and their email below." } },
@@ -198,6 +199,11 @@ export const Invites: CollectionConfig = {
     // The couple's private edit key. Never returned by the API or shown in the admin.
     { name: "editToken", type: "text", access: { read: () => false, update: () => false }, admin: { hidden: true } },
     // The whole design (names, theme, events, photos, guests…). Large, so hidden from the admin form.
+    // `state` is the draft the editor autosaves; `published` is what guests see (set by the Save button).
     { name: "state", type: "json", required: true, admin: { hidden: true } },
+    { name: "published", type: "json", admin: { hidden: true } },
+    // Which editor tab/device may currently save (one at a time) and when it last checked in.
+    { name: "editSid", type: "text", admin: { hidden: true } },
+    { name: "editAt", type: "date", admin: { hidden: true } },
   ],
 };
