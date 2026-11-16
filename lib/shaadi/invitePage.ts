@@ -1,6 +1,6 @@
 import "server-only";
 import { getPayloadClient } from "@/lib/cms/queries";
-import { coupleNames, findInvite, isLive, liveState } from "@/lib/invites";
+import { coupleNames, findInvite, isLive, liveState, ogImage } from "@/lib/invites";
 import { studioResponse } from "@/lib/shaadi/page";
 
 /**
@@ -9,6 +9,7 @@ import { studioResponse } from "@/lib/shaadi/page";
  */
 export async function inviteResponse(req: Request, slug: string) {
   let title = "Wedding invitation";
+  const og: { image?: string | null; description?: string | null } = {};
   const url = new URL(req.url);
   const isEdit = url.pathname.split("/")[3] === "edit";
   try {
@@ -20,9 +21,15 @@ export async function inviteResponse(req: Request, slug: string) {
       return new Response(null, { status: 308, headers: { Location: to, "Cache-Control": "no-store" } });
     }
     if (isEdit) return studioResponse("Edit your invite · Pandora Templates", url.pathname, false);
-    if (isLive(invite) && invite) title = `${coupleNames(liveState(invite))} are getting married`;
+    if (isLive(invite) && invite) {
+      const st = liveState(invite);
+      title = `${coupleNames(st)} are getting married`;
+      og.image = ogImage(st);
+      const d = new Date(String(st.date ?? ""));
+      if (!isNaN(d.getTime())) og.description = `${d.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} · Tap to open your invitation`;
+    }
   } catch {
     // keep the generic title
   }
-  return studioResponse(isEdit ? "Edit your invite · Pandora Templates" : title, url.pathname, !isEdit);
+  return studioResponse(isEdit ? "Edit your invite · Pandora Templates" : title, url.pathname, !isEdit, og);
 }
