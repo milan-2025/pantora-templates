@@ -119,7 +119,8 @@ export function cleanState(input: unknown): InviteState | null {
 export function guestSlugs(gu: { n: string }[]) {
   const seen: Record<string, number> = {};
   return gu.map((g) => {
-    const base = slugify(g.n) || "guest";
+    let base = slugify(g.n) || "guest";
+    if (base === "edit") base = "edit-guest"; // /i/<link>/edit is the edit page
     seen[base] = (seen[base] ?? 0) + 1;
     return seen[base] > 1 ? `${base}-${seen[base]}` : base;
   });
@@ -145,6 +146,49 @@ export function publicView(state: InviteState, guestSlug?: string | null, plan?:
   if (guest) out.gst = guest.n;
   return { state: out, guest: guest ? { n: guest.n, g: guest.g } : null };
 }
+
+/**
+ * Draft vs live. The editor autosaves to `state` (the draft); guests see `published` (the last time the couple pressed
+ * Save). The guest list and groups are working data, not design, so they always come from the draft: personal guest
+ * links work as soon as guests are added.
+ */
+const OPERATIONAL = ["gu", "grp", "gl"];
+type Versioned = { state?: unknown; published?: unknown };
+
+/** The version guests see: the last saved design, plus the current guest list. */
+export function liveState(invite: Versioned): InviteState {
+  const draft = (invite.state ?? {}) as InviteState;
+  const out: InviteState = { ...((invite.published ?? invite.state ?? {}) as InviteState) };
+  for (const k of OPERATIONAL) {
+    if (k in draft) out[k] = draft[k];
+    else delete out[k];
+  }
+  return out;
+}
+
+const stable = (v: unknown): unknown =>
+  Array.isArray(v) ? v.map(stable) : v && typeof v === "object" ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, stable((v as Record<string, unknown>)[k])])) : v;
+const designKey = (st: unknown) => {
+  const o = { ...((st ?? {}) as InviteState) };
+  for (const k of [...OPERATIONAL, "sl"]) delete o[k];
+  return JSON.stringify(stable(o));
+};
+/** True when the draft has design changes that aren't live yet (or nothing was ever saved). */
+export const hasUnsavedChanges = (invite: Versioned) => !invite.published || designKey(invite.state) !== designKey(invite.published);
+
+/** One editor per invite: the open editor renews a short lease; it lapses if not renewed. */
+export const LOCK_MS = 45_000;
+export const editSession = (req: Request) => (req.headers.get("x-edit-session") ?? "").slice(0, 64) || null;
+type Lock = { editSid?: string | null; editAt?: string | null };
+/** May this editor session write? (No other session holds a fresh lease.) */
+export const lockFree = (invite: Lock, sid: string | null, now = Date.now()) =>
+  !invite.editSid || invite.editSid === sid || !invite.editAt || now - Date.parse(invite.editAt) > LOCK_MS;
+/** Seconds since the other editor was last active. */
+export const lockAge = (invite: Lock, now = Date.now()) => (invite.editAt ? Math.max(0, Math.round((now - Date.parse(invite.editAt)) / 1000)) : null);
+
+/** The couple's private edit link. The key sits after "#", so it never reaches servers or logs; the page then hides it. */
+export const editLink = (invite: Pick<Invite, "slug" | "editToken">, query = "") =>
+  `${siteUrl()}/i/${invite.slug}/edit${query}#k=${invite.editToken}`;
 
 export const coupleNames = (st: InviteState) => `${String(st.b ?? "")} & ${String(st.g ?? "")}`.slice(0, 190);
 
@@ -190,7 +234,7 @@ const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&
 export async function sendInviteLiveEmail(invite: Invite, months: number) {
   if (!invite.contactEmail || !invite.editToken) return;
   const live = `${siteUrl()}/i/${invite.slug}`;
-  const edit = `${siteUrl()}/shaadi?edit=${invite.slug}.${invite.editToken}`;
+  const edit = editLink(invite);
   await sendWithBrevo({
     to: [{ email: invite.contactEmail }],
     subject: "Your wedding invite is live 💍",
@@ -230,6 +274,7 @@ export async function markInvitePaid(payload: Payload, orderId: string, paymentI
     data: {
       paymentStatus: "paid",
       plan: existing.orderPlan ?? "basic",
+      ...(existing.published ? {} : { published: existing.state, publishedAt: new Date().toISOString() }),
       paidAt: new Date().toISOString(),
       expiresAt: expires.toISOString(),
       ...(paymentId ? { paymentId } : {}),

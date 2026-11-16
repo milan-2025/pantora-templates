@@ -745,6 +745,10 @@ export interface Invite {
    */
   expiresAt?: string | null;
   /**
+   * When the couple last pressed Save. Guests see that version; later edits stay a draft until the next Save.
+   */
+  publishedAt?: string | null;
+  /**
    * Rupees received. Razorpay fills this in; type it yourself for cash, UPI or complimentary packages.
    */
   amount?: number | null;
@@ -774,6 +778,17 @@ export interface Invite {
     | number
     | boolean
     | null;
+  published?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  editSid?: string | null;
+  editAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1691,6 +1706,7 @@ export interface InvitesSelect<T extends boolean = true> {
   plan?: T;
   paidAt?: T;
   expiresAt?: T;
+  publishedAt?: T;
   amount?: T;
   manualNote?: T;
   emailLive?: T;
@@ -1701,6 +1717,9 @@ export interface InvitesSelect<T extends boolean = true> {
   paymentId?: T;
   editToken?: T;
   state?: T;
+  published?: T;
+  editSid?: T;
+  editAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }

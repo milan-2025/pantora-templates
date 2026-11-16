@@ -32,7 +32,7 @@ describe("manual package in /admin", () => {
     expect(d.emailLive).toBe(false);
     const html = (vi.mocked(sendWithBrevo).mock.calls[0][0] as { html: string }).html;
     expect(html).toContain("/i/aanya-rohan");
-    expect(html).toContain("/shaadi?edit=aanya-rohan.tok");
+    expect(html).toContain("/i/aanya-rohan/edit#k=tok");
   });
 });
 
@@ -45,8 +45,8 @@ describe("admin preview / edit links", () => {
     const call = (to: string) => GET(new Request(`http://x/api/shaadi/admin-open/aanya-rohan?to=${to}`), { params: Promise.resolve({ slug: "aanya-rohan" }) });
     expect((await call("edit")).status).toBe(401);
     user = { id: "admin" };
-    expect((await call("edit")).headers.get("location")).toBe("/shaadi?edit=aanya-rohan.tok");
-    expect((await call("preview")).headers.get("location")).toBe("/shaadi?edit=aanya-rohan.tok&pv=1");
+    expect((await call("edit")).headers.get("location")).toBe("/i/aanya-rohan/edit#k=tok");
+    expect((await call("preview")).headers.get("location")).toBe("/i/aanya-rohan/edit#k=tok&pv=1");
     expect((await call("live")).headers.get("location")).toBe("/i/aanya-rohan");
   });
 });

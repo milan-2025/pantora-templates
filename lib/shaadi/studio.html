@@ -503,12 +503,23 @@ body.boot .phone{opacity:0}body.view .phone{transition:opacity .35s ease}
 body.boot::after{content:"";position:fixed;left:50%;top:50%;width:38px;height:38px;margin:-19px 0 0 -19px;border-radius:50%;border:3px solid rgba(240,192,74,.22);border-top-color:#f0c04a;animation:bootspin .9s linear infinite;z-index:99}
 @keyframes bootspin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){body.boot::after{animation-duration:2.5s}}
+/* ===== v15: Save bar, single-editor notice ===== */
+.svbar{position:sticky;bottom:-18px;margin:18px -18px -18px;padding:12px 18px;background:var(--card,#fff);border-top:1px solid var(--line,#e5dccb);display:flex;align-items:center;gap:12px;z-index:5;box-shadow:0 -8px 20px rgba(0,0,0,.07)}
+.svt{flex:1;min-width:0;font:12.5px/1.35 Inter,sans-serif}.svt b{display:block;font-weight:600}.svbar.dirty .svt b{color:#9a5b00}
+#svd{background:none;border:0;padding:0;margin-top:2px;font:12px Inter,sans-serif;text-decoration:underline;cursor:pointer;color:inherit;opacity:.75}
+.svbar .p{width:auto;flex:none;padding:11px 18px;white-space:nowrap}.svbar .p:disabled{opacity:.55;cursor:default}
+@media(max-width:860px){.ed{padding-bottom:170px}.svbar{position:fixed;left:0;right:0;bottom:62px;margin:0;border-radius:0}body[data-v="pv"] .svbar{display:none!important}}
+.edlock{position:fixed;inset:0;z-index:300;background:rgba(20,12,16,.6);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:16px}
+.edlockc{background:#fffdf8;color:#2a2a2a;border-radius:20px;max-width:390px;width:100%;padding:26px 22px;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.4);font-family:Inter,sans-serif}
+.edlockc h3{margin:8px 0;font:700 20px 'Cormorant Garamond',serif}.edlockc p{margin:0 0 18px;font-size:14px;line-height:1.5;color:#555}.edlocki{font-size:28px}
+.edlockc button{display:block;width:100%;margin-top:9px;padding:12px;border-radius:12px;border:1px solid #d9cbb4;background:#fff;font:600 14px Inter,sans-serif;cursor:pointer;color:#2a2a2a}
+.edlockc button.p{background:linear-gradient(135deg,#8a1c2b,#5e0f20);border-color:#5e0f20;color:#f6e1a0}
 </style><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script></head>
 <body data-v="ed">
 <div class="app">
 <form class="ed" onsubmit="return false">
  <div class="brand"><div class="logo">श</div><div><h1>Shaadi Studio</h1><p>Design an invite guests will remember</p></div></div>
- <fieldset class="pubf"><legend>Publish and share</legend><div id="pubst"></div><button type="button" class="p" id="fsb">▶ Preview as a guest (full screen)</button><button type="button" class="p" id="unl" style="background:linear-gradient(135deg,#c9972b,#8a6212);border-color:#8a6212;color:#fff">Unlock and share · from ₹799</button><label id="trust" style="text-align:center">Free to design and preview</label><label id="svs" style="text-align:center"></label></fieldset>
+ <fieldset class="pubf"><legend>Publish and share</legend><div id="pubst"></div><button type="button" class="p" id="fsb">▶ Preview with your changes (full screen)</button><button type="button" class="p" id="unl" style="background:linear-gradient(135deg,#c9972b,#8a6212);border-color:#8a6212;color:#fff">Unlock and share · from ₹799</button><label id="trust" style="text-align:center">Free to design and preview</label><label id="svs" style="text-align:center"></label></fieldset>
  <fieldset><legend>Style</legend>
   <div class="row"><div><label for="lang">Language</label><select id="lang"><option value="en">English</option><option value="hi">हिन्दी (Hindi)</option><option value="gu">ગુજરાતી (Gujarati)</option><option value="mr">मराठी (Marathi)</option><option value="ta">தமிழ் (Tamil)</option><option value="te">తెలుగు (Telugu)</option><option value="bn">বাংলা (Bengali)</option><option value="pa">ਪੰਜਾਬੀ (Punjabi)</option><option value="kn">ಕನ್ನಡ (Kannada)</option><option value="ml">മലയാളം (Malayalam)</option></select></div>
   <div><label for="th">Theme</label><select id="th"><option value="rajwada">Rajwada – royal doors, mandala</option><option value="floral">Phool – garden florals</option><option value="minimal">Minimal – modern editorial</option><option value="nikah">Mehrab – arch and crescent</option><option value="starry">Sitara – starry night</option><option value="temple">Kasavu – temple lotus</option><option value="retro">Filmy – retro poster</option><option value="sikh">Anand – Sikh phulkari</option><option value="christian">Chapel – rose window, doves</option><option value="bengali">Shubho – Bengali alpona</option><option value="mandir">Mandir – temple garden story (reel style)</option><option value="utsav">Utsav – arch door, event scenes (reel style)</option><option value="mahal">Mahal – palace, scratch the date (reel style)</option><option value="shahi">Shahi – jharokha, peacock blue (reel style)</option></select></div></div><label>Colours</label><div class="sw" id="sw"></div>
@@ -550,6 +561,7 @@ body.boot::after{content:"";position:fixed;left:50%;top:50%;width:38px;height:38
  <fieldset><legend>Reel video invite</legend><p class="hint">A 25-second vertical video of your invite with music, made from your details. Preview it free. Downloading it and the shareable reel link are part of the Royal plan.</p><div class="row"><button type="button" id="rpv">▶ Preview reel</button><button type="button" id="rcp">Copy reel link</button></div></fieldset>
  <button type="button" class="p" id="unl2">Unlock and share · from ₹799</button>
  <button type="button" id="rp" style="width:100%;margin-top:8px">Replay opening</button>
+ <div class="svbar" id="svbar" style="display:none"><div class="svt"><b id="svst"></b><button type="button" id="svd">Discard changes</button></div><button type="button" class="p" id="svp">Save</button></div>
 </form>
 <div class="pv"><div class="phone" id="phn" data-t="rajwada">
  <div class="pg" id="pg"></div><div class="wm" id="wm"></div><button class="cta" id="cta">🔒 Preview · Unlock to share</button><button class="snd on" id="snd" aria-label="Sound on or off"><i></i><i></i><i></i></button><div class="petals" id="pt"></div>
@@ -773,29 +785,36 @@ $("unl").onclick=$("unl2").onclick=$("cta").onclick=plans;$("fsb").onclick=fsOn;
 $("t1").onclick=function(){document.body.dataset.v="ed";$("t1").className="on";$("t2").className=""};
 $("t2").onclick=function(){document.body.dataset.v="pv";$("t2").className="on";$("t1").className=""};
 /* live mode: talks to /api/shaadi on pandoratemplates.com; falls back to demo elsewhere */
+var SID=(function(){var s;try{s=sessionStorage.getItem("shaadi.sid")}catch(e){}if(!s){s=Math.random().toString(36).slice(2)+Date.now().toString(36);try{sessionStorage.setItem("shaadi.sid",s)}catch(e){}}return s})();
 var API="/api/shaadi",LIVE=false,VIEW=false,SLUGP=null,saveT=0,touched=false;
-function api(m,p,b,t){var h={"Content-Type":"application/json"};if(t)h["x-edit-token"]=t;return fetch(API+p,{method:m,headers:h,body:b?JSON.stringify(b):undefined}).then(function(r){return r.json().then(function(j){if(!r.ok)throw j;return j})})}
-function cred(){try{return JSON.parse(localStorage.getItem("shaadi")||"{}")}catch(e){return{}}}
-function setCred(o){try{localStorage.setItem("shaadi",JSON.stringify(o))}catch(e){}}
+function api(m,p,b,t){var h={"Content-Type":"application/json"};if(t){h["x-edit-token"]=t;h["x-edit-session"]=SID}return fetch(API+p,{method:m,headers:h,body:b?JSON.stringify(b):undefined}).then(function(r){return r.json().then(function(j){if(!r.ok)throw j;return j})})}
+var EDK=null,PVH=false;
+function keys(){try{return JSON.parse(localStorage.getItem("shaadi.keys")||"{}")}catch(e){return{}}}
+function setKey(sl,t){var k=keys();if(t)k[sl]=t;else delete k[sl];try{localStorage.setItem("shaadi.keys",JSON.stringify(k))}catch(e){}}
+function cred(){if(EDK)return EDK;if(EM)return{};try{return JSON.parse(localStorage.getItem("shaadi")||"{}")}catch(e){return{}}}
+/* Remembers the invite being edited and shows its edit address (/i/<link>/edit) in the address bar. */
+function setCred(o){try{localStorage.setItem("shaadi",JSON.stringify(o))}catch(e){}
+ if(o&&o.slug&&o.token){setKey(o.slug,o.token);EDK={slug:o.slug,token:o.token};if(!VIEW){var q=new URLSearchParams(location.search);q.delete("edit");var qs=q.toString(),to="/i/"+o.slug+"/edit"+(qs?"?"+qs:"");if(location.pathname+location.search!==to)history.replaceState(null,"",to)}if(LIVE&&!VIEW)lockStart()}else EDK=null}
 function stateOut(){var o={};for(var k in S)if(["paid","plan","au","fin","code"].indexOf(k)<0)o[k]=S[k];if(/^https:\/\//.test(S.au||""))o.au=S.au;else if(o.pk=="custom")o.pk="raga";return o}
-function EDL(){var c=cred();return LIVE&&c.slug?'<p class="ms" style="margin-top:8px">Private edit link (keep it safe):</p><input readonly id="edl" value="'+esc(location.origin+"/shaadi?edit="+c.slug+"."+c.token)+'">':""}
+function EDL(){var c=cred();return LIVE&&c.slug?'<p class="ms" style="margin-top:8px">Private edit link (keep it safe: anyone with it can edit). On this device you can also just open '+esc(location.host)+'/i/'+esc(c.slug)+'/edit</p><input readonly id="edl" value="'+esc(location.origin+"/i/"+c.slug+"/edit#k="+c.token)+'">':""}
 function ss(t){if($("svs"))$("svs").textContent=t}
-function queueSave(){if(!LIVE||VIEW||!touched)return;clearTimeout(saveT);ss("Saving…");saveT=setTimeout(function(){var c=cred(),st=stateOut();
- (c.slug?api("PUT","/invites/"+c.slug,{state:st},c.token):api("POST","/invites",{state:st,want:S.sl}).then(function(x){setCred(x);S.fin=x.slug;return x})).then(function(){linkUI();ss("Saved ✓")}).catch(function(){ss("Couldn’t save, retrying on your next change")})},1500)}
+function queueSave(){if(!LIVE||VIEW||!touched)return;if(LOCKED){ss("Not saved: open in another tab");return}clearTimeout(saveT);ss("Saving draft…");saveT=setTimeout(function(){var c=cred(),st=stateOut();
+ (c.slug?api("PUT","/invites/"+c.slug,{state:st},c.token):api("POST","/invites",{state:st,want:S.sl}).then(function(x){setCred(x);S.fin=x.slug;return x})).then(function(){linkUI();ss("Draft saved");saveUI()}).catch(function(x){if(x&&x.error=="locked")return lockLost();ss("Couldn’t save, retrying on your next change")})},1500)}
 var _rd=render;render=function(){_rd();queueSave()};
 ["input","change","click"].forEach(function(ev){document.querySelector(".ed").addEventListener(ev,function(){touched=true},true)});
 function syncUI(){["lang","th","b","g","fam","date","story","wa","gl","pk","vol","os"].forEach(function(k){var e=$(k);if(e)e.value=S[k]});$("mu").checked=S.mu;$("cs").checked=S.cs;$("aw").style.display=S.pk=="custom"?"":"none";["upi","live","tag"].forEach(function(k){$(k).value=S[k]||""});jsUI();evUI();swUI();hsUI();ordUI();gpUI()}
 /* Guest links: load the invite straight away (not after the server check) and keep a loader up until it is in. */
-var GM=location.pathname.match(/^\/i\/([^\/]+)(?:\/([^\/]+))?/);if(GM)document.body.classList.add("view","boot");
+var EM=location.pathname.match(/^\/i\/([^\/]+)\/edit\/?$/),GM=EM?null:location.pathname.match(/^\/i\/([^\/]+)(?:\/([^\/]+))?/);if(GM)document.body.classList.add("view","boot");
 var PUB=GM?api("GET","/public/"+GM[1]+(GM[2]?"?guest="+encodeURIComponent(GM[2]):"")):null;if(PUB)PUB.catch(function(){});
 function view(sg,guest){VIEW=true;SLUGP=sg;document.body.classList.add("view");
  return api("GET","/public/"+sg).then(function(r){Object.assign(S,r.state);fixOrd();S.paid=true;S.fin=sg;if(guest){var g=guests().filter(function(x){return slug(x)==guest})[0];if(g)S.gst=g}reset()}).catch(function(){document.body.innerHTML='<div class="nl"><h1>This invite isn’t live yet</h1><p>Please check the link, or ask the couple to finish publishing.</p></div>'})}
 api("GET","/ping").then(function(j){LIVE=true;loadPlans();
- var m=location.pathname.match(/^\/i\/([^\/]+)(?:\/([^\/]+))?/);if(m)return view(m[1],m[2]);
+ if(GM)return view(GM[1],GM[2]);
  var s1=document.createElement("script");s1.src="https://checkout.razorpay.com/v1/checkout.js";document.head.appendChild(s1);
- var q0=new URLSearchParams(location.search),pc=q0.get("code");if(pc)cp=pc.toUpperCase().replace(/[^A-Z0-9_-]/g,"");var pv0=q0.get("pv")=="1",e=q0.get("edit");if(e){var p=e.split(".");setCred({slug:p[0],token:p[1]});history.replaceState(null,"",location.pathname)}
- var c=cred();if(!c.slug){payUI();return}
- return api("GET","/mine/"+c.slug,null,c.token).then(function(r){Object.assign(S,r.state);fixOrd();S.fin=r.slug;if(r.slug!==c.slug)setCred({slug:r.slug,token:c.token});S.paid=r.paid;S.plan=r.plan||"";syncUI();payUI();render();if(pv0)setTimeout(fsOn,400)}).catch(function(){setCred({})})}).catch(function(){if(GM&&!VIEW)view(GM[1],GM[2])});
+ var q0=new URLSearchParams(location.search),pc=q0.get("code");if(pc)cp=pc.toUpperCase().replace(/[^A-Z0-9_-]/g,"");var pv0=q0.get("pv")=="1",e=q0.get("edit");if(e){var p=e.split(".");setCred({slug:p[0],token:p[1]})}
+ if(edInit()===false)return;
+ var c=cred();if(!c.slug){payUI();saveUI();return}
+ return api("GET","/mine/"+c.slug,null,c.token).then(function(r){Object.assign(S,r.state);fixOrd();S.fin=r.slug;setCred({slug:r.slug,token:c.token});S.paid=r.paid;S.plan=r.plan||"";mineMeta(r);syncUI();payUI();render();if(pv0||PVH)setTimeout(fsOn,400)}).catch(function(x){if(EM){if(x&&x.error){setKey(c.slug,null);noKey(c.slug,true)}}else setCred({})})}).catch(function(){if(GM&&!VIEW)view(GM[1],GM[2])});
 setInterval(function(){if(LIVE&&!VIEW&&S.paid)dashUI()},60000);
 /* ===== v7: richer hero art, new sections, admin-driven plans, upgrade flow ===== */
 var BANNER="",MONTHS=12;
@@ -885,7 +904,7 @@ function GR(){return S.gst?(T[S.lang].dr||"Dear ")+esc(S.gst)+",":""}
 /* ===== guests, groups, per-event audiences, bulk WhatsApp ===== */
 var RSVPED={},GP=0,GQ="",GMODE="invite";
 function normPhone(p){var d=String(p||"").replace(/[^\d]/g,"");if(!d)return"";if(d.length==11&&d[0]=="0")d=d.slice(1);if(d.length<7)return"";if(d.length==10)d="91"+d;return d}
-function gslugs(){var seen={};return S.gu.map(function(g){var b=slug(g.n)||"guest";seen[b]=(seen[b]||0)+1;return seen[b]>1?b+"-"+seen[b]:b})}
+function gslugs(){var seen={};return S.gu.map(function(g){var b=slug(g.n)||"guest";if(b=="edit")b="edit-guest";seen[b]=(seen[b]||0)+1;return seen[b]>1?b+"-"+seen[b]:b})}
 function guests(){return S.gu.map(function(g){return g.n})}
 function migrateGuests(){if(!S.gu.length&&S.gl&&S.gl.trim()){S.gl.split("\n").forEach(function(x){x=x.trim();if(x)S.gu.push({n:x,p:"",g:""})});S.gl=""}}
 function splitRow(l){var d=l.indexOf("\t")>=0?"\t":l.indexOf(",")>=0?",":l.indexOf(";")>=0?";":l.indexOf("|")>=0?"|":null;if(!d)return[l.trim()];var out=[],cur="",q=false;for(var i=0;i<l.length;i++){var c=l.charAt(i);if(c=='"')q=!q;else if(c==d&&!q){out.push(cur.trim());cur=""}else cur+=c}out.push(cur.trim());return out}
@@ -1242,7 +1261,49 @@ function slCheck(){clearTimeout(slT);slOk=false;slBtn();var w=S.sl;if(!w){slMsg(
  if(!LIVE){slOk=TK.indexOf(w)<0;slMsg(slOk?"Available ✓":"Taken, try another.",slOk);return}
  slMsg("Checking…");slT=setTimeout(function(){api("GET","/invites?want="+encodeURIComponent(w)+"&mine="+encodeURIComponent(S.fin||"")).then(function(r){if(S.sl!==w)return;slOk=r.ok;slMsg(r.ok?(r.current?"This is your current link ✓":"Available ✓"+(cred().slug?" Tap Save link.":"")):r.error,r.ok);slBtn()}).catch(function(){slMsg("")})},350)}
 function slSave(){var c=cred(),w=S.sl,b=$("slsv");if(!c.slug||!w||!slOk)return;b.disabled=true;b.textContent="Saving…";
- api("PATCH","/invites/"+c.slug,{want:w},c.token).then(function(r){setCred({slug:r.slug,token:c.token});S.fin=r.slug;S.sl=r.slug;b.textContent="Save link";slMsg("Saved ✓ Your link is now /i/"+r.slug,true);linkUI();slBtn();if($("edl"))$("edl").value=location.origin+"/shaadi?edit="+r.slug+"."+c.token;toast("Your link is now pandoratemplates.com/i/"+r.slug)})
+ api("PATCH","/invites/"+c.slug,{want:w},c.token).then(function(r){setCred({slug:r.slug,token:c.token});S.fin=r.slug;S.sl=r.slug;b.textContent="Save link";slMsg("Saved ✓ Your link is now /i/"+r.slug,true);linkUI();slBtn();if($("edl"))$("edl").value=location.origin+"/i/"+r.slug+"/edit#k="+c.token;toast("Your link is now pandoratemplates.com/i/"+r.slug)})
  .catch(function(e){b.textContent="Save link";b.disabled=false;slMsg((e&&e.error)||"Couldn't save. Please try again.",false)})}
 function linkUI(){if(!$("lkt"))return;$("lkt").textContent=LINK()}
+
+/* ===== v15: Save button (draft vs live), /i/<link>/edit, one active editor ===== */
+var PUBK=null,PUBST=null,PUBAT=null,SAVING=false,LOCKED=false,HAVE=false,HAVE_EVER=false,lkT=0;
+/* Design fingerprint (guest list etc. apply instantly, so they don't count as unsaved). */
+function dk(){var o=stateOut();["gu","grp","gl","sl"].forEach(function(k){delete o[k]});return JSON.stringify(o)}
+function mineMeta(r){PUBST=r.published||null;PUBAT=r.publishedAt||null;PUBK=null;setTimeout(function(){if(!r.unsaved)PUBK=dk();saveUI()},0)}
+/* The edit page: take the private key from the link (#k=…), keep it on this device, and hide it from the address bar. */
+function edInit(){var h=new URLSearchParams(location.hash.slice(1)),k=h.get("k");PVH=h.get("pv")=="1";
+ if(location.hash)history.replaceState(null,"",location.pathname+location.search);
+ if(!EM)return true;var sl=decodeURIComponent(EM[1]),t=k||keys()[sl];
+ if(!t){noKey(sl,false);return false}EDK={slug:sl,token:t};setKey(sl,t);return true}
+function noKey(sl,bad){clearInterval(lkT);document.body.className="";document.body.innerHTML='<div class="nl"><h1>'+(bad?"This edit link no longer works":"Open your private edit link")+'</h1><p style="max-width:440px;margin:10px auto;font-family:Inter,sans-serif;font-size:15px;line-height:1.5">'+(bad?"The invite may have moved, or the link is incomplete. Open the latest edit link from your email, or contact Pandora Templates.":"To edit this invite on this phone or computer, open the private edit link from your email once. After that, this page opens the editor directly.")+'</p><p><a style="color:#f0c04a" href="/i/'+encodeURIComponent(sl)+'">View the invite</a></p></div>'}
+/* Save bar */
+function saveUI(){var b=$("svbar");if(!b)return;var c=cred(),on=LIVE&&!VIEW;b.style.display=on?"":"none";if(!on)return;
+ var dirty=!c.slug||PUBK===null||dk()!==PUBK,btn=$("svp");b.classList.toggle("dirty",dirty);
+ btn.disabled=SAVING||LOCKED||!dirty;btn.textContent=SAVING?"Saving…":dirty?(S.paid?"Save & publish":"Save"):"Saved ✓";
+ $("svst").textContent=dirty?(S.paid?"Unsaved changes. Guests still see the last saved version.":"Draft. Press Save to keep this version."):(S.paid?"All changes are live ✓":"Saved. It goes live when you unlock sharing.");
+ $("svd").style.display=dirty&&PUBST?"":"none"}
+function doSave(){if(SAVING||LOCKED||!LIVE||VIEW)return;SAVING=true;clearTimeout(saveT);saveUI();var st=stateOut(),k0=dk();
+ ensureInvite().then(function(c){return api("POST","/invites/"+c.slug,{op:"publish",state:st},c.token)}).then(function(r){SAVING=false;PUBK=k0;PUBST=JSON.parse(JSON.stringify(st));PUBAT=r.publishedAt;ss("Saved");saveUI();toast(S.paid?"Saved. Guests now see this version.":"Saved.")})
+ .catch(function(x){SAVING=false;saveUI();if(x&&x.error=="locked")return lockLost();toast((x&&x.error)||"Couldn’t save. Please try again.")})}
+function doDiscard(){if(!PUBST||LOCKED)return;var keep={};["gu","grp","gl"].forEach(function(k){keep[k]=S[k]});Object.assign(S,JSON.parse(JSON.stringify(PUBST)),keep);fixOrd();syncUI();payUI();touched=true;render();PUBK=dk();saveUI();toast("Changes discarded. Back to the saved version.")}
+$("svp").onclick=doSave;$("svd").onclick=doDiscard;
+document.addEventListener("keydown",function(e){if((e.ctrlKey||e.metaKey)&&e.key&&e.key.toLowerCase()=="s"&&LIVE&&!VIEW){e.preventDefault();doSave()}});
+var _rd15=render;render=function(){_rd15();saveUI()};
+/* One active editor per invite: this tab renews a lease every 15s; another tab/device must take it over to edit. */
+try{var SBC=new BroadcastChannel("shaadi-sid");SBC.onmessage=function(e){var d=e.data||{};if(d.q===SID)SBC.postMessage({dup:SID});else if(d.dup===SID&&!HAVE){SID=Math.random().toString(36).slice(2)+Date.now().toString(36);try{sessionStorage.setItem("shaadi.sid",SID)}catch(x){}}};SBC.postMessage({q:SID})}catch(e){}
+function agoTxt(s){return s==null?"":s<10?"just now":s<60?s+" seconds ago":Math.round(s/60)+" min ago"}
+function lockTick(take){var c=cred();if(!LIVE||VIEW||!c.slug)return Promise.resolve();
+ return api("POST","/invites/"+c.slug,{op:"lock",take:!!take},c.token).then(function(r){if(r.ok){HAVE=true;var was=LOCKED;LOCKED=false;HAVE_EVER=true;if(was){lockUI(null);if(take)reloadDraft()}}else{HAVE=false;LOCKED=true;lockUI(HAVE_EVER?"lost":"busy",r.ago)}}).catch(function(){})}
+function lockStart(){if(lkT)return;lockTick(false);lkT=setInterval(function(){lockTick(false)},15000);
+ document.addEventListener("visibilitychange",function(){if(document.visibilityState=="visible")lockTick(false)});addEventListener("pagehide",lockRelease)}
+function lockRelease(){var c=cred();if(!HAVE||!c.slug)return;try{fetch(API+"/invites/"+c.slug,{method:"POST",keepalive:true,headers:{"Content-Type":"application/json","x-edit-token":c.token,"x-edit-session":SID},body:JSON.stringify({op:"lock",release:true})})}catch(e){}}
+function lockLost(){HAVE=false;LOCKED=true;lockUI("lost");saveUI()}
+/* Taking over: load the latest draft first, so this tab doesn't overwrite edits made in the other one. */
+function reloadDraft(){var c=cred();return api("GET","/mine/"+c.slug,null,c.token).then(function(r){Object.assign(S,r.state);fixOrd();S.fin=r.slug;S.paid=r.paid;S.plan=r.plan||"";mineMeta(r);syncUI();payUI();touched=false;render()}).catch(function(){})}
+function lockUI(k,ago){var o=$("edlock");if(!k){if(o)o.remove();saveUI();return}
+ if(!o){o=document.createElement("div");o.id="edlock";o.className="edlock";o.setAttribute("role","dialog");o.setAttribute("aria-modal","true");document.body.appendChild(o)}
+ var lost=k=="lost";o.innerHTML='<div class="edlockc"><div class="edlocki">✎</div><h3>'+(lost?"You’re editing in another tab now":"This invite is open in another tab")+'</h3><p>'+(lost?"This invite was opened for editing somewhere else, so this tab has stopped saving. Everything saved up to now is safe.":"It’s being edited in another browser tab or device"+(ago!=null?" (active "+agoTxt(ago)+")":"")+". Only one editor can be open at a time, so changes never overwrite each other.")+'</p><button type="button" class="p" id="lkh">Edit here instead</button><button type="button" id="lkx">'+(lost?"Close this editor":"Close this editor and keep editing there")+'</button></div>';
+ $("lkh").onclick=function(){this.disabled=true;this.textContent="Opening…";lockTick(true)};$("lkx").onclick=lockClose;saveUI()}
+function lockClose(){clearInterval(lkT);var sl=(cred().slug||"");try{window.close()}catch(e){}
+ setTimeout(function(){document.body.className="";document.body.innerHTML='<div class="nl"><h1>Editing continues in your other tab</h1><p style="font-family:Inter,sans-serif;font-size:15px">You can close this tab.</p>'+(sl?'<p><a style="color:#f0c04a" href="/i/'+encodeURIComponent(sl)+'">View the invite</a></p>':"")+'</div>'},150)}
 </script></body></html>
