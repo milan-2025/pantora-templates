@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
         { source: "/CRM", destination: "/CRM/index.html" },
         // Online wedding planner (static app in public/planner, server code in app/api/planner).
         { source: "/planner", destination: "/planner/index.html" },
+        { source: "/planner/signup", destination: "/planner/index.html" },
+        { source: "/planner/login", destination: "/planner/index.html" },
         { source: "/crm", destination: "/crm-software.html" },
         { source: "/CRM/api.php", destination: "/api/crm" },
       ],

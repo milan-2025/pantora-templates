@@ -14,6 +14,8 @@
 <link rel="icon" href="/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<script>/* Hide the planner until we know whether to show it (prevents a flash of it before the landing page). */
+try { document.documentElement.classList.add(localStorage.getItem('pp_token') || sessionStorage.getItem('pp_support') ? 'boot-app' : 'boot-out'); } catch (e) { document.documentElement.classList.add('boot-out'); }</script>
 <style>/*CSS*/</style>
 </head>
 <body>
