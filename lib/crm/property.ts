@@ -75,3 +75,11 @@ export const unitLabel = (u: { tower?: string; no: string }) => `${u.tower ? u.t
 export function reservedCodes(projectCode: string, endSeq: number, count: number): string[] {
   return Array.from({ length: count }, (_, i) => formatUnitCode(projectCode, endSeq - count + 1 + i));
 }
+
+/** Cloudinary public id of a project photo uploaded through the CRM (inside this project's own folder), else "". */
+export function projectPhotoId(url: unknown, ws: string, projectId: string): string {
+  const m = /^https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/(?:v\d+\/)?(crm\/[^?#]+?)\.[a-z0-9]{2,5}$/i.exec(String(url ?? ""));
+  if (!m) return "";
+  const id = m[1];
+  return id.startsWith(`crm/${ws}/projects/${projectId}/`) && !id.includes("..") ? id : "";
+}

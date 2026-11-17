@@ -216,6 +216,14 @@ describe("private unit documents", () => {
     expect((await as(A).post("unit_doc_add", { unit: u1, ...uploaded(`${folder()}/f21.pdf`), name: "f21.pdf" })).status).toBe(400);
     expect(unitDoc(u1).docs).toHaveLength(20);
   });
+  it("deleting a project removes its uploaded photos, but not pasted links", async () => {
+    const own = `https://res.cloudinary.com/demo/image/upload/v1/crm/${wsA}/projects/${p2}/ph1.jpg`;
+    await as(A).post("project_save", { id: p2, name: "Hidden Draft", images: [own, "https://example.com/outside.jpg"] });
+    const spy = vi.spyOn(cloudinary.uploader, "destroy").mockResolvedValue({ result: "ok" } as any);
+    await as(A).post("project_delete", { id: p2 });
+    expect(spy.mock.calls.map((c) => c[0])).toEqual([`crm/${wsA}/projects/${p2}/ph1`]);
+    spy.mockRestore();
+  });
   it("deleting the unit removes its files from storage", async () => {
     const spy = vi.spyOn(cloudinary.uploader, "destroy").mockResolvedValue({ result: "ok" } as any);
     await as(A).post("unit_delete", { id: u1 });

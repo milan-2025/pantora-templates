@@ -310,7 +310,8 @@ async function mergeG(gi){const g=window._dg[gi].slice().sort((a,b)=>(a.created|
 const APC={Meeting:"#7c3aed","Site visit":"#ea580c",Call:"#2563eb"};let calM=new Date(new Date().getFullYear(),new Date().getMonth(),1),calD=null,notifOn=LS.g("notif",false);
 const nextA=l=>{const a=(l.appts||[]).filter(x=>!x.done&&x.at.slice(0,10)>=td()).sort((x,y)=>x.at.localeCompare(y.at))[0];return a?chip("📅 "+a.type+" "+a.at.slice(5,10)+" "+a.at.slice(11),APC[a.type]||"#999"):""};
 const taskC=l=>{const o=(l.tasks||[]).filter(k=>!k.done);return o.length?chip("☑ "+o.length+" task"+(o.length>1?"s":""),o.some(k=>k.due&&k.due<=td())?"#dc2626":"#0891b2"):""};
-async function lupd(id,fn){const l=leads.find(x=>x.id===id);await db.collection("leads").doc(id).update(fn(l));setTimeout(()=>openLead(id),450)}
+/* Save a change to a lead. The change is shown straight away (the full list refreshes from the server a moment later). */
+async function lupd(id,fn){const l=leads.find(x=>x.id===id);const ch=fn(l)||{};await db.collection("leads").doc(id).update(ch);if(l)Object.assign(l,ch);setTimeout(()=>openLead(id),450)}
 function calH(vis){calD=calD||td();const ev={};vis.forEach(l=>(l.appts||[]).forEach(a=>{(ev[a.at.slice(0,10)]=ev[a.at.slice(0,10)]||[]).push({l,a})}));
  const y=calM.getFullYear(),mo=calM.getMonth(),first=new Date(y,mo,1).getDay(),dim=new Date(y,mo+1,0).getDate();let cells="";
  for(let i=0;i<first;i++)cells+="<div></div>";

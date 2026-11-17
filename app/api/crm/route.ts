@@ -13,7 +13,7 @@ import {
   holdFilter, holdHours, modeOf, releaseUpdate, type UnitStatus,
 } from "@/lib/crm/realestate";
 import { buildReport } from "@/lib/crm/reports";
-import { cleanImages, cleanMapUrl, formatCode, reservedCodes, resolveProject, unitLabel } from "@/lib/crm/property";
+import { cleanImages, cleanMapUrl, formatCode, projectPhotoId, reservedCodes, resolveProject, unitLabel } from "@/lib/crm/property";
 import { cleanPinned } from "@/lib/crm/notes";
 import { MAX_DOCS, cleanDocName, cleanVideos, docFolder, docInFolder } from "@/lib/crm/media";
 import { v2 as cloudinary } from "cloudinary";
@@ -524,11 +524,17 @@ async function handle(req: NextRequest) {
     case "project_delete": {
       const x = only(); if (x) return x;
       const pid = String(body.id || "");
-      if (!(await c.projects.findOne({ _id: pid, ws }))) return json({ ok: 1 });
+      const projDoc = await c.projects.findOne({ _id: pid, ws });
+      if (!projDoc) return json({ ok: 1 });
       const gone = await c.units.find({ ws, project: pid }).toArray();
       await c.units.deleteMany({ ws, project: pid });
       await c.projects.deleteOne({ _id: pid, ws });
       await dropDocs(gone.flatMap((u: any) => u.docs || []));
+      // photos uploaded through the CRM for this project (pasted links to other sites are left alone)
+      for (const img of new Set([...(projDoc.images || []), projDoc.cover].filter(Boolean))) {
+        const photo = projectPhotoId(img, ws, pid);
+        if (photo) { try { await cloudinary.uploader.destroy(photo, { invalidate: true }); } catch (e) { console.error("[crm] photo delete", e); } }
+      }
       await c.leads.updateMany({ ws, "data.projectId": pid }, { $set: { "data.projectId": "", "data.unitId": "", "data.unitCode": "" } });
       return json({ ok: 1 });
     }
