@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Site visits · LeadFlow CRM</title>
+<link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="stylesheet" href="re.css">
+</head>
+<body>
+<div id="app"><div class="msg">Loading…</div></div>
+<div id="ov"><div id="md"></div></div>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const api=async(m,r,x,b)=>{const res=await fetch("api.php?r="+r+(x||""),{method:m,headers:{"Content-Type":"application/json"},body:b?JSON.stringify(b):undefined,credentials:"same-origin"});
+  if(res.status===401){location.href="login.html";throw new Error("auth")}
+  const j=await res.json().catch(()=>({}));if(!res.ok)throw new Error(j.error||"Something went wrong");return j};
+const pad=n=>String(n).padStart(2,"0"),nowL=()=>{const d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+"T"+pad(d.getHours())+":"+pad(d.getMinutes())};
+const fmt=at=>{const d=new Date(at),t=nowL().slice(0,10),day=at.slice(0,10);const tm=d.toLocaleTimeString("en-IN",{hour:"numeric",minute:"2-digit"});
+  const tom=new Date();tom.setDate(tom.getDate()+1);const tk=tom.getFullYear()+"-"+pad(tom.getMonth()+1)+"-"+pad(tom.getDate());
+  return (day===t?"Today":day===tk?"Tomorrow":d.toLocaleDateString("en-IN",{weekday:"short",day:"numeric",month:"short"}))+", "+tm};
+const OUT={interested:["Interested","#16a34a"],thinking:["Still thinking","#d97706"],not_interested:["Not interested","#dc2626"],no_show:["Did not come","#6b7280"]};
+const BK={overdue:["Needs update","#dc2626"],today:["Today","#2563eb"],upcoming:["Upcoming","#7c3aed"],done:["Done","#16a34a"]};
+let me,visits=[],projects=[],leads=[],tab="today",units=[];
+const admin=()=>me.role==="admin";
+const open_=h=>{$("#md").innerHTML=h;$("#ov").classList.add("on")},close=()=>$("#ov").classList.remove("on");
+$("#ov").addEventListener("click",e=>{if(e.target.id==="ov")close()});
+const err=m=>{const x=$("#er");if(x)x.textContent=m};
+async function run(fn){try{await fn();close();await load()}catch(e){err(e.message)}}
+async function init(){
+  try{me=await api("GET","me")}catch(e){return}
+  if(!me.ws||me.ws.mode!=="realestate"||me.role==="partner"){$("#app").innerHTML=`<div class="msg"><p>Site visits are part of Real estate mode${me.role==="partner"?" and are not available to partners":""}.</p><a href="./">← Back to leads</a></div>`;return}
+  await load();setInterval(()=>load(true),30000);
+  const p=new URLSearchParams(location.search).get("lead");if(p)openSchedule(null,p);
+}
+async function load(quiet){
+  try{[visits,projects,leads]=await Promise.all([api("GET","visits_list","&now="+encodeURIComponent(nowL())),api("GET","projects_list"),api("GET","leads")]);
+    if(!quiet||!$("#ov").classList.contains("on"))render()}catch(e){if(!quiet)$("#app").innerHTML=`<div class="msg">${esc(e.message)}</div>`}
+}
+function render(){
+  const by=b=>visits.filter(v=>v.bucket===b);
+  const tabs=[["today","Today"],["overdue","Needs update"],["upcoming","Upcoming"],["done","Done"]];
+  let h=`<div class="top"><a class="btn sm" href="./">← Leads</a><h1>📍 Site visits</h1><button class="sm p" id="new">＋ Schedule</button></div>
+  <div class="tabs">${tabs.map(t=>`<button data-t="${t[0]}" class="${tab===t[0]?"on":""}">${t[1]} (${by(t[0]).length})</button>`).join("")}</div>`;
+  let list=by(tab);if(tab==="done")list=[...list].reverse();
+  if(!list.length)h+=`<div class="msg">${tab==="today"?"No visits today.":tab==="overdue"?"Nothing waiting for an update.":tab==="upcoming"?"No upcoming visits.":"No completed visits yet."}</div>`;
+  h+=list.map(v=>{const b=BK[v.bucket],wa=String(v.phone).replace(/\D/g,"").slice(-10);
+    return`<div class="card" style="--c:${b[1]}"><div class="h"><div><b>${esc(v.leadName||"Lead")}</b><span class="mut">${fmt(v.at)}${v.project?" · "+esc(v.project):""}${v.unit?" · "+esc(v.unit):""}</span></div><span class="tag" style="--c:${b[1]}">${v.outcome?OUT[v.outcome][0]:b[0]}</span></div>
+    ${v.note?`<div class="mut">📝 ${esc(v.note)}</div>`:""}${v.feedback?`<div class="mut">💬 ${esc(v.feedback)}</div>`:""}${admin()&&v.owner?`<div class="mut">Agent: ${esc(v.owner)}</div>`:""}
+    <div class="row" style="margin:8px 0 0">${wa.length===10?`<a class="btn sm" href="tel:+91${wa}">📞 Call</a><a class="btn sm" target="_blank" rel="noopener" href="https://wa.me/91${wa}">💬 WhatsApp</a>`:""}
+    ${v.done?"":`<button class="sm p" data-d="${v.leadId}|${v.id}">Mark done</button>`}<button class="sm" data-r="${v.leadId}|${v.id}">${v.done?"Reschedule":"Change time"}</button><button class="sm dg" data-x="${v.leadId}|${v.id}">Delete</button></div></div>`}).join("");
+  $("#app").innerHTML=h;$("#new").onclick=()=>openSchedule();
+}
+const find=k=>{const [l,i]=k.split("|");return visits.find(v=>v.leadId===l&&v.id===i)};
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-t]");if(t){tab=t.dataset.t;render();return}
+  const d=e.target.closest("[data-d]");if(d){openDone(find(d.dataset.d));return}
+  const r=e.target.closest("[data-r]");if(r){openSchedule(find(r.dataset.r));return}
+  const x=e.target.closest("[data-x]");if(x){const v=find(x.dataset.x);if(v&&confirm("Delete this visit?"))run(()=>api("POST","visit_delete","",{leadId:v.leadId,id:v.id}));return}
+  if(e.target.closest("[data-close]"))close();
+});
+function openSchedule(v,leadId){
+  const lid=v?v.leadId:(leadId||""),dflt=v?v.at:(()=>{const d=new Date();d.setDate(d.getDate()+1);d.setHours(11,0,0,0);return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+"T11:00"})();
+  const L=leads.filter(l=>!["Won","Lost"].includes(l.status)||l.id===lid);
+  open_(`<h3 style="margin:0">${v?"Change visit time":"Schedule site visit"}</h3>
+  <label class="l">Lead</label><select id="vl" ${v?"disabled":""}><option value="">Choose a lead…</option>${L.map(l=>`<option value="${l.id}" ${l.id===lid?"selected":""}>${esc(l.name||l.phone||"Lead")}${l.phone?" · "+esc(l.phone):""}</option>`).join("")}</select>
+  <label class="l">Date and time</label><input type="datetime-local" id="va" value="${dflt}">
+  <div class="r2"><div><label class="l">Project</label><input id="vp" list="pl" value="${esc(v?v.project:"")}"><datalist id="pl">${projects.map(p=>`<option value="${esc(p.name)}">`).join("")}</datalist></div><div><label class="l">Unit (optional)</label><input id="vu" value="${esc(v?v.unit:"")}"></div></div>
+  <label class="l">Note (optional)</label><input id="vn" value="${esc(v?v.note:"")}" placeholder="e.g. coming with family"><div id="er" class="er"></div>
+  <div class="acts"><button class="p" id="sv">Save</button><button data-close>Cancel</button></div>`);
+  if(!v&&lid){const l=leads.find(x=>x.id===lid);if(l&&l.project)$("#vp").value=l.project}
+  $("#sv").onclick=()=>run(async()=>{const leadId=v?v.leadId:$("#vl").value;if(!leadId)throw new Error("Choose a lead");
+    await api("POST","visit_save","",{leadId,id:v?v.id:"",at:$("#va").value,project:$("#vp").value,unit:$("#vu").value,note:$("#vn").value});history.replaceState(null,"","visits.html")});
+}
+function openDone(v){
+  open_(`<h3 style="margin:0">How did the visit go?</h3><div class="mut">${esc(v.leadName)} · ${fmt(v.at)}</div>
+  <div class="acts" id="oc" style="flex-direction:column">${Object.entries(OUT).map(([k,o])=>`<button data-o="${k}" style="border-color:${o[1]};color:${o[1]}">${o[0]}</button>`).join("")}</div>
+  <label class="l">Feedback (optional)</label><textarea id="vf" rows="3" placeholder="What did they like or worry about?"></textarea><div id="er" class="er"></div>
+  <div class="acts"><button data-close>Cancel</button></div>`);
+  document.querySelectorAll("#oc [data-o]").forEach(b=>b.onclick=()=>run(()=>api("POST","visit_done","",{leadId:v.leadId,id:v.id,outcome:b.dataset.o,feedback:$("#vf").value})));
+}
+init();
+</script>
+</body>
+</html>

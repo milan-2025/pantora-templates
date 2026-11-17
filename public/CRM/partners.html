@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Partners & commissions · LeadFlow CRM</title>
+<link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="stylesheet" href="re.css">
+</head>
+<body>
+<div id="app"><div class="msg">Loading…</div></div>
+<div id="ov"><div id="md"></div></div>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const api=async(m,r,x,b)=>{const res=await fetch("api.php?r="+r+(x||""),{method:m,headers:{"Content-Type":"application/json"},body:b?JSON.stringify(b):undefined,credentials:"same-origin"});
+  if(res.status===401){location.href="login.html";throw new Error("auth")}
+  const j=await res.json().catch(()=>({}));if(!res.ok)throw new Error(j.error||"Something went wrong");return j};
+const inr=n=>"₹"+Math.round(n||0).toLocaleString("en-IN");
+const ST={pending:["Pending","#d97706"],approved:["Approved","#2563eb"],paid:["Paid","#16a34a"],cancelled:["Cancelled","#6b7280"]};
+let me,partners=[],comm={items:[],totals:{}},tab="comm",filt="all";
+const admin=()=>me.role==="admin",isP=()=>me.role==="partner";
+const open_=h=>{$("#md").innerHTML=h;$("#ov").classList.add("on")},close=()=>$("#ov").classList.remove("on");
+$("#ov").addEventListener("click",e=>{if(e.target.id==="ov")close()});
+const err=m=>{const x=$("#er");if(x)x.textContent=m};
+async function run(fn){try{await fn();close();await load()}catch(e){err(e.message)}}
+async function init(){
+  try{me=await api("GET","me")}catch(e){return}
+  if(!me.ws||me.ws.mode!=="realestate"||(!admin()&&!isP())){$("#app").innerHTML=`<div class="msg"><p>${admin()||isP()?"Real estate mode is off for this company.":"Only admins and channel partners can open this page."}</p><a href="./">← Back to leads</a></div>`;return}
+  await load()}
+async function load(){
+  try{const jobs=[api("GET","commissions_list")];if(admin())jobs.push(api("GET","partners_list"));
+    const r=await Promise.all(jobs);comm=r[0];partners=r[1]||[];render()}catch(e){$("#app").innerHTML=`<div class="msg">${esc(e.message)}</div>`}
+}
+function totals(t){return`<div class="stats">${[["Due to partners",t.due,"#d97706"],["Pending",t.pending,"#d97706"],["Approved",t.approved,"#2563eb"],["Paid",t.paid,"#16a34a"]].map(x=>`<div class="stat" style="--c:${x[2]}"><b style="font-size:17px">${inr(x[1])}</b><span>${x[0]}</span></div>`).join("")}</div>`}
+function render(){
+  let h=`<div class="top"><a class="btn sm" href="./">← Leads</a><h1>${isP()?"💰 My commissions":"🤝 Partners & commissions"}</h1>${admin()&&tab==="partners"?`<button class="sm p" id="addp">＋ Partner</button>`:""}</div>`;
+  if(admin())h+=`<div class="tabs"><button data-t="comm" class="${tab==="comm"?"on":""}">Commissions</button><button data-t="partners" class="${tab==="partners"?"on":""}">Partners (${partners.length})</button></div>`;
+  if(isP())h+=`<div class="mut" style="margin-bottom:8px">Add customers from the Leads screen. Commission is created when a unit is booked for your customer.</div>`;
+  if(tab==="comm"||isP()){
+    h+=totals(comm.totals||{});
+    h+=`<div class="chips">${[["all","All"],["pending","Pending"],["approved","Approved"],["paid","Paid"],["cancelled","Cancelled"]].map(x=>`<button data-f="${x[0]}" class="${filt===x[0]?"on":""}">${x[1]}</button>`).join("")}</div>`;
+    const items=comm.items.filter(c=>filt==="all"||c.status===filt);
+    if(!items.length)h+=`<div class="msg">${comm.items.length?"Nothing here.":isP()?"No commissions yet.":"No commissions yet. They appear when a unit is booked for a partner's customer."}</div>`;
+    h+=items.map(c=>{const s=ST[c.status]||ST.pending;return`<div class="card" style="--c:${s[1]}"><div class="h"><div><b>${inr(c.amount)}</b><span class="mut">${esc(c.leadName)} · ${esc(c.project)} ${esc(c.unit)}</span></div><span class="tag" style="--c:${s[1]}">${s[0]}</span></div>
+      <div class="mut">Sale ${inr(c.saleValue)} · ${c.rate}%${admin()?" · "+esc(c.partner):""}${c.paidAt?" · paid "+new Date(c.paidAt).toLocaleDateString("en-IN"):""}</div>${c.note?`<div class="mut">📝 ${esc(c.note)}</div>`:""}
+      ${admin()?`<div class="row" style="margin:8px 0 0">${c.status==="pending"?`<button class="sm p" data-s="${c.id}|approved">Approve</button>`:""}${["pending","approved"].includes(c.status)?`<button class="sm" data-s="${c.id}|paid">Mark paid</button>`:""}${c.status==="paid"?`<button class="sm" data-s="${c.id}|approved">Reopen</button>`:""}${c.status==="cancelled"?`<button class="sm" data-s="${c.id}|pending">Restore</button>`:""}${c.status!=="paid"&&c.status!=="cancelled"?`<button class="sm" data-e="${c.id}">Edit</button><button class="sm dg" data-s="${c.id}|cancelled">Cancel</button>`:""}</div>`:""}</div>`}).join("");
+  }else{
+    if(!partners.length)h+=`<div class="msg">No channel partners yet. Add one so they can register customers and track commissions.</div>`;
+    h+=partners.map(p=>`<div class="card"><div class="h"><div><b>${esc(p.name)}</b><span class="mut">${esc(p.email)}${p.rate!=null?" · "+p.rate+"% own rate":" · uses project rate"}</span></div><button class="sm" data-p="${p.id}">Edit</button></div>
+      <div class="mut">${p.leads} customers · ${p.booked} booked · due ${inr(p.commission.due)} · paid ${inr(p.commission.paid)}</div></div>`).join("");
+  }
+  $("#app").innerHTML=h;const a=$("#addp");if(a)a.onclick=()=>openPartner();
+}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-t]");if(t){tab=t.dataset.t;render();return}
+  const f=e.target.closest("[data-f]");if(f){filt=f.dataset.f;render();return}
+  const s=e.target.closest("[data-s]");if(s){const [id,st]=s.dataset.s.split("|");if(st==="cancelled"&&!confirm("Cancel this commission?"))return;run(()=>api("POST","commission_update","",{id,status:st}));return}
+  const ed=e.target.closest("[data-e]");if(ed){openEdit(comm.items.find(c=>c.id===ed.dataset.e));return}
+  const p=e.target.closest("[data-p]");if(p){openPartner(partners.find(x=>x.id===p.dataset.p));return}
+  if(e.target.closest("[data-close]"))close();
+});
+function openEdit(c){
+  open_(`<h3 style="margin:0">Edit commission</h3><div class="mut">${esc(c.partner)} · ${esc(c.leadName)} · sale ${inr(c.saleValue)} at ${c.rate}%</div><label class="l">Amount (₹)</label><input id="ea" type="number" min="0" value="${c.amount}"><label class="l">Note</label><input id="en" value="${esc(c.note)}" placeholder="e.g. negotiated, TDS deducted"><div id="er" class="er"></div>
+  <div class="acts"><button class="p" id="sv">Save</button><button data-close>Cancel</button></div>`);
+  $("#sv").onclick=()=>run(()=>api("POST","commission_update","",{id:c.id,amount:$("#ea").value,note:$("#en").value}));
+}
+function openPartner(p){
+  open_(`<h3 style="margin:0">${p?"Edit":"New"} channel partner</h3><div class="mut">Partners log in at the same address as your team. They only see customers they register.</div>
+  <label class="l">Name</label><input id="pn" value="${esc(p?p.name:"")}"><label class="l">Email (login)</label><input id="pe" type="email" value="${esc(p?p.email:"")}">
+  <label class="l">${p?"New password (leave blank to keep)":"Password (min 8 characters)"}</label><input id="pw" type="text" autocomplete="off">
+  <label class="l">Own commission % (optional, overrides the project rate)</label><input id="pr" type="number" min="0" max="100" step="0.1" value="${p&&p.rate!=null?p.rate:""}"><div id="er" class="er"></div>
+  <div class="acts"><button class="p" id="sv">Save</button>${p?`<button class="dg" id="dl">Remove</button>`:""}<button data-close>Cancel</button></div>`);
+  $("#sv").onclick=()=>run(()=>api("POST","user_save","",{id:p?p.id:"",name:$("#pn").value,email:$("#pe").value,password:$("#pw").value,role:"partner",rate:$("#pr").value}));
+  const d=$("#dl");if(d)d.onclick=()=>{if(confirm("Remove this partner? Their customers stay in your CRM."))run(()=>api("POST","user_delete","",{id:p.id}))};
+}
+init();
+</script>
+</body>
+</html>

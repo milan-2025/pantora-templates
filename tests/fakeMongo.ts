@@ -16,6 +16,9 @@ const unsetPath = (o: any, p: string) => {
 const applyUpdate = (d: Doc, u: Doc) => {
   for (const [k, v] of Object.entries<any>(u.$set ?? {})) setPath(d, k, v);
   for (const k of Object.keys(u.$unset ?? {})) unsetPath(d, k);
+  for (const [k, v] of Object.entries<any>(u.$inc ?? {})) setPath(d, k, (Number(getPath(d, k)) || 0) + v);
+  for (const [k, v] of Object.entries<any>(u.$push ?? {})) setPath(d, k, [...(getPath(d, k) || []), structuredClone(v)]);
+  for (const [k, v] of Object.entries<any>(u.$pull ?? {})) setPath(d, k, (getPath(d, k) || []).filter((x: any) => !Object.entries(v).every(([kk, vv]) => x?.[kk] === vv)));
 };
 
 class Coll {
@@ -43,6 +46,13 @@ class Coll {
   async findOne(q: Doc = {}) { const m = this.match(q)[0]; return m ? structuredClone(m) : null; }
   async countDocuments(q: Doc = {}) { return this.match(q).length; }
   async updateOne(q: Doc, u: Doc) { const m = this.match(q)[0]; if (!m) return { matchedCount: 0 }; applyUpdate(m, u); return { matchedCount: 1 }; }
+  async findOneAndUpdate(q: Doc, u: Doc, o?: Doc) {
+    const m = this.match(q)[0];
+    if (!m) return null;
+    const before = structuredClone(m);
+    applyUpdate(m, u);
+    return structuredClone(o?.returnDocument === "after" ? m : before);
+  }
   async updateMany(q: Doc, u: Doc) { const ms = this.match(q); ms.forEach((m) => applyUpdate(m, u)); return { matchedCount: ms.length }; }
   async replaceOne(q: Doc, d: Doc, o?: Doc) { const m = this.match(q)[0]; if (m) { Object.keys(m).forEach((k) => delete m[k]); Object.assign(m, structuredClone(d)); return { matchedCount: 1 }; } if (o?.upsert) this.docs.push(structuredClone(d)); return { matchedCount: 0 }; }
   async deleteOne(q: Doc) { const m = this.match(q)[0]; if (m) this.docs.splice(this.docs.indexOf(m), 1); return { deletedCount: m ? 1 : 0 }; }
