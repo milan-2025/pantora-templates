@@ -1,0 +1,103 @@
+@import "tailwindcss";
+@source "../../components/stays";
+
+/* Same brand palette as the main site (app/(frontend)/globals.css), tuned for a photo-first stays section. */
+:root {
+  --plum: #3b1f4a;
+  --marigold: #f2a93b;
+  --cream: #fbf5ea;
+  --teal: #1f7a74;
+  --coral: #e0675a;
+  --charcoal: #2a2a2a;
+  --sand: #fbe9c8;
+  --blush: #f8e1dd;
+  --mint: #dcedea;
+  --lavender: #ebe2ef;
+  --paper: #fffdf8;
+  --marigold-deep: #a8651a;
+  --line: rgb(59 31 74 / 0.12);
+  --muted: #6b6372;
+  --wa: #1f9d55;
+}
+
+@theme inline {
+  --color-plum: var(--plum);
+  --color-marigold: var(--marigold);
+  --color-marigold-deep: var(--marigold-deep);
+  --color-cream: var(--cream);
+  --color-teal: var(--teal);
+  --color-coral: var(--coral);
+  --color-charcoal: var(--charcoal);
+  --color-sand: var(--sand);
+  --color-blush: var(--blush);
+  --color-mint: var(--mint);
+  --color-lavender: var(--lavender);
+  --color-paper: var(--paper);
+  --color-line: var(--line);
+  --color-muted: var(--muted);
+  --color-wa: var(--wa);
+  --font-display: var(--font-dm-serif);
+  --font-sans: var(--font-poppins);
+  --shadow-soft: 0 1px 2px rgb(59 31 74 / 0.06), 0 12px 32px -12px rgb(59 31 74 / 0.22);
+  --shadow-lift: 0 2px 4px rgb(59 31 74 / 0.08), 0 28px 56px -18px rgb(59 31 74 / 0.32);
+}
+
+@layer base {
+  html { overflow-x: clip; -webkit-text-size-adjust: 100%; }
+  body { background: var(--cream); color: var(--charcoal); overflow-x: clip; }
+  h1, h2, h3 { color: var(--plum); }
+  :focus-visible { outline: 2px solid var(--marigold); outline-offset: 2px; }
+  input, select, textarea { font: inherit; }
+}
+
+@layer components {
+  .s-card { background: var(--paper); border: 1px solid var(--line); box-shadow: var(--shadow-soft); }
+  .s-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+    border-radius: 999px; padding: 0.7rem 1.2rem; font-weight: 600; font-size: 0.95rem; line-height: 1.1;
+    transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease; cursor: pointer; white-space: nowrap;
+  }
+  .s-btn:active { transform: scale(0.98); }
+  .s-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+  .s-btn-primary { background: var(--plum); color: #fff; }
+  .s-btn-primary:hover { background: #2c1638; }
+  .s-btn-accent { background: var(--marigold); color: var(--plum); }
+  .s-btn-accent:hover { background: #e99a26; }
+  .s-btn-wa { background: var(--wa); color: #fff; }
+  .s-btn-wa:hover { background: #188547; }
+  .s-btn-ghost { background: transparent; color: var(--plum); border: 1px solid var(--line); }
+  .s-btn-ghost:hover { background: rgb(59 31 74 / 0.05); }
+  .s-btn-danger { background: #fff; color: #b42318; border: 1px solid #f3c1bb; }
+  .s-btn-danger:hover { background: #fff3f1; }
+  .s-btn-sm { padding: 0.45rem 0.8rem; font-size: 0.85rem; }
+
+  .s-input {
+    width: 100%; border: 1px solid var(--line); background: #fff; border-radius: 0.8rem; padding: 0.62rem 0.8rem;
+    font-size: 0.95rem; color: var(--charcoal); min-height: 2.6rem;
+  }
+  .s-input:focus { outline: none; border-color: var(--plum); box-shadow: 0 0 0 3px rgb(59 31 74 / 0.12); }
+  textarea.s-input { min-height: 6rem; resize: vertical; }
+  .s-label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--plum); margin-bottom: 0.3rem; }
+  .s-hint { font-size: 0.78rem; color: var(--muted); margin-top: 0.25rem; }
+  .s-chip { display: inline-flex; align-items: center; gap: 0.35rem; border-radius: 999px; padding: 0.25rem 0.65rem; font-size: 0.78rem; font-weight: 500; background: var(--lavender); color: var(--plum); }
+  .s-skeleton { background: linear-gradient(90deg, #f1e9df 25%, #f8f2ea 37%, #f1e9df 63%); background-size: 400% 100%; animation: s-shimmer 1.4s ease infinite; border-radius: 0.75rem; }
+  .s-scroll-x { overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .s-scroll-x::-webkit-scrollbar { display: none; }
+  .s-prose { white-space: pre-line; line-height: 1.75; }
+
+  /* Map price markers */
+  .s-pin {
+    background: #fff; color: var(--plum); border: 1px solid var(--line); border-radius: 999px; padding: 3px 9px; font: 600 12px/1.3 var(--font-poppins), sans-serif;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.18); white-space: nowrap; transform: translate(-50%, -50%); display: inline-block;
+  }
+  .s-pin.is-active { background: var(--plum); color: #fff; }
+  .s-pin-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--plum); border: 3px solid #fff; box-shadow: 0 2px 6px rgb(0 0 0 / 0.3); transform: translate(-50%, -50%); }
+  .leaflet-container { font-family: var(--font-poppins), sans-serif; background: #eae4d8; }
+  .leaflet-div-icon { background: transparent; border: none; }
+}
+
+@keyframes s-shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

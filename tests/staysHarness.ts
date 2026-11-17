@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /** Helpers for the Stays API tests: real route handlers, in-memory database, fake admin sign-in. */
 import { NextRequest } from "next/server";
 import crypto from "node:crypto";

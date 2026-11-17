@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- this file cleans untrusted request bodies */
 /**
  * Stays: cleaning what admins and hosts send for a property. Pure (no database).
  * Every field is whitelisted per role, so a host can never set prices they must not see, a status, a visibility,

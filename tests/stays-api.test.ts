@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Stays: end-to-end API tests (real route handlers, in-memory database).
  * Covers the mandatory checks in the project brief: roles, approval, IDs, pricing, privacy, share links,
