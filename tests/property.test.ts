@@ -85,3 +85,15 @@ describe("unit IDs", () => {
     expect(unitLabel({ no: "12" })).toBe("12");
   });
 });
+
+import { projectPhotoId } from "../lib/crm/property";
+
+describe("project photo ids (for clean-up on delete)", () => {
+  it("only matches photos inside this project's own folder", () => {
+    const u = "https://res.cloudinary.com/demo/image/upload/v1794915220/crm/ws1/projects/p1/abc123.jpg";
+    expect(projectPhotoId(u, "ws1", "p1")).toBe("crm/ws1/projects/p1/abc123");
+    expect(projectPhotoId(u.replace("/v1794915220", ""), "ws1", "p1")).toBe("crm/ws1/projects/p1/abc123");
+    for (const [x, ws, p] of [[u, "ws2", "p1"], [u, "ws1", "p2"], ["https://example.com/a.jpg", "ws1", "p1"], ["https://res.cloudinary.com/demo/image/upload/v1/shaadi/x.jpg", "ws1", "p1"], ["https://res.cloudinary.com/demo/image/upload/v1/crm/ws1/projects/p1/../../x.jpg", "ws1", "p1"], ["", "ws1", "p1"]])
+      expect(projectPhotoId(x, ws, p), x).toBe("");
+  });
+});
