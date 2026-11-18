@@ -19,6 +19,17 @@ const nextConfig: NextConfig = {
       fallback: [],
     };
   },
+  // Stays: keep private screens and share links out of search engines, and stop other sites framing them.
+  async headers() {
+    const noindex = [{ key: "X-Robots-Tag", value: "noindex, nofollow" }];
+    return [
+      { source: "/stay/s/:token*", headers: noindex },
+      { source: "/stays/admin", headers: [...noindex, { key: "X-Frame-Options", value: "DENY" }] },
+      { source: "/stays/host", headers: [...noindex, { key: "X-Frame-Options", value: "DENY" }] },
+      { source: "/api/stays/:path*", headers: noindex },
+      { source: "/stays/admin-sw.js", headers: [{ key: "Cache-Control", value: "no-cache" }, { key: "Service-Worker-Allowed", value: "/stays/admin" }] },
+    ];
+  },
   images: {
     remotePatterns: [{ protocol: "https", hostname: "res.cloudinary.com" }],
   },

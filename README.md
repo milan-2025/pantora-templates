@@ -37,6 +37,16 @@ Tips:
 
 ---
 
+## Stays: property inventory and sharing (`/stays`)
+
+A permanent inventory of your own and collaborating hosts' properties, a public discovery site with search and a map, a host portal, and an admin dashboard that works offline on your phone. Every enquiry goes to your WhatsApp; host details, exact addresses, landing prices and margins never reach guests.
+
+- Guests: **/stays** · Hosts: **/stays/host** · You: **/stays/admin** (same login as /admin)
+- Setup, deployment, backups, costs, limitations and the admin guide: **[docs/stays/README.md](docs/stays/README.md)**
+- No new environment variables (uploads need `CLOUDINARY_URL`).
+
+---
+
 ## Online wedding planner (`/planner`)
 
 The upgrade to the Excel planner: the same guest list, budget, vendors, payments, stay, transport, rituals, shagun and the rest, saved to the cloud, shared with family, on any phone.
