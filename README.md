@@ -69,7 +69,9 @@ First-time visitors to `/planner` (and every ad click) see a landing page: hero,
 12. **Phone checks**: numbers are tidied as typed (`098290-12345` → `98290 12345`), wrong-looking ones are flagged, and possible duplicate guests are listed on the Guest List.
 13. **Search** (🔍 or Ctrl+K) finds any guest, vendor, task, payment or contact. **Undo** (↶ or Ctrl+Z) reverses the last changes.
 14. **Wedding-day mode** shows the current function, what's next on the run sheet and one-tap calls; **Arrivals** ticks guests off as they arrive; **Share run sheet by link** gives a view-only page at `/planner/share/<code>` (run sheet and starred contacts only, no guests or money). The couple can turn the link off or replace it at any time.
-15. **Works offline and installs like an app**: once the planner has opened on a device, it opens there without internet and syncs changes when back online ("Install the app" in the sidebar, or Add to Home Screen).
+15. **Guest and vendor details**: tap a guest's or vendor's name (or › next to it, or "All details" on phones) on any screen: Guest List, rooming and pickup lists, Shagun, Payments, Run Sheet, Contacts, Arrivals, search. A guest shows their number, RSVP, functions they're invited to, stay, pickup, family and shagun; a vendor shows quoted / negotiated / paid / left to pay, every payment, their run-sheet jobs and tasks, and the other quotes for the same job.
+16. **Quick start tour**: a skippable tour the first time someone opens a planner on a device (remembered per email on that device). Replay it from Setup & Data or Account.
+17. **Works offline and installs like an app**: once the planner has opened on a device, it opens there without internet and syncs changes when back online ("Install the app" in the sidebar, or Add to Home Screen).
 
 When a trial or plan ends, the planner turns **read-only**: nothing is deleted, it can still be viewed and exported, and editing resumes the moment they upgrade or renew. "Explore the sample planner" works without an account and stays on that device.
 

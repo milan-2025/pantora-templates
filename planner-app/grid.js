@@ -88,7 +88,11 @@ function grid(cfg) {
       case 'tel': return ['tel', '<div class="telw"><input type="tel" inputmode="tel" autocomplete="off"' + a + ' value="' + esc(v == null ? '' : v) + '"' + (v && !phoneOk(v) && on('phonecheck') ? ' class="badp" title="This number looks incomplete or wrong"' : '') + '>' + telBtns(v, { wa: c.wa, text: c.msg ? c.msg(r) : '', name: r.name || r.vendor || r.hotel || r.operator }) + '</div>'];
       case 'chk': return ['fc', '<input type="checkbox" class="ck"' + a + (v === c.on ? ' checked' : '') + '>'];
       case 'fn': { const x = (r.fn || {})[c.k] || ''; return ['fc', '<button class="yc ' + x + '" data-act="yc" data-fn="' + esc(c.k) + '"' + dis() + ' title="' + esc(c.k) + ': tap to change (Y = invited, C = confirmed, N = declined)">' + x + '</button>']; }
-      default: return [c.sticky ? 's' : '', '<input type="text"' + a + ' value="' + esc(v == null ? '' : v) + '"' + (c.list ? ' list="' + c.list + '"' : '') + (c.ph ? ' placeholder="' + esc(c.ph) + '"' : '') + '>'];
+      default: {
+        const inp = '<input type="text"' + a + ' value="' + esc(v == null ? '' : v) + '"' + (c.list ? ' list="' + c.list + '"' : '') + (c.ph ? ' placeholder="' + esc(c.ph) + '"' : '') + '>';
+        const pr = c.prof ? (typeof c.prof === 'function' ? c.prof(r) : c.prof + ':' + r.id) : null;
+        return [c.sticky ? 's' : '', pr ? '<div class="namew">' + inp + '<button class="opn" data-prof="' + esc(pr) + '" title="See all details" aria-label="See all details">›</button></div>' : inp];
+      }
     }
   }
   const plain = (c, r, i) => {
@@ -111,7 +115,7 @@ function grid(cfg) {
     return '<div class="cr' + (isOpen ? ' on' : '') + '" data-id="' + r.id + '"><div class="ch" data-tog><div class="ct"><b data-head>' + esc(head(r, i)) + '</b><small data-sub>' + esc(sub(r, i)) + '</small></div>' + (q ? '<span class="q">' + q + '</span>' : '') + '<span data-pill>' + pillHtml(r, i) + '</span><span class="chev">›</span></div>' +
       (isOpen ? cardBody(r, i) : '') + '</div>';
   }
-  const cardBody = (r, i) => '<div class="cb">' + cols.map((c, ci) => { const x = inner(c, r, i, ci); return '<div class="fld ' + x[0] + '"' + (x[2] ? ' data-cc="' + ci + '"' : '') + '><label>' + esc(c.label) + '</label><div class="fv">' + x[1] + '</div></div>'; }).join('') + (cfg.noDel ? '' : '<div class="cfoot"><button class="btn sm danger" data-act="del">Delete</button></div>') + '</div>';
+  const cardBody = (r, i) => '<div class="cb">' + cols.map((c, ci) => { const x = inner(c, r, i, ci); return '<div class="fld ' + x[0] + '"' + (x[2] ? ' data-cc="' + ci + '"' : '') + '><label>' + esc(c.label) + '</label><div class="fv">' + x[1] + '</div></div>'; }).join('') + (cfg.noDel && !cfg.prof ? '' : '<div class="cfoot">' + (cfg.prof ? '<button class="btn sm pri" data-prof="' + cfg.prof + ':' + r.id + '">👤 All details</button> ' : '') + (cfg.noDel ? '' : '<button class="btn sm danger" data-act="del">Delete</button>') + '</div>') + '</div>';
 
   function build() {
     cols = visibleCols(key, base);
@@ -143,11 +147,12 @@ function grid(cfg) {
     const old = r[c.k]; r[c.k] = v;
     if (cfg.onChange) cfg.onChange(r, c.k, old);
     dirty();
-    if (c.full || c.t === 'tel' || (cfg.full && cfg.full.indexOf(c.k) >= 0) || cols.some(x => x !== c && x.k === c.k)) build(); else refresh();
+    if (c.full || c.t === 'tel' || typeof c.prof === 'function' || (cfg.full && cfg.full.indexOf(c.k) >= 0) || cols.some(x => x !== c && x.k === c.k)) build(); else refresh();
     if (cfg.after) cfg.after(); badges();
   });
   host.addEventListener('click', e => {
     const lk = e.target.closest('a[href]'); if (lk && !lk.dataset.act) return; // call / WhatsApp links just open
+    if (e.target.closest('[data-prof]')) return; // opens the details panel (handled for the whole page)
     const tog = e.target.closest('[data-tog]');
     if (tog) { const rowEl = tog.closest('[data-id]'), id = rowEl.dataset.id, r = byId().get(id); if (open.has(id)) { open.delete(id); rowEl.classList.remove('on'); const b = $('.cb', rowEl); if (b) b.remove(); } else if (r) { open.add(id); rowEl.classList.add('on'); rowEl.insertAdjacentHTML('beforeend', cardBody(r, visible().indexOf(r))); } return; }
     const b = e.target.closest('[data-act]'); if (!b || RO()) return;

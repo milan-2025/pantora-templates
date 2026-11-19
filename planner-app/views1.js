@@ -34,7 +34,7 @@ VIEWS.dash = function () {
   if (over.length) add('r', over.length + ' budget categor' + (over.length > 1 ? 'ies are' : 'y is') + ' over plan', over.map(x => x.c.name).slice(0, 2).join(', '), 'budget');
   if (o.noVendorLines.length) add('', o.noVendorLines.length + ' budget line' + (o.noVendorLines.length > 1 ? 's have' : ' has') + ' quotes but no vendor selected', o.noVendorLines.slice(0, 2).map(l => l.line).join(', '), 'vendors');
   if (o.thanksPending) add('g', o.thanksPending + ' thank-you' + (o.thanksPending > 1 ? 's' : '') + ' to send', 'For shagun received.', 'shagun');
-  const attn = el('<div class="card"><h3>Needs your attention</h3>' + (items.length ? '<ul class="todo">' + items.slice(0, 8).join('') + '</ul>' : '<div class="ok-note">All clear. Nothing urgent right now. 🎉</div>') + '</div>');
+  const attn = el('<div class="card" id="attn"><h3>Needs your attention</h3>' + (items.length ? '<ul class="todo">' + items.slice(0, 8).join('') + '</ul>' : '<div class="ok-note">All clear. Nothing urgent right now. 🎉</div>') + '</div>');
   /* budget bars */
   const mx = Math.max.apply(null, o.cats.map(x => Math.max(x.planned, x.committed)).concat([1]));
   const bud = el('<div class="card"><h3>Budget by category <small>planned · committed · paid</small></h3>' + (o.cats.length ? o.cats.map(x => hbar(x.c.name, [{ v: x.planned, c: '#EADFC9' }, { v: x.committed, c: o.catStatus(x) === 'Over budget' ? '#E0675A' : '#1F7A74' }, { v: x.paid, c: '#F2A93B', top: 1 }], mx, short(x.committed) + ' / ' + short(x.planned))).join('') : '<div class="empty">No budget categories yet.</div>') +
@@ -139,7 +139,7 @@ VIEWS.runsheet = () => byFnView({
   key: 'rs', coll: 'runsheet', title: 'Run Sheet', sub: 'The day-of plan: who does what, when, and where. Share it with your planner and family.', sort: true, keys: ['activity', 'who', 'vendor', 'loc', 'notes'], empty: 'No activities yet. Add the first one.',
   summary: () => { const n = S.runsheet.length, dn = S.runsheet.filter(x => x.status === 'Done').length; return '<b>' + n + '</b> activities · <b>' + dn + '</b> done'; },
   blank: () => ({ time: '', activity: '', status: 'Pending' }),
-  cols: [SEL('fn', 'Function', FNS, { w: 140 }), TM('time', 'Start'), T('activity', 'Activity', { w: 320 }), SEL('who', 'Responsible', TEAM, { w: 150, full: 1 }), T('vendor', 'Vendor / contact', { w: 140, list: 'dl-vendors', full: 1 }), T('loc', 'Location', { w: 140 }), SEL('status', 'Status', () => L('Run Sheet Status'), { w: 100 }), T('notes', 'Notes', { w: 180 }),
+  cols: [SEL('fn', 'Function', FNS, { w: 140 }), TM('time', 'Start'), T('activity', 'Activity', { w: 320 }), SEL('who', 'Responsible', TEAM, { w: 150, full: 1 }), T('vendor', 'Vendor / contact', { w: 150, list: 'dl-vendors', full: 1, prof: r => { const v = vendorByName(r.vendor) || (phoneOf(r.vendor) || {}).kind === 'vendor' && phoneOf(r.vendor).row; return v ? 'vendor:' + v.id : null; } }), T('loc', 'Location', { w: 140 }), SEL('status', 'Status', () => L('Run Sheet Status'), { w: 100 }), T('notes', 'Notes', { w: 180 }),
     { k: 'calls', label: 'Call', t: 'html', th: 'a', html: r => (whoBtns(r.who) + whoBtns(r.vendor)) || '<span class="note" title="Add phone numbers in Contacts, Vendors, Hotels or Transport">–</span>' }]
 }, v => {
   if (!on('sharelink')) return;
@@ -188,8 +188,8 @@ VIEWS.guests = function () {
     full: ['group'],
     filter: r => (!f.chk || ISS[f.chk].has(r.id)) && matchQ(r, ['name', 'group', 'city', 'phone', 'notes'], f.q) && (!f.side || r.side === f.side) && (!f.rsvp || r.rsvp === f.rsvp) && (!f.inv || (f.inv === 'Not sent' ? r.invited !== 'Yes' : r.invited === 'Yes')) && (!f.fn || (r.fn || {})[f.fn]) && (!f.stay || (f.stay === 'Needs stay' ? r.stay === 'Yes' : r.transport === 'Yes')),
     act: { wa: r => { r.invited = 'Yes'; }, msg: r => { msgPicker({ phone: r.phone, title: 'Message ' + (r.name || 'guest'), choices: guestChoices(r, () => { g.build(); upd(); }) }); return false; } },
-    quick: r => r.phone, quickWa: false,
-    cols: [T('name', 'Guest name', { w: 170, sticky: true }), T('group', 'Family / group', { w: 140, list: 'dl-groups' }), SEL('side', 'Side', () => L('Side'), { w: 100 }), SEL('cat', 'Category', () => L('Guest Category'), { w: 100 }), SEL('age', 'Age', () => L('Age Group'), { w: 80 }), T('city', 'City', { w: 100 }), TEL('phone', 'Phone', { wa: false }), SEL('diet', 'Diet', () => L('Diet'), { w: 130 }),
+    quick: r => r.phone, quickWa: false, prof: 'guest',
+    cols: [T('name', 'Guest name', { w: 190, sticky: true, prof: 'guest' }), T('group', 'Family / group', { w: 140, list: 'dl-groups' }), SEL('side', 'Side', () => L('Side'), { w: 100 }), SEL('cat', 'Category', () => L('Guest Category'), { w: 100 }), SEL('age', 'Age', () => L('Age Group'), { w: 80 }), T('city', 'City', { w: 100 }), TEL('phone', 'Phone', { wa: false }), SEL('diet', 'Diet', () => L('Diet'), { w: 130 }),
       { k: 'wa', label: 'WhatsApp', t: 'html', th: 'a', html: r => { const l = waLink(r); if (r.invited === 'Yes' && on('templates')) return '<button data-act="msg" class="btn sm">💬 Message</button>'; return l ? '<a data-act="wa" href="' + esc(l) + '" target="_blank" rel="noopener" class="btn sm" style="text-decoration:none;display:inline-block">💬 Invite</a>' : phoneDigits(r.phone) ? '<span class="note">check number</span>' : '<span class="note">add phone</span>'; } },
       SEL('invited', 'Sent?', YN, { w: 70 }), SEL('rsvp', 'RSVP', () => L('RSVP'), { w: 100 })]
       .concat(fcols).concat([SEL('stay', 'Stay?', YN, { w: 70 }), T('room', 'Room', { w: 70 }), SEL('transport', 'Transport?', YN, { w: 90 }), T('travel', 'Travel details', { w: 170 }), T('notes', 'Notes', { w: 170 })])

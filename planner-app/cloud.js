@@ -257,7 +257,7 @@ async function openPlanner(id, preload) {
     else if (r.state) { CLOUD.base = stripLocal(normalize(copy(r.state))); S = normalize(copy(r.state)); }
     else { CLOUD.base = null; S = freshState(); }
     S.demo = false; CLOUD.rev = r.rev || 0; D = null;
-    hideLanding(); ungate(); renderAll(); setSync(CLOUD.readOnly ? 'ro' : 'saved'); startPolling();
+    hideLanding(); ungate(); renderAll(); setSync(CLOUD.readOnly ? 'ro' : 'saved'); startPolling(); maybeTour();
     if (!CLOUD.readOnly && diffOps(CLOUD.base, stripLocal(S)).length) schedulePush();
   } catch (e) {
     if (e.status === 401) return signOut(true);
@@ -285,7 +285,7 @@ async function startCloud(noAuto) {
 
 function startLocal(msg) {
   clearInterval(CLOUD.pollT); CLOUD.on = false; CLOUD.readOnly = false; document.body.classList.remove('ro');
-  S = load(); D = null; undoClear(); hideLanding(); ungate(); renderAll(); setSync('local');
+  S = load(); D = null; undoClear(); hideLanding(); ungate(); renderAll(); setSync('local'); maybeTour();
   if (msg) toast(msg);
 }
 
@@ -397,7 +397,7 @@ VIEWS.activity = function () {
 
 VIEWS.account = function () {
   if (!CLOUD.on) return [el('<div>' + ph('Account', '') + '</div>').firstChild, el('<div class="card"><h3>Save your planner to the cloud</h3><p>Right now everything is saved only on this device. Sign in with your email to start a free trial: your planner syncs to every device and you can invite family.</p><button class="btn pri" data-signin>Sign in or start free trial</button></div>')];
-  const c = el('<div class="card"><h3>Signed in</h3><p><b>' + esc(CLOUD.email || 'Support view') + '</b></p><div class="bar">' + (CLOUD.list.length > 1 ? '<button class="btn keep" data-switch>Switch planner</button>' : '') + '<button class="btn keep" data-out>Sign out</button></div></div>');
+  const c = el('<div class="card"><h3>Signed in</h3><p><b>' + esc(CLOUD.email || 'Support view') + '</b></p><div class="bar"><button class="btn keep" data-tour>▶ Take the tour</button>' + (CLOUD.list.length > 1 ? '<button class="btn keep" data-switch>Switch planner</button>' : '') + '<button class="btn keep" data-out>Sign out</button></div></div>');
   const sw = $('[data-switch]', c); if (sw) sw.onclick = () => { clearInterval(CLOUD.pollT); CLOUD.on = false; pickScreen(CLOUD.list); };
   $('[data-out]', c).onclick = () => signOut();
   return [el('<div>' + ph('Account', '') + '</div>').firstChild, c];

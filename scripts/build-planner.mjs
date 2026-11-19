@@ -6,7 +6,7 @@ import { createHash } from "node:crypto";
 const src = (f) => readFileSync(new URL(`../planner-app/${f}`, import.meta.url), "utf8");
 const seed = src("seed.json").trim();
 // Order matters: later files use what earlier ones define.
-const js = ["core.js", "io.js", "grid.js", "ui.js", "cloud.js", "landing.js", "views1.js", "contacts.js", "daytools.js", "views2.js"]
+const js = ["core.js", "io.js", "grid.js", "ui.js", "cloud.js", "landing.js", "views1.js", "contacts.js", "daytools.js", "profiles.js", "tour.js", "views2.js"]
   .map((f) => `/* ===== ${f} ===== */\n${f === "core.js" ? src(f).replace("/*SEED*/null", () => seed) : src(f)}`)
   .join("\n");
 const html = src("shell.html").replace("/*CSS*/", () => src("style.css") + "\n" + src("landing.css")).replace("/*APP*/", () => js);

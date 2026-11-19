@@ -2,7 +2,7 @@
  * - The planner page: network first (so updates arrive), the saved copy when there is no connection.
  * - Its own files, icons and fonts: served from the cache, refreshed in the background.
  * - /api/*: never cached here. The app keeps its own copy of the planner and syncs when back online. */
-const VERSION = 'fe693bfa6a07';
+const VERSION = '56d8fdc193c1';
 const CACHE = 'pp-' + VERSION;
 const PAGE = '/planner';
 const PAGES = ['/planner', '/planner/', '/planner/signup', '/planner/login'];

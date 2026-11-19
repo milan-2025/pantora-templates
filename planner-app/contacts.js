@@ -150,7 +150,7 @@ function searchModal() {
     sel = Math.min(sel, Math.max(0, hits.length - 1));
     box.innerHTML = !q ? '' : hits.length ? hits.slice(0, 40).map((h, n) => '<button class="sr' + (n === sel ? ' on' : '') + '" data-n="' + n + '"><span class="ic">' + h.ic + '</span><span><b>' + esc(h.t) + '</b><small>' + esc(h.s || '') + '</small></span></button>').join('') : '<div class="empty">Nothing matches “' + esc(i.value) + '”.</div>';
   };
-  const open = h => { m.remove(); jumpTo(h); };
+  const open = h => { m.remove(); if (h.coll === 'guests' || h.coll === 'vendors') openProfile(h.coll === 'guests' ? 'guest' : 'vendor', h.id); else jumpTo(h); };
   i.oninput = () => { sel = 0; draw(); };
   i.onkeydown = e => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); sel = Math.max(0, Math.min(hits.length - 1, sel + (e.key === 'ArrowDown' ? 1 : -1))); draw(); const b = $('.sr.on', box); if (b) b.scrollIntoView({ block: 'nearest' }); }
@@ -198,7 +198,7 @@ function contactRow(c, opts) {
   opts = opts || {};
   const star = c.row.star === 'Yes';
   return '<div class="ctc" data-id="' + c.row.id + '" data-coll="' + c.coll + '"><button class="star' + (star ? ' on' : '') + '" data-star title="' + (star ? 'Starred: shown first, in Wedding-day mode and on the shared run sheet' : 'Star for wedding day') + '"' + dis() + '>' + (star ? '★' : '☆') + '</button>' +
-    '<div class="ctx"><b>' + esc(c.name) + (c.booked ? ' ' + pill('Booked', 'ok') : '') + '</b><small>' + esc(c.sub || '') + (c.phone ? ' · ' + esc(c.phone) : '') + '</small></div>' +
+    '<div class="ctx"><b>' + (c.coll === 'guests' ? profLink('guest', c.row.id, c.name) : c.coll === 'vendors' ? profLink('vendor', c.row.id, c.name) : esc(c.name)) + (c.booked ? ' ' + pill('Booked', 'ok') : '') + '</b><small>' + esc(c.sub || '') + (c.phone ? ' · ' + esc(c.phone) : '') + '</small></div>' +
     (phoneDigits(c.phone) ? telBtns(c.phone, { name: c.name, text: opts.text ? opts.text(c) : '' }) : '<a class="note addno" data-edit>+ add number</a>') + '</div>';
 }
 function contactsBind(box, redraw) {

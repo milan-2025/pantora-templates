@@ -397,6 +397,70 @@ input.badp{color:var(--coral)!important;text-decoration:underline wavy var(--cor
 }
 @media print{.stools,.top .tb,#install,.cbt,.pwarn{display:none!important}}
 @media (max-width:760px){.top b{flex:1;min-width:0;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.top .sp{display:none}}
+/* ---------- clickable names and the details panel ---------- */
+.lnk{color:var(--plum);font-weight:600;cursor:pointer;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.lnk:hover{text-decoration-color:var(--marigold)}
+.namew{display:flex;align-items:center}
+.namew input{flex:1;min-width:0}
+.opn{flex:none;width:24px;height:24px;margin-right:4px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--plum);font-weight:700;cursor:pointer;line-height:1;font-size:15px}
+.opn:hover{background:var(--marigold);border-color:var(--marigold)}
+.drawer-wrap{position:fixed;inset:0;z-index:55}
+.drawer-bg{position:absolute;inset:0;background:rgba(59,31,74,.35)}
+.drawer{position:absolute;right:0;top:0;bottom:0;width:min(480px,100%);background:var(--cream);overflow:auto;padding:22px 22px 40px;box-shadow:-10px 0 40px rgba(0,0,0,.18);animation:dIn .18s ease}
+@keyframes dIn{from{transform:translateX(30px);opacity:.4}to{transform:none;opacity:1}}
+.dx{position:sticky;top:0;float:right;border:0;background:#fff;border-radius:50%;width:34px;height:34px;cursor:pointer;font-size:15px;box-shadow:0 1px 4px rgba(0,0,0,.12);z-index:2}
+.ph{display:flex;gap:14px;align-items:flex-start;margin-bottom:12px}
+.ph h2{font-size:26px;line-height:1.15}
+.ph .pills{margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.av{width:52px;height:52px;flex:none;border-radius:50%;background:var(--plum);color:var(--cream);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:24px}
+.av.v{background:var(--gold-soft);font-size:22px}
+.stars{color:var(--marigold);letter-spacing:1px}.stars span{color:#EADFC9}
+.ps{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.ps h3{font-size:18px;margin-bottom:6px}.ps h3 small{font-family:var(--sans);font-size:12px;color:var(--muted)}
+.ps h4{margin:10px 0 2px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.pq{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px}
+.pq label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:2px}
+.pcall{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pnum{font-weight:600;margin-right:4px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0}
+.kv dt{color:var(--muted);font-size:13px}.kv dd{margin:0;font-size:13.5px}
+.pt{width:100%;border-collapse:collapse}
+.pt td{padding:7px 4px;border-top:1px dashed var(--line);vertical-align:middle;font-size:13.5px}
+.pt tr:first-child td{border-top:0}
+.pt td small{display:block;color:var(--muted);font-size:12px}
+.pt td.num{text-align:right;white-space:nowrap}
+.pt tr.muted{opacity:.55}
+.plist2{list-style:none;margin:0;padding:0}
+.plist2 li{display:flex;gap:8px;align-items:center;padding:6px 0;border-top:1px dashed var(--line)}
+.plist2 li:first-child{border-top:0}
+.plist2 li>span,.plist2 li>.lnk{flex:1;min-width:0}
+.plist2 li small{display:block;color:var(--muted);font-size:12px}
+.plist2 li>.lnk + small{flex:1}
+.pmoney{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.pmoney div{background:var(--cream);border-radius:10px;padding:8px 10px}
+.pmoney span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.pmoney b{font-size:16px;white-space:nowrap}.pmoney b.ok{color:var(--teal)}.pmoney b.due{color:var(--coral)}
+.pbar{height:8px;background:var(--grey);border-radius:99px;overflow:hidden;margin:10px 0 4px}.pbar i{display:block;height:100%;background:var(--teal)}
+.pinc{margin:0 0 6px;font-size:13.5px}
+.pfoot{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+@media (max-width:760px){
+  .drawer{top:auto;height:92vh;border-radius:20px 20px 0 0;padding:18px 16px 40px;animation:dUp .2s ease}
+  @keyframes dUp{from{transform:translateY(40px);opacity:.5}to{transform:none;opacity:1}}
+  .pmoney{grid-template-columns:repeat(2,1fr)}
+}
+/* ---------- quick start tour ---------- */
+.tour{position:fixed;inset:0;z-index:80}
+.tour.center{background:rgba(59,31,74,.6)}
+.tour-hole{position:fixed;border-radius:12px;box-shadow:0 0 0 9999px rgba(59,31,74,.6);transition:all .2s ease;pointer-events:none;outline:3px solid var(--marigold)}
+.tour-card{position:fixed;width:min(340px,calc(100vw - 24px));background:#fff;border-radius:16px;padding:16px 18px;box-shadow:0 12px 40px rgba(0,0,0,.3);transition:top .2s,left .2s}
+.tour.center .tour-card{left:50%!important;top:50%!important;transform:translate(-50%,-50%);width:min(420px,calc(100vw - 24px))}
+.tour-n{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.tour-card h3{font-size:22px;margin:4px 0 6px}
+.tour-card p{margin:0 0 14px;font-size:14px;color:#4A4050}
+.tour-b{display:flex;gap:8px;align-items:center}.tour-b .sp{flex:1}
+@media (max-width:760px){.tour:not(.center) .tour-card{left:12px!important;right:12px;bottom:16px!important;top:auto!important;width:auto}}
+.drawer-open .mask{z-index:58}.drawer-open .toast{z-index:62}
+.drawer .pill{white-space:nowrap}.drawer a.btn,.pfoot a.btn{text-decoration:none}.pt td:last-child{text-align:right}
 
 /* ===== landing page (/planner before sign-in) ===== */
 #lp{display:none}
@@ -1304,7 +1368,11 @@ function grid(cfg) {
       case 'tel': return ['tel', '<div class="telw"><input type="tel" inputmode="tel" autocomplete="off"' + a + ' value="' + esc(v == null ? '' : v) + '"' + (v && !phoneOk(v) && on('phonecheck') ? ' class="badp" title="This number looks incomplete or wrong"' : '') + '>' + telBtns(v, { wa: c.wa, text: c.msg ? c.msg(r) : '', name: r.name || r.vendor || r.hotel || r.operator }) + '</div>'];
       case 'chk': return ['fc', '<input type="checkbox" class="ck"' + a + (v === c.on ? ' checked' : '') + '>'];
       case 'fn': { const x = (r.fn || {})[c.k] || ''; return ['fc', '<button class="yc ' + x + '" data-act="yc" data-fn="' + esc(c.k) + '"' + dis() + ' title="' + esc(c.k) + ': tap to change (Y = invited, C = confirmed, N = declined)">' + x + '</button>']; }
-      default: return [c.sticky ? 's' : '', '<input type="text"' + a + ' value="' + esc(v == null ? '' : v) + '"' + (c.list ? ' list="' + c.list + '"' : '') + (c.ph ? ' placeholder="' + esc(c.ph) + '"' : '') + '>'];
+      default: {
+        const inp = '<input type="text"' + a + ' value="' + esc(v == null ? '' : v) + '"' + (c.list ? ' list="' + c.list + '"' : '') + (c.ph ? ' placeholder="' + esc(c.ph) + '"' : '') + '>';
+        const pr = c.prof ? (typeof c.prof === 'function' ? c.prof(r) : c.prof + ':' + r.id) : null;
+        return [c.sticky ? 's' : '', pr ? '<div class="namew">' + inp + '<button class="opn" data-prof="' + esc(pr) + '" title="See all details" aria-label="See all details">›</button></div>' : inp];
+      }
     }
   }
   const plain = (c, r, i) => {
@@ -1327,7 +1395,7 @@ function grid(cfg) {
     return '<div class="cr' + (isOpen ? ' on' : '') + '" data-id="' + r.id + '"><div class="ch" data-tog><div class="ct"><b data-head>' + esc(head(r, i)) + '</b><small data-sub>' + esc(sub(r, i)) + '</small></div>' + (q ? '<span class="q">' + q + '</span>' : '') + '<span data-pill>' + pillHtml(r, i) + '</span><span class="chev">›</span></div>' +
       (isOpen ? cardBody(r, i) : '') + '</div>';
   }
-  const cardBody = (r, i) => '<div class="cb">' + cols.map((c, ci) => { const x = inner(c, r, i, ci); return '<div class="fld ' + x[0] + '"' + (x[2] ? ' data-cc="' + ci + '"' : '') + '><label>' + esc(c.label) + '</label><div class="fv">' + x[1] + '</div></div>'; }).join('') + (cfg.noDel ? '' : '<div class="cfoot"><button class="btn sm danger" data-act="del">Delete</button></div>') + '</div>';
+  const cardBody = (r, i) => '<div class="cb">' + cols.map((c, ci) => { const x = inner(c, r, i, ci); return '<div class="fld ' + x[0] + '"' + (x[2] ? ' data-cc="' + ci + '"' : '') + '><label>' + esc(c.label) + '</label><div class="fv">' + x[1] + '</div></div>'; }).join('') + (cfg.noDel && !cfg.prof ? '' : '<div class="cfoot">' + (cfg.prof ? '<button class="btn sm pri" data-prof="' + cfg.prof + ':' + r.id + '">👤 All details</button> ' : '') + (cfg.noDel ? '' : '<button class="btn sm danger" data-act="del">Delete</button>') + '</div>') + '</div>';
 
   function build() {
     cols = visibleCols(key, base);
@@ -1359,11 +1427,12 @@ function grid(cfg) {
     const old = r[c.k]; r[c.k] = v;
     if (cfg.onChange) cfg.onChange(r, c.k, old);
     dirty();
-    if (c.full || c.t === 'tel' || (cfg.full && cfg.full.indexOf(c.k) >= 0) || cols.some(x => x !== c && x.k === c.k)) build(); else refresh();
+    if (c.full || c.t === 'tel' || typeof c.prof === 'function' || (cfg.full && cfg.full.indexOf(c.k) >= 0) || cols.some(x => x !== c && x.k === c.k)) build(); else refresh();
     if (cfg.after) cfg.after(); badges();
   });
   host.addEventListener('click', e => {
     const lk = e.target.closest('a[href]'); if (lk && !lk.dataset.act) return; // call / WhatsApp links just open
+    if (e.target.closest('[data-prof]')) return; // opens the details panel (handled for the whole page)
     const tog = e.target.closest('[data-tog]');
     if (tog) { const rowEl = tog.closest('[data-id]'), id = rowEl.dataset.id, r = byId().get(id); if (open.has(id)) { open.delete(id); rowEl.classList.remove('on'); const b = $('.cb', rowEl); if (b) b.remove(); } else if (r) { open.add(id); rowEl.classList.add('on'); rowEl.insertAdjacentHTML('beforeend', cardBody(r, visible().indexOf(r))); } return; }
     const b = e.target.closest('[data-act]'); if (!b || RO()) return;
@@ -1793,7 +1862,7 @@ async function openPlanner(id, preload) {
     else if (r.state) { CLOUD.base = stripLocal(normalize(copy(r.state))); S = normalize(copy(r.state)); }
     else { CLOUD.base = null; S = freshState(); }
     S.demo = false; CLOUD.rev = r.rev || 0; D = null;
-    hideLanding(); ungate(); renderAll(); setSync(CLOUD.readOnly ? 'ro' : 'saved'); startPolling();
+    hideLanding(); ungate(); renderAll(); setSync(CLOUD.readOnly ? 'ro' : 'saved'); startPolling(); maybeTour();
     if (!CLOUD.readOnly && diffOps(CLOUD.base, stripLocal(S)).length) schedulePush();
   } catch (e) {
     if (e.status === 401) return signOut(true);
@@ -1821,7 +1890,7 @@ async function startCloud(noAuto) {
 
 function startLocal(msg) {
   clearInterval(CLOUD.pollT); CLOUD.on = false; CLOUD.readOnly = false; document.body.classList.remove('ro');
-  S = load(); D = null; undoClear(); hideLanding(); ungate(); renderAll(); setSync('local');
+  S = load(); D = null; undoClear(); hideLanding(); ungate(); renderAll(); setSync('local'); maybeTour();
   if (msg) toast(msg);
 }
 
@@ -1933,7 +2002,7 @@ VIEWS.activity = function () {
 
 VIEWS.account = function () {
   if (!CLOUD.on) return [el('<div>' + ph('Account', '') + '</div>').firstChild, el('<div class="card"><h3>Save your planner to the cloud</h3><p>Right now everything is saved only on this device. Sign in with your email to start a free trial: your planner syncs to every device and you can invite family.</p><button class="btn pri" data-signin>Sign in or start free trial</button></div>')];
-  const c = el('<div class="card"><h3>Signed in</h3><p><b>' + esc(CLOUD.email || 'Support view') + '</b></p><div class="bar">' + (CLOUD.list.length > 1 ? '<button class="btn keep" data-switch>Switch planner</button>' : '') + '<button class="btn keep" data-out>Sign out</button></div></div>');
+  const c = el('<div class="card"><h3>Signed in</h3><p><b>' + esc(CLOUD.email || 'Support view') + '</b></p><div class="bar"><button class="btn keep" data-tour>▶ Take the tour</button>' + (CLOUD.list.length > 1 ? '<button class="btn keep" data-switch>Switch planner</button>' : '') + '<button class="btn keep" data-out>Sign out</button></div></div>');
   const sw = $('[data-switch]', c); if (sw) sw.onclick = () => { clearInterval(CLOUD.pollT); CLOUD.on = false; pickScreen(CLOUD.list); };
   $('[data-out]', c).onclick = () => signOut();
   return [el('<div>' + ph('Account', '') + '</div>').firstChild, c];
@@ -2229,7 +2298,7 @@ VIEWS.dash = function () {
   if (over.length) add('r', over.length + ' budget categor' + (over.length > 1 ? 'ies are' : 'y is') + ' over plan', over.map(x => x.c.name).slice(0, 2).join(', '), 'budget');
   if (o.noVendorLines.length) add('', o.noVendorLines.length + ' budget line' + (o.noVendorLines.length > 1 ? 's have' : ' has') + ' quotes but no vendor selected', o.noVendorLines.slice(0, 2).map(l => l.line).join(', '), 'vendors');
   if (o.thanksPending) add('g', o.thanksPending + ' thank-you' + (o.thanksPending > 1 ? 's' : '') + ' to send', 'For shagun received.', 'shagun');
-  const attn = el('<div class="card"><h3>Needs your attention</h3>' + (items.length ? '<ul class="todo">' + items.slice(0, 8).join('') + '</ul>' : '<div class="ok-note">All clear. Nothing urgent right now. 🎉</div>') + '</div>');
+  const attn = el('<div class="card" id="attn"><h3>Needs your attention</h3>' + (items.length ? '<ul class="todo">' + items.slice(0, 8).join('') + '</ul>' : '<div class="ok-note">All clear. Nothing urgent right now. 🎉</div>') + '</div>');
   /* budget bars */
   const mx = Math.max.apply(null, o.cats.map(x => Math.max(x.planned, x.committed)).concat([1]));
   const bud = el('<div class="card"><h3>Budget by category <small>planned · committed · paid</small></h3>' + (o.cats.length ? o.cats.map(x => hbar(x.c.name, [{ v: x.planned, c: '#EADFC9' }, { v: x.committed, c: o.catStatus(x) === 'Over budget' ? '#E0675A' : '#1F7A74' }, { v: x.paid, c: '#F2A93B', top: 1 }], mx, short(x.committed) + ' / ' + short(x.planned))).join('') : '<div class="empty">No budget categories yet.</div>') +
@@ -2334,7 +2403,7 @@ VIEWS.runsheet = () => byFnView({
   key: 'rs', coll: 'runsheet', title: 'Run Sheet', sub: 'The day-of plan: who does what, when, and where. Share it with your planner and family.', sort: true, keys: ['activity', 'who', 'vendor', 'loc', 'notes'], empty: 'No activities yet. Add the first one.',
   summary: () => { const n = S.runsheet.length, dn = S.runsheet.filter(x => x.status === 'Done').length; return '<b>' + n + '</b> activities · <b>' + dn + '</b> done'; },
   blank: () => ({ time: '', activity: '', status: 'Pending' }),
-  cols: [SEL('fn', 'Function', FNS, { w: 140 }), TM('time', 'Start'), T('activity', 'Activity', { w: 320 }), SEL('who', 'Responsible', TEAM, { w: 150, full: 1 }), T('vendor', 'Vendor / contact', { w: 140, list: 'dl-vendors', full: 1 }), T('loc', 'Location', { w: 140 }), SEL('status', 'Status', () => L('Run Sheet Status'), { w: 100 }), T('notes', 'Notes', { w: 180 }),
+  cols: [SEL('fn', 'Function', FNS, { w: 140 }), TM('time', 'Start'), T('activity', 'Activity', { w: 320 }), SEL('who', 'Responsible', TEAM, { w: 150, full: 1 }), T('vendor', 'Vendor / contact', { w: 150, list: 'dl-vendors', full: 1, prof: r => { const v = vendorByName(r.vendor) || (phoneOf(r.vendor) || {}).kind === 'vendor' && phoneOf(r.vendor).row; return v ? 'vendor:' + v.id : null; } }), T('loc', 'Location', { w: 140 }), SEL('status', 'Status', () => L('Run Sheet Status'), { w: 100 }), T('notes', 'Notes', { w: 180 }),
     { k: 'calls', label: 'Call', t: 'html', th: 'a', html: r => (whoBtns(r.who) + whoBtns(r.vendor)) || '<span class="note" title="Add phone numbers in Contacts, Vendors, Hotels or Transport">–</span>' }]
 }, v => {
   if (!on('sharelink')) return;
@@ -2383,8 +2452,8 @@ VIEWS.guests = function () {
     full: ['group'],
     filter: r => (!f.chk || ISS[f.chk].has(r.id)) && matchQ(r, ['name', 'group', 'city', 'phone', 'notes'], f.q) && (!f.side || r.side === f.side) && (!f.rsvp || r.rsvp === f.rsvp) && (!f.inv || (f.inv === 'Not sent' ? r.invited !== 'Yes' : r.invited === 'Yes')) && (!f.fn || (r.fn || {})[f.fn]) && (!f.stay || (f.stay === 'Needs stay' ? r.stay === 'Yes' : r.transport === 'Yes')),
     act: { wa: r => { r.invited = 'Yes'; }, msg: r => { msgPicker({ phone: r.phone, title: 'Message ' + (r.name || 'guest'), choices: guestChoices(r, () => { g.build(); upd(); }) }); return false; } },
-    quick: r => r.phone, quickWa: false,
-    cols: [T('name', 'Guest name', { w: 170, sticky: true }), T('group', 'Family / group', { w: 140, list: 'dl-groups' }), SEL('side', 'Side', () => L('Side'), { w: 100 }), SEL('cat', 'Category', () => L('Guest Category'), { w: 100 }), SEL('age', 'Age', () => L('Age Group'), { w: 80 }), T('city', 'City', { w: 100 }), TEL('phone', 'Phone', { wa: false }), SEL('diet', 'Diet', () => L('Diet'), { w: 130 }),
+    quick: r => r.phone, quickWa: false, prof: 'guest',
+    cols: [T('name', 'Guest name', { w: 190, sticky: true, prof: 'guest' }), T('group', 'Family / group', { w: 140, list: 'dl-groups' }), SEL('side', 'Side', () => L('Side'), { w: 100 }), SEL('cat', 'Category', () => L('Guest Category'), { w: 100 }), SEL('age', 'Age', () => L('Age Group'), { w: 80 }), T('city', 'City', { w: 100 }), TEL('phone', 'Phone', { wa: false }), SEL('diet', 'Diet', () => L('Diet'), { w: 130 }),
       { k: 'wa', label: 'WhatsApp', t: 'html', th: 'a', html: r => { const l = waLink(r); if (r.invited === 'Yes' && on('templates')) return '<button data-act="msg" class="btn sm">💬 Message</button>'; return l ? '<a data-act="wa" href="' + esc(l) + '" target="_blank" rel="noopener" class="btn sm" style="text-decoration:none;display:inline-block">💬 Invite</a>' : phoneDigits(r.phone) ? '<span class="note">check number</span>' : '<span class="note">add phone</span>'; } },
       SEL('invited', 'Sent?', YN, { w: 70 }), SEL('rsvp', 'RSVP', () => L('RSVP'), { w: 100 })]
       .concat(fcols).concat([SEL('stay', 'Stay?', YN, { w: 70 }), T('room', 'Room', { w: 70 }), SEL('transport', 'Transport?', YN, { w: 90 }), T('travel', 'Travel details', { w: 170 }), T('notes', 'Notes', { w: 170 })])
@@ -2592,7 +2661,7 @@ function searchModal() {
     sel = Math.min(sel, Math.max(0, hits.length - 1));
     box.innerHTML = !q ? '' : hits.length ? hits.slice(0, 40).map((h, n) => '<button class="sr' + (n === sel ? ' on' : '') + '" data-n="' + n + '"><span class="ic">' + h.ic + '</span><span><b>' + esc(h.t) + '</b><small>' + esc(h.s || '') + '</small></span></button>').join('') : '<div class="empty">Nothing matches “' + esc(i.value) + '”.</div>';
   };
-  const open = h => { m.remove(); jumpTo(h); };
+  const open = h => { m.remove(); if (h.coll === 'guests' || h.coll === 'vendors') openProfile(h.coll === 'guests' ? 'guest' : 'vendor', h.id); else jumpTo(h); };
   i.oninput = () => { sel = 0; draw(); };
   i.onkeydown = e => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); sel = Math.max(0, Math.min(hits.length - 1, sel + (e.key === 'ArrowDown' ? 1 : -1))); draw(); const b = $('.sr.on', box); if (b) b.scrollIntoView({ block: 'nearest' }); }
@@ -2640,7 +2709,7 @@ function contactRow(c, opts) {
   opts = opts || {};
   const star = c.row.star === 'Yes';
   return '<div class="ctc" data-id="' + c.row.id + '" data-coll="' + c.coll + '"><button class="star' + (star ? ' on' : '') + '" data-star title="' + (star ? 'Starred: shown first, in Wedding-day mode and on the shared run sheet' : 'Star for wedding day') + '"' + dis() + '>' + (star ? '★' : '☆') + '</button>' +
-    '<div class="ctx"><b>' + esc(c.name) + (c.booked ? ' ' + pill('Booked', 'ok') : '') + '</b><small>' + esc(c.sub || '') + (c.phone ? ' · ' + esc(c.phone) : '') + '</small></div>' +
+    '<div class="ctx"><b>' + (c.coll === 'guests' ? profLink('guest', c.row.id, c.name) : c.coll === 'vendors' ? profLink('vendor', c.row.id, c.name) : esc(c.name)) + (c.booked ? ' ' + pill('Booked', 'ok') : '') + '</b><small>' + esc(c.sub || '') + (c.phone ? ' · ' + esc(c.phone) : '') + '</small></div>' +
     (phoneDigits(c.phone) ? telBtns(c.phone, { name: c.name, text: opts.text ? opts.text(c) : '' }) : '<a class="note addno" data-edit>+ add number</a>') + '</div>';
 }
 function contactsBind(box, redraw) {
@@ -2858,7 +2927,7 @@ VIEWS.checkin = function () {
       .filter(e => f.st === 'All' || (f.st === 'Arrived' ? e[1].some(g => g.arr) : e[1].some(g => !g.arr)));
     list.innerHTML = fams.length ? fams.slice(0, 250).map(e => {
       const gs = e[1], a = gs.filter(g => g.arr).length, ph = (gs.find(g => phoneDigits(g.phone)) || {}).phone;
-      return '<div class="card cif' + (a === gs.length ? ' all' : '') + '"><div class="cih"><div><b>' + esc(e[0]) + '</b><small>' + a + ' of ' + gs.length + ' here' + [gs[0].city, stayOf(e[0])].filter(Boolean).map(x => ' · ' + esc(x)).join('') + '</small></div><span>' + (ph ? telBtns(ph, { name: e[0] }) : '') + '</span>' + (a < gs.length ? '<button class="btn sm pri" data-all="' + esc(e[0]) + '"' + dis() + '>✓ All here</button>' : '') + '</div>' +
+      return '<div class="card cif' + (a === gs.length ? ' all' : '') + '"><div class="cih"><div><b>' + (gs.length === 1 ? profLink('guest', gs[0].id, e[0]) : esc(e[0])) + '</b><small>' + a + ' of ' + gs.length + ' here' + [gs[0].city, stayOf(e[0])].filter(Boolean).map(x => ' · ' + esc(x)).join('') + '</small></div><span>' + (ph ? telBtns(ph, { name: e[0] }) : '') + '</span>' + (a < gs.length ? '<button class="btn sm pri" data-all="' + esc(e[0]) + '"' + dis() + '>✓ All here</button>' : '') + '</div>' +
         gs.map(g => '<button class="cig' + (g.arr ? ' on' : '') + '" data-g="' + g.id + '"' + dis() + '><span class="tick">' + (g.arr ? '✓' : '') + '</span><span>' + esc(g.name || '(no name)') + (g.age && g.age !== 'Adult' ? ' <small>' + esc(g.age) + '</small>' : '') + '</span>' + (g.arr ? '<small>' + esc(String(g.arr).slice(11) || '') + '</small>' : '') + '</button>').join('') + '</div>';
     }).join('') + (fams.length > 250 ? '<div class="empty">Showing 250 families. Search to find others.</div>' : '') : '<div class="empty">' + (o.G.length ? 'No families match.' : 'Add guests to the Guest List first.') + '</div>';
   }
@@ -2874,6 +2943,229 @@ VIEWS.checkin = function () {
   wrap.appendChild(kp); wrap.appendChild(bar); wrap.appendChild(list);
   return [el('<div>' + ph('Arrivals', 'Tap a name as each guest arrives. Families still on the way stay at the top, with their number to call.') + '</div>').firstChild, wrap];
 };
+
+/* ===== profiles.js ===== */
+/* ---------- guest and vendor details: tap a name anywhere to see everything about them ---------- */
+const lc = s => String(s == null ? '' : s).trim().toLowerCase();
+const vendorByName = n => { const k = lc(n); if (!k) return null; const vs = S.vendors.filter(v => lc(v.vendor) === k || lc(v.contact) === k); return vs.find(v => v.decision === 'Selected') || vs[0] || null; };
+const guestByName = n => { const k = lc(n); return k ? S.guests.find(g => lc(g.name) === k) || null : null; };
+/** A name that opens the guest's or vendor's details. */
+const profLink = (kind, id, text) => id ? '<a class="lnk" data-prof="' + kind + ':' + id + '" role="button" tabindex="0">' + esc(text == null || text === '' ? '(no name)' : text) + '</a>' : esc(text || '');
+const vendorLink = name => { const v = vendorByName(name); return v ? profLink('vendor', v.id, name) : esc(name || ''); };
+
+document.addEventListener('click', e => { const p = e.target.closest('[data-prof]'); if (!p) return; e.preventDefault(); const i = p.dataset.prof.indexOf(':'); openProfile(p.dataset.prof.slice(0, i), p.dataset.prof.slice(i + 1)); });
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches && e.target.matches('a[data-prof]')) e.target.click(); });
+
+let PROF = null; // { kind, id, el }
+function closeProfile() { if (PROF) { PROF.el.remove(); PROF = null; document.body.classList.remove('drawer-open'); } }
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && PROF && !$('.mask')) closeProfile(); });
+
+function openProfile(kind, id) {
+  const row = (kind === 'guest' ? S.guests : S.vendors).find(r => r.id === id);
+  if (!row) { toast('That ' + kind + ' was deleted.'); return; }
+  if (!PROF) {
+    const el = document.createElement('div');
+    el.className = 'drawer-wrap';
+    el.innerHTML = '<div class="drawer-bg" data-x></div><aside class="drawer" role="dialog" aria-modal="true"><button class="dx" data-x aria-label="Close">✕</button><div class="dbody"></div></aside>';
+    document.body.appendChild(el); document.body.classList.add('drawer-open');
+    el.addEventListener('click', ev => { if (ev.target.closest('[data-x]')) closeProfile(); });
+    el.addEventListener('change', ev => profileChange(ev));
+    el.addEventListener('click', ev => profileAction(ev));
+    PROF = { el };
+  }
+  PROF.kind = kind; PROF.id = id;
+  drawProfile();
+  $('.drawer', PROF.el).scrollTop = 0;
+}
+function drawProfile() {
+  if (!PROF) return;
+  const rows = PROF.kind === 'guest' ? S.guests : S.vendors, r = rows.find(x => x.id === PROF.id);
+  if (!r) { closeProfile(); return; }
+  $('.dbody', PROF.el).innerHTML = PROF.kind === 'guest' ? guestProfile(r) : vendorProfile(r);
+  if (RO()) $$('.dbody select, .dbody [data-pa]', PROF.el).forEach(x => { if (!x.hasAttribute('data-ro-ok')) x.disabled = true; });
+}
+// Keep an open panel in step with edits made elsewhere (other devices, the grid behind it).
+const _renderAll = renderAll;
+renderAll = function () { _renderAll(); if (PROF) drawProfile(); };
+
+const sec = (title, body, extra) => body ? '<section class="ps"><h3>' + title + (extra ? ' <small>' + extra + '</small>' : '') + '</h3>' + body + '</section>' : '';
+const kv = pairs => '<dl class="kv">' + pairs.filter(p => p[1] !== '' && p[1] != null && p[1] !== false).map(p => '<dt>' + esc(p[0]) + '</dt><dd>' + p[1] + '</dd>').join('') + '</dl>';
+const contactBlock = (phone, name, extra) => phoneDigits(phone)
+  ? '<div class="pcall"><span class="pnum">' + esc(phone) + (phoneOk(phone) ? '' : ' <span class="pwarn" title="This number looks wrong">⚠</span>') + '</span>' + (phoneOk(phone) ? '<a class="btn pri sm" href="' + telHref(phone) + '">📞 Call</a><a class="btn sm" target="_blank" rel="noopener" href="' + esc(waHref(phone, '')) + '">💬 WhatsApp</a>' : '') + (extra || '') + '</div>'
+  : '<p class="note">No phone number yet.' + (extra ? '</p><div class="pcall">' + extra + '</div>' : '</p>');
+
+/* ----- guest ----- */
+function guestProfile(g) {
+  const o = d(), grp = gk(g), fam = o.G.filter(x => gk(x) === grp && x.id !== g.id);
+  const rsvpPill = pill(g.rsvp || 'Pending', g.rsvp === 'Confirmed' ? 'ok' : g.rsvp === 'Declined' ? 'bad' : 'warn');
+  const head = '<div class="ph"><div class="av">' + esc((g.name || '?').trim().charAt(0).toUpperCase()) + '</div><div><h2>' + esc(g.name || '(no name)') + '</h2><div class="note">' + [g.group && g.group !== g.name ? g.group : '', g.side, g.cat, g.age && g.age !== 'Adult' ? g.age : '', g.city].filter(Boolean).map(esc).join(' · ') + '</div><div class="pills">' + rsvpPill + ' ' + pill(g.invited === 'Yes' ? 'Invite sent' : 'Not invited yet', g.invited === 'Yes' ? 'info' : '') + (g.arr && on('checkin') ? ' ' + pill('Arrived ' + String(g.arr).slice(11), 'ok') : '') + '</div></div></div>';
+  const msgBtn = '<button class="btn sm" data-pa="gmsg" data-ro-ok>💬 ' + (g.invited === 'Yes' && on('templates') ? 'Send a message' : 'Send invite') + '</button>';
+  const contact = sec('Contact', contactBlock(g.phone, g.name, msgBtn));
+  const quick = '<div class="pq"><label>RSVP <select class="sel" data-pf="rsvp">' + L('RSVP').map(x => '<option' + (x === g.rsvp ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + '</select></label><label>Invite sent <select class="sel" data-pf="invited">' + YN.map(x => '<option' + (x === g.invited ? ' selected' : '') + '>' + x + '</option>').join('') + '</select></label>' + (on('checkin') ? '<button class="btn sm" data-pa="arr">' + (g.arr ? 'Undo arrival' : '🛬 Mark arrived') + '</button>' : '') + '</div>';
+  // functions
+  const fns = S.functions.filter(f => f.name && f.active !== 'No').slice().sort((a, b) => (a.date || '9') < (b.date || '9') ? -1 : 1);
+  const fnRows = fns.map(f => { const s = fnState(g, f.name); return '<tr class="' + (s ? '' : 'muted') + '"><td><b>' + esc(f.name) + '</b><small>' + [dshow(f.date), f.time, f.venue].filter(Boolean).map(esc).join(' · ') + '</small></td><td>' + (s ? pill(s === 'Confirmed' ? 'Coming' : s === 'Declined' ? 'Not coming' : 'Invited', s === 'Confirmed' ? 'ok' : s === 'Declined' ? 'bad' : 'warn') : '<span class="note">Not invited</span>') + '</td></tr>'; }).join('');
+  const nInv = fns.filter(f => fnState(g, f.name)).length;
+  const events = sec('Functions', fns.length ? '<table class="pt">' + fnRows + '</table>' : '', nInv + ' of ' + fns.length + ' invited');
+  // stay
+  let stay = '';
+  if (on('stay')) {
+    const ra = S.roomAlloc.find(a => a.group === grp), h = ra && S.hotels.find(x => o.hotelKey(x) === ra.hotelType);
+    stay = sec('Stay', ra ? kv([['Hotel', h ? esc(h.hotel) + (h.phone ? ' ' + telBtns(h.phone, { name: h.hotel }) : '') : esc(ra.hotelType || 'Not picked')], ['Room', esc([h && h.type, g.room ? 'room ' + g.room : ''].filter(Boolean).join(', '))], ['Check-in', esc(dshow(ra.in))], ['Check-out', esc(dshow(ra.out))], ['Rooms for the family', esc(ra.rooms || '')]])
+      : g.stay === 'Yes' ? '<p class="note">Needs a stay, not given a room yet. <a data-pa="go-stay">Allocate a room</a></p>' : '<p class="note">No stay needed.</p>');
+  }
+  // transport
+  let tr = '';
+  if (on('transport')) {
+    const ta = S.transAlloc.find(a => a.group === grp), v = ta && S.vehicles.find(x => o.vehKey(x) === ta.vehicle);
+    tr = sec('Transport', ta ? kv([['Vehicle', v ? esc(v.type + ' · ' + v.operator) + (v.phone ? ' ' + telBtns(v.phone, { name: v.operator }) : '') : esc(ta.vehicle || 'Not picked')], ['Arrival', esc([dshow(ta.arrDate), ta.arrTime, ta.arrFrom].filter(Boolean).join(' · '))], ['Departure', esc([dshow(ta.depDate), ta.depTime, ta.depTo].filter(Boolean).join(' · '))], ['Flight / train', esc(g.travel || '')]])
+      : g.transport === 'Yes' ? '<p class="note">Needs transport, not arranged yet. <a data-pa="go-tr">Arrange a pickup</a>' + (g.travel ? '<br>Travel: ' + esc(g.travel) : '') + '</p>' : '<p class="note">No pickup needed.' + (g.travel ? ' Travel: ' + esc(g.travel) : '') + '</p>');
+  }
+  const more = sec('Other details', kv([['Diet', esc(g.diet || '')], ['Notes', esc(g.notes || '')]].concat(customCols(colPrefs('guests')).map(c => [c.label, esc(g[c.k] == null ? '' : g[c.k])]))));
+  const famS = sec('Family / group', fam.length ? '<ul class="plist2">' + fam.map(x => '<li>' + profLink('guest', x.id, x.name || x.group) + '<small>' + [x.age && x.age !== 'Adult' ? x.age : '', x.rsvp].filter(Boolean).map(esc).join(' · ') + '</small>' + (phoneDigits(x.phone) ? telBtns(x.phone, { name: x.name }) : '') + '</li>').join('') + '</ul>' : '', grp + ' · ' + (fam.length + 1) + ' people');
+  const sh = on('shagun') ? S.shagun.filter(x => lc(x.name) === lc(g.name) || (g.group && lc(x.group) === lc(g.group) && !x.name)) : [];
+  const shS = sec('Shagun & gifts', sh.length ? '<table class="pt">' + sh.map(x => '<tr><td><b>' + esc(x.dir || '') + '</b><small>' + [x.fn, dshow(x.date), x.gift].filter(Boolean).map(esc).join(' · ') + '</small></td><td class="num">' + (x.amount ? inr(x.amount) : '') + '</td></tr>').join('') + '</table>' : '');
+  return head + quick + contact + events + stay + tr + famS + shS + more +
+    '<div class="pfoot"><button class="btn" data-pa="edit-guest" data-ro-ok>✎ Edit in Guest List</button></div>';
+}
+
+/* ----- vendor ----- */
+function vendorPayments(v) { const k = lc(v.vendor), c = lc(v.contact); return S.payments.filter(p => { const n = lc(p.payee); return n && (n === k || (c && n === c)); }); }
+function vendorDuties(v) {
+  const names = [v.vendor, v.contact].map(lc).filter(Boolean);
+  const hit = s => { const t = lc(s); return t && names.some(n => t === n || t.indexOf(n) >= 0); };
+  const rs = on('runsheet') ? S.runsheet.filter(r => hit(r.vendor) || hit(r.activity) || (v.decision === 'Selected' && (phoneOf(r.vendor) || {}).row === v)) : [];
+  const ts = on('tasks') ? S.tasks.filter(t => hit(t.task) || hit(t.notes)) : [];
+  return { rs, ts };
+}
+function vendorProfile(v) {
+  const o = d(), c = o.vCalc[v.id] || {}, eff = c.eff || 0, pays = vendorPayments(v).slice().sort((a, b) => (a.due || '9') < (b.due || '9') ? -1 : 1);
+  const paid = pays.filter(p => p.status === 'Paid').reduce((a, p) => a + num(p.amount), 0);
+  const sched = pays.filter(p => p.status !== 'Paid').reduce((a, p) => a + num(p.amount), 0);
+  const sel = v.decision === 'Selected', left = eff - paid;
+  const head = '<div class="ph"><div class="av v">🧾</div><div><h2>' + esc(v.vendor || '(no name)') + '</h2><div class="note">' + [v.line, (S.budgetLines.find(l => l.line === v.line) || {}).cat].filter(Boolean).map(esc).join(' · ') + '</div><div class="pills">' + pill(v.decision || 'Considering', sel ? 'ok' : v.decision === 'Rejected' ? 'bad' : 'info') + (num(v.rating) ? ' <span class="stars">' + '★'.repeat(num(v.rating)) + '<span>' + '★'.repeat(5 - num(v.rating)) + '</span></span>' : '') + (v.contract === 'Yes' ? ' ' + pill('Contract signed', 'ok') : '') + (c.low ? ' ' + pill('Lowest quote', 'info') : '') + '</div></div></div>';
+  const noteBtn = on('templates') && on('payments') ? '<button class="btn sm" data-pa="vnote" data-ro-ok>💬 Payment note</button>' : '';
+  const contact = sec('Contact', (v.contact ? '<p style="margin:0 0 6px"><b>' + esc(v.contact) + '</b></p>' : '') + contactBlock(v.phone, v.vendor, noteBtn));
+  const money = sec('Money', '<div class="pmoney">' +
+    '<div><span>Quoted</span><b>' + (num(v.quoted) ? inr(v.quoted) : '–') + '</b></div>' +
+    '<div><span>Negotiated</span><b>' + (num(v.negotiated) ? inr(v.negotiated) : '–') + '</b></div>' +
+    '<div><span>Paid</span><b class="ok">' + inr(paid) + '</b></div>' +
+    '<div><span>' + (sel ? 'Left to pay' : 'Price') + '</span><b class="' + (sel && left > 0 ? 'due' : '') + '">' + (sel ? inr(Math.max(0, left)) : eff ? inr(eff) : '–') + '</b></div></div>' +
+    (sel && eff ? '<div class="pbar"><i style="width:' + Math.min(100, pct(paid, eff)) + '%"></i></div><p class="note">' + pct(paid, eff) + '% paid' + (sched ? ' · ' + inr(sched) + ' scheduled in Payments' : '') + (left - sched > 0 && sched ? ' · ' + inr(left - sched) + ' not scheduled yet' : '') + (left < 0 ? ' · ' + inr(-left) + ' paid over the agreed price' : '') + '</p>' : '') +
+    (c.vsAvg != null || c.vsPlan != null ? '<p class="note">' + [c.vsAvg != null ? pctCell(c.vsAvg) + ' vs the average quote' : '', c.vsPlan != null ? pctCell(c.vsPlan) + ' vs your budget for this line' : ''].filter(Boolean).join(' · ') + '</p>' : ''));
+  const payS = on('payments') ? sec('Payments', (pays.length ? '<table class="pt">' + pays.map(p => { const pc = o.payCalc[p.id] || {}; return '<tr><td><b>' + esc(p.desc || 'Payment') + '</b><small>' + (p.status === 'Paid' ? 'Paid ' + esc(dshow(p.paid)) + (p.mode ? ' · ' + esc(p.mode) : '') : p.due ? 'Due ' + esc(dshow(p.due)) : 'No due date') + '</small></td><td class="num">' + inr(p.amount) + '</td><td>' + statusPill(pc.st) + '</td>' + (p.status !== 'Paid' ? '<td><button class="btn sm" data-pa="paid" data-pid="' + p.id + '">Mark paid</button></td>' : '<td></td>') + '</tr>'; }).join('') + '</table>' : '<p class="note">No payments recorded for this vendor.</p>') + '<button class="btn sm" data-pa="addpay">+ Add a payment</button>', pays.length ? pays.length + ' payment' + (pays.length > 1 ? 's' : '') : '') : '';
+  const du = vendorDuties(v);
+  const duties = sec('Responsibilities', (v.notes ? '<p class="pinc"><b>What’s included:</b> ' + esc(v.notes) + '</p>' : '') +
+    (du.rs.length ? '<h4>On the run sheet</h4><ul class="plist2">' + du.rs.map(r => '<li><span><b>' + esc(r.activity || '') + '</b><small>' + [r.fn, r.time ? hm12(r.time) : '', r.loc, r.who ? 'with ' + r.who : ''].filter(Boolean).map(esc).join(' · ') + '</small></span>' + (r.status === 'Done' ? pill('Done', 'ok') : '') + '</li>').join('') + '</ul>' : '') +
+    (du.ts.length ? '<h4>Tasks</h4><ul class="plist2">' + du.ts.map(t => '<li><span><b>' + esc(t.task) + '</b><small>' + [t.who, o.tCalc[t.id] && o.tCalc[t.id].dl ? 'due ' + dshow(fd(o.tCalc[t.id].dl)) : ''].filter(Boolean).map(esc).join(' · ') + '</small></span>' + statusPill(t.status === 'Done' ? 'Done' : (o.tCalc[t.id] || {}).alert) + '</li>').join('') + '</ul>' : '') +
+    (!v.notes && !du.rs.length && !du.ts.length ? '<p class="note">Nothing yet. Write what’s included in the vendor’s notes, and use their name in the Run Sheet’s “Vendor” column.</p>' : ''));
+  const alts = S.vendors.filter(x => x.id !== v.id && x.line && x.line === v.line);
+  const altS = sec('Other quotes for ' + esc(v.line || 'this job'), alts.length ? '<ul class="plist2">' + alts.map(x => { const xc = o.vCalc[x.id] || {}; return '<li>' + profLink('vendor', x.id, x.vendor) + '<small>' + [xc.eff ? inr(xc.eff) : '', x.decision].filter(Boolean).map(esc).join(' · ') + '</small></li>'; }).join('') + '</ul>' : '');
+  const pick = sel ? '<button class="btn" data-pa="unsel">Unselect</button>' : '<button class="btn pri" data-pa="sel">✓ Select this vendor</button>';
+  return head + contact + money + payS + duties + altS + '<div class="pfoot">' + pick + ' <button class="btn" data-pa="edit-vendor" data-ro-ok>✎ Edit in Vendors</button></div>';
+}
+
+/* ----- actions inside the panel ----- */
+function profileChange(e) {
+  const f = e.target.dataset.pf; if (!f || RO() || !PROF) return;
+  const g = S.guests.find(x => x.id === PROF.id); if (!g) return;
+  undoRow('guests', g, 'Changed ' + f + ' of “' + (g.name || '') + '”'); g[f] = e.target.value; dirty(); renderAllKeep();
+}
+const renderAllKeep = () => { const y = window.scrollY; renderAll(); window.scrollTo(0, y); };
+function profileAction(e) {
+  const b = e.target.closest('[data-pa]'); if (!b || !PROF) return;
+  const a = b.dataset.pa, isG = PROF.kind === 'guest', r = (isG ? S.guests : S.vendors).find(x => x.id === PROF.id); if (!r) return;
+  if (a === 'edit-guest') { closeProfile(); jumpTo({ route: 'guests', coll: 'guests', id: r.id, q: r.name }); return; }
+  if (a === 'edit-vendor') { closeProfile(); jumpTo({ route: 'vendors', coll: 'vendors', id: r.id, tab: 'list' }); return; }
+  if (a === 'go-stay') { closeProfile(); UI.tab.stay = 'alloc'; go('stay'); return; }
+  if (a === 'go-tr') { closeProfile(); UI.tab.trans = 'alloc'; go('transport'); return; }
+  if (a === 'gmsg') { msgPicker({ phone: r.phone, title: 'Message ' + (r.name || 'guest'), choices: on('templates') ? guestChoices(r, renderAllKeep) : [['invite', 'Invitation', guestVals(r), () => { if (r.invited !== 'Yes' && !RO()) { undoRow('guests', r); r.invited = 'Yes'; dirty(); renderAllKeep(); } }]] }); return; }
+  if (a === 'vnote') { const p = vendorPayments(r).find(x => x.status !== 'Paid') || vendorPayments(r)[0] || { payee: r.vendor, desc: 'payment' }; msgPicker({ phone: r.phone, title: 'Message ' + (r.vendor || 'vendor'), choices: [['pay', 'Payment note', payVals(p)], ['', 'Blank', '']] }); return; }
+  if (RO()) return;
+  if (a === 'arr') { undoRow('guests', r, (r.arr ? 'Un-checked ' : 'Checked in ') + (r.name || '')); r.arr = r.arr ? '' : fd(today()) + ' ' + nowHM(); }
+  else if (a === 'sel' || a === 'unsel') { undoFn((a === 'sel' ? 'Selected ' : 'Unselected ') + (r.vendor || 'vendor'), (() => { const was = S.vendors.filter(x => x.line === r.line).map(x => [x.id, x.decision]); return () => was.forEach(w => { const x = S.vendors.find(y => y.id === w[0]); if (x) x.decision = w[1]; }); })()); if (a === 'sel') S.vendors.forEach(x => { if (x.line === r.line && x.decision === 'Selected') x.decision = 'Considering'; }); r.decision = a === 'sel' ? 'Selected' : 'Considering'; }
+  else if (a === 'paid') { const p = S.payments.find(x => x.id === b.dataset.pid); if (!p) return; undoRow('payments', p, 'Marked paid: ' + (p.payee || '')); p.status = 'Paid'; p.paid = fd(today()); }
+  else if (a === 'addpay') { if (!canAdd('payments')) return; const p = { id: uid(), line: r.line || '', payee: r.vendor || '', desc: 'Advance', amount: '', status: 'Pending', mode: 'Bank Transfer', by: 'Bride Family' }; S.payments.push(p); UNDO.push({ coll: 'payments', id: p.id, row: null, label: 'Added a payment', add: true }); dirty(); closeProfile(); UI.f.p = { st: 'All', line: '', q: '' }; jumpTo({ route: 'payments', coll: 'payments', id: p.id }); return; }
+  else return;
+  dirty(); renderAllKeep();
+}
+
+/* ===== tour.js ===== */
+/* ---------- quick start tour: shown once per person on each device, skippable, can be replayed ---------- */
+// Each step points at the first of its selectors that is on screen (desktop sidebar, else the phone's top bar).
+const TOUR_STEPS = [
+  { t: 'Welcome to your wedding planner 👋', b: 'A one-minute tour of where everything is. Skip it if you like: you can replay it any time from Setup & Data.' },
+  { sel: ['#attn'], t: 'Your dashboard', b: 'The countdown, your numbers and “Needs your attention”. It tells you what to do next: tap any item to go straight there.' },
+  { nav: 'guests', t: 'Guests & RSVPs', b: 'Add guests, tap Y under each function to invite them, and send the invite on WhatsApp in one tap. Tap a guest’s name (›) to see everything about them: number, functions, stay and pickup.' },
+  { nav: 'vendors', t: 'Vendors & payments', b: 'Log quotes, compare them and pick one. Tap a vendor to see the price, what you’ve paid, what’s left, their number and their jobs on the day.' },
+  { nav: 'contacts', t: 'Contacts', b: 'One phone book with call and WhatsApp buttons for family, vendors, hotels and drivers. Star (☆) the people you’ll need on the wedding day.' },
+  { sel: ['#srch', '#srch-m'], feat: 'search', t: 'Search, and undo', b: 'Find any guest, vendor or task in a second (Ctrl+K on a computer). Made a mistake? An ↶ Undo button appears right here after every change.' },
+  { sel: ['#sync', '#sync-m'], t: 'Saved by itself', b: 'Everything saves automatically and shows up on your family’s phones within seconds. No signal at the venue? Keep going: changes sync when you’re back online.' },
+  { nav: 'features', t: 'Keep it simple', b: 'Too many pages? Switch off the ones your wedding doesn’t need in Features. Wedding-day mode and guest check-in live there too, for the big day.' },
+  { nav: 'setup', t: 'Start here', b: 'Add your names, wedding date and city in Setup & Data. Task deadlines and the countdown follow your date.', done: 'Go to Setup' }
+];
+const tourKey = () => 'pp_tour_' + (CLOUD.on ? (CLOUD.email || CLOUD.id || 'cloud') : 'local');
+function maybeTour() {
+  if (store.get(tourKey()) || (CLOUD.meta && CLOUD.meta.role === 'support') || document.body.classList.contains('gated') || $('.mask')) return;
+  setTimeout(() => { if (!$('.tour') && !document.body.classList.contains('gated')) startTour(); }, 700);
+}
+function startTour() {
+  const steps = TOUR_STEPS.filter(s => (!s.nav || routeOn(s.nav)) && (!s.feat || on(s.feat)));
+  closeProfile(); $$('.mask').forEach(m => m.remove());
+  if (route !== 'dash') go('dash');
+  const root = el('<div class="tour" role="dialog" aria-live="polite"><div class="tour-hole"></div><div class="tour-card"><div class="tour-n"></div><h3></h3><p></p><div class="tour-b"><button class="btn ghost sm" data-skip>Skip tour</button><span class="sp"></span><button class="btn sm" data-back>Back</button><button class="btn pri sm" data-next>Next</button></div></div></div>');
+  document.body.appendChild(root);
+  const hole = $('.tour-hole', root), card = $('.tour-card', root);
+  let i = 0;
+  const visible = e => { if (!e) return false; const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
+  const target = s => {
+    if (s.nav) { // on phones the menu slides in so the page's link can be shown
+      if (MOBILE()) $('.side').classList.add('open');
+      const a = $('#nav a[data-r="' + s.nav + '"]'); if (a) a.scrollIntoView({ block: 'nearest' }); return a;
+    }
+    return (s.sel || []).map(q => $(q)).find(visible) || null;
+  };
+  const place = () => {
+    const s = steps[i], t = s.nav || s.sel ? target(s) : null;
+    if (!s.nav && MOBILE()) $('.side').classList.remove('open');
+    root.classList.toggle('center', !t);
+    if (t) {
+      if (!s.nav) t.scrollIntoView({ block: 'nearest' });
+      const r = t.getBoundingClientRect(), pad = 6;
+      Object.assign(hole.style, { left: r.left - pad + 'px', top: r.top - pad + 'px', width: r.width + pad * 2 + 'px', height: r.height + pad * 2 + 'px', display: 'block' });
+      if (!MOBILE()) {
+        const cw = Math.min(340, innerWidth - 24), ch = card.offsetHeight || 200;
+        let left = r.right + 16, top = r.top;
+        if (left + cw > innerWidth - 12) { left = Math.max(12, Math.min(r.left, innerWidth - cw - 12)); top = r.bottom + 14; }
+        if (top + ch > innerHeight - 12) top = Math.max(12, r.top - ch - 14);
+        Object.assign(card.style, { left: left + 'px', top: Math.max(12, top) + 'px', bottom: '' });
+      } else Object.assign(card.style, { left: '', top: '', bottom: '' });
+    } else { hole.style.display = 'none'; Object.assign(card.style, { left: '', top: '', bottom: '' }); }
+  };
+  const show = () => {
+    const s = steps[i];
+    $('.tour-n', card).textContent = i ? 'Step ' + i + ' of ' + (steps.length - 1) : 'Quick start';
+    $('h3', card).textContent = s.t; $('p', card).textContent = s.b;
+    $('[data-back]', card).hidden = i === 0;
+    $('[data-next]', card).textContent = i === 0 ? 'Show me around' : i === steps.length - 1 ? (s.done || 'Finish') : 'Next';
+    place(); setTimeout(place, 220); // after the phone menu has slid in
+    $('[data-next]', card).focus();
+  };
+  const end = goSetup => {
+    store.set(tourKey(), '1'); root.remove(); removeEventListener('resize', place); removeEventListener('keydown', key, true);
+    if (MOBILE()) $('.side').classList.remove('open');
+    if (goSetup) go('setup'); else toast('You can replay the tour from Setup & Data.');
+  };
+  const key = e => { if (e.key === 'Escape') { e.preventDefault(); end(); } else if (e.key === 'ArrowRight') $('[data-next]', card).click(); else if (e.key === 'ArrowLeft' && i) $('[data-back]', card).click(); };
+  root.addEventListener('click', e => {
+    if (e.target.closest('[data-skip]')) end();
+    else if (e.target.closest('[data-back]')) { i = Math.max(0, i - 1); show(); }
+    else if (e.target.closest('[data-next]')) { if (i === steps.length - 1) end(steps[i].done ? true : false); else { i++; show(); } }
+  });
+  addEventListener('resize', place); addEventListener('keydown', key, true);
+  show();
+}
+document.addEventListener('click', e => { if (e.target.closest('[data-tour]')) startTour(); });
 
 /* ===== views2.js ===== */
 /* ---------- Stay (hotels) ---------- */
@@ -2902,8 +3194,8 @@ VIEWS.stay = function () {
     if (tab === 'list') {
       const al = r => S.roomAlloc.find(a => a.group === gk(r));
       const hh = r => { const a = al(r); return a && S.hotels.find(h => d().hotelKey(h) === a.hotelType); };
-      const g = grid({ coll: 'guests', key: 'rooming', noDel: true, filter: r => r.stay === 'Yes', empty: 'No guest needs a stay yet. Mark “Stay?” = Yes on the Guest List.', act: { stay: r => { msgPicker({ phone: r.phone, title: 'Send to ' + (r.name || 'guest'), choices: [['stay', 'Stay & pickup', guestVals(r)], ['', 'Blank', '']] }); return false; } }, quick: r => r.phone, 
-        cols: [CALC('n', 'Guest', r => r.name, { th: '' }), CALC('g', 'Family / group', r => gk(r)), CALC('ag', 'Age', r => r.age), CALC('h', 'Hotel', r => (hh(r) || {}).hotel || ''), CALC('rt', 'Room type', r => (hh(r) || {}).type || ''), CALC('ci', 'Check-in', r => (al(r) || {}).in ? dshow(al(r).in) : ''), CALC('co', 'Check-out', r => (al(r) || {}).out ? dshow(al(r).out) : ''), T('room', 'Room no.', { w: 90 }), CALC('s', 'Status', r => al(r) ? 'Allocated' : 'Awaiting', { fmt: v => pill(v, v === 'Allocated' ? 'ok' : 'warn') }), { k: 'snd', label: 'Send details', t: 'html', th: 'a', html: r => on('templates') ? '<button class="btn sm" data-act="stay">💬 Send</button>' : telBtns(r.phone) }] });
+      const g = grid({ coll: 'guests', key: 'rooming', noDel: true, filter: r => r.stay === 'Yes', empty: 'No guest needs a stay yet. Mark “Stay?” = Yes on the Guest List.', act: { stay: r => { msgPicker({ phone: r.phone, title: 'Send to ' + (r.name || 'guest'), choices: [['stay', 'Stay & pickup', guestVals(r)], ['', 'Blank', '']] }); return false; } }, quick: r => r.phone, prof: 'guest', 
+        cols: [CALC('n', 'Guest', r => r.name, { th: '', fmt: (v, r) => profLink('guest', r.id, v) }), CALC('g', 'Family / group', r => gk(r)), CALC('ag', 'Age', r => r.age), CALC('h', 'Hotel', r => (hh(r) || {}).hotel || ''), CALC('rt', 'Room type', r => (hh(r) || {}).type || ''), CALC('ci', 'Check-in', r => (al(r) || {}).in ? dshow(al(r).in) : ''), CALC('co', 'Check-out', r => (al(r) || {}).out ? dshow(al(r).out) : ''), T('room', 'Room no.', { w: 90 }), CALC('s', 'Status', r => al(r) ? 'Allocated' : 'Awaiting', { fmt: v => pill(v, v === 'Allocated' ? 'ok' : 'warn') }), { k: 'snd', label: 'Send details', t: 'html', th: 'a', html: r => on('templates') ? '<button class="btn sm" data-act="stay">💬 Send</button>' : telBtns(r.phone) }] });
       return [el('<p class="note">Fully automatic from the Guest List and Room Allocation. Type the room number once the hotel confirms. To add or remove guests, use the Guest List.</p>'), g.root];
     }
     const kp = el('<div class="grid g4" style="margin-bottom:12px"></div>'), aw = el('<div class="card" style="margin-bottom:12px"></div>');
@@ -2937,8 +3229,8 @@ VIEWS.transport = function () {
     }
     if (tab === 'list') {
       const al = r => S.transAlloc.find(a => a.group === gk(r));
-      const g = grid({ coll: 'guests', key: 'pickups', noDel: true, filter: r => r.transport === 'Yes', empty: 'No guest needs transport yet. Mark “Transport?” = Yes on the Guest List.', act: { stay: r => { msgPicker({ phone: r.phone, title: 'Send to ' + (r.name || 'guest'), choices: [['stay', 'Stay & pickup', guestVals(r)], ['', 'Blank', '']] }); return false; } }, quick: r => r.phone, 
-        cols: [CALC('n', 'Guest', r => r.name, { th: '' }), CALC('g', 'Family / group', r => gk(r)), { k: 'p', label: 'Phone', t: 'html', th: 'a', html: r => esc(r.phone || '') + ' ' + telBtns(r.phone, { wa: false }) }, CALC('c', 'City', r => r.city || ''), CALC('v', 'Vehicle', r => (al(r) || {}).vehicle || ''), CALC('a', 'Arrival', r => al(r) ? [al(r).arrDate ? dshow(al(r).arrDate) : '', al(r).arrTime || '', al(r).arrFrom || ''].filter(Boolean).join(' · ') : ''), CALC('dp', 'Departure', r => al(r) ? [al(r).depDate ? dshow(al(r).depDate) : '', al(r).depTime || '', al(r).depTo || ''].filter(Boolean).join(' · ') : ''), T('travel', 'Flight / train', { w: 170 }), CALC('s', 'Status', r => al(r) ? 'Allocated' : 'Awaiting', { fmt: v => pill(v, v === 'Allocated' ? 'ok' : 'warn') }), { k: 'snd', label: 'Send details', t: 'html', th: 'a', html: r => on('templates') ? '<button class="btn sm" data-act="stay">💬 Send</button>' : telBtns(r.phone) }] });
+      const g = grid({ coll: 'guests', key: 'pickups', noDel: true, filter: r => r.transport === 'Yes', empty: 'No guest needs transport yet. Mark “Transport?” = Yes on the Guest List.', act: { stay: r => { msgPicker({ phone: r.phone, title: 'Send to ' + (r.name || 'guest'), choices: [['stay', 'Stay & pickup', guestVals(r)], ['', 'Blank', '']] }); return false; } }, quick: r => r.phone, prof: 'guest', 
+        cols: [CALC('n', 'Guest', r => r.name, { th: '', fmt: (v, r) => profLink('guest', r.id, v) }), CALC('g', 'Family / group', r => gk(r)), { k: 'p', label: 'Phone', t: 'html', th: 'a', html: r => esc(r.phone || '') + ' ' + telBtns(r.phone, { wa: false }) }, CALC('c', 'City', r => r.city || ''), CALC('v', 'Vehicle', r => (al(r) || {}).vehicle || ''), CALC('a', 'Arrival', r => al(r) ? [al(r).arrDate ? dshow(al(r).arrDate) : '', al(r).arrTime || '', al(r).arrFrom || ''].filter(Boolean).join(' · ') : ''), CALC('dp', 'Departure', r => al(r) ? [al(r).depDate ? dshow(al(r).depDate) : '', al(r).depTime || '', al(r).depTo || ''].filter(Boolean).join(' · ') : ''), T('travel', 'Flight / train', { w: 170 }), CALC('s', 'Status', r => al(r) ? 'Allocated' : 'Awaiting', { fmt: v => pill(v, v === 'Allocated' ? 'ok' : 'warn') }), { k: 'snd', label: 'Send details', t: 'html', th: 'a', html: r => on('templates') ? '<button class="btn sm" data-act="stay">💬 Send</button>' : telBtns(r.phone) }] });
       return [el('<p class="note">Fully automatic. Share this list with your cab operator.</p>'), g.root];
     }
     const kp = el('<div class="grid g4" style="margin-bottom:12px"></div>'), aw = el('<div class="card" style="margin-bottom:12px"></div>');
@@ -3016,14 +3308,14 @@ VIEWS.vendors = function () {
         const bl = S.budgetLines.find(l => l.line === f.line), planned = bl ? o.lineCalc[bl.id].planned : 0, sel = vs.find(v => v.decision === 'Selected');
         box.innerHTML = '<div class="bar"><select class="sel" style="min-width:260px">' + lines.map(l => '<option' + (l === f.line ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></div>' +
           (vs.length ? '<div class="grid g4" style="margin-bottom:14px">' + kpi('Quotes received', vs.length, bl ? esc(bl.cat) : '') + kpi('Lowest price', effs.length ? short(Math.min.apply(null, effs)) : '–', 'average ' + short(avg), 't') + kpi('Planned budget', short(planned), 'for this line', 'm') + kpi('Selected', sel ? esc(sel.vendor) : 'None yet', sel && planned ? pctCell(o.vCalc[sel.id].eff / planned - 1) + ' vs plan' : 'pick one below', 'c') + '</div>' +
-          '<div class="grid g3">' + vs.map(v => { const c = o.vCalc[v.id]; return '<div class="vc ' + (v.decision === 'Selected' ? 'sel' : '') + (c.low ? ' low' : '') + '"><div class="p">' + inr(c.eff) + '</div>' + (num(v.negotiated) && num(v.quoted) ? '<div class="note"><s>' + inr(v.quoted) + '</s> quoted · negotiated</div>' : '<div class="note">quoted price</div>') + '<h3 style="margin:8px 0 2px">' + esc(v.vendor) + '</h3><div class="note">' + esc(v.contact || '') + (v.phone ? ' · ' + esc(v.phone) + ' ' + telBtns(v.phone, { name: v.vendor }) : '') + '</div><div style="margin:6px 0">' + '★'.repeat(num(v.rating)) + '<span style="color:#EADFC9">' + '★'.repeat(5 - num(v.rating)) + '</span> ' + pill(v.decision || 'Considering', v.decision === 'Selected' ? 'ok' : v.decision === 'Rejected' ? 'bad' : 'info') + '</div><div class="note" style="min-height:36px">' + esc(v.notes || '') + '</div><div class="note" style="margin:6px 0">' + (c.vsAvg != null ? pctCell(c.vsAvg) + ' vs average' : '') + (c.vsPlan != null ? ' · ' + pctCell(c.vsPlan) + ' vs plan' : '') + '</div>' + (v.decision === 'Selected' ? '<button class="btn sm" data-set="Considering" data-id="' + v.id + '">Unselect</button>' : '<button class="btn pri sm" data-set="Selected" data-id="' + v.id + '">Select this vendor</button> <button class="btn sm ghost" data-set="Rejected" data-id="' + v.id + '">Reject</button>') + '</div>'; }).join('') + '</div>' : '<div class="empty">No quotes for this line yet. Add them in “All quotes”.</div>');
+          '<div class="grid g3">' + vs.map(v => { const c = o.vCalc[v.id]; return '<div class="vc ' + (v.decision === 'Selected' ? 'sel' : '') + (c.low ? ' low' : '') + '"><div class="p">' + inr(c.eff) + '</div>' + (num(v.negotiated) && num(v.quoted) ? '<div class="note"><s>' + inr(v.quoted) + '</s> quoted · negotiated</div>' : '<div class="note">quoted price</div>') + '<h3 style="margin:8px 0 2px">' + profLink('vendor', v.id, v.vendor) + '</h3><div class="note">' + esc(v.contact || '') + (v.phone ? ' · ' + esc(v.phone) + ' ' + telBtns(v.phone, { name: v.vendor }) : '') + '</div><div style="margin:6px 0">' + '★'.repeat(num(v.rating)) + '<span style="color:#EADFC9">' + '★'.repeat(5 - num(v.rating)) + '</span> ' + pill(v.decision || 'Considering', v.decision === 'Selected' ? 'ok' : v.decision === 'Rejected' ? 'bad' : 'info') + '</div><div class="note" style="min-height:36px">' + esc(v.notes || '') + '</div><div class="note" style="margin:6px 0">' + (c.vsAvg != null ? pctCell(c.vsAvg) + ' vs average' : '') + (c.vsPlan != null ? ' · ' + pctCell(c.vsPlan) + ' vs plan' : '') + '</div>' + (v.decision === 'Selected' ? '<button class="btn sm" data-set="Considering" data-id="' + v.id + '">Unselect</button>' : '<button class="btn pri sm" data-set="Selected" data-id="' + v.id + '">Select this vendor</button> <button class="btn sm ghost" data-set="Rejected" data-id="' + v.id + '">Reject</button>') + '</div>'; }).join('') + '</div>' : '<div class="empty">No quotes for this line yet. Add them in “All quotes”.</div>');
         const s = $('select', box); if (s) s.onchange = () => { f.line = s.value; draw(); };
         $$('[data-set]', box).forEach(b => b.onclick = () => { const v = S.vendors.find(x => x.id === b.dataset.id); if (b.dataset.set === 'Selected') S.vendors.forEach(x => { if (x.line === v.line && x.decision === 'Selected') x.decision = 'Considering'; }); v.decision = b.dataset.set; dirty(); badges(); draw(); });
       };
       draw(); return [box];
     }
-    const g = grid({ coll: 'vendors', limit: 300, quick: r => r.phone, title: r => r.vendor || 'New quote', sub: r => [r.line, d().vCalc[r.id] && d().vCalc[r.id].eff ? inr(d().vCalc[r.id].eff) : '', r.decision].filter(Boolean).join(' · '), empty: 'No quotes yet. Add your first vendor quote.', blank: () => ({ line: '', vendor: '', decision: 'Considering', contract: 'No' }),
-      cols: [SEL('line', 'Budget line', LINES, { w: 190 }), T('vendor', 'Vendor / company', { w: 170 }), T('contact', 'Contact', { w: 110 }), TEL('phone', 'Phone'), NUM('quoted', 'Quoted (₹)', { w: 100 }), NUM('negotiated', 'Negotiated (₹)', { w: 100 }), { k: 'rating', label: 'Rating', t: 'rating', w: 60 }, SEL('decision', 'Decision', () => L('Vendor Decision'), { w: 110 }), SEL('contract', 'Contract?', YN, { w: 80 }), T('notes', 'What is included / notes', { w: 220 }),
+    const g = grid({ coll: 'vendors', limit: 300, quick: r => r.phone, prof: 'vendor', title: r => r.vendor || 'New quote', sub: r => [r.line, d().vCalc[r.id] && d().vCalc[r.id].eff ? inr(d().vCalc[r.id].eff) : '', r.decision].filter(Boolean).join(' · '), empty: 'No quotes yet. Add your first vendor quote.', blank: () => ({ line: '', vendor: '', decision: 'Considering', contract: 'No' }),
+      cols: [SEL('line', 'Budget line', LINES, { w: 190 }), T('vendor', 'Vendor / company', { w: 190, prof: 'vendor' }), T('contact', 'Contact', { w: 110 }), TEL('phone', 'Phone'), NUM('quoted', 'Quoted (₹)', { w: 100 }), NUM('negotiated', 'Negotiated (₹)', { w: 100 }), { k: 'rating', label: 'Rating', t: 'rating', w: 60 }, SEL('decision', 'Decision', () => L('Vendor Decision'), { w: 110 }), SEL('contract', 'Contract?', YN, { w: 80 }), T('notes', 'What is included / notes', { w: 220 }),
         CALC('eff', 'Effective price', r => d().vCalc[r.id].eff, { fmt: moneyCell, num: 1 }), CALC('rk', 'Rank', r => d().vCalc[r.id].rank, { num: 1 }), CALC('va', 'vs line avg', r => d().vCalc[r.id].vsAvg, { fmt: pctCell, num: 1 }), CALC('vp', 'vs plan', r => d().vCalc[r.id].vsPlan, { fmt: pctCell, num: 1 }), CALC('pd', 'Paid', r => d().vCalc[r.id].decision === 'x' ? '' : (r.decision === 'Selected' ? d().vCalc[r.id].paid : ''), { fmt: moneyCell, num: 1 }), CALC('bl', 'Balance', r => d().vCalc[r.id].bal, { fmt: moneyCell, num: 1 }), CALC('ps', 'Payment', r => d().vCalc[r.id].st, { fmt: statusPill })] });
     const add = el('<button class="btn pri" style="margin:12px 0">+ Add vendor quote</button>'); add.onclick = () => g.add();
     return [g.root, add];
@@ -3044,7 +3336,7 @@ VIEWS.payments = function () {
     filter: p => { const c = d().payCalc[p.id]; return (!f.st || f.st === 'All' || (f.st === 'Pending' && !c.paid) || (f.st === 'Paid' && c.paid) || (f.st === 'Overdue' && c.st === 'Overdue') || (f.st === 'Due soon' && !c.paid && c.dd != null && c.dd >= 0 && c.dd <= 14)) && (!f.line || p.line === f.line) && matchQ(p, ['payee', 'desc', 'notes', 'line'], f.q); },
     act: { paid: r => { r.status = 'Paid'; r.paid = fd(today()); }, note: r => { const h = phoneOf(r.payee); msgPicker({ phone: h && h.phone, title: 'Message ' + (r.payee || 'vendor'), choices: [['pay', 'Payment note', payVals(r)], ['', 'Blank', '']] }); return false; } },
     quick: r => (phoneOf(r.payee) || {}).phone,
-    cols: [SEL('line', 'Budget line', LINES, { w: 190 }), T('payee', 'Payee', { w: 160, list: 'dl-vendors' }), SEL('desc', 'Type', () => L('Payment Type'), { w: 120 }), DT('due', 'Due date'), NUM('amount', 'Amount (₹)', { w: 110 }), DT('paid', 'Paid on'), SEL('status', 'Status', () => L('Payment Status'), { w: 100 }), SEL('mode', 'Mode', () => L('Payment Mode'), { w: 130 }), SEL('by', 'Paid by', () => L('Paid By'), { w: 120 }), T('notes', 'Notes', { w: 160 }),
+    cols: [SEL('line', 'Budget line', LINES, { w: 190 }), T('payee', 'Payee', { w: 180, list: 'dl-vendors', prof: r => { const v = vendorByName(r.payee); return v ? 'vendor:' + v.id : null; } }), SEL('desc', 'Type', () => L('Payment Type'), { w: 120 }), DT('due', 'Due date'), NUM('amount', 'Amount (₹)', { w: 110 }), DT('paid', 'Paid on'), SEL('status', 'Status', () => L('Payment Status'), { w: 100 }), SEL('mode', 'Mode', () => L('Payment Mode'), { w: 130 }), SEL('by', 'Paid by', () => L('Paid By'), { w: 120 }), T('notes', 'Notes', { w: 160 }),
       CALC('ds', 'Due status', r => d().payCalc[r.id].st, { fmt: statusPill }), CALC('dd', 'Days to due', r => { const c = d().payCalc[r.id]; return c.paid || c.dd == null ? '' : c.dd; }, { num: 1 }),
       { k: 'mp', label: '', t: 'html', th: 'a', html: r => r.status === 'Paid' ? '' : '<button class="btn sm" data-act="paid">Mark paid</button>' },
       { k: 'ct', label: 'Contact', t: 'html', th: 'a', html: r => { const h = phoneOf(r.payee); return (h ? telBtns(h.phone, { name: h.name, wa: !on('templates') }) : '') + (on('templates') && r.payee ? ' <button class="btn sm" data-act="note" title="Send a payment note on WhatsApp">💬 Note</button>' : '') || '<span class="note" title="Add the vendor’s phone in Vendors">–</span>'; } }]
@@ -3069,7 +3361,7 @@ VIEWS.shagun = function () {
     act: { thank: r => { const h = phoneOf(r.name) || (r.group && phoneOf(r.group)); msgPicker({ phone: h && h.phone, title: 'Thank ' + (r.name || 'them'), choices: [['thanks', 'Thank-you', { name: r.name || '', gift: r.gift || '' }, () => { if (r.thanks !== 'Yes') { undoRow('shagun', r, 'Marked thanked: ' + (r.name || '')); r.thanks = 'Yes'; dirty(); g.build(); upd(); } }]] }); return false; } }, empty: 'No entries yet. Record each shagun or gift as it comes in.',
     blank: () => ({ date: fd(today()), dir: 'Received', mode: 'Cash', ret: 'No', retStatus: 'Not needed', thanks: 'No' }),
     filter: r => (!f.dir || r.dir === f.dir) && matchQ(r, ['name', 'group', 'relation', 'gift', 'notes'], f.q),
-    cols: [DT('date', 'Date'), SEL('fn', 'Function', FNS, { w: 130 }), SEL('dir', 'Direction', () => L('Direction'), { w: 100 }), T('name', 'Name', { w: 150 }), T('group', 'Family / group', { w: 130, list: 'dl-groups' }), SEL('side', 'Side', () => L('Side'), { w: 100 }), T('relation', 'Relation', { w: 100 }), SEL('mode', 'Mode', () => L('Gift Mode'), { w: 110 }), NUM('amount', 'Amount (₹)', { w: 100 }), T('gift', 'Gift / item', { w: 140 }), SEL('ret', 'Return?', YN, { w: 70 }), SEL('retStatus', 'Return status', () => L('Return Status'), { w: 110 }), SEL('thanks', 'Thanked?', YN, { w: 80 }), T('notes', 'Notes', { w: 140 }),
+    cols: [DT('date', 'Date'), SEL('fn', 'Function', FNS, { w: 130 }), SEL('dir', 'Direction', () => L('Direction'), { w: 100 }), T('name', 'Name', { w: 170, prof: r => { const g = guestByName(r.name); return g ? 'guest:' + g.id : null; } }), T('group', 'Family / group', { w: 130, list: 'dl-groups' }), SEL('side', 'Side', () => L('Side'), { w: 100 }), T('relation', 'Relation', { w: 100 }), SEL('mode', 'Mode', () => L('Gift Mode'), { w: 110 }), NUM('amount', 'Amount (₹)', { w: 100 }), T('gift', 'Gift / item', { w: 140 }), SEL('ret', 'Return?', YN, { w: 70 }), SEL('retStatus', 'Return status', () => L('Return Status'), { w: 110 }), SEL('thanks', 'Thanked?', YN, { w: 80 }), T('notes', 'Notes', { w: 140 }),
       CALC('act', 'Action', r => r.dir === 'Received' && r.thanks !== 'Yes' ? 'Send thank-you' : r.ret === 'Yes' && r.retStatus !== 'Done' ? 'Return pending' : 'OK', { fmt: v => pill(v, v === 'OK' ? 'ok' : 'warn') }),
       { k: 'ty', label: '', t: 'html', th: 'a', html: r => on('templates') && r.dir === 'Received' ? '<button class="btn sm" data-act="thank">🙏 ' + (r.thanks === 'Yes' ? 'Thank again' : 'Thank') + '</button>' : '' }] });
   const bar = filterBar([{ type: 'search', get: () => f.q, set: v => { f.q = v; g.build(); } }, { type: 'sel', label: 'Received & given', opts: ['Received', 'Given'], get: () => f.dir, set: v => { f.dir = v; g.build(); } }]);
@@ -3160,7 +3452,7 @@ VIEWS.setup = function () {
     } catch (err) { toast('Could not read that file: ' + err.message); }
     e.target.value = '';
   };
-  const tips = el('<div class="card" style="margin-top:14px"><h3>Quick start</h3><ol style="margin:0;padding-left:20px;line-height:1.9"><li>Enter your names, wedding date and city above.</li><li>Open <b>Budget → Planner</b> and type your total budget.</li><li>Add your <b>Guests</b>, tap Y under each function they are invited to, and send invites on WhatsApp.</li><li>Add <b>Hotels</b> and <b>Vehicles</b>; allocate families as they say they are coming.</li><li>Log vendor quotes in <b>Vendors</b>, select your pick, and add its payment schedule in <b>Payments</b>.</li><li>Check the <b>Dashboard</b> every few days. It tells you what needs attention.</li></ol></div>');
+  const tips = el('<div class="card" style="margin-top:14px"><h3>Quick start <button class="btn sm keep" data-tour style="float:right">▶ Take the tour</button></h3><ol style="margin:0;padding-left:20px;line-height:1.9"><li>Enter your names, wedding date and city above.</li><li>Open <b>Budget → Planner</b> and type your total budget.</li><li>Add your <b>Guests</b>, tap Y under each function they are invited to, and send invites on WhatsApp.</li><li>Add <b>Hotels</b> and <b>Vehicles</b>; allocate families as they say they are coming.</li><li>Log vendor quotes in <b>Vendors</b>, select your pick, and add its payment schedule in <b>Payments</b>.</li><li>Check the <b>Dashboard</b> every few days. It tells you what needs attention.</li></ol></div>');
   const lists = el('<div class="card" style="margin-top:14px"><h3>Dropdown options</h3><p class="note" style="margin-top:0">Change the choices in any dropdown, e.g. add “Gujarati Thali” to Diet. One option per line.</p><div class="row2" style="align-items:flex-start"><select class="sel" data-ln>' + Object.keys(S.lists).filter(k => k !== 'Selected Vendors (auto)').map(k => '<option>' + esc(k) + '</option>').join('') + '</select><textarea class="inp" data-lv style="flex:1;min-width:220px;min-height:150px"></textarea></div></div>');
   const ln = $('[data-ln]', lists), lv = $('[data-lv]', lists);
   ln.setAttribute('data-free', ''); const fill = () => { lv.value = (S.lists[ln.value] || []).join('\n'); }; fill();
