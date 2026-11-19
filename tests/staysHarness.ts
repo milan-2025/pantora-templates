@@ -76,9 +76,10 @@ export const fullListing = (over: Record<string, unknown> = {}) => ({
   policies: { checkIn: "13:00", checkOut: "11:00", rules: "No loud music after 10 pm" },
   pricing: { landing: { weekday: 2000, weekend: 2500 }, listing: { weekday: 2500, weekend: 3000 } },
   airbnbUrl: "https://www.airbnb.co.in/rooms/123456789", adminNotes: "Owner prefers calls after 6pm", ownerName: "Mr Secret Owner",
+  contactName: "Caretaker Sunil", contactPhone: "9123400000",
   visibility: "public", showPrice: true,
   ...over,
 });
 
 /** Strings that must never appear in anything a guest can receive. */
-export const SECRETS = ["Flat 1202", "Hidden Lane", "160071", "30.70123", "76.71456", "airbnb.co.in", "Owner prefers", "Mr Secret Owner", "9876500000"];
+export const SECRETS = ["Flat 1202", "Hidden Lane", "160071", "30.70123", "76.71456", "airbnb.co.in", "Owner prefers", "Mr Secret Owner", "9876500000", "Caretaker Sunil", "9123400000"];

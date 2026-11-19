@@ -3,7 +3,7 @@
  * The property form, shared by the host portal and the admin dashboard. `role` decides which sections show:
  * hosts never see guest prices, margins, visibility or admin notes (and the server ignores them if sent anyway).
  */
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { ChevronDown, Crosshair, Loader2 } from "lucide-react";
 import { AMENITY_CATEGORIES } from "@/lib/stays/constants";
 import { coordsFromMapsUrl, inr, margins } from "@/lib/stays/core";
@@ -11,6 +11,9 @@ import MapView from "../MapView";
 import { api } from "./api";
 
 type Pair = { weekday: number | null; weekend: number | null };
+export type RoomVal = { id: string; name: string; description: string; amenities: string[] };
+const newRoomId = () => "r" + Math.random().toString(36).slice(2, 10);
+const ROOM_PRESETS = ["Living room", "Bedroom 1", "Bedroom 2", "Bedroom 3", "Kitchen", "Bathroom", "Balcony", "Dining area", "Pool", "Garden", "Terrace", "Entrance"];
 export type FormVal = {
   title: string; shortDescription: string; description: string; propertyType: string; category: string;
   location: { address: string; society: string; street: string; locality: string; city: string; state: string; pin: string; country: string; lat: number | null; lng: number | null; mapsUrl: string };
@@ -18,6 +21,7 @@ export type FormVal = {
   amenities: string[]; features: string[];
   policies: Record<string, string | boolean | null>;
   landing: Pair; listing: Pair; airbnbUrl: string; hostNotes: string;
+  roomList: RoomVal[]; contactName: string; contactPhone: string; slugText: string;
   // admin only
   ownership: "own" | "host"; hostId: string; visibility: "public" | "unlisted" | "private"; availability: "available" | "limited" | "unavailable";
   featured: boolean; showPrice: boolean; showSociety: boolean; adminNotes: string; ownerName: string;
@@ -33,20 +37,21 @@ export function toForm(p: any): FormVal {
     landing: { ...(p?.pricing?.landing || p?.landing || { weekday: null, weekend: null }) },
     listing: { ...(p?.pricing?.listing || { weekday: null, weekend: null }) },
     airbnbUrl: p?.airbnbUrl || "", hostNotes: p?.hostNotes || "",
+    roomList: (p?.roomList || []).map((x: RoomVal) => ({ ...x, amenities: [...(x.amenities || [])] })), contactName: p?.contactName || "", contactPhone: p?.contactPhone || "", slugText: p?.slugText || "",
     ownership: p?.ownership || "own", hostId: p?.hostId || "", visibility: p?.visibility || "public", availability: p?.availability || "available",
     featured: !!p?.featured, showPrice: p?.showPrice !== false, showSociety: L.showSociety !== false, adminNotes: p?.adminNotes || "", ownerName: p?.ownerName || "",
   };
 }
 export function toPayload(v: FormVal, role: "host" | "admin") {
-  const common = { title: v.title, shortDescription: v.shortDescription, description: v.description, propertyType: v.propertyType, category: v.category, location: v.location, rooms: v.rooms, amenities: v.amenities, features: v.features, policies: v.policies, airbnbUrl: v.airbnbUrl };
+  const common = { title: v.title, shortDescription: v.shortDescription, description: v.description, propertyType: v.propertyType, category: v.category, location: v.location, rooms: v.rooms, amenities: v.amenities, features: v.features, policies: v.policies, airbnbUrl: v.airbnbUrl, roomList: v.roomList, contactName: v.contactName, contactPhone: v.contactPhone };
   if (role === "host") return { ...common, landing: v.landing, hostNotes: v.hostNotes };
-  return { ...common, ownership: v.ownership, hostId: v.hostId, visibility: v.visibility, availability: v.availability, featured: v.featured, showPrice: v.showPrice, showSociety: v.showSociety, pricing: { landing: v.landing, listing: v.listing }, adminNotes: v.adminNotes, ownerName: v.ownerName };
+  return { ...common, ownership: v.ownership, hostId: v.hostId, visibility: v.visibility, availability: v.availability, featured: v.featured, showPrice: v.showPrice, showSociety: v.showSociety, pricing: { landing: v.landing, listing: v.listing }, adminNotes: v.adminNotes, ownerName: v.ownerName, slugText: v.slugText };
 }
 
 type Opts = { propertyTypes: string[]; categories: string[]; features: string[]; map: { tileUrl: string; attribution: string; defaultLat: number; defaultLng: number; defaultZoom: number } };
 
-export function PropertyForm({ role, value, onChange, amenities, opts, hosts }: {
-  role: "host" | "admin"; value: FormVal; onChange: (v: FormVal) => void;
+export function PropertyForm({ role, value, onChange, amenities, opts, hosts, code }: {
+  role: "host" | "admin"; value: FormVal; onChange: (v: FormVal) => void; code?: string;
   amenities: { key: string; label: string; category: string }[]; opts: Opts; hosts?: { id: string; name: string; hostCode: string }[];
 }) {
   const v = value;
@@ -103,6 +108,11 @@ export function PropertyForm({ role, value, onChange, amenities, opts, hosts }: 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Property title *" className="sm:col-span-2"><input className="s-input" maxLength={120} value={v.title} onChange={(e) => set({ title: e.target.value })} placeholder="e.g. Sunlit 2BHK with mountain view" /></Field>
           <Field label="Short description" className="sm:col-span-2" hint="One line shown on cards and link previews."><input className="s-input" maxLength={300} value={v.shortDescription} onChange={(e) => set({ shortDescription: e.target.value })} /></Field>
+          {admin && (
+            <Field label="Custom link words" className="sm:col-span-2" hint={`Page address: /stay/${linkWords(v.slugText || v.title) || "…"}-${code || "ID"}. Leave empty to use the title. Old links keep working.`}>
+              <input className="s-input" maxLength={60} value={v.slugText} onChange={(e) => set({ slugText: e.target.value })} placeholder="e.g. sea-view-mohali" />
+            </Field>
+          )}
           <Field label="Full description" className="sm:col-span-2"><textarea className="s-input" rows={6} maxLength={6000} value={v.description} onChange={(e) => set({ description: e.target.value })} /></Field>
           <Field label="Property type">
             <select className="s-input" value={v.propertyType} onChange={(e) => set({ propertyType: e.target.value })}>
@@ -189,6 +199,10 @@ export function PropertyForm({ role, value, onChange, amenities, opts, hosts }: 
         </div>
       </Section>
 
+      <Section title={`Room by room (${v.roomList.length})`}>
+        <RoomsEditor rooms={v.roomList} onChange={(roomList) => set({ roomList })} suggestions={amenities.map((a) => a.label)} />
+      </Section>
+
       <Section title={`Amenities (${v.amenities.length})`}>
         <div className="space-y-4">
           {AMENITY_CATEGORIES.map((cat) => {
@@ -268,6 +282,8 @@ export function PropertyForm({ role, value, onChange, amenities, opts, hosts }: 
 
       <Section title={admin ? "Private details (admin only)" : "Links and notes for us"}>
         <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Property contact name (caretaker, optional)" hint="Private, never shown to guests."><input className="s-input" value={v.contactName} onChange={(e) => set({ contactName: e.target.value })} placeholder="e.g. Sunil (caretaker)" /></Field>
+          <Field label="Property contact number"><input className="s-input" type="tel" value={v.contactPhone} onChange={(e) => set({ contactPhone: e.target.value })} placeholder="10-digit mobile" /></Field>
           <Field label="Airbnb listing link" className="sm:col-span-2" hint="Private, never shown to guests."><input className="s-input" type="url" value={v.airbnbUrl} onChange={(e) => set({ airbnbUrl: e.target.value })} placeholder="https://www.airbnb.co.in/rooms/…" /></Field>
           {admin ? (
             <>
@@ -314,4 +330,54 @@ export function Field({ label, children, className = "", hint }: { label: string
 
 function Check({ label, checked, on }: { label: string; checked: boolean; on: (x: boolean) => void }) {
   return <label className="flex items-center gap-2 self-end pb-2 text-sm text-plum"><input type="checkbox" className="size-4 accent-plum" checked={checked} onChange={(e) => on(e.target.checked)} />{label}</label>;
+}
+
+/** Same rules as the server's cleanSlugText (preview only). */
+const linkWords = (v: string) => v.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60).replace(/-+$/g, "");
+
+function RoomsEditor({ rooms, onChange, suggestions }: { rooms: RoomVal[]; onChange: (r: RoomVal[]) => void; suggestions: string[] }) {
+  const upd = (i: number, patch: Partial<RoomVal>) => onChange(rooms.map((r, k) => (k === i ? { ...r, ...patch } : r)));
+  const move = (i: number, d: number) => { const n = [...rooms]; const [x] = n.splice(i, 1); n.splice(Math.max(0, Math.min(n.length, i + d)), 0, x); onChange(n); };
+  const add = (name = "") => onChange([...rooms, { id: newRoomId(), name, description: "", amenities: [] }]);
+  const unused = ROOM_PRESETS.filter((n) => !rooms.some((r) => r.name.toLowerCase() === n.toLowerCase()));
+  return (
+    <div>
+      <p className="mb-3 text-sm text-muted">Describe each room and tag photos to it (in Photos and videos). Guests see the property room by room, and photos are sorted in this order.</p>
+      <ul className="space-y-3">
+        {rooms.map((r, i) => (
+          <li key={r.id} className="rounded-xl bg-white p-3 ring-1 ring-line">
+            <div className="flex gap-2">
+              <input className="s-input" value={r.name} maxLength={60} onChange={(e) => upd(i, { name: e.target.value })} placeholder="Room name, e.g. Bedroom 1" aria-label="Room name" />
+              <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="rounded-lg px-2 text-muted hover:bg-plum/5 disabled:opacity-30" aria-label="Move up">↑</button>
+              <button type="button" onClick={() => move(i, 1)} disabled={i === rooms.length - 1} className="rounded-lg px-2 text-muted hover:bg-plum/5 disabled:opacity-30" aria-label="Move down">↓</button>
+              <button type="button" onClick={() => { if (confirm(`Remove ${r.name || "this room"}? Its photos stay, untagged.`)) onChange(rooms.filter((_, k) => k !== i)); }} className="rounded-lg px-2 text-coral hover:bg-blush" aria-label="Remove room">✕</button>
+            </div>
+            <textarea className="s-input mt-2 !min-h-0" rows={2} maxLength={600} value={r.description} onChange={(e) => upd(i, { description: e.target.value })} placeholder="Short description, e.g. King bed, mountain-facing window, attached bathroom" aria-label="Room description" />
+            <ChipsInput values={r.amenities} onChange={(amenities) => upd(i, { amenities })} suggestions={suggestions} placeholder="Add amenity (e.g. AC, Smart TV, Wardrobe) and press Enter" />
+          </li>
+        ))}
+      </ul>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button type="button" onClick={() => add()} className="s-btn s-btn-ghost s-btn-sm">+ Add custom room</button>
+        {unused.slice(0, 8).map((n) => <button key={n} type="button" onClick={() => add(n)} className="rounded-full border border-dashed border-line px-3 py-1 text-xs text-plum hover:border-plum">+ {n}</button>)}
+      </div>
+    </div>
+  );
+}
+
+function ChipsInput({ values, onChange, suggestions, placeholder }: { values: string[]; onChange: (v: string[]) => void; suggestions: string[]; placeholder: string }) {
+  const [t, setT] = useState("");
+  const listId = useId();
+  const add = () => { const x = t.trim().slice(0, 50); if (x && !values.some((v) => v.toLowerCase() === x.toLowerCase()) && values.length < 30) onChange([...values, x]); setT(""); };
+  return (
+    <div className="mt-2">
+      {values.length > 0 && (
+        <div className="mb-2 flex flex-wrap gap-1.5">
+          {values.map((v) => <span key={v} className="s-chip !bg-mint !text-teal">{v}<button type="button" onClick={() => onChange(values.filter((x) => x !== v))} aria-label={`Remove ${v}`} className="ml-0.5">×</button></span>)}
+        </div>
+      )}
+      <input className="s-input" list={listId} value={t} onChange={(e) => setT(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); add(); } }} onBlur={add} placeholder={placeholder} aria-label="Room amenities" />
+      <datalist id={listId}>{suggestions.map((s) => <option key={s} value={s} />)}</datalist>
+    </div>
+  );
 }

@@ -8,6 +8,7 @@ import { api, fmtDate, fmtDay } from "../client/api";
 import { Field, Section } from "../client/PropertyForm";
 import { useAdmin, Empty, type HostRow } from "./AdminApp";
 import { HistoryList, Img, StatusChip } from "./AdminProperties";
+import { ContactButtons } from "../ui";
 import { clearDevice, clearSynced, discardEdit, listListings, listQueue, queueEdit, removeOffline, saveOffline, storageUsage, syncQueue, getMeta, type OfflineListing, type QueuedEdit } from "./offline";
 import type { Status } from "@/lib/stays/constants";
 
@@ -52,7 +53,7 @@ export function HostsScreen() {
               {list.map((h) => (
                 <tr key={h.id} className="hover:bg-cream/60">
                   <td className="p-3"><p className="font-medium text-plum">{h.name}</p><p className="text-xs text-muted">{h.hostCode}{h.ownerName ? ` · owner ${h.ownerName}` : ""}</p>{h.notes && <p className="mt-0.5 line-clamp-1 max-w-56 text-xs text-muted" title={h.notes}>📝 {h.notes}</p>}</td>
-                  <td className="p-3 text-xs"><p>{h.phone || "—"}</p><p className="text-muted">{h.email || "no email"}</p></td>
+                  <td className="p-3 text-xs"><p>{h.phone || "—"}{h.whatsapp && h.whatsapp !== h.phone ? ` · WA ${h.whatsapp}` : ""}</p><p className="text-muted">{h.email || "no email"}</p>{(h.whatsapp || h.phone) && <div className="mt-1"><ContactButtons phone={h.whatsapp || h.phone} size="xs" greet={`Hi ${h.name},`} /></div>}</td>
                   <td className="p-3 text-center"><a href={`#properties?host=${h.id}`} className="text-plum underline">{h.total}</a></td>
                   <td className="p-3 text-center">{h.approved}</td>
                   <td className="p-3 text-center">{h.pending ? <span className="font-semibold text-marigold-deep">{h.pending}</span> : 0}</td>

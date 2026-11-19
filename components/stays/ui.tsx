@@ -1,8 +1,10 @@
 /** Stays: presentational pieces shared by the public pages (no hooks, so they render on the server too). */
 import Link from "next/link";
-import { Bath, BedDouble, MapPin, Sparkles, Users } from "lucide-react";
-import { inr } from "@/lib/stays/core";
-import type { PublicCard } from "@/lib/stays/views";
+import { Bath, BedDouble, Eye, MapPin, MessageCircle, Phone, Sparkles, Users } from "lucide-react";
+import { inr, waLink, waNumber } from "@/lib/stays/core";
+import type { AdminExtras, PublicCard } from "@/lib/stays/views";
+
+type Card = PublicCard & { admin?: AdminExtras };
 
 export type SiteInfo = { siteName: string; tagline: string; logoUrl: string; whatsappNumber: string; contactNumber: string };
 
@@ -20,14 +22,46 @@ export function Brand({ site }: { site: Pick<SiteInfo, "siteName" | "logoUrl"> }
   );
 }
 
-export function Header({ site, active }: { site: SiteInfo; active?: "home" | "search" | "host" }) {
+/** One-tap WhatsApp and phone call buttons for a number (admin use). */
+export function ContactButtons({ phone, greet = "", size = "sm" }: { phone: string; greet?: string; size?: "sm" | "xs" }) {
+  const n = waNumber(phone);
+  if (!n) return phone ? <span className="text-xs text-muted">{phone}</span> : null;
+  const cls = size === "xs" ? "inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold" : "s-btn s-btn-sm";
+  return (
+    <span className="inline-flex flex-wrap gap-1.5">
+      <a href={waLink(n, greet)} target="_blank" rel="noopener noreferrer" className={`${cls} bg-wa text-white hover:opacity-90`} aria-label={`WhatsApp ${phone}`}><MessageCircle className="size-3.5" /> WhatsApp</a>
+      <a href={`tel:+${n}`} className={`${cls} border border-line bg-white text-plum hover:bg-plum/5`} aria-label={`Call ${phone}`}><Phone className="size-3.5" /> Call</a>
+    </span>
+  );
+}
+
+/** Banner shown on every guest page while the admin browsing view is on. */
+export function AdminBar() {
+  return (
+    <div className="bg-plum text-white">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 text-sm sm:px-6">
+        <span className="inline-flex items-center gap-1.5 font-semibold"><Eye className="size-4 text-marigold" /> Admin view</span>
+        <span className="text-white/75">Only you see this: all properties, host details and contacts.</span>
+        <span className="ml-auto flex gap-3">
+          <Link href="/stays/admin" prefetch={false} className="underline">Dashboard</Link>
+          {/* A plain link on purpose: this is an API route (never prefetched) that clears the admin-view cookie. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+          <a href="/api/stays/admin?a=browse_off" className="font-semibold text-marigold underline">Exit admin view</a>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+export function Header({ site, active, admin = false }: { site: SiteInfo; active?: "home" | "search" | "host"; admin?: boolean }) {
   const link = (href: string, label: string, on: boolean) => (
     <Link href={href} className={`rounded-full px-3 py-2 text-sm font-medium ${on ? "bg-plum text-white" : "text-plum hover:bg-plum/5"}`}>
       {label}
     </Link>
   );
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-cream/90 backdrop-blur supports-[backdrop-filter]:bg-cream/75">
+    <header className="sticky top-0 z-40 border-b border-line bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+      {admin && <AdminBar />}
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
         <Brand site={site} />
         <nav className="flex items-center gap-1">
@@ -42,7 +76,7 @@ export function Header({ site, active }: { site: SiteInfo; active?: "home" | "se
 
 export function Footer({ site }: { site: SiteInfo }) {
   return (
-    <footer className="mt-20 border-t border-line bg-paper">
+    <footer className="mt-20 border-t border-line bg-white">
       <div className="mx-auto grid max-w-7xl gap-6 px-4 py-10 sm:grid-cols-3 sm:px-6">
         <div>
           <Brand site={site} />
@@ -101,7 +135,7 @@ export function Facts({ bedrooms, bathrooms, maxGuests, className = "" }: { bedr
   );
 }
 
-export function PropertyCard({ card, href, priority = false }: { card: PublicCard; href?: string; priority?: boolean }) {
+export function PropertyCard({ card, href, priority = false }: { card: Card; href?: string; priority?: boolean }) {
   const url = href || `/stay/${card.slug}`;
   return (
     <article data-code={card.code} className="group relative flex flex-col">
@@ -142,6 +176,7 @@ export function PropertyCard({ card, href, priority = false }: { card: PublicCar
             {card.features.map((f) => <span key={f} className="s-chip !bg-mint !text-teal !text-[11px]">{f}</span>)}
           </div>
         )}
+        {card.admin && <CardAdmin a={card.admin} title={card.title} code={card.code} />}
         <div className="mt-auto flex items-end justify-between gap-2 pt-2">
           <PriceLine price={card.price} />
           <Link href={url} className="s-btn s-btn-ghost s-btn-sm ml-auto">View details</Link>
@@ -151,7 +186,7 @@ export function PropertyCard({ card, href, priority = false }: { card: PublicCar
   );
 }
 
-export function CardGrid({ cards, hrefFor }: { cards: PublicCard[]; hrefFor?: (c: PublicCard) => string }) {
+export function CardGrid({ cards, hrefFor }: { cards: Card[]; hrefFor?: (c: Card) => string }) {
   return (
     <div className="grid gap-x-5 gap-y-9 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {cards.map((c, i) => <PropertyCard key={c.code} card={c} href={hrefFor?.(c)} priority={i < 4} />)}
@@ -169,6 +204,29 @@ export function CardSkeletons({ n = 8 }: { n?: number }) {
           <div className="s-skeleton mt-2 h-3 w-1/2" />
         </div>
       ))}
+    </div>
+  );
+}
+
+/** Admin browsing view: status and host contact on each card. */
+function CardAdmin({ a, title, code }: { a: AdminExtras; title: string; code: string }) {
+  const live = a.status === "published" && a.visibility === "public";
+  const who = a.host ? a.host.name : a.ownership === "own" ? "Own property" : "No host set";
+  const phone = a.host?.whatsapp || a.host?.phone || "";
+  return (
+    <div className="mt-2 rounded-xl bg-lavender/60 p-2 text-xs">
+      <div className="flex flex-wrap items-center gap-1.5">
+        {!live && <span className="rounded-full bg-plum px-2 py-0.5 font-semibold text-white">{a.statusLabel}{a.visibility !== "public" ? ` · ${a.visibility}` : ""}</span>}
+        {!a.showPrice && <span className="rounded-full bg-white px-2 py-0.5 text-plum">price hidden for guests</span>}
+      </div>
+      <div className="mt-1 text-plum">
+        Landing {inr(a.landing.weekday) || "—"} / {inr(a.landing.weekend) || "—"} · <span className={a.margins.negative ? "text-coral" : "font-semibold text-teal"}>Margin {a.margins.weekday !== null ? inr(a.margins.weekday) : "—"} / {a.margins.weekend !== null ? inr(a.margins.weekend) : "—"}</span>
+      </div>
+      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+        <span className="font-semibold text-plum">{who}</span>
+        {phone && <span className="text-muted">{phone}</span>}
+      </div>
+      {phone && <div className="mt-1.5"><ContactButtons phone={phone} size="xs" greet={`Hi ${a.host?.name || ""}, about ${title} (${code}):`} /></div>}
     </div>
   );
 }

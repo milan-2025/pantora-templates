@@ -3,10 +3,13 @@
  * publicProperty()/publicCard(), and the visibility rules live in guestCanView().
  */
 import "server-only";
-import { CODE_RE, codeFromSlug, propertySlug } from "./core";
+import { CODE_RE, codeFromSlug } from "./core";
 import { destinations, search, sortCards } from "./search";
-import { amenityDefs, dbs, getSettings, listedCards, publicSettings } from "./server";
-import { guestCanView, publicProperty, type PublicCard, type StoredProperty } from "./views";
+import { adminCards, amenityDefs, dbs, getSettings, listedCards, publicSettings, type Actor } from "./server";
+import { adminExtras, guestCanView, publicProperty, slugOf, type AdminExtras, type PublicCard, type StoredProperty } from "./views";
+
+/** A card, plus private extras in the admin browsing view. */
+export type Card = PublicCard & { admin?: AdminExtras };
 
 export async function loadSite() {
   const c = await dbs();
@@ -24,15 +27,21 @@ function similarTo(cards: PublicCard[], code: string, city: string, guests: numb
 }
 
 /** /stay/<slug>: public, published properties only. Returns the canonical slug so old titles can redirect. */
-export async function loadBySlug(slug: string) {
+export async function loadBySlug(slug: string, admin: Actor | null = null) {
   const code = codeFromSlug(slug);
   if (!CODE_RE.test(code)) return null;
   const c = await dbs();
   const p: StoredProperty | null = await c.properties.findOne({ code });
-  if (!p || !guestCanView(p, false)) return null;
-  const [site, cards] = await Promise.all([loadSite(), listedCards(c)]);
-  const property = publicProperty(p, p.showPrice !== false, site.amenities);
-  return { property, canonical: propertySlug(p.title, p.code), site, similar: similarTo(cards, p.code, property.city, property.maxGuests), shareId: null as string | null, indexable: true };
+  // Admin browsing view: any property (drafts, private, unlisted, archived), with the guest price always shown.
+  if (!p || (!admin && !guestCanView(p, false))) return null;
+  const [site, cards] = await Promise.all([loadSite(), admin ? adminCards(c) : listedCards(c)]);
+  const property = publicProperty(p, admin ? true : p.showPrice !== false, site.amenities);
+  const host = admin && p.hostId ? await c.hosts.findOne({ _id: p.hostId }) : null;
+  return {
+    property, canonical: slugOf(p), site, similar: similarTo(cards, p.code, property.city, property.maxGuests) as Card[], shareId: null as string | null,
+    indexable: !admin && guestCanView(p, false),
+    admin: admin ? adminExtras(p, host) : null,
+  };
 }
 
 /** /stay/s/<token>: a share link. Its own price setting wins; unlisted properties work here; revoked links don't. */
@@ -47,18 +56,19 @@ export async function loadShare(token: string) {
   const [site, cards] = await Promise.all([loadSite(), listedCards(c)]);
   return {
     property: publicProperty(p, !!sh.showPrice, site.amenities),
-    canonical: propertySlug(p.title, p.code),
+    canonical: slugOf(p),
     site,
     // Similar listings follow the link's price choice too.
     similar: p.visibility === "public" ? similarTo(cards, p.code, p.location?.city || "", (p.rooms?.maxGuests as number) ?? null).map((x) => (sh.showPrice ? x : { ...x, price: null })) : [],
     shareId: sh._id as string,
     indexable: false,
+    admin: null,
   };
 }
 
-export async function loadHome() {
+export async function loadHome(admin: Actor | null = null) {
   const c = await dbs();
-  const [site, cards] = await Promise.all([loadSite(), listedCards(c)]);
+  const [site, cards] = await Promise.all([loadSite(), admin ? adminCards(c) : listedCards(c)]) as [Awaited<ReturnType<typeof loadSite>>, Card[]];
   return {
     site,
     featured: search(cards, { featured: true, sort: "recommended", perPage: 8 }).results,

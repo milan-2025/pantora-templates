@@ -125,12 +125,36 @@ function common(b: any, amenityKeys: Set<string>) {
     amenities: (Array.isArray(b.amenities) ? b.amenities : []).map((x: unknown) => String(x)).filter((k: string, i: number, a: string[]) => amenityKeys.has(k) && a.indexOf(k) === i).slice(0, 200),
     features: strList(b.features, 30, 60),
     policies: cleanPolicies(b.policies),
+    roomList: cleanRoomList(b.roomList),
+    contactName: str(b.contactName, 80),
+    contactPhone: String(b.contactPhone ?? "").replace(/[^\d+]/g, "").slice(0, 16),
   };
 }
 
+export const MAX_ROOMS = 25;
+const ROOM_ID = /^[A-Za-z0-9_-]{4,24}$/;
+const newRoomId = () => "r" + Math.random().toString(36).slice(2, 10);
+
+/** Rooms list: name required, short description, amenities as free text (e.g. "King bed", "Attached bath"). */
+export function cleanRoomList(v: unknown): { id: string; name: string; description: string; amenities: string[] }[] {
+  const out: { id: string; name: string; description: string; amenities: string[] }[] = [];
+  for (const r of Array.isArray(v) ? v : []) {
+    const name = str((r as any)?.name, 60);
+    if (!name) continue;
+    let id = String((r as any)?.id ?? "");
+    if (!ROOM_ID.test(id) || out.some((x) => x.id === id)) id = newRoomId();
+    out.push({ id, name, description: text((r as any)?.description, 600), amenities: strList((r as any)?.amenities, 30, 50) });
+    if (out.length >= MAX_ROOMS) break;
+  }
+  return out;
+}
+
+/** Custom words for the property address: lower-case letters, numbers and dashes (the ID is always added after). */
+export const cleanSlugText = (v: unknown) => str(v, 80).toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60).replace(/-+$/g, "");
+
 export type AdminInput = ReturnType<typeof common> & {
   ownership: Ownership; hostId: string; visibility: Visibility; availability: Availability; featured: boolean; showPrice: boolean;
-  pricing: { landing: PricePair; listing: PricePair }; airbnbUrl: string; adminNotes: string; ownerName: string; showSociety: boolean;
+  pricing: { landing: PricePair; listing: PricePair }; airbnbUrl: string; adminNotes: string; ownerName: string; showSociety: boolean; slugText: string;
 };
 export type HostInput = ReturnType<typeof common> & { landing: PricePair; airbnbUrl: string; hostNotes: string };
 
@@ -149,6 +173,7 @@ export function cleanAdminInput(b: any, amenityKeys: Set<string>): AdminInput {
     airbnbUrl: cleanAirbnbUrl(b.airbnbUrl),
     adminNotes: text(b.adminNotes, 4000),
     ownerName: str(b.ownerName, 120),
+    slugText: cleanSlugText(b.slugText),
   };
 }
 

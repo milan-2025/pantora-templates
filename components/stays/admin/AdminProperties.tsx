@@ -13,10 +13,11 @@ import { MediaManager, type MediaRow } from "../client/MediaManager";
 import { PropertyForm, Section, toForm, toPayload, type FormVal } from "../client/PropertyForm";
 import { go, useAdmin, useHash } from "./AdminApp";
 import { listListings, removeOffline, saveOffline } from "./offline";
+import { ContactButtons } from "../ui";
 
 type Pair = { weekday: number | null; weekend: number | null };
 type Row = {
-  id: string; code: string; slug: string; title: string; ownership: "own" | "host"; host: { id: string; name: string; phone: string } | null;
+  id: string; code: string; slug: string; title: string; ownership: "own" | "host"; host: { id: string; name: string; phone: string; whatsapp?: string } | null;
   status: Status; statusLabel: string; visibility: string; availability: string; featured: boolean; showPrice: boolean;
   city: string; locality: string; society: string; lat: number | null; lng: number | null; propertyType: string;
   bedrooms: number | null; bathrooms: number | null; beds: number | null; maxGuests: number | null; amenities: string[]; features: string[];
@@ -220,7 +221,7 @@ export function PropertiesScreen() {
                     </td>
                     <td className="p-3"><StatusChip s={r.status} /><div className="mt-1 text-xs text-muted">{VIS[r.visibility]}{!r.showPrice ? " · price hidden" : ""}{(r.hostChanges || r.pendingMedia || r.publishRequested) ? <span className="ml-1 font-semibold text-marigold-deep">· review</span> : null}</div></td>
                     <td className="p-3 text-xs"><span className="text-plum">{r.locality || "—"}</span><br /><span className="text-muted">{r.city}</span></td>
-                    <td className="p-3 text-xs">{r.host ? <><span className="text-plum">{r.host.name}</span><br /><span className="text-muted">{r.host.phone}</span></> : <span className="text-muted">Own</span>}</td>
+                    <td className="p-3 text-xs">{r.host ? <><span className="text-plum">{r.host.name}</span><br /><span className="text-muted">{r.host.phone}</span>{r.host.phone && <div className="mt-1"><ContactButtons phone={r.host.whatsapp || r.host.phone} size="xs" greet={`Hi ${r.host.name}, about ${r.title} (${r.code}):`} /></div>}</> : <span className="text-muted">Own</span>}</td>
                     <td className="p-3 text-right text-xs tabular-nums">{inr(r.pricing.landing.weekday) || "—"}<br /><span className="text-muted">{inr(r.pricing.landing.weekend) || "—"}</span></td>
                     <td className="p-3 text-right text-xs tabular-nums">{inr(r.pricing.listing.weekday) || "—"}<br /><span className="text-muted">{inr(r.pricing.listing.weekend) || "—"}</span></td>
                     <td className={`p-3 text-right text-xs tabular-nums ${r.margins.negative ? "text-coral" : "text-teal"}`}>{r.margins.weekday !== null ? inr(r.margins.weekday) : "—"}<br />{r.margins.weekend !== null ? inr(r.margins.weekend) : "—"}</td>
@@ -256,7 +257,9 @@ function AdminMap({ rows }: { rows: Row[] }) {
 
 type Full = Row & {
   hostId: string | null; shortDescription: string; description: string; category: string; location: FormVal["location"] & { showSociety: boolean }; rooms: Record<string, unknown>;
-  policies: Record<string, unknown>; airbnbUrl: string; adminNotes: string; ownerName: string; hostNotes: string; media: (MediaRow & { publicId: string })[]; coverId: string | null;
+  policies: Record<string, unknown>; airbnbUrl: string; adminNotes: string; ownerName: string; hostNotes: string;
+  contactName: string; contactPhone: string; slugText: string; roomList: { id: string; name: string; description: string; amenities: string[] }[];
+  hostFull?: never; media: (MediaRow & { publicId: string })[]; coverId: string | null;
   hostChanges: { data: Record<string, unknown>; at: number } | null; review: { reason: string; action: string; at: number } | null;
   approvedAt: number | null; publishedAt: number | null; submittedAt: number | null;
   shares: { _id: string; showPrice: boolean; label: string; createdAt: number; createdBy: string; revoked: boolean; views: number; lastViewedAt?: number }[];
@@ -361,23 +364,25 @@ export function PropertyEditor({ id }: { id: string | null }) {
           {status === "published" && p.visibility === "public" && <a href={`/stay/${p.slug}`} target="_blank" className="s-btn s-btn-ghost s-btn-sm"><ExternalLink className="size-4" /> Public page</a>}
           <button type="button" onClick={() => simple("property_verify", {}, "Marked as verified today")} className="s-btn s-btn-ghost s-btn-sm" title="Record that you checked the details are still correct"><ShieldCheck className="size-4" /> Verified today</button>
           <button type="button" onClick={toggleOffline} className="s-btn s-btn-ghost s-btn-sm"><CloudDownload className="size-4" /> {offline ? "Saved offline ✓" : "Save offline"}</button>
+          <a href={`/api/stays/admin?a=browse&to=${encodeURIComponent(`/stay/${p.slug}`)}`} target="_blank" rel="noopener" className="s-btn s-btn-ghost s-btn-sm" title="Open the guest page with host details and contacts (only you)"><Eye className="size-4" /> View as admin</a>
         </div>
       )}
 
       {p?.review && ["rejected", "changes_requested"].includes(status) && <p className="mt-3 rounded-2xl bg-blush p-3 text-sm text-coral">Note sent to host: {p.review.reason}</p>}
       {p?.publishRequested && <p className="mt-3 rounded-2xl bg-sand p-3 text-sm text-marigold-deep">The host asked for this listing to be published.</p>}
+      {p && (p.host || p.contactPhone) && <ContactsCard p={p} />}
       {p?.hostChanges && <HostChanges p={p} onDone={accept} />}
       {p && p.media.some((m) => m.pending || m.removalRequested) && <p className="mt-3 rounded-2xl bg-sand p-3 text-sm text-marigold-deep">The host added photos or asked for removals: see Photos and videos below.</p>}
 
       {p && <SharePanel p={p} onChange={accept} />}
 
       <div className="mt-5" onChangeCapture={() => setDirty(true)}>
-        <PropertyForm role="admin" value={form} onChange={(v) => { setForm(v); setDirty(true); }} amenities={amenities} opts={settings} hosts={hosts} />
+        <PropertyForm role="admin" value={form} onChange={(v) => { setForm(v); setDirty(true); }} amenities={amenities} opts={settings} hosts={hosts} code={p?.code} />
       </div>
 
       <div className="mt-4 space-y-4">
         <Section title={`Photos and videos (${p?.media.length || 0})`} open>
-          {p ? <MediaManager<Full> base="admin" propertyId={p.id} media={p.media} coverId={p.coverId} live={live} onChange={accept} /> : <p className="text-sm text-muted">Save the property first, then add photos and videos.</p>}
+          {p ? <MediaManager<Full> base="admin" propertyId={p.id} media={p.media} coverId={p.coverId} live={live} onChange={accept} rooms={p.roomList} /> : <p className="text-sm text-muted">Save the property first, then add photos and videos.</p>}
         </Section>
         {p && (
           <Section title={`History (${p.history.length})`}>
@@ -555,5 +560,28 @@ export function HistoryList({ items }: { items: Full["history"] }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+/** One-tap WhatsApp / call to the property's host and on-site contact. */
+function ContactsCard({ p }: { p: Full }) {
+  const greet = (n: string) => `Hi ${n}, about ${p.title} (${p.code}):`;
+  return (
+    <div className="s-card mt-4 grid gap-4 rounded-2xl p-4 sm:grid-cols-2">
+      {p.host && (
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted">Host</p>
+          <p className="mt-0.5 font-semibold text-plum">{p.host.name} <span className="text-xs font-normal text-muted">{p.host.phone}</span></p>
+          {p.host.phone || p.host.whatsapp ? <div className="mt-2"><ContactButtons phone={p.host.whatsapp || p.host.phone} greet={greet(p.host.name)} /></div> : <p className="text-xs text-muted">No number saved: add it in Hosts.</p>}
+        </div>
+      )}
+      {p.contactPhone && (
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted">Property contact</p>
+          <p className="mt-0.5 font-semibold text-plum">{p.contactName || "Contact"} <span className="text-xs font-normal text-muted">{p.contactPhone}</span></p>
+          <div className="mt-2"><ContactButtons phone={p.contactPhone} greet={greet(p.contactName || "")} /></div>
+        </div>
+      )}
+    </div>
   );
 }

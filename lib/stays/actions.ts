@@ -41,6 +41,12 @@ export async function createProperty(c: C, s: Settings, actor: Actor, ownership:
   return p;
 }
 
+/** Photos tagged to a room that no longer exists become untagged. */
+const dropRoomTags = (media: MediaItem[] = [], rooms: { id: string }[]) => {
+  const ids = new Set(rooms.map((r) => r.id));
+  return media.map((m) => (m.roomId && !ids.has(m.roomId) ? { ...m, roomId: null } : m));
+};
+
 /** Host-entered fields applied to a property (used for direct host edits and when the admin accepts host changes). */
 export function withHostInput(p: StoredProperty, h: HostInput): StoredProperty {
   return {
@@ -49,7 +55,8 @@ export function withHostInput(p: StoredProperty, h: HostInput): StoredProperty {
     location: { ...h.location, showSociety: p.location?.showSociety !== false },
     rooms: h.rooms, amenities: h.amenities, features: h.features, policies: h.policies,
     pricing: { ...p.pricing, landing: h.landing },
-    private: { ...p.private, airbnbUrl: h.airbnbUrl, hostNotes: h.hostNotes },
+    private: { ...p.private, airbnbUrl: h.airbnbUrl, hostNotes: h.hostNotes, contactName: h.contactName, contactPhone: h.contactPhone },
+    roomList: h.roomList, media: dropRoomTags(p.media, h.roomList),
   };
 }
 
@@ -62,7 +69,8 @@ export function withAdminInput(p: StoredProperty, a: AdminInput): StoredProperty
     location: { ...a.location, showSociety: a.showSociety },
     rooms: a.rooms, amenities: a.amenities, features: a.features, policies: a.policies,
     pricing: a.pricing,
-    private: { ...p.private, airbnbUrl: a.airbnbUrl, adminNotes: a.adminNotes, ownerName: a.ownerName },
+    private: { ...p.private, airbnbUrl: a.airbnbUrl, adminNotes: a.adminNotes, ownerName: a.ownerName, contactName: a.contactName, contactPhone: a.contactPhone },
+    slugText: a.slugText, roomList: a.roomList, media: dropRoomTags(p.media, a.roomList),
   };
 }
 
@@ -165,6 +173,15 @@ export async function mediaAction(c: C, actor: Actor, p: StoredProperty, op: str
   } else if (op === "media_order") {
     const { reorder } = await import("./media");
     media = reorder(media, body.ids);
+  } else if (op === "media_room") {
+    const m = find();
+    if (!m) return { status: 404, body: { error: "Not found" } };
+    const roomId = body.roomId ? String(body.roomId) : null;
+    if (roomId && !(p.roomList || []).some((r) => r.id === roomId)) return { status: 400, body: { error: "Save the room first, then tag photos to it" } };
+    media = media.map((x) => (x.id === m.id ? { ...x, roomId } : x));
+  } else if (op === "media_sort_rooms") {
+    const { byRoom } = await import("./views");
+    media = byRoom(media, p.roomList || []);
   } else if (op === "media_cover") {
     const m = find();
     if (!m || m.type !== "image") return { status: 400, body: { error: "Pick a photo as the cover" } };

@@ -16,7 +16,7 @@ type F = Partial<Record<(typeof FILTER_KEYS)[number], string>>;
 
 const SORTS: [string, string][] = [["recommended", "Recommended"], ["price_asc", "Lowest price"], ["price_desc", "Highest price"], ["newest", "Recently added"], ["updated", "Recently updated"], ["bedrooms", "Most bedrooms"], ["guests", "Most guests"]];
 
-export function SearchApp({ initial, types, categories, features, amenities, cfg }: { initial: Record<string, string>; types: string[]; categories: string[]; features: string[]; amenities: Amenity[]; cfg: Cfg }) {
+export function SearchApp({ initial, types, categories, features, amenities, cfg, admin = false }: { admin?: boolean; initial: Record<string, string>; types: string[]; categories: string[]; features: string[]; amenities: Amenity[]; cfg: Cfg }) {
   const [f, setF] = useState<F>(() => Object.fromEntries(FILTER_KEYS.filter((k) => initial[k]).map((k) => [k, initial[k]])));
   const [view, setView] = useState<"list" | "map">(initial.view === "map" ? "map" : "list");
   const [data, setData] = useState<Result | null>(null);
@@ -38,11 +38,11 @@ export function SearchApp({ initial, types, categories, features, amenities, cfg
     const url = new URLSearchParams(qs);
     if (view === "map") url.set("view", "map");
     window.history.replaceState(null, "", `/stays/search${url.size ? `?${url}` : ""}`);
-    fetch(`/api/stays/public?a=search&${qs}`).then((r) => r.json()).then((d) => { if (id === reqId.current) { setData(d); setErr(""); } }).catch(() => id === reqId.current && setErr("Couldn't load stays. Check your connection and try again."));
+    fetch(`/api/stays/public?a=search&${qs}${admin ? "&adm=1" : ""}`).then((r) => r.json()).then((d) => { if (id === reqId.current) { setData(d); setErr(""); } }).catch(() => id === reqId.current && setErr("Couldn't load stays. Check your connection and try again."));
     const mq = new URLSearchParams(qs);
     mq.delete("bbox"); mq.delete("page");
-    fetch(`/api/stays/public?a=map&${mq}`).then((r) => r.json()).then((d) => { if (id === reqId.current) setMapPts(d); }).catch(() => {});
-  }, [qs, view]);
+    fetch(`/api/stays/public?a=map&${mq}${admin ? "&adm=1" : ""}`).then((r) => r.json()).then((d) => { if (id === reqId.current) setMapPts(d); }).catch(() => {});
+  }, [qs, view, admin]);
 
   const set = useCallback((patch: F) => setF((cur) => {
     const next: F = { ...cur, ...patch };
@@ -118,8 +118,8 @@ export function SearchApp({ initial, types, categories, features, amenities, cfg
 
   return (
     <div className="mx-auto max-w-[1600px] px-4 pb-16 pt-4 sm:px-6">
-      <div className="sticky top-16 z-30 -mx-4 flex flex-wrap items-center gap-2 border-b border-line bg-cream/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
-        <input className="s-input !w-auto min-w-0 flex-1 sm:max-w-sm" value={f.q || ""} onChange={(e) => set({ q: e.target.value })} placeholder="Search stays, areas or IDs" aria-label="Search" />
+      <div className="sticky top-16 z-30 -mx-4 flex flex-wrap items-center gap-2 border-b border-line bg-white/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
+        <input className="s-input !w-auto min-w-0 flex-1 sm:max-w-sm" value={f.q || ""} onChange={(e) => set({ q: e.target.value })} placeholder={admin ? "Search stays, IDs, host name or number" : "Search stays, areas or IDs"} aria-label="Search" />
         <button type="button" onClick={() => setPanel(true)} className="s-btn s-btn-ghost s-btn-sm"><SlidersHorizontal className="size-4" /> Filters{active ? ` (${active})` : ""}</button>
         <select className="s-input !w-auto !min-h-0 !py-1.5 text-sm" value={f.sort || "recommended"} onChange={(e) => set({ sort: e.target.value === "recommended" ? "" : e.target.value })} aria-label="Sort by">
           {SORTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}

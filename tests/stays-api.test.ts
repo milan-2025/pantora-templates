@@ -406,3 +406,115 @@ describe("audit log and search", () => {
     expect(o.hosts).toBeGreaterThanOrEqual(3);
   });
 });
+
+describe("custom links", () => {
+  it("custom words keep the ID at the end, and old links still find the property", async () => {
+    await adminSave(own, { slugText: "Sea View, Mohali!" });
+    const { loadBySlug } = await import("../lib/stays/pages");
+    const viaNew = await loadBySlug("sea-view-mohali-LAC-0001");
+    expect(viaNew?.canonical).toBe("sea-view-mohali-LAC-0001");
+    const viaOld = await loadBySlug("sea-breeze-2bhk-LAC-0001");
+    expect(viaOld?.canonical).toBe("sea-view-mohali-LAC-0001"); // the page redirects to this
+    const card = (await call("public", "search")).json.results.find((r: any) => r.code === "LAC-0001");
+    expect(card.slug).toBe("sea-view-mohali-LAC-0001");
+    expect((await admin.get("property", `&id=${own}`)).json.slugText).toBe("sea-view-mohali");
+  });
+});
+
+describe("rooms and room-tagged photos", () => {
+  it("saves rooms (preset or custom names) with descriptions and amenities", async () => {
+    await adminSave(own, { roomList: [
+      { name: "Living room", description: "Big sofa", amenities: ["Smart TV", "AC"] },
+      { name: "Rooftop jacuzzi deck", description: "Custom room", amenities: ["Jacuzzi"] },
+      { name: "" }, // ignored
+    ] });
+    const rooms = (await admin.get("property", `&id=${own}`)).json.roomList;
+    expect(rooms.map((r: any) => r.name)).toEqual(["Living room", "Rooftop jacuzzi deck"]);
+    expect(rooms[0].id).toMatch(/^[A-Za-z0-9_-]{4,}$/);
+  });
+  it("tags photos to rooms, sorts them room by room, and shows rooms to guests", async () => {
+    const p = (await admin.get("property", `&id=${own}`)).json;
+    const [living, deck] = p.roomList;
+    const imgs = p.media.filter((m: any) => m.type === "image");
+    expect((await admin.post("media_room", { id: own, mediaId: imgs[0].id, roomId: deck.id })).status).toBe(200);
+    expect((await admin.post("media_room", { id: own, mediaId: imgs[1].id, roomId: living.id })).status).toBe(200);
+    expect((await admin.post("media_room", { id: own, mediaId: imgs[1].id, roomId: "nope1234" })).status).toBe(400);
+    await admin.post("media_sort_rooms", { id: own });
+    const after = (await admin.get("property", `&id=${own}`)).json.media.filter((m: any) => m.type === "image");
+    expect(after[0].id).toBe(imgs[1].id); // living room first, then the deck
+    expect(after[1].id).toBe(imgs[0].id);
+    const pub = (await call("public", "property", { query: "&code=LAC-0001" })).json;
+    expect(pub.roomSections.rooms.map((r: any) => [r.name, r.media.length])).toEqual([["Living room", 1], ["Rooftop jacuzzi deck", 1]]);
+    expect(pub.roomSections.rooms[0].amenities).toEqual(["Smart TV", "AC"]);
+  });
+  it("removing a room untags its photos", async () => {
+    const p = (await admin.get("property", `&id=${own}`)).json;
+    await adminSave(own, { roomList: [p.roomList[0]] });
+    const media = (await admin.get("property", `&id=${own}`)).json.media;
+    expect(media.some((m: any) => m.roomId === p.roomList[1].id)).toBe(false);
+  });
+  it("hosts can add rooms and tag their photos too", async () => {
+    const cur = (await asHost(H2).get("property", `&id=${h2Prop}`)).json;
+    const r = await asHost(H2).post("property_save", { ...cur, id: h2Prop, roomList: [{ name: "Bedroom 1", description: "Queen bed", amenities: ["Wardrobe"] }] });
+    expect(r.json.roomList[0].name).toBe("Bedroom 1");
+  });
+});
+
+describe("admin browsing view of the guest site", () => {
+  const BROWSE = "stay_admin_view=1";
+  it("is switched on only by a signed-in admin, and sends you to the site", async () => {
+    expect((await call("admin", "browse")).status).toBe(401);
+    const r = await call("admin", "browse", { cookie: ADMIN_COOKIE, query: "&to=/stay/sea-view-mohali-LAC-0001" });
+    expect(r.status).toBe(307);
+    expect(r.setCookie).toContain("stay_admin_view=1");
+    expect(r.setCookie.toLowerCase()).toContain("httponly");
+    const evil = await call("admin", "browse", { cookie: ADMIN_COOKIE, query: "&to=https://evil.example" });
+    expect(evil.status).toBe(307);
+  });
+  it("shows every property with host, contacts, address, landing price and margin", async () => {
+    const r = await call("public", "search", { cookie: `${ADMIN_COOKIE}; ${BROWSE}`, query: "&perPage=60" });
+    const codes = r.json.results.map((x: any) => x.code);
+    expect(codes).toContain("HST-0002"); // a draft, not public
+    const mine = r.json.results.find((x: any) => x.code === "LAC-0001");
+    expect(mine.admin).toMatchObject({ contact: { name: "Caretaker Sunil", phone: "9123400000" }, landing: { weekday: 2000 } });
+    expect(mine.admin.address).toContain("Flat 1202");
+    expect(mine.admin.margins.weekday).toBeGreaterThan(0);
+    const hostCard = r.json.results.find((x: any) => x.code === "HST-0001");
+    expect(hostCard.admin.host).toMatchObject({ name: "Asha Host", phone: "9876500000" });
+    expect(r.raw).toBeTruthy();
+  });
+  it("is never cached, and finds properties by host name or number", async () => {
+    const r = await call("public", "search", { cookie: `${ADMIN_COOKIE}; ${BROWSE}`, query: "&q=9876500000" });
+    expect(r.json.results.map((x: any) => x.code)).toContain("HST-0001");
+  });
+  it("gives NOTHING private without both the admin login and the switch", async () => {
+    for (const cookie of [undefined, BROWSE, ADMIN_COOKIE, `${H1.cookie}; ${BROWSE}`]) {
+      for (const a of ["search", "map", "suggest"]) {
+        const r = await call("public", a, { cookie, query: "&q=mo" });
+        expect(noSecrets(r.raw)).toEqual([]);
+        expect(r.raw).not.toContain('"admin"');
+        expect(r.raw).not.toContain("landing");
+      }
+    }
+    const { loadBySlug } = await import("../lib/stays/pages");
+    const pub = await loadBySlug("sea-view-mohali-LAC-0001");
+    expect(pub?.admin).toBeNull();
+    expect(noSecrets(JSON.stringify(pub))).toEqual([]);
+  });
+  it("opens drafts and private properties with full details", async () => {
+    const { loadBySlug } = await import("../lib/stays/pages");
+    const { browsingAdmin } = await import("../lib/stays/server");
+    const actor = await browsingAdmin(new Headers({ cookie: `${ADMIN_COOKIE}; ${BROWSE}` }));
+    expect(actor?.role).toBe("admin");
+    expect(await browsingAdmin(new Headers({ cookie: ADMIN_COOKIE }))).toBeNull();
+    const draft = await loadBySlug("balas-flat-HST-0002", actor);
+    expect(draft?.admin?.host?.name).toBe("Bala Host");
+    expect(draft?.indexable).toBe(false);
+    expect(await loadBySlug("balas-flat-HST-0002")).toBeNull();
+  });
+  it("your own enquiry clicks in admin view aren't logged", async () => {
+    const before = fake.collection("stay_enquiries").docs.length;
+    await call("public", "click", { cookie: `${ADMIN_COOKIE}; ${BROWSE}`, body: { code: "LAC-0001", type: "simple" } });
+    expect(fake.collection("stay_enquiries").docs.length).toBe(before);
+  });
+});

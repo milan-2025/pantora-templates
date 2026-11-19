@@ -7,6 +7,7 @@ A module inside the existing Pandora Templates website. It keeps every property 
 | Guests | `/stays` (home), `/stays/search` (list + map), `/stay/<title>-<ID>` (property), `/stay/s/<token>` (share links) | none |
 | Hosts | `/stays/host` | email + password (own account) |
 | You (admin) | `/stays/admin` (installable app, works offline) | the existing website admin login (`/admin`) |
+| You, browsing the guest site with private details | any guest page after **Browse site as admin** in the dashboard | admin login **and** the admin-view switch |
 
 ---
 
@@ -42,9 +43,11 @@ tests/stays-*.test.ts            69 automated tests
 | Listing (guest) price | only when shown | ✗ | ✓ |
 | Landing price (host payout) | ✗ | ✓ (their own) | ✓ |
 | Margin | ✗ | ✗ | ✓ |
-| Airbnb link, host contact, notes | ✗ | own link/notes | ✓ |
+| Airbnb link, host contact, caretaker contact, notes | ✗ | own link/notes/caretaker | ✓ |
 
 Hosts never see listing prices because that would let them work out your margin.
+
+**Admin browsing view:** the dashboard's *Browse site as admin* (or *View as admin* on a property) sets a cookie and opens the guest site. While it is on, and only for a request that also carries a valid admin login, pages and search show every property (drafts, unlisted, private), and each card and property page adds the host's name and number, the caretaker contact with one-tap WhatsApp/call buttons, the exact address with a Directions button, the Airbnb link, private notes, landing prices and margins. The cookie alone reveals nothing; these responses are marked `private, no-store` so no cache can keep them; your own enquiry-button clicks aren't logged. *Exit admin view* in the purple bar turns it off (it also expires after 12 hours).
 
 **Approximate locations:** the public position is moved 250–650 m from the real one in a direction fixed per property (derived from `PAYLOAD_SECRET`, so it can't be reversed or averaged out), rounded to ~110 m, and drawn as an area circle. Exact coordinates are never sent to guests.
 
@@ -52,7 +55,7 @@ Hosts never see listing prices because that would let them work out your margin.
 
 | Collection | Holds |
 |---|---|
-| `stay_properties` | One document per property: IDs, details, location (exact + approximate), rooms, amenities, features, policies, pricing (`landing`, `listing`), private fields, media list, status, visibility, review notes, pending host edits, timestamps (`createdAt`, `updatedAt`, `submittedAt`, `approvedAt`, `publishedAt`, `lastVerifiedAt`) |
+| `stay_properties` | One document per property: IDs, custom link words (`slugText`), rooms (`roomList`: name, description, amenities; photos point to a room with `roomId`), caretaker contact, details, location (exact + approximate), rooms, amenities, features, policies, pricing (`landing`, `listing`), private fields, media list, status, visibility, review notes, pending host edits, timestamps (`createdAt`, `updatedAt`, `submittedAt`, `approvedAt`, `publishedAt`, `lastVerifiedAt`) |
 | `stay_hosts` | Hosts: host ID (H-0001), contact, payout details, notes, status, password hash, invite token hash |
 | `stay_shares` | Share links: unguessable token, property, with/without price, views, revoked |
 | `stay_enquiries` | Enquiry log: button clicks (no personal data) and enquiries you record |
@@ -125,9 +128,9 @@ Same as the rest of the site (Vercel + MongoDB Atlas + Cloudinary; see the main 
 `npm test` runs everything (no database needed). The stays suites:
 
 - `tests/stays-core.test.ts` (27 tests): IDs, slugs, margins, money, Google Maps links, approximate positions, WhatsApp numbers/messages/encoding, input whitelists per role, workflow rules, media checks, views never leaking, search.
-- `tests/stays-api.test.ts` (42 tests): the real API routes end to end, covering the brief's mandatory cases 1–20 and 22 (admin manages hosts and invites; host submits; approval required; host isolation; admin edits; unique permanent IDs; margins; landing price and margin hidden from guests and hosts; share with/without price; private/unlisted rules; no exact address anywhere public; WhatsApp number, property ID, dates and guests; approximate vs exact maps; media persistence and forged-upload rejection; offline sync with conflict detection), plus access control, cross-site request blocking, audit log and combined filters.
+- `tests/stays-api.test.ts` (53 tests): the real API routes end to end, covering the brief's mandatory cases 1–20 and 22 (admin manages hosts and invites; host submits; approval required; host isolation; admin edits; unique permanent IDs; margins; landing price and margin hidden from guests and hosts; share with/without price; private/unlisted rules; no exact address anywhere public; WhatsApp number, property ID, dates and guests; approximate vs exact maps; media persistence and forged-upload rejection; offline sync with conflict detection), plus access control, cross-site request blocking, audit log and combined filters.
 
-Browser checks (run against a production build with a real MongoDB; script not committed because it needs a database and sample data): 34 checks across desktop and phone sizes covering public pages, page-source privacy, the Check Availability → WhatsApp message, hidden prices, unlisted 404s, canonical redirects, sitemap/robots, no sideways scrolling on phones, no service worker on guest devices, admin overview/table/editor/share/pricing/map, **offline open + offline edit + sync back** (case 21–22), and host isolation (case 23: mobile and desktop layouts).
+Browser checks (run against a production build with a real MongoDB; scripts not committed because they need a database and sample data): 59 checks, including custom links and redirects, room-by-room pages, white guest pages, and the admin browsing view (on/off, drafts visible, host/caretaker one-tap links, landing and margin, nothing shown without both the login and the switch). The original 34 checks across desktop and phone sizes covering public pages, page-source privacy, the Check Availability → WhatsApp message, hidden prices, unlisted 404s, canonical redirects, sitemap/robots, no sideways scrolling on phones, no service worker on guest devices, admin overview/table/editor/share/pricing/map, **offline open + offline edit + sync back** (case 21–22), and host isolation (case 23: mobile and desktop layouts).
 
 ## 8. Known limitations
 
@@ -149,6 +152,18 @@ Browser checks (run against a production build with a real MongoDB; script not c
 **+ Add property** → Basics (title, type) → Ownership: *My own property* → Location (address, locality, city; paste the Google Maps link or tap the map, or press *I'm at the property* when you're there) → Rooms, Amenities, Standout features, House rules → **Pricing and margin**: landing price (what the owner gets; for your own flat, your cost) and listing price (what guests pay). The margin is worked out as you type. → **Create property**. Then add photos (drag them in, or *Choose files* / *Take a photo* on your phone; ★ makes a photo the cover; arrows reorder) → **Publish**.
 
 Every property gets a permanent ID: `LAC-0001…` for yours, `HST-0001…` for hosts' (prefixes in Settings). IDs are never reused, even after deletion.
+
+### Custom links
+In the property's **Basics**, fill in **Custom link words** (e.g. `sea view mohali`). The address becomes `/stay/sea-view-mohali-LAC-0001`; the ID always stays at the end so links never clash. Old links keep working and redirect to the new one.
+
+### Rooms and room-tagged photos
+In **Room by room**, add rooms (one tap for Living room, Bedroom 1, Kitchen…, or **+ Add custom room** for anything else, e.g. *Rooftop jacuzzi deck*), each with a short description and amenities. Then in **Photos and videos**, pick each photo's room from the drop-down and press **Sort photos by room**. Guests see a *Room by room* section with each room's photos, description and amenities; the gallery is ordered room by room. Hosts can do the same in their portal.
+
+### Contact hosts and caretakers in one tap
+Save the host's phone and WhatsApp in **Hosts**, and an optional caretaker/on-site contact on each property (*Private details*). WhatsApp and Call buttons appear in the Hosts list, the Properties table, at the top of each property, and in the admin browsing view. These numbers are never shown to guests.
+
+### Browse the site as admin (for answering enquiries)
+Menu → **Browse site as admin**, or **View as admin** on a property. You get the normal guest site plus a purple *Admin view* bar, and every property (including drafts, unlisted and private) shows the host's name and number, the caretaker, the exact address with Directions, the Airbnb link, your notes, landing price and margin, with one-tap WhatsApp/Call. You can also search by host name or number. Press **Exit admin view** to go back to what guests see.
 
 ### Invite hosts
 **Hosts → Add host** (name, phone, email, payout details, private notes) → **Invite** → *Send on WhatsApp*. The link lets them set a password at `/stays/host` (valid 14 days, single use). Hosts can also sign up themselves at `/stays/host`. Pausing a host signs them out everywhere; their properties and photos stay.

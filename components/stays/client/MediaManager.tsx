@@ -9,13 +9,16 @@ import { ArrowDown, ArrowUp, Camera, Check, Loader2, Play, Star, Trash2, Upload,
 import { MAX_IMAGE_MB, MAX_VIDEO_MB } from "@/lib/stays/constants";
 import { api, uploadToCloud } from "./api";
 
-export type MediaRow = { id: string; type: "image" | "video"; url: string; thumb: string; caption: string; pending: boolean; removalRequested: boolean; by: string };
+export type MediaRow = { id: string; type: "image" | "video"; url: string; thumb: string; caption: string; pending: boolean; removalRequested: boolean; by: string; roomId?: string | null };
 type Job = { name: string; progress: number; error?: string; done?: boolean };
 
-export function MediaManager<P>({ base, propertyId, media, coverId, onChange, live }: {
+export function MediaManager<P>({ base, propertyId, media, coverId, onChange, live, rooms = [] }: {
   base: "host" | "admin"; propertyId: string; media: MediaRow[]; coverId: string | null;
   onChange: (p: P) => void; live?: boolean;
+  /** Saved rooms of the property, for tagging photos. */
+  rooms?: { id: string; name: string }[];
 }) {
+  const [roomFilter, setRoomFilter] = useState("");
   const [jobs, setJobs] = useState<Job[]>([]);
   const [msg, setMsg] = useState("");
   const [drag, setDrag] = useState<string | null>(null);
@@ -109,11 +112,22 @@ export function MediaManager<P>({ base, propertyId, media, coverId, onChange, li
       )}
       {msg && <p className="mt-3 rounded-xl bg-blush px-3 py-2 text-sm text-coral" role="alert">{msg}</p>}
 
+      {media.length > 0 && rooms.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <button type="button" onClick={() => call("media_sort_rooms", {})} className="s-btn s-btn-ghost s-btn-sm" title="Order all photos room by room, in the order of your room list">Sort photos by room</button>
+          <select className="s-input !min-h-0 !w-auto !py-1.5 text-sm" value={roomFilter} onChange={(e) => setRoomFilter(e.target.value)} aria-label="Show photos of">
+            <option value="">All photos ({media.length})</option>
+            {rooms.map((r) => <option key={r.id} value={r.id}>{r.name} ({media.filter((m) => m.roomId === r.id).length})</option>)}
+            <option value="none">Not tagged ({media.filter((m) => !m.roomId || !rooms.some((r) => r.id === m.roomId)).length})</option>
+          </select>
+          <span className="text-xs text-muted">Tag each photo with its room below.</span>
+        </div>
+      )}
       {media.length === 0 ? (
         <p className="mt-4 text-sm text-muted">No photos yet. Guests book what they can see: add at least 5 good photos (living room, bedrooms, bathroom, kitchen, view).</p>
       ) : (
         <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {media.map((m, i) => (
+          {media.map((m, i) => (roomFilter && (roomFilter === "none" ? m.roomId && rooms.some((r) => r.id === m.roomId) : m.roomId !== roomFilter)) ? null : (
             <li
               key={m.id}
               draggable
@@ -134,6 +148,17 @@ export function MediaManager<P>({ base, propertyId, media, coverId, onChange, li
                 </div>
               </div>
               <div className="p-2">
+                {rooms.length > 0 && (
+                  <select
+                    value={m.roomId && rooms.some((r) => r.id === m.roomId) ? m.roomId : ""}
+                    onChange={(e) => call("media_room", { mediaId: m.id, roomId: e.target.value || null })}
+                    className="mb-1 w-full rounded-lg border border-line bg-white px-1.5 py-1 text-xs text-plum"
+                    aria-label="Room"
+                  >
+                    <option value="">Room: not tagged</option>
+                    {rooms.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+                  </select>
+                )}
                 <input
                   defaultValue={m.caption}
                   placeholder="Caption (optional)"

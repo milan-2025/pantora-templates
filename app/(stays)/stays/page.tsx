@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { headers } from "next/headers";
+import { browsingAdmin } from "@/lib/stays/server";
 import { ArrowRight, Building2, Home, MessageCircle, Sparkles } from "lucide-react";
 import { loadHome } from "@/lib/stays/pages";
 import { CardGrid, Footer, Header } from "@/components/stays/ui";
@@ -21,15 +23,15 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function StaysHome() {
-  const { site, featured, recent, destinations, total, mapPoints } = await loadHome();
+  const admin = await browsingAdmin(await headers());
+  const { site, featured, recent, destinations, total, mapPoints } = await loadHome(admin);
   const s = site.settings;
   const wa = waLink(s.whatsappNumber, s.templates.general);
   return (
     <>
-      <Header site={s} active="home" />
+      <Header site={s} active="home" admin={!!admin} />
       <main>
         <section className="relative overflow-hidden">
-          <div className="pointer-events-none absolute inset-0 -z-10" style={{ backgroundImage: "radial-gradient(60% 50% at 85% 0%, rgb(242 169 59 / 0.25), transparent 70%), radial-gradient(50% 45% at 0% 100%, rgb(31 122 116 / 0.12), transparent 70%)" }} />
           <div className="mx-auto max-w-7xl px-4 pb-10 pt-12 sm:px-6 sm:pt-20">
             <p className="s-chip !bg-sand !text-marigold-deep"><Sparkles className="size-3.5" /> {total} handpicked stay{total === 1 ? "" : "s"}</p>
             <h1 className="mt-4 max-w-3xl font-display text-4xl leading-[1.05] sm:text-6xl">Find a stay that feels like it was <em className="text-coral">kept for you</em>.</h1>
@@ -41,7 +43,7 @@ export default async function StaysHome() {
         <section className="mx-auto max-w-7xl px-4 sm:px-6" aria-label="Browse by type">
           <div className="s-scroll-x -mx-4 flex gap-2 px-4 pb-2">
             {s.propertyTypes.map((t) => (
-              <Link key={t} href={`/stays/search?type=${encodeURIComponent(t)}`} className="inline-flex shrink-0 items-center gap-2 rounded-full border border-line bg-paper px-4 py-2 text-sm font-medium text-plum hover:border-plum">
+              <Link key={t} href={`/stays/search?type=${encodeURIComponent(t)}`} className="inline-flex shrink-0 items-center gap-2 rounded-full border border-line bg-white px-4 py-2 text-sm font-medium text-plum hover:border-plum">
                 {/villa|house|farm/i.test(t) ? <Home className="size-4" /> : <Building2 className="size-4" />}{t}
               </Link>
             ))}
