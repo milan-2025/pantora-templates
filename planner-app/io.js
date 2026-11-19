@@ -82,7 +82,7 @@ function importWorkbook(buf) {
     for (let c = 1; c < 40; c++) {
       if (cellVal(ls, 3, c, 's') === 'Family Members & Team') { for (let r = 4; r < 120; r++) { const v = cellVal(ls, r, c, 's'); if (v) team.push(v); } }
     }
-    if (team.length) st.team = team;
+    if (team.length) { st.team = team; const had = st.people || []; st.people = teamToPeople(team).map(p => had.find(x => x.name === p.name) || p); }
   }
   const ct = wb.Sheets['Catering'];
   if (ct) {

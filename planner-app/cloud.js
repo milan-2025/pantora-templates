@@ -21,7 +21,7 @@ async function api(path, opts) {
 }
 
 /* ---------- diffing (what changed since the last save) ---------- */
-const TOPK = ['settings', 'totalBudget', 'cat', 'team', 'msg', 'lists', 'cols'];
+const TOPK = ['settings', 'totalBudget', 'cat', 'team', 'msg', 'lists', 'cols', 'features', 'msgs'];
 function diffOps(base, cur) {
   if (!base || CLOUD.forceReplace) return [{ replace: stripLocal(cur) }];
   const ops = [];
@@ -46,7 +46,7 @@ function applyOpsJs(state, ops) {
 }
 const stripLocal = st => { const o = {}; COLLS.concat(TOPK).forEach(k => { if (st[k] !== undefined) o[k] = st[k]; }); return copy(o); };
 
-const NOUN = { functions: ['function', 'functions'], guests: ['guest', 'guests'], hotels: ['hotel room type', 'hotel room types'], vehicles: ['vehicle', 'vehicles'], roomAlloc: ['room allocation', 'room allocations'], transAlloc: ['transport allocation', 'transport allocations'], budgetCats: ['budget category', 'budget categories'], budgetLines: ['budget line', 'budget lines'], vendors: ['vendor quote', 'vendor quotes'], payments: ['payment', 'payments'], tasks: ['task', 'tasks'], rituals: ['ritual item', 'ritual items'], runsheet: ['run sheet activity', 'run sheet activities'], shagun: ['shagun entry', 'shagun entries'], milni: ['milni pair', 'milni pairs'], shopping: ['shopping item', 'shopping items'], settings: ['wedding details'], totalBudget: ['total budget'], cat: ['catering settings'], team: ['family & team list'], msg: ['invite message'], lists: ['dropdown options'], cols: ['columns'] };
+const NOUN = { functions: ['function', 'functions'], guests: ['guest', 'guests'], hotels: ['hotel room type', 'hotel room types'], vehicles: ['vehicle', 'vehicles'], roomAlloc: ['room allocation', 'room allocations'], transAlloc: ['transport allocation', 'transport allocations'], budgetCats: ['budget category', 'budget categories'], budgetLines: ['budget line', 'budget lines'], vendors: ['vendor quote', 'vendor quotes'], payments: ['payment', 'payments'], tasks: ['task', 'tasks'], rituals: ['ritual item', 'ritual items'], runsheet: ['run sheet activity', 'run sheet activities'], shagun: ['shagun entry', 'shagun entries'], milni: ['milni pair', 'milni pairs'], shopping: ['shopping item', 'shopping items'], people: ['contact', 'contacts'], features: ['features'], msgs: ['WhatsApp messages'], settings: ['wedding details'], totalBudget: ['total budget'], cat: ['catering settings'], team: ['family & team list'], msg: ['invite message'], lists: ['dropdown options'], cols: ['columns'] };
 const rowName = r => r && (r.name || r.task || r.vendor || r.item || r.line || r.activity || r.payee || r.pair || r.group || r.hotel || r.operator || '');
 function summarize(ops, base) {
   if (ops.some(o => o.replace)) return CLOUD.replaceNote || 'Replaced the whole planner';
@@ -66,7 +66,20 @@ function summarize(ops, base) {
 
 /* ---------- saving & syncing ---------- */
 function cacheKey() { return 'pp_cache_' + CLOUD.id; }
-function saveCache() { if (!CLOUD.on) return; try { store.set(cacheKey(), JSON.stringify({ rev: CLOUD.rev, base: CLOUD.base, state: stripLocal(S), forceReplace: CLOUD.forceReplace })); } catch (e) { /* storage full: cloud still has it */ } }
+function saveCache() { if (!CLOUD.on) return; try { store.set(cacheKey(), JSON.stringify({ rev: CLOUD.rev, base: CLOUD.base, state: stripLocal(S), forceReplace: CLOUD.forceReplace, meta: CLOUD.meta, email: CLOUD.email })); } catch (e) { /* storage full: cloud still has it */ } }
+/** No connection when the planner opens: show the copy saved on this device and sync once back online. */
+function openCached(id) {
+  id = id || store.get('pp_last');
+  let c = null; try { c = JSON.parse(store.get('pp_cache_' + id) || 'null'); } catch (e) { c = null; }
+  if (!id || !c || !c.meta || !c.state) return false;
+  CLOUD.on = true; CLOUD.id = id; CLOUD.myRevs = new Set(); CLOUD.email = CLOUD.email || c.email || null;
+  applyMeta(c.meta);
+  CLOUD.base = c.base || null; CLOUD.rev = c.rev || 0; CLOUD.forceReplace = !!c.forceReplace; CLOUD.offline = true;
+  S = normalize(c.state); S.demo = false; D = null;
+  hideLanding(); ungate(); renderAll(); setSync('offline'); startPolling();
+  if (!CLOUD.readOnly && diffOps(CLOUD.base, stripLocal(S)).length) schedulePush();
+  return true;
+}
 function schedulePush() { if (!CLOUD.on || CLOUD.readOnly) return; clearTimeout(CLOUD.pushT); setSync('pending'); CLOUD.pushT = setTimeout(push, 900); }
 
 async function push() {
@@ -236,7 +249,7 @@ function trialScreen() {
 async function openPlanner(id, preload) {
   try {
     const r = preload || await api('/planners/' + id);
-    CLOUD.on = true; CLOUD.id = id; CLOUD.myRevs = new Set();
+    CLOUD.on = true; CLOUD.id = id; CLOUD.myRevs = new Set(); undoClear();
     applyMeta(r.meta);
     store.set('pp_last', id);
     let cache = null; try { cache = JSON.parse(store.get('pp_cache_' + id) || 'null'); } catch (e) { cache = null; }
@@ -244,11 +257,11 @@ async function openPlanner(id, preload) {
     else if (r.state) { CLOUD.base = stripLocal(normalize(copy(r.state))); S = normalize(copy(r.state)); }
     else { CLOUD.base = null; S = freshState(); }
     S.demo = false; CLOUD.rev = r.rev || 0; D = null;
-    hideLanding(); ungate(); renderAll(); setSync(CLOUD.readOnly ? 'ro' : 'saved'); startPolling();
+    hideLanding(); ungate(); renderAll(); setSync(CLOUD.readOnly ? 'ro' : 'saved'); startPolling(); maybeTour();
     if (!CLOUD.readOnly && diffOps(CLOUD.base, stripLocal(S)).length) schedulePush();
   } catch (e) {
     if (e.status === 401) return signOut(true);
-    if (e.status === 0) return startLocal('Couldn’t reach the server. Showing what’s saved on this device.');
+    if (e.status === 0) return openCached(id) || startLocal('Couldn’t reach the server. Showing what’s saved on this device.');
     toast(e.message); store.del('pp_last'); startCloud(true);
   }
 }
@@ -265,13 +278,14 @@ async function startCloud(noAuto) {
     return trialScreen();
   } catch (e) {
     if (e.status === 401) return signOut(true);
+    if (e.status === 0 && openCached()) return;
     return startLocal(e.status === 0 ? null : e.message);
   }
 }
 
 function startLocal(msg) {
   clearInterval(CLOUD.pollT); CLOUD.on = false; CLOUD.readOnly = false; document.body.classList.remove('ro');
-  S = load(); D = null; hideLanding(); ungate(); renderAll(); setSync('local');
+  S = load(); D = null; undoClear(); hideLanding(); ungate(); renderAll(); setSync('local'); maybeTour();
   if (msg) toast(msg);
 }
 
@@ -383,7 +397,7 @@ VIEWS.activity = function () {
 
 VIEWS.account = function () {
   if (!CLOUD.on) return [el('<div>' + ph('Account', '') + '</div>').firstChild, el('<div class="card"><h3>Save your planner to the cloud</h3><p>Right now everything is saved only on this device. Sign in with your email to start a free trial: your planner syncs to every device and you can invite family.</p><button class="btn pri" data-signin>Sign in or start free trial</button></div>')];
-  const c = el('<div class="card"><h3>Signed in</h3><p><b>' + esc(CLOUD.email || 'Support view') + '</b></p><div class="bar">' + (CLOUD.list.length > 1 ? '<button class="btn keep" data-switch>Switch planner</button>' : '') + '<button class="btn keep" data-out>Sign out</button></div></div>');
+  const c = el('<div class="card"><h3>Signed in</h3><p><b>' + esc(CLOUD.email || 'Support view') + '</b></p><div class="bar"><button class="btn keep" data-tour>▶ Take the tour</button>' + (CLOUD.list.length > 1 ? '<button class="btn keep" data-switch>Switch planner</button>' : '') + '<button class="btn keep" data-out>Sign out</button></div></div>');
   const sw = $('[data-switch]', c); if (sw) sw.onclick = () => { clearInterval(CLOUD.pollT); CLOUD.on = false; pickScreen(CLOUD.list); };
   $('[data-out]', c).onclick = () => signOut();
   return [el('<div>' + ph('Account', '') + '</div>').firstChild, c];

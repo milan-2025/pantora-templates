@@ -2,8 +2,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/brevo", () => ({ sendWithBrevo: vi.fn(async () => ({ sent: true })) }));
 import {
-  applyOps, cleanState, counts, overLimit, makeToken, readToken, effectiveStatus, newExpiry, PlannerError, describeOps,
+  applyOps, cleanState, counts, overLimit, makeToken, readToken, effectiveStatus, newExpiry, PlannerError, describeOps, runSheetView,
 } from "@/lib/planner/core";
+import { dialDigits, runSheetPage } from "@/lib/planner/sharePage";
 import { fakePayload } from "./plannerFakePayload";
 import { Planners } from "@/collections/Planners";
 
@@ -158,5 +159,74 @@ describe("saving through the server", () => {
     const ok = await server.verifyLogin(fakePayload, "NEW@x.in", devCode);
     expect(ok.email).toBe("new@x.in");
     await expect(server.verifyLogin(fakePayload, "new@x.in", devCode)).rejects.toThrow(); // single use
+  });
+  it("run sheet link: on, shown, renewed and off", async () => {
+    const doc = await server.createPlanner(fakePayload, "o@x.in", { features: { sharelink: true }, functions: [{ id: "f", name: "Sangeet", active: "Yes" }], runsheet: [{ id: "r", fn: "Sangeet", activity: "DJ" }] });
+    await expect(server.setShareLink(fakePayload, doc, "viewer", true)).rejects.toMatchObject({ status: 403 });
+    const { shareToken } = await server.setShareLink(fakePayload, doc, "owner", true);
+    expect(shareToken).toMatch(/^[\w-]{20}$/);
+    expect((await server.sharedRunSheet(fakePayload, shareToken!))?.functions[0].items[0].activity).toBe("DJ");
+    const cur = await fakePayload.findByID({ collection: "planners", id: doc.id });
+    expect((await server.setShareLink(fakePayload, cur, "editor", true)).shareToken).toBe(shareToken); // same link while on
+    expect((await server.meta(fakePayload, cur, "owner")).shareToken).toBe(shareToken);
+    expect((await server.meta(fakePayload, cur, "viewer")).shareToken).toBeNull();
+    await server.setShareLink(fakePayload, cur, "owner", false);
+    expect(await server.sharedRunSheet(fakePayload, shareToken!)).toBeNull();
+    expect(await server.sharedRunSheet(fakePayload, "bad token!")).toBeNull();
+  });
+});
+
+describe("contacts, features and the run sheet link", () => {
+  it("saves the new lists and settings (people, features, messages)", () => {
+    const next = applyOps({}, [{ c: "people", id: "p1", r: { id: "p1", name: "Mama ji", phone: "98765 43210" } }, { k: "features", v: { daymode: true } }, { k: "msgs", v: { remind: "Hi {name}" } }]);
+    expect(next.people).toHaveLength(1);
+    expect(next.features).toEqual({ daymode: true });
+    expect(cleanState({ people: [{ id: "x" }], features: {}, msgs: {} })).toHaveProperty("people");
+  });
+  const state = {
+    settings: { bride: "Asha", groom: "Ravi", date: "2026-12-12", city: "Jaipur" },
+    features: { sharelink: true },
+    functions: [{ id: "f1", name: "Wedding", date: "2026-12-12", active: "Yes" }, { id: "f2", name: "Haldi", date: "2026-12-11", active: "Yes" }, { id: "f3", name: "Off", active: "No" }],
+    runsheet: [
+      { id: "r1", fn: "Wedding", time: "19:00", activity: "Pheras", who: "Pandit ji" },
+      { id: "r2", fn: "Wedding", time: "17:00", activity: "Baraat", status: "Done", notes: "secret note" },
+      { id: "r3", fn: "Haldi", time: "10:00", activity: "Haldi <b>" },
+      { id: "r4", fn: "Off", activity: "hidden" },
+    ],
+    people: [{ id: "p1", name: "Mama ji", role: "Coordinator", phone: "98765 43210", star: "Yes" }, { id: "p2", name: "Not starred", phone: "98765 00000" }],
+    vendors: [{ id: "v1", vendor: "Lens Co", line: "Photography", phone: "+44 7700 900123", star: "Yes", quoted: 90000 }],
+    guests: [{ id: "g1", name: "Guest", phone: "9999999999", star: "Yes" }],
+    payments: [{ id: "pay", amount: 5 }],
+  };
+  it("shows only the run sheet and starred contacts, in time order", () => {
+    const v = runSheetView(state)!;
+    expect(v.names).toBe("Asha & Ravi");
+    expect(v.functions.map((f) => f.name)).toEqual(["Haldi", "Wedding"]);
+    expect(v.functions[1].items.map((i) => i.activity)).toEqual(["Baraat", "Pheras"]);
+    expect(v.functions[1].items[0].done).toBe(true);
+    expect(v.contacts.map((c) => c.name)).toEqual(["Mama ji", "Lens Co"]); // no guests, nobody unstarred
+    const json = JSON.stringify(v);
+    expect(json).not.toMatch(/secret note|90000|9999999999|hidden/);
+  });
+  it("is off unless the couple switched the link on (and the run sheet is on)", () => {
+    expect(runSheetView({ ...state, features: {} })).toBeNull();
+    expect(runSheetView({ ...state, features: { sharelink: true, runsheet: false } })).toBeNull();
+    expect(runSheetView(null)).toBeNull();
+  });
+  it("renders a safe page with call links", () => {
+    const { status, html } = runSheetPage(runSheetView(state));
+    expect(status).toBe(200);
+    expect(html).toContain("Haldi &lt;b&gt;");
+    expect(html).toContain('href="tel:+919876543210"');
+    expect(html).toContain('href="tel:+447700900123"');
+    expect(html).toContain("noindex");
+    expect(runSheetPage(null).status).toBe(404);
+  });
+  it("dials Indian numbers typed in any common way", () => {
+    expect(dialDigits("98765 43210")).toBe("919876543210");
+    expect(dialDigits("098765-43210")).toBe("919876543210");
+    expect(dialDigits("+91 98765 43210")).toBe("919876543210");
+    expect(dialDigits("0044 7700 900123")).toBe("447700900123");
+    expect(dialDigits("123")).toBe("");
   });
 });
