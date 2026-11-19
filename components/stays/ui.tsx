@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { Bath, BedDouble, Eye, MapPin, MessageCircle, Phone, Sparkles, Users } from "lucide-react";
 import { inr, waLink, waNumber } from "@/lib/stays/core";
+import { CardCarousel } from "./Gallery";
 import type { AdminExtras, PublicCard } from "@/lib/stays/views";
 
 type Card = PublicCard & { admin?: AdminExtras };
@@ -139,7 +140,11 @@ export function PropertyCard({ card, href, priority = false }: { card: Card; hre
   const url = href || `/stay/${card.slug}`;
   return (
     <article data-code={card.code} className="group relative flex flex-col">
-      <Link href={url} className="relative block aspect-[4/3] overflow-hidden rounded-2xl bg-sand" aria-label={card.title}>
+      <div className="relative">
+        {card.images && card.images.length > 1 ? (
+          <CardCarousel images={card.images} href={url} title={card.title} priority={priority} />
+        ) : (
+          <Link href={url} className="relative block aspect-[4/3] overflow-hidden rounded-2xl bg-neutral-100" aria-label={card.title}>
         {card.cover ? (
           // Cloudinary already serves resized WebP/AVIF, so a plain responsive <img> is enough.
           // eslint-disable-next-line @next/next/no-img-element
@@ -156,12 +161,20 @@ export function PropertyCard({ card, href, priority = false }: { card: Card; hre
           <div className="grid size-full place-items-center text-plum/40"><Sparkles className="size-10" /></div>
         )}
         <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
-          {card.featured && <span className="rounded-full bg-marigold px-2.5 py-1 text-xs font-semibold text-plum">Featured</span>}
+          {card.featured && <span className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-charcoal shadow-soft">Featured</span>}
           {card.availability !== "available" && (
             <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${card.availability === "unavailable" ? "bg-charcoal text-white" : "bg-white text-plum"}`}>{card.availabilityLabel}</span>
           )}
         </div>
-      </Link>
+          </Link>
+        )}
+        {card.images && card.images.length > 1 && (
+          <div className="pointer-events-none absolute left-3 top-3 flex flex-wrap gap-1.5">
+            {card.featured && <span className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-charcoal shadow-soft">Featured</span>}
+            {card.availability !== "available" && <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${card.availability === "unavailable" ? "bg-charcoal text-white" : "bg-white text-charcoal"}`}>{card.availabilityLabel}</span>}
+          </div>
+        )}
+      </div>
       <div className="mt-3 flex flex-1 flex-col gap-1">
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-sans text-[15px] font-semibold leading-snug text-plum">

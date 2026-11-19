@@ -157,7 +157,13 @@ Every property gets a permanent ID: `LAC-0001…` for yours, `HST-0001…` for h
 In the property's **Basics**, fill in **Custom link words** (e.g. `sea view mohali`). The address becomes `/stay/sea-view-mohali-LAC-0001`; the ID always stays at the end so links never clash. Old links keep working and redirect to the new one.
 
 ### Rooms and room-tagged photos
-In **Room by room**, add rooms (one tap for Living room, Bedroom 1, Kitchen…, or **+ Add custom room** for anything else, e.g. *Rooftop jacuzzi deck*), each with a short description and amenities. Then in **Photos and videos**, pick each photo's room from the drop-down and press **Sort photos by room**. Guests see a *Room by room* section with each room's photos, description and amenities; the gallery is ordered room by room. Hosts can do the same in their portal.
+In **Room by room**, add rooms (one tap for Living room, Bedroom 1, Kitchen…, or **+ Add custom room** for anything else, e.g. *Rooftop jacuzzi deck*), each with a short description and amenities. Then in **Photos and videos**, pick each photo's room from the drop-down (and optionally press **Sort photos by room**). Hosts can do the same in their portal.
+
+What guests see (modelled on Airbnb):
+- **Top of the page:** your photos in **your own order** (cover first). Phones get a full-width swipe carousel with next/previous arrows and a "2 / 12" counter; larger screens get one large photo plus four, and **Show all photos**.
+- **Opening the photos** shows the **photo tour**, room by room: room thumbnails at the top (tap to jump), then each room's name, description, amenities and photos; photos without a room come last under "Additional photos". Tapping a photo opens a full-screen viewer (swipe, arrows or keyboard) that shows which room it is ("Master bedroom · 2/4").
+- **Room by room** (below the description): a row of room cards you can swipe or scroll with arrows; tapping one opens the photo tour at that room.
+- **Property cards** on the home and search pages can be swiped through (arrows on hover on a computer, dots underneath).
 
 ### Contact hosts and caretakers in one tap
 Save the host's phone and WhatsApp in **Hosts**, and an optional caretaker/on-site contact on each property (*Private details*). WhatsApp and Call buttons appear in the Hosts list, the Properties table, at the top of each property, and in the admin browsing view. These numbers are never shown to guests.
