@@ -7,12 +7,12 @@ import { createHmac, timingSafeEqual } from "crypto";
 /** Row collections inside a planner's data. Every row has a string `id`. */
 export const COLLS = [
   "functions", "guests", "hotels", "vehicles", "roomAlloc", "transAlloc", "budgetCats", "budgetLines",
-  "vendors", "payments", "tasks", "rituals", "runsheet", "shagun", "milni", "shopping",
+  "vendors", "payments", "tasks", "rituals", "runsheet", "shagun", "milni", "shopping", "people",
 ] as const;
 export type Coll = (typeof COLLS)[number];
 
 /** Single-value settings stored beside the rows. */
-export const TOP_KEYS = ["settings", "totalBudget", "cat", "team", "msg", "lists", "cols"] as const;
+export const TOP_KEYS = ["settings", "totalBudget", "cat", "team", "msg", "lists", "cols", "features", "msgs"] as const;
 export type TopKey = (typeof TOP_KEYS)[number];
 
 /** Collections a plan can cap, with the label shown to customers and in /admin. */
@@ -137,6 +137,49 @@ export function overLimit(before: State, after: State, limits: Limits) {
     if (a[k] > lim && a[k] > b[k]) return { key: k, label: LIMITS[k], limit: lim, count: a[k] };
   }
   return null;
+}
+
+/* ---------- run sheet shared by link ---------- */
+
+export type SharedContact = { name: string; role: string; phone: string };
+export type SharedRunSheet = {
+  names: string; date: string; city: string;
+  functions: { name: string; date: string; time: string; venue: string; dress: string; items: { time: string; activity: string; who: string; vendor: string; loc: string; done: boolean }[] }[];
+  contacts: SharedContact[];
+};
+
+const str = (v: unknown, max = 200) => (v == null ? "" : String(v)).slice(0, max);
+const rowsOf = (s: State, c: Coll) => (Array.isArray(s[c]) ? (s[c] as Row[]) : []);
+const starred = (r: Row) => r.star === "Yes" && str(r.phone).replace(/\D/g, "").length >= 6;
+
+/**
+ * What a run sheet link shows: functions, the run sheet and the contacts the couple starred. Nothing else
+ * (no guests, money or notes) leaves the planner. Empty when the couple switched the run sheet or the link off.
+ */
+export function runSheetView(state: State | null | undefined): SharedRunSheet | null {
+  const s = (state ?? {}) as State;
+  const f = (s.features ?? {}) as Record<string, unknown>;
+  if (f.sharelink !== true || f.runsheet === false) return null;
+  const set = (s.settings ?? {}) as Record<string, unknown>;
+  const names = set.bride || set.groom ? `${str(set.bride) || "Bride"} & ${str(set.groom) || "Groom"}` : "Our wedding";
+  const rs = rowsOf(s, "runsheet");
+  const functions = rowsOf(s, "functions")
+    .filter((x) => x.name && x.active !== "No")
+    .map((x) => ({
+      name: str(x.name, 80), date: str(x.date, 10), time: str(x.time, 5), venue: str(x.venue), dress: str(x.dress),
+      items: rs.filter((r) => r.fn === x.name)
+        .map((r) => ({ time: str(r.time, 5), activity: str(r.activity, 300), who: str(r.who, 80), vendor: str(r.vendor, 80), loc: str(r.loc, 120), done: r.status === "Done" }))
+        .sort((a, b) => (a.time || "99").localeCompare(b.time || "99")),
+    }))
+    .filter((x) => x.items.length)
+    .sort((a, b) => `${a.date || "9"}${a.time}`.localeCompare(`${b.date || "9"}${b.time}`));
+  const contacts: SharedContact[] = [];
+  const add = (name: unknown, role: unknown, phone: unknown) => { if (name && !contacts.some((c) => c.name === str(name, 80))) contacts.push({ name: str(name, 80), role: str(role, 80), phone: str(phone, 30) }); };
+  rowsOf(s, "people").filter(starred).forEach((r) => add(r.name, r.role, r.phone));
+  rowsOf(s, "vendors").filter(starred).forEach((r) => add(r.vendor || r.contact, [r.line, r.vendor && r.contact ? r.contact : ""].filter(Boolean).join(" · "), r.phone));
+  rowsOf(s, "hotels").filter(starred).forEach((r) => add(r.hotel, ["Hotel", r.contact].filter(Boolean).join(" · "), r.phone));
+  rowsOf(s, "vehicles").filter(starred).forEach((r) => add(r.operator, ["Transport", r.contact].filter(Boolean).join(" · "), r.phone));
+  return { names: str(names, 120), date: str(set.date, 10), city: str(set.city, 80), functions, contacts };
 }
 
 /* ---------- sign-in ---------- */

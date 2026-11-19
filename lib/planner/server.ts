@@ -1,11 +1,11 @@
 import "server-only";
-import { randomInt } from "crypto";
+import { randomBytes, randomInt } from "crypto";
 import type { Payload, Where } from "payload";
 import { sendWithBrevo } from "@/lib/brevo";
 import { applyPromo, findAffiliate } from "@/lib/pricing";
 import {
   LIMIT_KEYS, PlannerError, applyOps, codesMatch, counts, daysLeft, describeOps, effectiveStatus, hashCode, makeToken,
-  newExpiry, normEmail, overLimit, readToken, validEmail,
+  newExpiry, normEmail, overLimit, readToken, runSheetView, validEmail,
   type Limits, type Op, type State,
 } from "./core";
 
@@ -181,6 +181,7 @@ export async function meta(payload: Payload, doc: Doc, role: Role) {
     limits: plan.limits,
     counts: counts(doc.state),
     collaborators: role === "owner" || role === "support" ? (doc.collaborators ?? []).map((c: Doc) => ({ email: c.email, role: c.role ?? "editor" })) : [],
+    shareToken: role === "owner" || role === "editor" ? doc.shareToken || null : null,
     rev: doc.rev ?? 0,
   };
 }
@@ -342,6 +343,27 @@ export async function removeCollaborator(payload: Payload, doc: Doc, rawEmail: u
   const collaborators = ((doc.collaborators ?? []) as Doc[]).filter((c) => normEmail(c.email) !== email).map((c) => ({ email: c.email, role: c.role, addedAt: c.addedAt }));
   await payload.update({ collection: "planners", id: doc.id, data: { collaborators } as never, overrideAccess: true });
   return collaborators;
+}
+
+/* ---------- run sheet link ---------- */
+
+/** Turns the view-only run sheet link on (a new random code if there is none) or off. */
+export async function setShareLink(payload: Payload, doc: Doc, role: Role, onOff: boolean) {
+  if (role !== "owner" && role !== "editor") throw new PlannerError("Only the owner or an editor can share the run sheet", 403);
+  const status = effectiveStatus(doc);
+  if (onOff && (status === "expired" || status === "suspended")) throw new PlannerError("Renew your plan to share the run sheet", 402, { reason: status });
+  const shareToken = onOff ? doc.shareToken || randomBytes(15).toString("base64url") : null;
+  await payload.update({ collection: "planners", id: doc.id, data: { shareToken } as never, depth: 0, overrideAccess: true });
+  return { shareToken };
+}
+
+/** The run sheet behind a link, or null when the link is off, unknown or the planner is paused. */
+export async function sharedRunSheet(payload: Payload, token: string) {
+  if (!/^[A-Za-z0-9_-]{16,40}$/.test(token)) return null;
+  const res = await payload.find({ collection: "planners", where: { shareToken: { equals: token } }, limit: 1, depth: 0, overrideAccess: true, select: { state: true, status: true, expiresAt: true } });
+  const doc = res.docs[0] as Doc | undefined;
+  if (!doc || effectiveStatus(doc) === "suspended") return null;
+  return runSheetView(doc.state as State);
 }
 
 /* ---------- payments ---------- */

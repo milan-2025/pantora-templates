@@ -1,7 +1,7 @@
 /* ---------- Pandora Indian Wedding Planner (web app) ---------- */
 const SEED = /*SEED*/null;
 const KEY = 'pandora_wedding_planner_v1';
-const COLLS = ['functions','guests','hotels','vehicles','roomAlloc','transAlloc','budgetCats','budgetLines','vendors','payments','tasks','rituals','runsheet','shagun','milni','shopping'];
+const COLLS = ['functions','guests','hotels','vehicles','roomAlloc','transAlloc','budgetCats','budgetLines','vendors','payments','tasks','rituals','runsheet','shagun','milni','shopping','people'];
 const MEM = {}; // fallback when storage is blocked
 let S = null, D = null, saveT = null;
 
@@ -35,11 +35,13 @@ function demoState() {
   const st = copy(SEED);
   st.budgetCats = st.budgetCats.filter(c => c.name !== 'TOTAL');
   st.team = (SEED.lists['Family Members & Team'] || []).slice();
+  st.people = teamToPeople(st.team);
   st.lists = copy(SEED.lists); delete st.lists['Language'];
   st.cat = { share: 0.7, childPct: 0.5, buffer: 0.1, perFn: {} };
   const meals = {Roka:['Lunch',900],Engagement:['Dinner',1800],Haldi:['Lunch',700],Mehndi:['High tea',450],Sangeet:['Dinner',1600],'Cocktail Night':['Dinner',2000],'Baraat & Milni':['Snacks only',500],'Wedding Ceremony':['Dinner',1900],Reception:['Dinner',1800],Vidaai:['Breakfast',400]};
   Object.keys(meals).forEach(k => { st.cat.perFn[k] = { meal: meals[k][0], cost: meals[k][1] }; });
   st.msg = defaultMsg();
+  st.msgs = defaultMsgs();
   st.demo = true;
   return withIds(st);
 }
@@ -47,6 +49,70 @@ function demoState() {
 function defaultMsg() {
   return 'Namaste {name} 🙏\n\nWith the blessings of our families, {bride} & {groom} are getting married on {date} in {city}. We would be honoured to have you with us.\n\nPlease reply to let us know if you can join.\n\nWith love,\n{bride} & {groom}';
 }
+
+/** Family & team as contacts (name, role, phone). Ids come from the name, so two devices upgrading the same planner make the same rows. */
+function teamToPeople(team) {
+  const h = s => { let x = 5381; for (let i = 0; i < s.length; i++) x = (x * 33 + s.charCodeAt(i)) >>> 0; return x.toString(36); };
+  return (team || []).filter(Boolean).map((n, i) => ({ id: 'tm' + i + '_' + h(String(n)), name: String(n), role: '', phone: '', side: '', star: 'No' }));
+}
+
+/* WhatsApp messages besides the invitation (which stays in S.msg). A line whose {placeholders} are all empty is left out. */
+const MSG_KINDS = [
+  ['invite', 'Invitation', 'Guest List: the WhatsApp button on guests not invited yet.'],
+  ['remind', 'RSVP reminder', 'Guest List: guests who have not replied.'],
+  ['stay', 'Stay & pickup details', 'Guest List and Hotels: guests with a room or a pickup.'],
+  ['thanks', 'Thank-you', 'Shagun Register: shagun received.'],
+  ['pay', 'Vendor payment note', 'Payments: to the vendor being paid.']
+];
+function defaultMsgs() {
+  return {
+    remind: 'Namaste {name} 🙏\n\nA gentle reminder about {bride} & {groom}’s wedding on {date} in {city}. Could you let us know if you will be joining us?\n\nWith love,\n{bride} & {groom}',
+    stay: 'Namaste {name} 🙏\n\nYour stay for {bride} & {groom}’s wedding is arranged:\n🏨 {hotel}{room}\n📅 Check-in {checkin}, check-out {checkout}\n🚗 {pickup}\n\nCall us if you need anything. See you soon!',
+    thanks: 'Dear {name} 🙏\n\nThank you so much for your blessings and your lovely gift. It meant a lot to us to have you with us.\n\nWith love,\n{bride} & {groom}',
+    pay: 'Namaste {vendor} 🙏\n\nAbout {bride} & {groom}’s wedding on {date}: {payment}.\n\nPlease confirm. Thank you!'
+  };
+}
+const MSG_HELP = { invite: '{name} {bride} {groom} {date} {city}', remind: '{name} {bride} {groom} {date} {city}', stay: '{name} {hotel} {room} {checkin} {checkout} {pickup} {bride} {groom} {date} {city}', thanks: '{name} {gift} {bride} {groom} {date} {city}', pay: '{vendor} {payment} {amount} {due} {item} {bride} {groom} {date} {city}' };
+const msgText = k => k === 'invite' ? S.msg : ((S.msgs || {})[k] || defaultMsgs()[k] || '');
+function fillMsg(tpl, vals) {
+  const s = S.settings, all = Object.assign({ bride: s.bride || '', groom: s.groom || '', date: dlong(s.date), city: s.city || '' }, vals || {});
+  return String(tpl || '').split('\n').filter(line => {
+    const keys = (line.match(/\{(\w+)\}/g) || []).map(x => x.slice(1, -1)).filter(k => k in all);
+    return !keys.length || keys.some(k => all[k]);
+  }).join('\n').replace(/\{(\w+)\}/g, (m, k) => (k in all ? all[k] : m)).replace(/\n{3,}/g, '\n\n').trim();
+}
+
+/* ---------- features: pages and tools each planner can switch on or off ---------- */
+// def = on for a planner that never changed it; simple = part of the "Just the essentials" preset.
+const FEATURES = [
+  { k: 'tasks', g: 'Plan', icon: '✅', label: 'Tasks & Timeline', desc: 'Ready-made to-do list with deadlines that follow your wedding date.', def: 1, simple: 1 },
+  { k: 'functions', g: 'Plan', icon: '🎊', label: 'Functions', desc: 'Roka to Vidaai: dates, venues and guest counts per function.', def: 1, simple: 1 },
+  { k: 'runsheet', g: 'Plan', icon: '⏰', label: 'Run Sheet', desc: 'The hour-by-hour plan for each day: who does what, when and where.', def: 1 },
+  { k: 'rituals', g: 'Plan', icon: '🪔', label: 'Rituals & Puja', desc: 'Checklist of puja items for each function.', def: 1 },
+  { k: 'catering', g: 'Guests', icon: '🍽️', label: 'Catering & Plates', desc: 'Plates to order per function, from RSVPs.', def: 1 },
+  { k: 'stay', g: 'Stay & Travel', icon: '🏨', label: 'Hotels & Rooms', desc: 'Hotels, room types and which family stays where.', def: 1 },
+  { k: 'transport', g: 'Stay & Travel', icon: '🚐', label: 'Transport', desc: 'Cabs and buses for pickups and drops.', def: 1 },
+  { k: 'budget', g: 'Money', icon: '💰', label: 'Budget', desc: 'Your total budget split into categories and lines.', def: 1, simple: 1 },
+  { k: 'vendors', g: 'Money', icon: '🧾', label: 'Vendors', desc: 'Quotes, side-by-side comparison and your pick.', def: 1, simple: 1 },
+  { k: 'payments', g: 'Money', icon: '💳', label: 'Payments', desc: 'Advances and instalments with due-date alerts.', def: 1, simple: 1 },
+  { k: 'shagun', g: 'Customs', icon: '🎁', label: 'Shagun Register', desc: 'Shagun and gifts received and given.', def: 1 },
+  { k: 'milni', g: 'Customs', icon: '🤝', label: 'Milni List', desc: 'Who meets whom at the baraat.', def: 1 },
+  { k: 'shopping', g: 'Customs', icon: '🛍️', label: 'Shopping & Outfits', desc: 'Outfits, jewellery, gifts and trousseau.', def: 1 },
+  { k: 'print', g: 'Share', icon: '🖨️', label: 'Family Handout', desc: 'A one-page summary to print or send as a PDF.', def: 1, simple: 1 },
+  { k: 'contacts', g: 'Contacts & messages', icon: '📇', label: 'Contacts', desc: 'One phone book: family, team, vendors, hotels, drivers and guests, with call and WhatsApp buttons.', def: 1, simple: 1 },
+  { k: 'templates', g: 'Contacts & messages', icon: '💬', label: 'Message templates', desc: 'Ready WhatsApp messages: RSVP reminders, stay & pickup details, thank-yous and vendor payment notes.', def: 1 },
+  { k: 'phonecheck', g: 'Contacts & messages', icon: '☎️', label: 'Phone number checks', desc: 'Tidies numbers as you type, flags ones that look wrong and spots duplicate guests.', def: 1, simple: 1 },
+  { k: 'search', g: 'Contacts & messages', icon: '🔍', label: 'Search everything', desc: 'One search box for guests, vendors, tasks, payments and contacts (Ctrl+K).', def: 1, simple: 1 },
+  { k: 'daymode', g: 'Wedding-day tools', icon: '☀️', label: 'Wedding-day mode', desc: 'A simple phone screen for the day: what’s on now and next, and one-tap calls to the people and vendors involved.', def: 0 },
+  { k: 'checkin', g: 'Wedding-day tools', icon: '🛬', label: 'Guest arrival check-in', desc: 'Tick off families as they arrive, see who is still on the way and call them.', def: 0 },
+  { k: 'sharelink', g: 'Wedding-day tools', icon: '🔗', label: 'Share run sheet by link', desc: 'A view-only link for your event coordinator or caterer: run sheet and starred contacts, no sign-in needed.', def: 0 }
+];
+const FEAT = {}; FEATURES.forEach(f => { FEAT[f.k] = f; });
+/** Is this feature switched on for this planner? */
+const on = k => { const f = FEAT[k]; if (!f) return true; const v = S && S.features && S.features[k]; return v == null ? !!f.def : !!v; };
+// Pages that belong to a feature (pages not listed are always on).
+const ROUTE_FEAT = { tasks: 'tasks', functions: 'functions', runsheet: 'runsheet', rituals: 'rituals', catering: 'catering', stay: 'stay', transport: 'transport', budget: 'budget', vendors: 'vendors', payments: 'payments', shagun: 'shagun', milni: 'milni', shopping: 'shopping', print: 'print', contacts: 'contacts', today: 'daymode', checkin: 'checkin' };
+const routeOn = r => !ROUTE_FEAT[r] || on(ROUTE_FEAT[r]);
 
 function freshState() {
   const st = demoState();
@@ -60,6 +126,7 @@ function freshState() {
   st.rituals.forEach(r => { r.status = 'To arrange'; r.who = rep(r.who); });
   st.milni.forEach(m => { m.bride = ''; m.groom = ''; m.amount = ''; m.done = 'No'; m.gift = m.gift || ''; });
   st.team = st.team.map(rep);
+  st.people = teamToPeople(st.team);
   return st;
 }
 
@@ -72,6 +139,10 @@ function normalize(st) {
   st.cat.perFn = st.cat.perFn || {};
   st.lists = Object.assign({}, base.lists, st.lists || {});
   if (!Array.isArray(st.team)) st.team = base.team;
+  // Planners from before Contacts: the family & team names become contacts once.
+  if (!st.people.length && st.team.length) st.people = teamToPeople(st.team);
+  if (!st.features || typeof st.features !== 'object' || Array.isArray(st.features)) st.features = {};
+  st.msgs = Object.assign(defaultMsgs(), st.msgs && typeof st.msgs === 'object' ? st.msgs : {});
   if (st.totalBudget == null) st.totalBudget = 0;
   if (!st.msg) st.msg = defaultMsg();
   if (!st.cols || typeof st.cols !== 'object') st.cols = {};
@@ -85,7 +156,7 @@ function load() {
   return demoState();
 }
 function save() { if (typeof CLOUD !== 'undefined' && CLOUD.on) { saveCache(); return; } const j = JSON.stringify(S); try { localStorage.setItem(KEY, j); } catch (e) { MEM[KEY] = j; } }
-function dirty() { if (typeof CLOUD !== 'undefined' && CLOUD.readOnly) return; D = null; clearTimeout(saveT); saveT = setTimeout(save, 250); if (typeof CLOUD !== 'undefined' && CLOUD.on) schedulePush(); }
+function dirty() { if (typeof CLOUD !== 'undefined' && CLOUD.readOnly) return; syncTeam(); D = null; clearTimeout(saveT); saveT = setTimeout(save, 250); if (typeof CLOUD !== 'undefined' && CLOUD.on) schedulePush(); }
 
 /* ---------- derived numbers (the "formulas" of the Excel) ---------- */
 const d = () => D || (D = compute());
@@ -259,7 +330,9 @@ function compute() {
 }
 
 /* ---------- team / lists ---------- */
-const TEAM = () => S.team || [];
+// Contacts are the source of the family & team names; S.team keeps a copy for the Excel export and older devices.
+const TEAM = () => { const p = (S.people || []).map(x => x.name).filter(Boolean); return p.length ? p : (S.team || []); };
+function syncTeam() { if (!S || !Array.isArray(S.people)) return; const n = S.people.map(x => x.name).filter(Boolean); if (JSON.stringify(n) !== JSON.stringify(S.team || [])) S.team = n; }
 const LINES = () => S.budgetLines.map(l => l.line);
 const FNS = () => S.functions.filter(f => f.name).map(f => f.name);
 const GROUPS = () => Array.from(d().groups.keys()).sort();

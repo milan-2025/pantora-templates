@@ -12,6 +12,10 @@
 <meta property="og:description" content="Guests, functions, budget, vendors, payments and shagun, shared with your family. Free trial, no card needed.">
 <meta property="og:image" content="https://pandoratemplates.com/planner/lp/og.jpg"><meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.ico">
+<link rel="manifest" href="/planner/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/planner/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Wedding Planner">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 <script>/* Hide the planner until we know whether to show it (prevents a flash of it before the landing page). */
@@ -19,7 +23,7 @@ try { document.documentElement.classList.add(localStorage.getItem('pp_token') ||
 <style>/*CSS*/</style>
 </head>
 <body>
-<div class="top"><button id="burger" aria-label="Menu">☰</button><b>Pandora Wedding Planner</b><span class="sp"></span><span id="sync-m"></span></div>
+<div class="top"><button id="burger" aria-label="Menu">☰</button><b>Pandora Wedding Planner</b><span class="sp"></span><button id="undo-m" class="tb" hidden aria-label="Undo">↶</button><button id="srch-m" class="tb" aria-label="Search">🔍</button><span id="sync-m"></span></div>
 <div class="app">
   <aside class="side">
     <div class="brand">
@@ -27,8 +31,9 @@ try { document.documentElement.classList.add(localStorage.getItem('pp_token') ||
       <div><b>Pandora</b><small>TEMPLATES</small></div>
     </div>
     <div id="planchip"></div>
+    <div class="stools"><button id="srch" type="button">🔍 Search <kbd>Ctrl K</kbd></button><button id="undo" type="button" hidden>↶ Undo</button></div>
     <nav class="nav" id="nav"></nav>
-    <div class="foot"><div id="sync" class="sync"></div>Indian Wedding Planner<br>Open the box. Everything’s ready.<br><a href="/" style="color:#F2A93B">pandoratemplates.com</a></div>
+    <div class="foot"><button id="install" class="btn sm" type="button" hidden>📲 Install the app</button><div id="sync" class="sync"></div>Indian Wedding Planner<br>Open the box. Everything’s ready.<br><a href="/" style="color:#F2A93B">pandoratemplates.com</a></div>
   </aside>
   <main class="main" id="main"></main>
 </div>

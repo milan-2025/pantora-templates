@@ -86,28 +86,30 @@ const UI = { q: {}, f: {}, tab: {} };
 
 /* ---------- router ---------- */
 const NAV = [
-  ['Home', [['dash', '🏠', 'Dashboard']]],
+  ['Home', [['dash', '🏠', 'Dashboard'], ['today', '☀️', 'Wedding Day']]],
   ['Plan', [['tasks', '✅', 'Tasks & Timeline'], ['functions', '🎊', 'Functions'], ['runsheet', '⏰', 'Run Sheet'], ['rituals', '🪔', 'Rituals & Puja']]],
-  ['Guests', [['guests', '👥', 'Guest List & RSVP'], ['catering', '🍽️', 'Catering & Plates']]],
+  ['Guests', [['guests', '👥', 'Guest List & RSVP'], ['checkin', '🛬', 'Arrivals'], ['catering', '🍽️', 'Catering & Plates']]],
   ['Stay & Travel', [['stay', '🏨', 'Hotels & Rooms'], ['transport', '🚐', 'Transport']]],
   ['Money', [['budget', '💰', 'Budget'], ['vendors', '🧾', 'Vendors'], ['payments', '💳', 'Payments']]],
   ['Customs', [['shagun', '🎁', 'Shagun Register'], ['milni', '🤝', 'Milni List'], ['shopping', '🛍️', 'Shopping & Outfits']]],
-  ['Share', [['print', '🖨️', 'Family Handout'], ['sharing', '👪', 'Sharing'], ['activity', '🕘', 'Activity & Restore']]],
-  ['Account', [['plan', '⭐', 'Plan & Billing'], ['setup', '⚙️', 'Setup & Data'], ['account', '👤', 'Account']]]
+  ['Share', [['contacts', '📇', 'Contacts'], ['print', '🖨️', 'Family Handout'], ['sharing', '👪', 'Sharing'], ['activity', '🕘', 'Activity & Restore']]],
+  ['Account', [['plan', '⭐', 'Plan & Billing'], ['features', '🧩', 'Features'], ['setup', '⚙️', 'Setup & Data'], ['account', '👤', 'Account']]]
 ];
 const VIEWS = {};
 let route = 'dash';
-function go(r) { route = VIEWS[r] ? r : 'dash'; try { history.replaceState(null, '', '#' + route); } catch (e) { /* ignore */ } renderAll(); window.scrollTo(0, 0); $('.side').classList.remove('open'); }
+function go(r) { route = VIEWS[r] && routeOn(r) ? r : 'dash'; try { history.replaceState(null, '', '#' + route); } catch (e) { /* ignore */ } renderAll(); window.scrollTo(0, 0); $('.side').classList.remove('open'); }
 function badges() {
   const o = d(); const bd = { tasks: o.tOver, payments: o.payOver.length };
   $$('.nav a').forEach(a => { const n = bd[a.dataset.r]; let b = a.querySelector('.bd'); if (n) { if (!b) { b = el('<span class="bd"></span>'); a.appendChild(b); } b.textContent = n; } else if (b) b.remove(); });
 }
 function renderNav() {
-  $('#nav').innerHTML = NAV.map(g => '<div class="nav-h">' + g[0] + '</div>' + g[1].map(i => '<a data-r="' + i[0] + '" class="' + (i[0] === route ? 'on' : '') + '"><span class="ic">' + i[1] + '</span>' + i[2] + '</a>').join('')).join('');
+  $('#nav').innerHTML = NAV.map(g => [g[0], g[1].filter(i => routeOn(i[0]))]).filter(g => g[1].length).map(g => '<div class="nav-h">' + g[0] + '</div>' + g[1].map(i => '<a data-r="' + i[0] + '" class="' + (i[0] === route ? 'on' : '') + '"><span class="ic">' + i[1] + '</span>' + i[2] + '</a>').join('')).join('');
   badges();
 }
 function renderAll() {
-  renderNav(); planChip();
+  if (!routeOn(route)) { route = 'dash'; try { history.replaceState(null, '', '#dash'); } catch (e) { /* ignore */ } }
+  renderNav(); planChip(); undoBtn();
+  $$('#srch,#srch-m').forEach(b => { b.hidden = !on('search'); });
   const m = $('#main'); m.innerHTML = '';
   const dl = $('#dl-groups'); if (dl) dl.innerHTML = GROUPS().map(g => '<option value="' + esc(g) + '">').join('');
   const dv = $('#dl-vendors'); if (dv) dv.innerHTML = Array.from(new Set(S.vendors.map(v => v.vendor).concat(S.hotels.map(h => h.hotel)).concat(S.vehicles.map(v => v.operator)))).filter(Boolean).map(g => '<option value="' + esc(g) + '">').join('');

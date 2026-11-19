@@ -881,6 +881,10 @@ export interface Planner {
    * Ticked once this order's payment was applied.
    */
   orderPaid?: boolean | null;
+  /**
+   * Set when the couple shares their run sheet by link (pandoratemplates.com/planner/share/<code>). Empty = no link. The couple turns it on or off in the planner.
+   */
+  shareToken?: string | null;
   state?:
     | {
         [k: string]: unknown;
@@ -1776,6 +1780,7 @@ export interface PlannersSelect<T extends boolean = true> {
   orderAmount?: T;
   paymentId?: T;
   orderPaid?: T;
+  shareToken?: T;
   state?: T;
   updatedAt?: T;
   createdAt?: T;

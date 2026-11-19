@@ -28,6 +28,9 @@ const nextConfig: NextConfig = {
       { source: "/stays/host", headers: [...noindex, { key: "X-Frame-Options", value: "DENY" }] },
       { source: "/api/stays/:path*", headers: noindex },
       { source: "/stays/admin-sw.js", headers: [{ key: "Cache-Control", value: "no-cache" }, { key: "Service-Worker-Allowed", value: "/stays/admin" }] },
+      // Wedding planner: offline worker for /planner, and run sheets shared by link stay out of search engines.
+      { source: "/planner/sw.js", headers: [{ key: "Cache-Control", value: "no-cache" }, { key: "Service-Worker-Allowed", value: "/planner" }] },
+      { source: "/planner/share/:token*", headers: [...noindex, { key: "X-Frame-Options", value: "DENY" }] },
     ];
   },
   images: {

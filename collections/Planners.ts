@@ -126,6 +126,16 @@ export const Planners: CollectionConfig = {
         { name: "orderPaid", type: "checkbox", defaultValue: false, admin: { readOnly: true, description: "Ticked once this order's payment was applied." } },
       ],
     },
+    {
+      name: "shareToken",
+      type: "text",
+      index: true,
+      label: "Run sheet link code",
+      admin: {
+        readOnly: true,
+        description: "Set when the couple shares their run sheet by link (pandoratemplates.com/planner/share/<code>). Empty = no link. The couple turns it on or off in the planner.",
+      },
+    },
     // The whole planner (guests, budget, vendors…). Large, so hidden from the admin form.
     { name: "state", type: "json", admin: { hidden: true } },
   ],

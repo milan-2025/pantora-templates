@@ -63,6 +63,13 @@ First-time visitors to `/planner` (and every ad click) see a landing page: hero,
 6. **Activity & Restore** shows who changed what, and can put the planner back to an earlier restore point (kept automatically every 30 minutes of editing, before imports and before deleting 5+ rows).
 7. Every list has a **⚙ Columns** button: show/hide, rename, reorder, and add their own columns (text, number, date, dropdown, yes/no). Dropdown choices are editable under **Setup & Data**.
 8. On phones, lists become tap-to-open cards; no sideways scrolling.
+9. **Features** (Account menu) switches pages and tools on or off for the whole planner, with "Just the essentials", "Standard" and "Everything" presets. Switching off only hides a page; nothing is deleted. Every existing page is on by default; Wedding-day mode, Arrivals and the run sheet link start off.
+10. **Contacts** is one phone book (family & team with phone numbers, vendors, hotels, transport, guests) with call and WhatsApp buttons. Every phone number in the planner has them too. Starred (⭐) contacts show first, in Wedding-day mode, in the Family Handout and on the shared run sheet.
+11. **WhatsApp messages** (Setup & Data): invitation, RSVP reminder, stay & pickup details, thank-you and vendor payment note, each editable, with placeholders like `{name}` and `{hotel}`.
+12. **Phone checks**: numbers are tidied as typed (`098290-12345` → `98290 12345`), wrong-looking ones are flagged, and possible duplicate guests are listed on the Guest List.
+13. **Search** (🔍 or Ctrl+K) finds any guest, vendor, task, payment or contact. **Undo** (↶ or Ctrl+Z) reverses the last changes.
+14. **Wedding-day mode** shows the current function, what's next on the run sheet and one-tap calls; **Arrivals** ticks guests off as they arrive; **Share run sheet by link** gives a view-only page at `/planner/share/<code>` (run sheet and starred contacts only, no guests or money). The couple can turn the link off or replace it at any time.
+15. **Works offline and installs like an app**: once the planner has opened on a device, it opens there without internet and syncs changes when back online ("Install the app" in the sidebar, or Add to Home Screen).
 
 When a trial or plan ends, the planner turns **read-only**: nothing is deleted, it can still be viewed and exported, and editing resumes the moment they upgrade or renew. "Explore the sample planner" works without an account and stays on that device.
 
@@ -88,7 +95,9 @@ The starting plans (Free trial 14 days/30 guests, Family ₹1,499, Grand ₹2,99
 No new environment variables: the planner uses `PAYLOAD_SECRET`, `BREVO_API_KEY` (sign-in codes and invites), the Razorpay keys and the existing Razorpay webhook. Without `BREVO_API_KEY`, in development the sign-in code is filled in for you.
 
 ### For developers
-- App source: `planner-app/` (plain JS + CSS, no build tools). After editing, run `npm run build-planner` to regenerate `public/planner/index.html`, and commit both.
+- App source: `planner-app/` (plain JS + CSS, no build tools). After editing, run `npm run build-planner` to regenerate `public/planner/index.html` and the offline worker `public/planner/sw.js` (its version changes with every build, so phones pick up updates), and commit them.
+- Offline: `planner-app/sw.js` caches the page, its files and fonts (never `/api`). The app keeps the last-opened planner in `localStorage` and opens it from there when the server can't be reached.
+- Run sheet link: `shareToken` on the planner, `POST /api/planner/planners/:id/share`, page `app/planner/share/[token]/route.ts`. What it shows is decided in `runSheetView` (`lib/planner/core.ts`).
 - Server: `lib/planner/core.ts` (merge, limits, tokens; pure and unit-tested), `lib/planner/server.ts` (Payload), routes in `app/api/planner/*`.
 - Collections: `planners`, `planner-plans`, `planner-history`, `planner-logins` (hidden).
 - Sync model: the app sends row-level changes (`{c, id, r}` / `{k, v}` / `{replace}`) with each save; the server applies them under an optimistic lock on `rev` and logs them, so other devices fetch just the changes since their last `rev` (polling every 7 s while visible). Plan limits and read-only states are enforced on the server.

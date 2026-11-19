@@ -5,19 +5,23 @@ VIEWS.dash = function () {
     (o.mode ? '<div class="sub" style="font-size:12.5px;margin-top:6px;opacity:.75">' + esc(o.mode) + ' timeline · ' + o.avail + ' planning days from ' + dshow(s.start) + '</div>' : '') + '</div>' +
     '<div class="cd"><b>' + (o.daysTo == null ? '–' : Math.abs(o.daysTo)) + '</b><span>' + (o.daysTo == null ? 'set the date' : o.daysTo >= 0 ? 'days to go' : 'days since') + '</span></div></div>');
   const bal = o.committed - o.paid;
-  const k = el('<div class="grid g4" style="margin:14px 0">' +
-    kpi('Guests', o.nGuests, o.nGroups + ' families / groups') +
-    kpi('Confirmed', o.conf, o.await + ' awaiting · ' + o.decl + ' declined', 't') +
-    kpi('Budget committed', o.total ? pct(o.committed, o.total) + '%' : '–', short(o.committed) + ' of ' + short(o.total), 'm') +
-    kpi('Paid so far', short(o.paid), short(bal) + ' still to pay', 'c') +
-    kpi('Tasks done', S.tasks.length ? pct(o.tDone, S.tasks.length) + '%' : '–', o.tDone + ' of ' + S.tasks.length + (o.tOver ? ' · <b style="color:#E0675A">' + o.tOver + ' overdue</b>' : '')) +
-    kpi('Rooms booked', o.roomsBooked + ' / ' + o.roomsTotal, o.stayNeedN + ' guests need a stay · ' + short(o.roomCost), 't') +
-    kpi('Shagun received', short(o.shRecv), short(o.shGiven) + ' given', 'm') +
-    kpi('Plates to order', o.fns.reduce((a, f) => a + f.plates, 0), short(o.fns.reduce((a, f) => a + f.food, 0)) + ' estimated food', 'c') + '</div>');
+  const k = el('<div class="grid g4" style="margin:14px 0">' + [
+    kpi('Guests', o.nGuests, o.nGroups + ' families / groups'),
+    kpi('Confirmed', o.conf, o.await + ' awaiting · ' + o.decl + ' declined', 't'),
+    on('budget') && kpi('Budget committed', o.total ? pct(o.committed, o.total) + '%' : '–', short(o.committed) + ' of ' + short(o.total), 'm'),
+    (on('budget') || on('payments')) && kpi('Paid so far', short(o.paid), short(bal) + ' still to pay', 'c'),
+    on('tasks') && kpi('Tasks done', S.tasks.length ? pct(o.tDone, S.tasks.length) + '%' : '–', o.tDone + ' of ' + S.tasks.length + (o.tOver ? ' · <b style="color:#E0675A">' + o.tOver + ' overdue</b>' : '')),
+    on('stay') && kpi('Rooms booked', o.roomsBooked + ' / ' + o.roomsTotal, o.stayNeedN + ' guests need a stay · ' + short(o.roomCost), 't'),
+    on('shagun') && kpi('Shagun received', short(o.shRecv), short(o.shGiven) + ' given', 'm'),
+    on('catering') && kpi('Plates to order', o.fns.reduce((a, f) => a + f.plates, 0), short(o.fns.reduce((a, f) => a + f.food, 0)) + ' estimated food', 'c'),
+    on('checkin') && o.daysTo != null && o.daysTo <= 3 && kpi('Arrived', o.G.filter(g => g.arr).length, 'of ' + o.G.filter(g => g.rsvp !== 'Declined').length + ' expected', 't')
+  ].filter(Boolean).join('') + '</div>');
   /* attention */
   const items = [];
-  const add = (c, t, sub, to) => items.push('<li data-go="' + to + '"><span class="dot ' + c + '"></span><div><b>' + t + '</b><small>' + sub + '</small></div></li>');
+  const add = (c, t, sub, to) => routeOn(to) && items.push('<li data-go="' + to + '"><span class="dot ' + c + '"></span><div><b>' + t + '</b><small>' + sub + '</small></div></li>');
   if (!s.date) add('r', 'Add your wedding date', 'Task deadlines and the countdown depend on it.', 'setup');
+  if (!on('daymode') && o.daysTo != null && o.daysTo >= 0 && o.daysTo <= 7) add('g', 'The wedding is ' + (o.daysTo ? 'in ' + o.daysTo + ' day' + (o.daysTo > 1 ? 's' : '') : 'today') + ': try Wedding-day mode', 'A simple phone screen with what’s next and one-tap calls. Switch it on in Features.', 'features');
+  if (on('phonecheck')) { const gi = guestIssues(); if (gi.bad.size) add('', gi.bad.size + ' guest phone number' + (gi.bad.size > 1 ? 's look' : ' looks') + ' wrong', 'Fix them so WhatsApp invites reach the right person.', 'guests'); }
   if (!o.total) add('r', 'Set your total budget', 'Everything in Budget is calculated from it.', 'budget');
   if (o.tOver) add('r', o.tOver + ' task' + (o.tOver > 1 ? 's are' : ' is') + ' overdue', 'Open Tasks to catch up.', 'tasks');
   if (o.payOver.length) add('r', o.payOver.length + ' payment' + (o.payOver.length > 1 ? 's' : '') + ' overdue', inr(o.payOver.reduce((a, p) => a + num(p.amount), 0)) + ' to settle.', 'payments');
@@ -35,22 +39,23 @@ VIEWS.dash = function () {
   const mx = Math.max.apply(null, o.cats.map(x => Math.max(x.planned, x.committed)).concat([1]));
   const bud = el('<div class="card"><h3>Budget by category <small>planned · committed · paid</small></h3>' + (o.cats.length ? o.cats.map(x => hbar(x.c.name, [{ v: x.planned, c: '#EADFC9' }, { v: x.committed, c: o.catStatus(x) === 'Over budget' ? '#E0675A' : '#1F7A74' }, { v: x.paid, c: '#F2A93B', top: 1 }], mx, short(x.committed) + ' / ' + short(x.planned))).join('') : '<div class="empty">No budget categories yet.</div>') +
     '<div class="legend"><span><i style="background:#EADFC9"></i>Planned</span><span><i style="background:#1F7A74"></i>Committed (selected vendors)</span><span><i style="background:#F2A93B"></i>Paid</span></div></div>');
-  const row1 = el('<div class="grid g32"></div>'); row1.appendChild(bud); row1.appendChild(attn);
+  const row1 = el('<div class="grid ' + (on('budget') ? 'g32' : 'g2') + '"></div>'); if (on('budget')) row1.appendChild(bud); row1.appendChild(attn);
   /* rsvp donut */
   const rs = [{ v: o.conf, c: '#1F7A74', l: 'Confirmed' }, { v: o.await, c: '#F2A93B', l: 'Awaiting' }, { v: o.decl, c: '#E0675A', l: 'Declined' }];
   const rsvp = el('<div class="card"><h3>RSVP status</h3><div class="donutwrap">' + donut(rs, 150, o.nGuests ? pct(o.conf, o.nGuests) + '%' : '–', 'confirmed') + '<div>' + legend(rs) + '<div class="note" style="margin-top:8px">' + o.sent + ' of ' + o.nGuests + ' invitations sent</div></div></div></div>');
   const fx = Math.max.apply(null, o.fns.map(f => f.inv).concat([1]));
   const fnc = el('<div class="card"><h3>Guests by function</h3>' + (o.fns.length ? o.fns.map(f => hbar(f.f.name, [{ v: f.inv, c: '#EFE6F3' }, { v: f.conf, c: '#1F7A74', top: 1 }], fx, f.conf + ' / ' + f.inv)).join('') : '<div class="empty">No functions.</div>') + '</div>');
   /* upcoming */
-  const nextT = S.tasks.filter(t => o.tCalc[t.id].alert !== 'Done' && o.tCalc[t.id].dl).sort((a, b) => o.tCalc[a.id].dl - o.tCalc[b.id].dl).slice(0, 4);
-  const nextP = S.payments.filter(p => p.status !== 'Paid' && p.due).sort((a, b) => a.due < b.due ? -1 : 1).slice(0, 3);
+  const nextT = !on('tasks') ? [] : S.tasks.filter(t => o.tCalc[t.id].alert !== 'Done' && o.tCalc[t.id].dl).sort((a, b) => o.tCalc[a.id].dl - o.tCalc[b.id].dl).slice(0, 4);
+  const nextP = !on('payments') ? [] : S.payments.filter(p => p.status !== 'Paid' && p.due).sort((a, b) => a.due < b.due ? -1 : 1).slice(0, 3);
   const nextF = o.fns.filter(f => f.f.date && pd(f.f.date) >= o.T).sort((a, b) => a.f.date < b.f.date ? -1 : 1).slice(0, 2);
   const up = el('<div class="card"><h3>Coming up</h3><ul class="todo">' +
     nextF.map(f => '<li data-go="functions"><span class="dot g"></span><div><b>' + esc(f.f.name) + '</b><small>' + dshow(f.f.date) + ' · in ' + diff(pd(f.f.date), o.T) + ' days' + (f.f.venue ? ' · ' + esc(f.f.venue) : '') + '</small></div></li>').join('') +
     nextT.map(t => '<li data-go="tasks"><span class="dot"></span><div><b>' + esc(t.task) + '</b><small>Due ' + dshow(fd(o.tCalc[t.id].dl)) + (t.who ? ' · ' + esc(t.who) : '') + '</small></div></li>').join('') +
     nextP.map(p => '<li data-go="payments"><span class="dot r"></span><div><b>' + esc(p.payee || p.line) + ' · ' + inr(p.amount) + '</b><small>' + esc(p.desc || 'Payment') + ' due ' + dshow(p.due) + '</small></div></li>').join('') +
     '</ul></div>');
-  const row2 = el('<div class="grid g3" style="margin-top:14px"></div>'); [rsvp, fnc, up].forEach(x => row2.appendChild(x));
+  const row2 = el('<div class="grid g3" style="margin-top:14px"></div>'); [rsvp, on('functions') ? fnc : null, up].filter(Boolean).forEach(x => row2.appendChild(x));
+  if (on('daymode')) { const b = el('<button class="btn pri" data-go="today" style="margin-top:12px">☀️ Open Wedding-day mode</button>'); const sub = hero.querySelector('div'); if (sub) sub.appendChild(b); }
   const gap = el('<div style="height:14px"></div>');
   return [hero, k, row1, row2];
 };
@@ -118,7 +123,7 @@ VIEWS.functions = function () {
 };
 
 /* ---------- Run sheet / Rituals ---------- */
-function byFnView(opts) {
+function byFnView(opts, extra) {
   UI.f[opts.key] = UI.f[opts.key] || { fn: '' };
   const f = UI.f[opts.key];
   const sortFn = (a, b) => { const fa = S.functions.find(x => x.name === a.fn), fb = S.functions.find(x => x.name === b.fn); const da = (fa && fa.date) || '9', db = (fb && fb.date) || '9'; return da < db ? -1 : da > db ? 1 : (a.time || '') < (b.time || '') ? -1 : 1; };
@@ -128,13 +133,19 @@ function byFnView(opts) {
   const bar = filterBar([{ type: 'search', get: () => f.q || '', set: v => { f.q = v; g.build(); } }, { type: 'sel', label: 'All functions', opts: FNS(), get: () => f.fn, set: v => { f.fn = v; g.build(); } }]);
   const add = el('<button class="btn pri">+ Add</button>'); add.onclick = () => g.add();
   const head = el('<div>' + ph(opts.title, opts.sub) + '</div>'); head.querySelector('.page-h').appendChild(add);
-  upd(); return [head.firstChild, kp, bar, g.root];
+  upd(); const v = [head.firstChild, kp, bar, g.root]; if (extra) extra(v); return v;
 }
 VIEWS.runsheet = () => byFnView({
   key: 'rs', coll: 'runsheet', title: 'Run Sheet', sub: 'The day-of plan: who does what, when, and where. Share it with your planner and family.', sort: true, keys: ['activity', 'who', 'vendor', 'loc', 'notes'], empty: 'No activities yet. Add the first one.',
   summary: () => { const n = S.runsheet.length, dn = S.runsheet.filter(x => x.status === 'Done').length; return '<b>' + n + '</b> activities · <b>' + dn + '</b> done'; },
   blank: () => ({ time: '', activity: '', status: 'Pending' }),
-  cols: [SEL('fn', 'Function', FNS, { w: 140 }), TM('time', 'Start'), T('activity', 'Activity', { w: 320 }), SEL('who', 'Responsible', TEAM, { w: 150 }), T('vendor', 'Vendor / contact', { w: 140, list: 'dl-vendors' }), T('loc', 'Location', { w: 140 }), SEL('status', 'Status', () => L('Run Sheet Status'), { w: 100 }), T('notes', 'Notes', { w: 180 })]
+  cols: [SEL('fn', 'Function', FNS, { w: 140 }), TM('time', 'Start'), T('activity', 'Activity', { w: 320 }), SEL('who', 'Responsible', TEAM, { w: 150, full: 1 }), T('vendor', 'Vendor / contact', { w: 140, list: 'dl-vendors', full: 1 }), T('loc', 'Location', { w: 140 }), SEL('status', 'Status', () => L('Run Sheet Status'), { w: 100 }), T('notes', 'Notes', { w: 180 }),
+    { k: 'calls', label: 'Call', t: 'html', th: 'a', html: r => (whoBtns(r.who) + whoBtns(r.vendor)) || '<span class="note" title="Add phone numbers in Contacts, Vendors, Hotels or Transport">–</span>' }]
+}, v => {
+  if (!on('sharelink')) return;
+  const b = el('<button class="btn">🔗 Share link</button>');
+  b.onclick = () => { const c = shareCard(); if (!c) return; const m = modal(''); const box = $('.modal', m); box.appendChild(c); c.style.margin = '0'; c.style.border = '0'; c.style.padding = '0'; box.appendChild(el('<div class="bar" style="justify-content:flex-end;margin-top:12px"><button class="btn" data-x>Close</button></div>')); $('[data-x]', m).onclick = () => m.remove(); };
+  v[0].insertBefore(b, v[0].lastChild);
 });
 VIEWS.rituals = () => byFnView({
   key: 'rt', coll: 'rituals', title: 'Rituals & Puja Checklist', sub: 'A starter list of items for each function. Edit freely: every family does things a little differently.', keys: ['item', 'qty', 'who', 'source', 'remarks'], empty: 'No items.', sort: true,
@@ -145,25 +156,41 @@ VIEWS.rituals = () => byFnView({
 
 /* ---------- Guests ---------- */
 function waLink(g) {
-  let p = (g.phone || '').replace(/\D/g, ''); if (!p) return '';
-  if (p.length === 10) p = '91' + p;
-  const s = S.settings;
-  const msg = S.msg.replace(/\{name\}/g, g.name || '').replace(/\{bride\}/g, s.bride || '').replace(/\{groom\}/g, s.groom || '').replace(/\{date\}/g, dlong(s.date)).replace(/\{city\}/g, s.city || '');
-  return 'https://wa.me/' + p + '?text=' + encodeURIComponent(msg);
+  if (!phoneDigits(g.phone)) return '';
+  return waHref(g.phone, fillMsg(S.msg, guestVals(g)));
+}
+/** Messages that make sense for this guest, most useful first. */
+function guestChoices(r, after) {
+  const inv = ['invite', 'Invitation', guestVals(r), () => { if (r.invited !== 'Yes') { undoRow('guests', r, 'Marked invite sent to ' + (r.name || 'a guest')); r.invited = 'Yes'; dirty(); after(); } }];
+  const rem = r.rsvp !== 'Confirmed' && r.rsvp !== 'Declined' ? ['remind', 'RSVP reminder', guestVals(r)] : null;
+  const stay = r.stay === 'Yes' || r.transport === 'Yes' || S.roomAlloc.some(a => a.group === gk(r)) || S.transAlloc.some(a => a.group === gk(r)) ? ['stay', 'Stay & pickup', guestVals(r)] : null;
+  return (r.invited === 'Yes' ? [rem, stay, inv] : [inv, rem, stay]).concat([['', 'Blank', '']]);
 }
 VIEWS.guests = function () {
   UI.f.g = UI.f.g || { q: '', side: '', rsvp: '', inv: '', fn: '', stay: '' };
   const f = UI.f.g, kp = el('<div class="grid g4" style="margin-bottom:12px"></div>');
-  const upd = () => { const o = d(); kp.innerHTML = kpi('Guests', o.nGuests, o.nGroups + ' families / groups') + kpi('Invites sent', o.sent, o.nGuests - o.sent + ' to send', 'm') + kpi('Confirmed', o.conf, o.await + ' awaiting', 't') + kpi('Declined', o.decl, 'regrets', 'c'); };
+  const chk = el('<div></div>');
+  let ISS = { dup: new Set(), bad: new Set() };
+  const issues = () => {
+    if (!on('phonecheck')) { chk.innerHTML = ''; f.chk = ''; return; }
+    ISS = guestIssues();
+    const n1 = ISS.dup.size, n2 = ISS.bad.size;
+    chk.innerHTML = n1 || n2 || f.chk ? '<div class="banner noprint"><span>☎️ ' + [n1 ? '<b>' + n1 + '</b> guests may be entered twice (same name, or a number shared by two families)' : '', n2 ? '<b>' + n2 + '</b> phone number' + (n2 > 1 ? 's look' : ' looks') + ' wrong' : ''].filter(Boolean).join(' · ') + (!n1 && !n2 ? 'All fixed. ✔' : '') + '</span><span class="sp"></span>' +
+      (n1 ? '<button class="btn sm' + (f.chk === 'dup' ? ' dark' : '') + '" data-chk="dup">' + (f.chk === 'dup' ? 'Show all guests' : 'Show possible duplicates') + '</button>' : '') + (n2 ? ' <button class="btn sm' + (f.chk === 'bad' ? ' dark' : '') + '" data-chk="bad">' + (f.chk === 'bad' ? 'Show all guests' : 'Show wrong numbers') + '</button>' : '') + (f.chk && !n1 && !n2 ? '<button class="btn sm" data-chk="">Show all guests</button>' : '') + '</div>' : '';
+  };
+  issues();
+  chk.onclick = e => { const b = e.target.closest('[data-chk]'); if (!b) return; f.chk = f.chk === b.dataset.chk ? '' : b.dataset.chk; issues(); g.build(); };
+  const upd = () => { issues(); const o = d(); kp.innerHTML = kpi('Guests', o.nGuests, o.nGroups + ' families / groups') + kpi('Invites sent', o.sent, o.nGuests - o.sent + ' to send', 'm') + kpi('Confirmed', o.conf, o.await + ' awaiting', 't') + kpi('Declined', o.decl, 'regrets', 'c'); };
   const fcols = S.functions.filter(x => x.name && x.active !== 'No').map(x => ({ id: 'fn:' + x.name, k: x.name, label: x.name.slice(0, 4), tip: x.name, t: 'fn', th: 'f', w: 34 }));
   const g = grid({
     coll: 'guests', after: upd, limit: 300, empty: 'No guests yet. Add your first guest, or import your list from Excel in Setup & Data.',
     blank: () => ({ name: '', group: '', side: f.side || '', cat: 'Family', age: 'Adult', invited: 'No', rsvp: 'Pending', stay: 'No', transport: 'No', fn: {} }),
     full: ['group'],
-    filter: r => matchQ(r, ['name', 'group', 'city', 'phone', 'notes'], f.q) && (!f.side || r.side === f.side) && (!f.rsvp || r.rsvp === f.rsvp) && (!f.inv || (f.inv === 'Not sent' ? r.invited !== 'Yes' : r.invited === 'Yes')) && (!f.fn || (r.fn || {})[f.fn]) && (!f.stay || (f.stay === 'Needs stay' ? r.stay === 'Yes' : r.transport === 'Yes')),
-    act: { wa: r => { r.invited = 'Yes'; } },
-    cols: [T('name', 'Guest name', { w: 170, sticky: true }), T('group', 'Family / group', { w: 140, list: 'dl-groups' }), SEL('side', 'Side', () => L('Side'), { w: 100 }), SEL('cat', 'Category', () => L('Guest Category'), { w: 100 }), SEL('age', 'Age', () => L('Age Group'), { w: 80 }), T('city', 'City', { w: 100 }), T('phone', 'Phone', { w: 120 }), SEL('diet', 'Diet', () => L('Diet'), { w: 130 }),
-      { k: 'wa', label: 'Invite', t: 'html', th: 'a', html: r => { const l = waLink(r); return l ? '<a data-act="wa" href="' + l + '" target="_blank" rel="noopener" class="btn sm" style="text-decoration:none;display:inline-block">💬 WhatsApp</a>' : '<span class="note">add phone</span>'; } },
+    filter: r => (!f.chk || ISS[f.chk].has(r.id)) && matchQ(r, ['name', 'group', 'city', 'phone', 'notes'], f.q) && (!f.side || r.side === f.side) && (!f.rsvp || r.rsvp === f.rsvp) && (!f.inv || (f.inv === 'Not sent' ? r.invited !== 'Yes' : r.invited === 'Yes')) && (!f.fn || (r.fn || {})[f.fn]) && (!f.stay || (f.stay === 'Needs stay' ? r.stay === 'Yes' : r.transport === 'Yes')),
+    act: { wa: r => { r.invited = 'Yes'; }, msg: r => { msgPicker({ phone: r.phone, title: 'Message ' + (r.name || 'guest'), choices: guestChoices(r, () => { g.build(); upd(); }) }); return false; } },
+    quick: r => r.phone, quickWa: false,
+    cols: [T('name', 'Guest name', { w: 170, sticky: true }), T('group', 'Family / group', { w: 140, list: 'dl-groups' }), SEL('side', 'Side', () => L('Side'), { w: 100 }), SEL('cat', 'Category', () => L('Guest Category'), { w: 100 }), SEL('age', 'Age', () => L('Age Group'), { w: 80 }), T('city', 'City', { w: 100 }), TEL('phone', 'Phone', { wa: false }), SEL('diet', 'Diet', () => L('Diet'), { w: 130 }),
+      { k: 'wa', label: 'WhatsApp', t: 'html', th: 'a', html: r => { const l = waLink(r); if (r.invited === 'Yes' && on('templates')) return '<button data-act="msg" class="btn sm">💬 Message</button>'; return l ? '<a data-act="wa" href="' + esc(l) + '" target="_blank" rel="noopener" class="btn sm" style="text-decoration:none;display:inline-block">💬 Invite</a>' : phoneDigits(r.phone) ? '<span class="note">check number</span>' : '<span class="note">add phone</span>'; } },
       SEL('invited', 'Sent?', YN, { w: 70 }), SEL('rsvp', 'RSVP', () => L('RSVP'), { w: 100 })]
       .concat(fcols).concat([SEL('stay', 'Stay?', YN, { w: 70 }), T('room', 'Room', { w: 70 }), SEL('transport', 'Transport?', YN, { w: 90 }), T('travel', 'Travel details', { w: 170 }), T('notes', 'Notes', { w: 170 })])
   });
@@ -176,12 +203,12 @@ VIEWS.guests = function () {
     { type: 'sel', label: 'Stay / travel', opts: ['Needs stay', 'Needs transport'], get: () => f.stay, set: v => { f.stay = v; g.build(); } }
   ]);
   const add = el('<button class="btn pri">+ Add guest</button>'); add.onclick = () => g.add();
-  const msgBtn = el('<button class="btn">✎ Invite message</button>');
-  msgBtn.onclick = () => { go('setup'); setTimeout(() => { const t = $('#msgbox'); if (t) { t.scrollIntoView({ block: 'center' }); t.focus(); } }, 50); };
-  const head = el('<div>' + ph('Guest List & RSVP', 'One row per person. Tap <b>Y</b> under a function to invite, again for <b>C</b> (confirmed) or <b>N</b> (declined). The WhatsApp button sends your invite message and marks it as sent.') + '</div>');
+  const msgBtn = el('<button class="btn">✎ ' + (on('templates') ? 'Messages' : 'Invite message') + '</button>');
+  msgBtn.onclick = () => { UI.tab.msg = 'invite'; go('setup'); setTimeout(() => { const t = $('#msgbox'); if (t) { t.scrollIntoView({ block: 'center' }); t.focus(); } }, 50); };
+  const head = el('<div>' + ph('Guest List & RSVP', 'One row per person. Tap <b>Y</b> under a function to invite, again for <b>C</b> (confirmed) or <b>N</b> (declined). The WhatsApp button sends your invite message and marks it as sent' + (on('templates') ? '; after that it offers reminders and stay details' : '') + '.') + '</div>');
   head.querySelector('.page-h').appendChild(msgBtn); head.querySelector('.page-h').appendChild(add);
   upd();
-  return [head.firstChild, kp, bar, g.root];
+  return [head.firstChild, kp, chk, bar, g.root];
 };
 
 /* ---------- Catering ---------- */
