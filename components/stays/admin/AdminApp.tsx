@@ -117,6 +117,7 @@ function Shell({ section, children, nav, setNav, online, toastMsg, me }: { secti
       <a href="#new" onClick={() => setNav(false)} className="s-btn s-btn-accent s-btn-sm mt-3"><Plus className="size-4" /> Add property</a>
       <div className="mt-6 border-t border-line pt-3 text-xs text-muted">
         <Link href="/stays" target="_blank" className="block rounded-lg px-3 py-1.5 hover:bg-plum/5">Open public site ↗</Link>
+        <a href="/api/stays/admin?a=browse" target="_blank" rel="noopener" className="block rounded-lg px-3 py-1.5 font-semibold text-plum hover:bg-plum/5" title="Browse the guest site with host names, numbers and addresses (only you)">Browse site as admin ↗</a>
         <Link href="/admin" className="block rounded-lg px-3 py-1.5 hover:bg-plum/5">Main website admin</Link>
         <button type="button" onClick={signOut} className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left hover:bg-plum/5"><LogOut className="size-3.5" /> Sign out{me ? ` (${me.name})` : ""}</button>
       </div>

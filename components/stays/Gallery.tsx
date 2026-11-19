@@ -117,3 +117,23 @@ export function ShareButton({ title, url }: { title: string; url?: string }) {
   }
   return <button type="button" onClick={share} className="s-btn s-btn-ghost s-btn-sm">{done ? "Link copied" : "Share"}</button>;
 }
+
+/** A row of photos (e.g. one room's) that opens the full-screen viewer. */
+export function PhotoStrip({ photos, title }: { photos: Photo[]; title: string }) {
+  const [open, setOpen] = useState<number | null>(null);
+  if (!photos.length) return null;
+  return (
+    <>
+      <div className="s-scroll-x -mx-1 flex gap-2 px-1">
+        {photos.map((p, i) => (
+          <button key={p.id} type="button" onClick={() => setOpen(i)} className="relative aspect-[4/3] w-44 shrink-0 overflow-hidden rounded-xl bg-sand sm:w-56" aria-label={p.caption || `${title} photo ${i + 1}`}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={p.thumb} alt={p.caption || ""} loading="lazy" className="size-full object-cover transition hover:brightness-95" />
+            {p.caption && <span className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/60 to-transparent px-2 pb-1 pt-4 text-left text-xs text-white">{p.caption}</span>}
+          </button>
+        ))}
+      </div>
+      {open !== null && <Viewer photos={photos} start={open} title={title} onClose={() => setOpen(null)} />}
+    </>
+  );
+}

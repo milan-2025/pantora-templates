@@ -13,7 +13,7 @@ import { cleanAdminInput, cleanHostInput, missingForReview, str, text } from "@/
 import { NEEDS_REASON, stampsFor, transition } from "@/lib/stays/workflow";
 import { createProperty, destroyMedia, mediaAction, offlineMerge, OFFLINE_FIELDS, store, withAdminInput, withHostInput } from "@/lib/stays/actions";
 import {
-  adminFrom, amenityDefs, audit, bustCards, dbs, getSettings, nextHostCode, rid, sameOrigin, tokenHash, type Actor, type C,
+  BROWSE_COOKIE, adminFrom, amenityDefs, audit, bustCards, dbs, getSettings, nextHostCode, rid, sameOrigin, tokenHash, type Actor, type C,
 } from "@/lib/stays/server";
 import { adminProperty, offlineBundle, type StoredProperty } from "@/lib/stays/views";
 
@@ -32,7 +32,7 @@ function row(p: StoredProperty, h: any) {
   const v = adminProperty(p, h);
   const cover = v.media.find((m: any) => m.id === p.coverId && m.type === "image") || v.media.find((m: any) => m.type === "image");
   return {
-    id: v.id, code: v.code, slug: v.slug, title: v.title, ownership: v.ownership, host: v.host ? { id: v.host.id, name: v.host.name, phone: v.host.phone } : null,
+    id: v.id, code: v.code, slug: v.slug, title: v.title, ownership: v.ownership, host: v.host ? { id: v.host.id, name: v.host.name, phone: v.host.phone, whatsapp: v.host.whatsapp } : null,
     status: v.status, statusLabel: v.statusLabel, visibility: v.visibility, availability: v.availability, featured: v.featured, showPrice: v.showPrice,
     city: p.location?.city || "", locality: p.location?.locality || "", society: p.location?.society || "",
     lat: p.location?.lat ?? null, lng: p.location?.lng ?? null,
@@ -59,6 +59,15 @@ export async function GET(req: NextRequest) {
   const c = await dbs();
   const q = req.nextUrl.searchParams;
 
+  if (a === "browse" || a === "browse_off") {
+    // Switch the admin browsing view of the guest site on/off, then go there. Only internal paths are allowed.
+    const to = String(q.get("to") || "");
+    const dest = a === "browse" ? (/^\/(stays|stay\/)[^\s]*$/.test(to) && !to.includes("//") ? to : "/stays") : "/stays/admin";
+    const res = NextResponse.redirect(new URL(dest, siteUrl(req)));
+    res.headers.set("cache-control", "no-store");
+    res.cookies.set({ name: BROWSE_COOKIE, value: a === "browse" ? "1" : "", httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: a === "browse" ? 12 * 3600 : 0 });
+    return res;
+  }
   if (a === "settings") return json({ settings: await getSettings(c), amenities: (await c.amenities.find({}).sort({ category: 1, label: 1 }).toArray()).map((x: any) => ({ key: x._id, label: x.label, category: x.category, custom: !!x.custom })), me: { name: actor.name, email: actor.email } });
 
   if (a === "overview") {

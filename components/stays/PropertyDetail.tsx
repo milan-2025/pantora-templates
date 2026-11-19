@@ -1,18 +1,20 @@
 /** The guest-facing property page (used by /stay/<slug> and share links /stay/s/<token>). Server component. */
-import { BedDouble, Check, CircleSlash, Clock, MapPin, Sparkles } from "lucide-react";
-import type { PublicCard, PublicProperty } from "@/lib/stays/views";
+import Link from "next/link";
+import { BedDouble, Check, CircleSlash, Clock, ExternalLink, MapPin, Navigation, Pencil, Sparkles } from "lucide-react";
+import type { AdminExtras, PublicCard, PublicProperty } from "@/lib/stays/views";
 import type { TemplateKey } from "@/lib/stays/constants";
 import { AVAILABILITY_LABEL } from "@/lib/stays/constants";
+import { inr } from "@/lib/stays/core";
 import { EnquiryButtons, EnquiryQuickLinks } from "./Enquiry";
-import { Gallery, ShareButton, Videos } from "./Gallery";
-import { CardGrid, Facts, Footer, Header, PriceLine, type SiteInfo } from "./ui";
+import { Gallery, PhotoStrip, ShareButton, Videos } from "./Gallery";
+import { CardGrid, ContactButtons, Facts, Footer, Header, PriceLine, type SiteInfo } from "./ui";
 import MapView from "./MapView";
 
 type Site = SiteInfo & { templates: Partial<Record<TemplateKey, string>>; map: { tileUrl: string; attribution: string; defaultLat: number; defaultLng: number; defaultZoom: number } };
 
 const yesNo = (v: unknown) => (v === true ? "Yes" : v === false ? "No" : null);
 
-export function PropertyDetail({ property: p, site, similar, shareId }: { property: PublicProperty; site: Site; similar: PublicCard[]; shareId: string | null }) {
+export function PropertyDetail({ property: p, site, similar, shareId, admin = null }: { property: PublicProperty; site: Site; similar: (PublicCard & { admin?: AdminExtras })[]; shareId: string | null; admin?: AdminExtras | null }) {
   const r = p.rooms;
   const config = [
     ["Bedrooms", r.bedrooms], ["Bathrooms", r.bathrooms], ["Attached bathrooms", r.attachedBathrooms], ["Beds", r.beds], ["Bed setup", r.bedConfig || null],
@@ -31,7 +33,7 @@ export function PropertyDetail({ property: p, site, similar, shareId }: { proper
 
   return (
     <>
-      <Header site={site} />
+      <Header site={site} admin={!!admin} />
       <main className="mx-auto max-w-6xl px-4 pb-28 pt-5 sm:px-6 lg:pb-10">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div className="min-w-0">
@@ -43,6 +45,8 @@ export function PropertyDetail({ property: p, site, similar, shareId }: { proper
           </div>
           <ShareButton title={p.title} />
         </div>
+
+        {admin && <AdminPanel a={admin} title={p.title} code={p.code} />}
 
         <Gallery photos={p.photos} title={p.title} />
 
@@ -63,7 +67,7 @@ export function PropertyDetail({ property: p, site, similar, shareId }: { proper
                 <h2 id="h-feat" className="font-display text-2xl">What makes it special</h2>
                 <ul className="mt-4 grid gap-3 sm:grid-cols-2">
                   {p.allFeatures.map((f) => (
-                    <li key={f} className="flex items-center gap-3 rounded-2xl bg-paper p-3 ring-1 ring-line"><Sparkles className="size-5 shrink-0 text-marigold" aria-hidden /><span className="font-medium text-plum">{f}</span></li>
+                    <li key={f} className="flex items-center gap-3 rounded-2xl bg-white p-3 ring-1 ring-line"><Sparkles className="size-5 shrink-0 text-marigold" aria-hidden /><span className="font-medium text-plum">{f}</span></li>
                   ))}
                 </ul>
               </section>
@@ -73,6 +77,31 @@ export function PropertyDetail({ property: p, site, similar, shareId }: { proper
               <section aria-labelledby="h-about">
                 <h2 id="h-about" className="font-display text-2xl">About this stay</h2>
                 <p className="s-prose mt-3 text-[15px] text-charcoal">{p.description}</p>
+              </section>
+            )}
+
+            {p.roomSections.rooms.length > 0 && (
+              <section aria-labelledby="h-rbr">
+                <h2 id="h-rbr" className="font-display text-2xl">Room by room</h2>
+                <div className="mt-4 space-y-6">
+                  {p.roomSections.rooms.map((room) => (
+                    <article key={room.id} className="rounded-2xl border border-line p-4">
+                      <h3 className="font-sans text-lg font-semibold text-plum">{room.name}</h3>
+                      {room.description && <p className="s-prose mt-1 text-[15px] text-charcoal">{room.description}</p>}
+                      {room.amenities.length > 0 && (
+                        <ul className="mt-3 flex flex-wrap gap-1.5">{room.amenities.map((a) => <li key={a} className="inline-flex items-center gap-1 rounded-full bg-mint px-2.5 py-1 text-xs font-medium text-teal"><Check className="size-3" aria-hidden />{a}</li>)}</ul>
+                      )}
+                      {room.media.some((m) => m.type === "image") && <div className="mt-3"><PhotoStrip photos={room.media.filter((m) => m.type === "image")} title={`${p.title}: ${room.name}`} /></div>}
+                      {room.media.some((m) => m.type === "video") && <div className="mt-3"><Videos videos={room.media.filter((m) => m.type === "video")} /></div>}
+                    </article>
+                  ))}
+                  {p.roomSections.other.length > 0 && (
+                    <article className="rounded-2xl border border-line p-4">
+                      <h3 className="font-sans text-lg font-semibold text-plum">More photos</h3>
+                      <div className="mt-3"><PhotoStrip photos={p.roomSections.other} title={p.title} /></div>
+                    </article>
+                  )}
+                </div>
               </section>
             )}
 
@@ -118,7 +147,7 @@ export function PropertyDetail({ property: p, site, similar, shareId }: { proper
                     ))}
                   </dl>
                 )}
-                {pol.rules && <p className="s-prose mt-4 rounded-2xl bg-paper p-4 text-[15px] ring-1 ring-line">{pol.rules}</p>}
+                {pol.rules && <p className="s-prose mt-4 rounded-2xl bg-cream/60 p-4 text-[15px] ring-1 ring-line">{pol.rules}</p>}
               </section>
             )}
 
@@ -170,11 +199,64 @@ export function PropertyDetail({ property: p, site, similar, shareId }: { proper
       </main>
 
       {/* phones: price + main action always in reach */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper/95 px-4 py-3 backdrop-blur lg:hidden" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/95 px-4 py-3 backdrop-blur lg:hidden" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
         <EnquiryButtons {...enquiry} layout="bar" priceSlot={p.price ? <PriceLine price={p.price} /> : <span className="text-sm text-muted">Ask for price</span>} />
         <EnquiryQuickLinks {...enquiry} />
       </div>
       <Footer site={site} />
     </>
+  );
+}
+
+/** Admin browsing view: the private details you need when answering an enquiry. */
+function AdminPanel({ a, title, code }: { a: AdminExtras; title: string; code: string }) {
+  const greet = (name: string) => `Hi ${name}, about ${title} (${code}):`;
+  return (
+    <section aria-label="Private details (admin only)" className="mb-5 rounded-3xl border-2 border-plum bg-lavender/40 p-4 sm:p-5">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="rounded-full bg-plum px-2.5 py-1 text-xs font-semibold text-white">Admin only</span>
+        <span className="text-sm font-semibold text-plum">{a.statusLabel} · {a.visibility}{a.archived ? " · archived" : ""}{!a.showPrice ? " · price hidden for guests" : ""}</span>
+        <Link href={`/stays/admin#p/${a.id}`} className="ml-auto inline-flex items-center gap-1 text-sm font-medium text-plum underline"><Pencil className="size-3.5" /> Edit in dashboard</Link>
+      </div>
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted">{a.ownership === "own" ? "Own property" : "Host"}</p>
+          {a.host ? (
+            <>
+              <p className="mt-1 text-lg font-semibold text-plum">{a.host.name} <span className="text-xs font-normal text-muted">{a.host.hostCode}</span></p>
+              {(a.host.ownerName || a.ownerName) && <p className="text-sm text-muted">Owner: {a.host.ownerName || a.ownerName}</p>}
+              {a.host.phone && <p className="mt-1 text-sm">Phone: <strong>{a.host.phone}</strong>{a.host.whatsapp && a.host.whatsapp !== a.host.phone ? <> · WhatsApp: <strong>{a.host.whatsapp}</strong></> : null}</p>}
+              <div className="mt-2"><ContactButtons phone={a.host.whatsapp || a.host.phone} greet={greet(a.host.name)} /></div>
+              {a.host.whatsapp && a.host.phone && a.host.whatsapp !== a.host.phone && <div className="mt-2"><ContactButtons phone={a.host.phone} greet={greet(a.host.name)} /></div>}
+            </>
+          ) : <p className="mt-1 text-sm text-muted">{a.ownerName ? `Owner: ${a.ownerName}` : "No host linked"}</p>}
+          {a.contact && (
+            <div className="mt-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted">Property contact</p>
+              <p className="mt-1 font-semibold text-plum">{a.contact.name || "Contact"} · <span className="font-normal">{a.contact.phone}</span></p>
+              <div className="mt-2"><ContactButtons phone={a.contact.phone} greet={greet(a.contact.name || "")} /></div>
+            </div>
+          )}
+        </div>
+        <div className="space-y-3 text-sm">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted">Exact address</p>
+            <p className="mt-1 text-charcoal">{a.address || "Not added"}</p>
+            {a.directions && <a href={a.directions} target="_blank" rel="noopener noreferrer" className="s-btn s-btn-ghost s-btn-sm mt-2 !bg-white"><Navigation className="size-3.5" /> Directions</a>}
+          </div>
+          {a.airbnbUrl && <a href={a.airbnbUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-teal underline">Airbnb listing <ExternalLink className="size-3.5" /></a>}
+          <table className="w-full max-w-sm text-sm">
+            <thead><tr className="text-left text-xs text-muted"><th className="font-medium"> </th><th className="font-medium">Weekday</th><th className="font-medium">Weekend</th></tr></thead>
+            <tbody>
+              <tr><td className="pr-3 text-muted">Guest price</td><td>{inr(a.listing.weekday) || "—"}</td><td>{inr(a.listing.weekend) || "—"}</td></tr>
+              <tr><td className="pr-3 text-muted">Landing</td><td>{inr(a.landing.weekday) || "—"}</td><td>{inr(a.landing.weekend) || "—"}</td></tr>
+              <tr className={a.margins.negative ? "text-coral" : "font-semibold text-teal"}><td className="pr-3">Margin</td><td>{a.margins.weekday !== null ? `${inr(a.margins.weekday)} (${a.margins.weekdayPct}%)` : "—"}</td><td>{a.margins.weekend !== null ? `${inr(a.margins.weekend)} (${a.margins.weekendPct}%)` : "—"}</td></tr>
+            </tbody>
+          </table>
+          {a.adminNotes && <div><p className="text-xs font-semibold uppercase tracking-wide text-muted">Private notes</p><p className="s-prose mt-1">{a.adminNotes}</p></div>}
+          {a.hostNotes && <div><p className="text-xs font-semibold uppercase tracking-wide text-muted">Host&apos;s notes</p><p className="s-prose mt-1">{a.hostNotes}</p></div>}
+        </div>
+      </div>
+    </section>
   );
 }

@@ -44,7 +44,8 @@
 
 @layer base {
   html { overflow-x: clip; -webkit-text-size-adjust: 100%; }
-  body { background: var(--cream); color: var(--charcoal); overflow-x: clip; }
+  /* Guest pages are white; the host portal and admin dashboard wrap themselves in cream. */
+  body { background: #fff; color: var(--charcoal); overflow-x: clip; }
   h1, h2, h3 { color: var(--plum); }
   :focus-visible { outline: 2px solid var(--marigold); outline-offset: 2px; }
   input, select, textarea { font: inherit; }

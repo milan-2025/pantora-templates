@@ -240,12 +240,12 @@ function Editor({ id, me, onSaved }: { id: string | null; me: Me; onSaved: () =>
       {p?.status === "published" && p.visibility === "public" && <Link href={`/stay/${p.slug}`} target="_blank" className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-teal underline">View the live page <ExternalLink className="size-3.5" /></Link>}
 
       <div className="mt-5" onChangeCapture={() => setDirty(true)} onClickCapture={(e) => { if ((e.target as HTMLElement).closest("button[aria-pressed]")) setDirty(true); }}>
-        <PropertyForm role="host" value={form} onChange={(v) => { setForm(v); setDirty(true); }} amenities={me.amenities} opts={me.settings} />
+        <PropertyForm role="host" value={form} onChange={(v) => { setForm(v); setDirty(true); }} amenities={me.amenities} opts={me.settings} code={p?.code} />
       </div>
 
       <div className="mt-4">
         <Section title={`Photos and videos (${p?.media.length || 0})`} open>
-          {p ? <MediaManager<HostProp> base="host" propertyId={p.id} media={p.media} coverId={p.coverId} live={live} onChange={(x) => setP(x)} /> : <p className="text-sm text-muted">Save the property first, then add photos and videos.</p>}
+          {p ? <MediaManager<HostProp> base="host" propertyId={p.id} media={p.media} coverId={p.coverId} live={live} onChange={(x) => setP(x)} rooms={(p.roomList as { id: string; name: string }[]) || []} /> : <p className="text-sm text-muted">Save the property first, then add photos and videos.</p>}
         </Section>
       </div>
 

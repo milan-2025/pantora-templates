@@ -22,5 +22,5 @@ export default async function StaysAdminPage() {
   const h = await headers();
   const admin = await adminFrom(new Request("http://local/stays/admin", { headers: h }));
   if (!admin) redirect("/admin/login?redirect=%2Fstays%2Fadmin");
-  return <AdminApp />;
+  return <div className="min-h-dvh bg-cream"><AdminApp /></div>;
 }

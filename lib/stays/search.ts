@@ -54,7 +54,10 @@ export const priceOf = (c: PublicCard, basis: SearchQuery["priceBasis"] = "from"
 export function matches(c: PublicCard, q: SearchQuery): boolean {
   if (q.q) {
     const words = norm(q.q).split(/\s+/).filter(Boolean);
-    const hay = norm([c.title, c.code, c.place, c.propertyType, c.category, c.shortDescription, ...(c.allFeatures || [])].join(" "));
+    const adm = (c as PublicCard & { admin?: { host: { name: string; phone: string } | null; contact: { name: string; phone: string } | null; address: string } }).admin;
+    const hay = norm([c.title, c.code, c.place, c.propertyType, c.category, c.shortDescription, ...(c.allFeatures || []),
+      // admin browsing view: also find by host name/number, caretaker and full address
+      ...(adm ? [adm.host?.name, adm.host?.phone, adm.contact?.name, adm.contact?.phone, adm.address] : [])].join(" "));
     if (!words.every((w) => hay.includes(w))) return false;
   }
   if (q.city && !has(c.city, q.city)) return false;

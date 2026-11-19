@@ -25,6 +25,8 @@ export type MediaItem = {
   removalRequested: boolean;
   by: "admin" | "host";
   at: number;
+  /** Which room (from the property's room list) this photo/video shows. */
+  roomId?: string | null;
 };
 
 export const IMAGE_FORMATS = ["jpg", "jpeg", "png", "webp", "heic", "heif", "avif"];

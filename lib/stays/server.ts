@@ -186,6 +186,25 @@ export async function adminFrom(req: Request): Promise<Actor | null> {
   }
 }
 
+// ---------- admin browsing view of the guest site ----------
+// Turned on from the dashboard (/api/stays/admin?a=browse sets this cookie). Private details are only shown when the
+// cookie is set AND the request carries a valid admin login, so the cookie on its own reveals nothing.
+export const BROWSE_COOKIE = "stay_admin_view";
+export async function browsingAdmin(headers: Headers): Promise<Actor | null> {
+  const on = (headers.get("cookie") || "").split(/;\s*/).some((c) => c === `${BROWSE_COOKIE}=1`);
+  if (!on) return null;
+  return adminFrom(new Request("http://local/", { headers }));
+}
+
+/** Every non-archived property as a card with the admin-only extras (host, contacts, address, notes). Not cached. */
+export async function adminCards(c: C) {
+  const { adminExtras } = await import("./views");
+  const docs: StoredProperty[] = await c.properties.find({ archived: { $ne: true } }).toArray();
+  const hosts = await c.hosts.find({ _id: { $in: [...new Set(docs.map((d) => d.hostId).filter(Boolean))] } }).toArray();
+  const hmap = new Map<string, any>(hosts.map((h: any) => [h._id, h]));
+  return docs.map((p) => ({ ...publicCard(p, true), admin: adminExtras(p, p.hostId ? hmap.get(p.hostId) : null) }));
+}
+
 // ---------- sign-in: hosts (email + password, own cookie) ----------
 
 export const HOST_COOKIE = "stay_host";

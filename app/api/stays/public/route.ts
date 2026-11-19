@@ -10,13 +10,15 @@ import { ENQUIRY_TYPES } from "@/lib/stays/constants";
 import { cleanDate, cleanGuests, CODE_RE } from "@/lib/stays/core";
 import { str } from "@/lib/stays/property";
 import { destinations, parseQuery, search, suggest } from "@/lib/stays/search";
-import { amenityDefs, dbs, getSettings, listedCards, publicSettings, rid, sameOrigin } from "@/lib/stays/server";
+import { adminCards, amenityDefs, browsingAdmin, dbs, getSettings, listedCards, publicSettings, rid, sameOrigin } from "@/lib/stays/server";
 import { guestCanView, publicProperty, type StoredProperty } from "@/lib/stays/views";
 
 export const dynamic = "force-dynamic";
 
 const json = (v: unknown, status = 200, cache = false) =>
-  NextResponse.json(v, { status, headers: cache ? { "cache-control": "public, max-age=30, stale-while-revalidate=120" } : { "cache-control": "no-store" } });
+  NextResponse.json(v, { status, headers: cache ? { "cache-control": "public, max-age=30, stale-while-revalidate=120", vary: "Cookie" } : { "cache-control": "no-store" } });
+
+const privateJson = (v: unknown) => NextResponse.json(v, { headers: { "cache-control": "private, no-store", vary: "Cookie" } });
 
 export async function GET(req: NextRequest) {
   const a = req.nextUrl.searchParams.get("a") || "";
@@ -25,17 +27,18 @@ export async function GET(req: NextRequest) {
     const [s, am] = await Promise.all([getSettings(c), amenityDefs(c)]);
     return json({ settings: publicSettings(s), amenities: am }, 200, true);
   }
-  if (a === "search") {
-    const cards = await listedCards(c);
-    return json(search(cards, parseQuery(req.nextUrl.searchParams)), 200, true);
-  }
-  if (a === "suggest") return json(suggest(await listedCards(c), req.nextUrl.searchParams.get("q") || ""), 200, true);
-  if (a === "destinations") return json(destinations(await listedCards(c)), 200, true);
-  if (a === "map") {
-    // Every listed property on the map: approximate positions only.
+  if (["search", "suggest", "destinations", "map"].includes(a)) {
+    // Admin browsing view: every property with private extras, never cached anywhere.
+    const admin = await browsingAdmin(req.headers);
+    const cards = admin ? await adminCards(c) : await listedCards(c);
+    const out = (v: unknown) => (admin ? privateJson(v) : json(v, 200, true));
+    if (a === "search") return out(search(cards, parseQuery(req.nextUrl.searchParams)));
+    if (a === "suggest") return out(suggest(cards, req.nextUrl.searchParams.get("q") || ""));
+    if (a === "destinations") return out(destinations(cards));
+    // Map: approximate positions only (also in the admin view; exact ones are on the property page).
     const q = parseQuery(req.nextUrl.searchParams);
-    const r = search(await listedCards(c), { ...q, page: 1, perPage: 100000 });
-    return json(r.results.filter((x) => x.approx).map((x) => ({ code: x.code, slug: x.slug, title: x.title, approx: x.approx, place: x.place, price: x.price, cover: x.cover, maxGuests: x.maxGuests, bedrooms: x.bedrooms })), 200, true);
+    const r = search(cards, { ...q, page: 1, perPage: 100000 });
+    return out(r.results.filter((x) => x.approx).map((x) => ({ code: x.code, slug: x.slug, title: x.title, approx: x.approx, place: x.place, price: x.price, cover: x.cover, maxGuests: x.maxGuests, bedrooms: x.bedrooms })));
   }
   if (a === "property") {
     const code = String(req.nextUrl.searchParams.get("code") || "").toUpperCase();
@@ -52,6 +55,7 @@ export async function POST(req: NextRequest) {
   if (!sameOrigin(req)) return json({ error: "Forbidden" }, 403);
   if (a !== "click") return json({ error: "Unknown request" }, 400);
   if (!rateLimit(`stay-click:${clientIp(req)}`, 40, 3600_000)) return json({ ok: true, counted: false });
+  if (await browsingAdmin(req.headers)) return json({ ok: true, counted: false }); // your own clicks aren't enquiries
   const b: any = await req.json().catch(() => ({}));
   const c = await dbs();
   const type = (ENQUIRY_TYPES as readonly string[]).includes(b.type) ? b.type : "simple";

@@ -24,7 +24,11 @@ export type StoredProperty = {
   amenities: string[]; features: string[];
   policies: Record<string, string | boolean | null>;
   pricing: { landing: PricePair; listing: PricePair };
-  private: { airbnbUrl: string; adminNotes: string; ownerName: string; hostNotes: string };
+  private: { airbnbUrl: string; adminNotes: string; ownerName: string; hostNotes: string; contactName?: string; contactPhone?: string };
+  /** Custom words for the property's address (/stay/<words>-<ID>); empty = use the title. */
+  slugText?: string;
+  /** Rooms (living room, bedroom 1 …) with their own description and amenities; photos point to a room by roomId. */
+  roomList?: Room[];
   media: MediaItem[]; coverId: string | null;
   hostChanges: { data: Record<string, unknown>; at: number } | null;
   publishRequested: boolean;
@@ -34,8 +38,34 @@ export type StoredProperty = {
 };
 
 export type AmenityDef = { key: string; label: string; category: string };
+export type Room = { id: string; name: string; description: string; amenities: string[] };
+
+/** The words-plus-ID address of a property (custom words when set, else the title). */
+export const slugOf = (p: Pick<StoredProperty, "title" | "code" | "slugText">) => propertySlug(p.slugText || p.title, p.code);
+
+/** Media ordered room by room (in the order rooms are listed), untagged last; order inside a room is kept. */
+export function byRoom<T extends { roomId?: string | null }>(media: T[], rooms: Room[] = []): T[] {
+  const rank = new Map(rooms.map((r, i) => [r.id, i]));
+  const key = (m: T) => (m.roomId && rank.has(m.roomId) ? rank.get(m.roomId)! : rooms.length);
+  return media.map((m, i) => ({ m, i })).sort((a, b) => key(a.m) - key(b.m) || a.i - b.i).map((x) => x.m);
+}
 
 const visibleMedia = (p: StoredProperty) => (p.media || []).filter((m) => !m.pending);
+const coverFirst = (list: MediaItem[], coverId: string | null) => {
+  const c = list.find((m) => m.id === coverId);
+  return c ? [c, ...list.filter((m) => m !== c)] : list;
+};
+
+/** Each room with its description, amenities and photos/videos; then the untagged photos as "More photos". */
+function roomSections(p: StoredProperty, media: MediaItem[]) {
+  const rooms = (p.roomList || []).map((r) => ({
+    id: r.id, name: r.name, description: r.description, amenities: r.amenities,
+    media: guestMedia(media.filter((m) => m.roomId === r.id)),
+  }));
+  const known = new Set(rooms.map((r) => r.id));
+  const other = guestMedia(media.filter((m) => m.type === "image" && !(m.roomId && known.has(m.roomId))));
+  return { rooms, other };
+}
 
 function guestMedia(list: MediaItem[]) {
   return list.map((m) =>
@@ -65,7 +95,7 @@ export function publicCard(p: StoredProperty, showPrice: boolean) {
   const price = showPrice ? { weekday: p.pricing?.listing?.weekday ?? null, weekend: p.pricing?.listing?.weekend ?? null, from: fromPrice(p.pricing?.listing || { weekday: null, weekend: null }) } : null;
   return {
     code: p.code,
-    slug: propertySlug(p.title, p.code),
+    slug: slugOf(p),
     title: p.title,
     shortDescription: p.shortDescription,
     propertyType: p.propertyType,
@@ -115,8 +145,10 @@ export function publicProperty(p: StoredProperty, showPrice: boolean, amenityDef
       smoking: pol.smoking ?? "", alcohol: pol.alcohol ?? "", visitors: pol.visitors ?? "", ageRestriction: pol.ageRestriction ?? "",
       idRequirements: pol.idRequirements ?? "", rules: pol.rules ?? "",
     },
-    photos: guestMedia(media.filter((m) => m.type === "image")),
+    // Cover first, then room by room.
+    photos: guestMedia(coverFirst(byRoom(media.filter((m) => m.type === "image"), p.roomList), p.coverId)),
     videos: guestMedia(media.filter((m) => m.type === "video")),
+    roomSections: roomSections(p, media),
     state: p.location?.state || "",
   };
 }
@@ -126,7 +158,7 @@ export type PublicProperty = ReturnType<typeof publicProperty>;
 export function hostProperty(p: StoredProperty) {
   const l = p.location || ({} as StoredProperty["location"]);
   return {
-    id: p._id, code: p.code, slug: propertySlug(p.title, p.code),
+    id: p._id, code: p.code, slug: slugOf(p),
     title: p.title, shortDescription: p.shortDescription, description: p.description, propertyType: p.propertyType, category: p.category,
     status: p.status, statusLabel: STATUS_LABEL[p.status], visibility: p.visibility, availability: p.availability,
     location: { address: l.address, society: l.society, street: l.street, locality: l.locality, city: l.city, state: l.state, pin: l.pin, country: l.country, lat: l.lat, lng: l.lng, mapsUrl: l.mapsUrl },
@@ -134,7 +166,9 @@ export function hostProperty(p: StoredProperty) {
     landing: { weekday: p.pricing?.landing?.weekday ?? null, weekend: p.pricing?.landing?.weekend ?? null },
     airbnbUrl: p.private?.airbnbUrl || "",
     hostNotes: p.private?.hostNotes || "",
-    media: (p.media || []).map((m) => ({ id: m.id, type: m.type, url: m.url, thumb: m.type === "image" ? imgUrl(m.url, 320, 240) : posterUrl(m.url, 320), caption: m.caption, pending: m.pending, removalRequested: m.removalRequested, by: m.by })),
+    contactName: p.private?.contactName || "", contactPhone: p.private?.contactPhone || "",
+    roomList: p.roomList || [],
+    media: (p.media || []).map((m) => ({ id: m.id, type: m.type, url: m.url, thumb: m.type === "image" ? imgUrl(m.url, 320, 240) : posterUrl(m.url, 320), caption: m.caption, pending: m.pending, removalRequested: m.removalRequested, by: m.by, roomId: m.roomId || null })),
     coverId: p.coverId,
     hostChangesPending: !!p.hostChanges,
     pendingChanges: p.hostChanges?.data || null,
@@ -147,14 +181,16 @@ export function hostProperty(p: StoredProperty) {
 /** Everything, for the administrator, plus calculated margins. */
 export function adminProperty(p: StoredProperty, host?: { _id: string; name: string; phone?: string; whatsapp?: string; email?: string; hostCode?: string } | null) {
   return {
-    id: p._id, code: p.code, slug: propertySlug(p.title, p.code), ownership: p.ownership, hostId: p.hostId,
+    id: p._id, code: p.code, slug: slugOf(p), ownership: p.ownership, hostId: p.hostId,
     host: host ? { id: host._id, name: host.name, phone: host.phone || "", whatsapp: host.whatsapp || "", email: host.email || "", hostCode: host.hostCode || "" } : null,
     title: p.title, shortDescription: p.shortDescription, description: p.description, propertyType: p.propertyType, category: p.category,
     status: p.status, statusLabel: STATUS_LABEL[p.status], visibility: p.visibility, availability: p.availability, featured: !!p.featured, showPrice: p.showPrice !== false,
     location: p.location, approx: p.approx, rooms: p.rooms, amenities: p.amenities, features: p.features, policies: p.policies,
     pricing: p.pricing, margins: margins(p.pricing || { landing: { weekday: null, weekend: null }, listing: { weekday: null, weekend: null } }),
     airbnbUrl: p.private?.airbnbUrl || "", adminNotes: p.private?.adminNotes || "", ownerName: p.private?.ownerName || "", hostNotes: p.private?.hostNotes || "",
-    media: (p.media || []).map((m) => ({ ...m, thumb: m.type === "image" ? imgUrl(m.url, 320, 240) : posterUrl(m.url, 320) })),
+    contactName: p.private?.contactName || "", contactPhone: p.private?.contactPhone || "",
+    slugText: p.slugText || "", roomList: p.roomList || [],
+    media: (p.media || []).map((m) => ({ ...m, roomId: m.roomId || null, thumb: m.type === "image" ? imgUrl(m.url, 320, 240) : posterUrl(m.url, 320) })),
     coverId: p.coverId, hostChanges: p.hostChanges, publishRequested: !!p.publishRequested, review: p.review, archived: !!p.archived,
     createdAt: p.createdAt, updatedAt: p.updatedAt, approvedAt: p.approvedAt ?? null, publishedAt: p.publishedAt ?? null,
     submittedAt: p.submittedAt ?? null, lastVerifiedAt: p.lastVerifiedAt ?? null,
@@ -173,3 +209,29 @@ export function offlineBundle(p: StoredProperty, amenityDefs: AmenityDef[]) {
     updatedAt: p.updatedAt,
   };
 }
+
+type HostLite = { _id: string; name: string; phone?: string; whatsapp?: string; hostCode?: string; ownerName?: string } | null | undefined;
+
+/**
+ * Extra details for the ADMIN-ONLY browsing view of the guest site (never sent unless the request carries a valid
+ * admin login AND the admin switched browsing view on). Includes landing prices and margins.
+ */
+export function adminExtras(p: StoredProperty, host: HostLite) {
+  const l = p.location || ({} as StoredProperty["location"]);
+  const exact = l.lat !== null && l.lng !== null && l.lat !== undefined ? `${l.lat},${l.lng}` : "";
+  return {
+    id: p._id, status: p.status, statusLabel: STATUS_LABEL[p.status], visibility: p.visibility, archived: !!p.archived, showPrice: p.showPrice !== false,
+    ownership: p.ownership,
+    host: host ? { name: host.name, ownerName: host.ownerName || "", hostCode: host.hostCode || "", phone: host.phone || "", whatsapp: host.whatsapp || host.phone || "" } : null,
+    ownerName: p.private?.ownerName || "",
+    contact: p.private?.contactPhone ? { name: p.private?.contactName || "", phone: p.private.contactPhone } : null,
+    // Full address, adding society/street/locality/… only when the typed address doesn't already contain them.
+    address: [l.address, ...[l.society, l.street, l.locality, l.city, l.state, l.pin].filter((x) => x && !(l.address || "").toLowerCase().includes(x.toLowerCase()))].filter(Boolean).join(", "),
+    directions: l.mapsUrl || (exact ? `https://www.google.com/maps/search/?api=1&query=${exact}` : ""),
+    airbnbUrl: p.private?.airbnbUrl || "", adminNotes: p.private?.adminNotes || "", hostNotes: p.private?.hostNotes || "",
+    listing: { weekday: p.pricing?.listing?.weekday ?? null, weekend: p.pricing?.listing?.weekend ?? null },
+    landing: { weekday: p.pricing?.landing?.weekday ?? null, weekend: p.pricing?.landing?.weekend ?? null },
+    margins: margins(p.pricing || { landing: { weekday: null, weekend: null }, listing: { weekday: null, weekend: null } }),
+  };
+}
+export type AdminExtras = ReturnType<typeof adminExtras>;
