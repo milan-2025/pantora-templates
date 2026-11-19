@@ -60,18 +60,20 @@ const coverFirst = (list: MediaItem[], coverId: string | null) => {
 function roomSections(p: StoredProperty, media: MediaItem[]) {
   const rooms = (p.roomList || []).map((r) => ({
     id: r.id, name: r.name, description: r.description, amenities: r.amenities,
-    media: guestMedia(media.filter((m) => m.roomId === r.id)),
+    media: guestMedia(media.filter((m) => m.roomId === r.id), p.roomList),
   }));
   const known = new Set(rooms.map((r) => r.id));
-  const other = guestMedia(media.filter((m) => m.type === "image" && !(m.roomId && known.has(m.roomId))));
+  const other = guestMedia(media.filter((m) => m.type === "image" && !(m.roomId && known.has(m.roomId))), p.roomList);
   return { rooms, other };
 }
 
-function guestMedia(list: MediaItem[]) {
+function guestMedia(list: MediaItem[], rooms: Room[] = []) {
+  const names = new Map(rooms.map((r) => [r.id, r.name]));
+  const room = (m: MediaItem) => (m.roomId && names.has(m.roomId) ? { roomId: m.roomId, room: names.get(m.roomId)! } : { roomId: null, room: "" });
   return list.map((m) =>
     m.type === "image"
-      ? { id: m.id, type: "image" as const, src: imgUrl(m.url, 1600), thumb: imgUrl(m.url, 480, 360), srcSet: srcSet(m.url), caption: m.caption, width: m.width, height: m.height }
-      : { id: m.id, type: "video" as const, src: videoUrl(m.url), thumb: posterUrl(m.url, 480), poster: posterUrl(m.url, 1280), caption: m.caption, width: m.width, height: m.height },
+      ? { id: m.id, type: "image" as const, src: imgUrl(m.url, 1600), thumb: imgUrl(m.url, 480, 360), srcSet: srcSet(m.url), caption: m.caption, width: m.width, height: m.height, ...room(m) }
+      : { id: m.id, type: "video" as const, src: videoUrl(m.url), thumb: posterUrl(m.url, 480), poster: posterUrl(m.url, 1280), caption: m.caption, width: m.width, height: m.height, ...room(m) },
   );
 }
 
@@ -116,6 +118,8 @@ export function publicCard(p: StoredProperty, showPrice: boolean) {
     availabilityLabel: AVAILABILITY_LABEL[p.availability] || "",
     featured: !!p.featured,
     cover: cover ? { src: imgUrl(cover.url, 800, 600), srcSet: srcSet(cover.url, [400, 800, 1200]), alt: cover.caption || p.title } : null,
+    // Up to 8 photos (cover first, then your order) for the swipeable card carousel.
+    images: (cover ? [cover, ...(p.media || []).filter((m) => m.type === "image" && !m.pending && m.id !== cover.id)] : []).slice(0, 8).map((m) => ({ src: imgUrl(m.url, 800, 600), alt: m.caption || p.title })),
     price,
     createdAt: p.publishedAt || p.createdAt,
     updatedAt: p.updatedAt,
@@ -145,9 +149,9 @@ export function publicProperty(p: StoredProperty, showPrice: boolean, amenityDef
       smoking: pol.smoking ?? "", alcohol: pol.alcohol ?? "", visitors: pol.visitors ?? "", ageRestriction: pol.ageRestriction ?? "",
       idRequirements: pol.idRequirements ?? "", rules: pol.rules ?? "",
     },
-    // Cover first, then room by room.
-    photos: guestMedia(coverFirst(byRoom(media.filter((m) => m.type === "image"), p.roomList), p.coverId)),
-    videos: guestMedia(media.filter((m) => m.type === "video")),
+    // Your own order, cover first (the room-wise view is built from each photo's room).
+    photos: guestMedia(coverFirst(media.filter((m) => m.type === "image"), p.coverId), p.roomList),
+    videos: guestMedia(media.filter((m) => m.type === "video"), p.roomList),
     roomSections: roomSections(p, media),
     state: p.location?.state || "",
   };

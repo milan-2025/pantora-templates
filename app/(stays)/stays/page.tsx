@@ -33,7 +33,7 @@ export default async function StaysHome() {
       <main>
         <section className="relative overflow-hidden">
           <div className="mx-auto max-w-7xl px-4 pb-10 pt-12 sm:px-6 sm:pt-20">
-            <p className="s-chip !bg-sand !text-marigold-deep"><Sparkles className="size-3.5" /> {total} handpicked stay{total === 1 ? "" : "s"}</p>
+            <p className="s-chip !bg-neutral-100 !text-charcoal"><Sparkles className="size-3.5" /> {total} handpicked stay{total === 1 ? "" : "s"}</p>
             <h1 className="mt-4 max-w-3xl font-display text-4xl leading-[1.05] sm:text-6xl">Find a stay that feels like it was <em className="text-coral">kept for you</em>.</h1>
             <p className="mt-4 max-w-xl text-lg text-muted">{s.tagline}</p>
             <div className="mt-8 max-w-5xl"><SearchBar types={s.propertyTypes} /></div>

@@ -447,6 +447,19 @@ describe("rooms and room-tagged photos", () => {
     expect(pub.roomSections.rooms.map((r: any) => [r.name, r.media.length])).toEqual([["Living room", 1], ["Rooftop jacuzzi deck", 1]]);
     expect(pub.roomSections.rooms[0].amenities).toEqual(["Smart TV", "AC"]);
   });
+  it("guest gallery keeps your own photo order (cover first) and labels each photo with its room", async () => {
+    const p = (await admin.get("property", `&id=${own}`)).json;
+    const imgs = p.media.filter((m: any) => m.type === "image").map((m: any) => m.id);
+    const custom = [...imgs].reverse();
+    await admin.post("media_order", { id: own, ids: custom });
+    await admin.post("media_cover", { id: own, mediaId: custom[1] });
+    const pub = (await call("public", "property", { query: "&code=LAC-0001" })).json;
+    expect(pub.photos.map((x: any) => x.id)).toEqual([custom[1], custom[0], ...custom.slice(2)]);
+    const tagged = pub.photos.find((x: any) => x.roomId);
+    expect(tagged.room).toMatch(/Living room|Rooftop jacuzzi deck/);
+    const card = (await call("public", "search")).json.results.find((r: any) => r.code === "LAC-0001");
+    expect(card.images.length).toBe(imgs.length);
+  });
   it("removing a room untags its photos", async () => {
     const p = (await admin.get("property", `&id=${own}`)).json;
     await adminSave(own, { roomList: [p.roomList[0]] });

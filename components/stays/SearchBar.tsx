@@ -39,7 +39,7 @@ export function SearchBar({ types, compact = false, initial = {} }: { types: str
 
   return (
     <form onSubmit={submit} role="search" className={`s-card relative grid gap-2 rounded-3xl p-2 sm:grid-cols-[1.6fr_0.8fr_1fr_1fr_auto] sm:items-center sm:rounded-full ${compact ? "" : "shadow-lift"}`}>
-      <label className="relative block rounded-2xl px-3 py-1.5 sm:rounded-full hover:bg-cream">
+      <label className="relative block rounded-2xl px-3 py-1.5 sm:rounded-full hover:bg-neutral-100">
         <span className="block text-[11px] font-semibold uppercase tracking-wide text-plum">Where</span>
         <input
           value={where}
@@ -55,7 +55,7 @@ export function SearchBar({ types, compact = false, initial = {} }: { types: str
           <ul className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl bg-white py-1 shadow-lift sm:w-80" role="listbox">
             {sugs.map((s) => (
               <li key={s.kind + s.label}>
-                <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => { pick.current = s; setWhere(s.label); setShowSugs(false); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-cream">
+                <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => { pick.current = s; setWhere(s.label); setShowSugs(false); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-neutral-100">
                   <MapPin className="size-4 text-muted" /> <span className="flex-1">{s.label}</span>
                   <span className="text-xs text-muted">{s.kind === "type" ? "type" : `${s.count} stay${s.count === 1 ? "" : "s"}`}</span>
                 </button>
@@ -64,18 +64,18 @@ export function SearchBar({ types, compact = false, initial = {} }: { types: str
           </ul>
         )}
       </label>
-      <label className="block rounded-2xl px-3 py-1.5 sm:rounded-full hover:bg-cream">
+      <label className="block rounded-2xl px-3 py-1.5 sm:rounded-full hover:bg-neutral-100">
         <span className="block text-[11px] font-semibold uppercase tracking-wide text-plum">Guests</span>
         <input type="number" min={1} max={50} inputMode="numeric" value={guests} onChange={(e) => setGuests(e.target.value)} placeholder="Add guests" className="w-full bg-transparent text-sm outline-none placeholder:text-muted" />
       </label>
-      <label className="block rounded-2xl px-3 py-1.5 sm:rounded-full hover:bg-cream">
+      <label className="block rounded-2xl px-3 py-1.5 sm:rounded-full hover:bg-neutral-100">
         <span className="block text-[11px] font-semibold uppercase tracking-wide text-plum">Type</span>
         <select value={type} onChange={(e) => setType(e.target.value)} className="w-full bg-transparent text-sm outline-none">
           <option value="">Any type</option>
           {types.map((t) => <option key={t}>{t}</option>)}
         </select>
       </label>
-      <label className="block rounded-2xl px-3 py-1.5 sm:rounded-full hover:bg-cream">
+      <label className="block rounded-2xl px-3 py-1.5 sm:rounded-full hover:bg-neutral-100">
         <span className="block text-[11px] font-semibold uppercase tracking-wide text-plum">Budget / night</span>
         <select value={budget} onChange={(e) => setBudget(e.target.value)} className="w-full bg-transparent text-sm outline-none">
           <option value="">Any budget</option>

@@ -6,7 +6,7 @@ import type { TemplateKey } from "@/lib/stays/constants";
 import { AVAILABILITY_LABEL } from "@/lib/stays/constants";
 import { inr } from "@/lib/stays/core";
 import { EnquiryButtons, EnquiryQuickLinks } from "./Enquiry";
-import { Gallery, PhotoStrip, ShareButton, Videos } from "./Gallery";
+import { Gallery, RoomCards, ShareButton, Videos } from "./Gallery";
 import { CardGrid, ContactButtons, Facts, Footer, Header, PriceLine, type SiteInfo } from "./ui";
 import MapView from "./MapView";
 
@@ -29,13 +29,16 @@ export function PropertyDetail({ property: p, site, similar, shareId, admin = nu
     ["Smoking", pol.smoking], ["Alcohol", pol.alcohol], ["Visitors", pol.visitors], ["Age", pol.ageRestriction], ["ID required", pol.idRequirements],
   ].filter(([, v]) => v) as [string, string][];
   const groups = p.amenityList.reduce<Record<string, string[]>>((acc, a) => ((acc[a.category] ||= []).push(a.label), acc), {});
+  const roomInfo = p.roomSections.rooms.map((r) => ({ id: r.id, name: r.name, description: r.description, amenities: r.amenities }));
   const enquiry = { code: p.code, title: p.title, place: p.place, whatsappNumber: site.whatsappNumber, templates: site.templates, shareId };
 
   return (
     <>
       <Header site={site} admin={!!admin} />
-      <main className="mx-auto max-w-6xl px-4 pb-28 pt-5 sm:px-6 lg:pb-10">
-        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+      <main className="mx-auto max-w-6xl px-4 pb-28 pt-0 sm:px-6 sm:pt-5 lg:pb-10">
+        {/* Phones: photos first, edge to edge (like Airbnb); larger screens: title, then the photo grid. */}
+        <div className="flex flex-col">
+        <div className="order-2 mb-4 mt-4 flex flex-wrap items-end justify-between gap-3 sm:order-1 sm:mt-0">
           <div className="min-w-0">
             <h1 className="font-display text-3xl leading-tight sm:text-4xl">{p.title}</h1>
             <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
@@ -46,17 +49,18 @@ export function PropertyDetail({ property: p, site, similar, shareId, admin = nu
           <ShareButton title={p.title} />
         </div>
 
-        {admin && <AdminPanel a={admin} title={p.title} code={p.code} />}
+        {admin && <div className="order-3 sm:order-2"><AdminPanel a={admin} title={p.title} code={p.code} /></div>}
 
-        <Gallery photos={p.photos} title={p.title} />
+        <div className="order-1 sm:order-3"><Gallery photos={p.photos} rooms={roomInfo} title={p.title} /></div>
+        </div>
 
         <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_22rem]">
           <div className="min-w-0 space-y-10">
             <section>
               <div className="flex flex-wrap items-center gap-2">
                 {p.propertyType && <span className="s-chip">{p.propertyType}</span>}
-                {p.category && <span className="s-chip !bg-sand !text-marigold-deep">{p.category}</span>}
-                <span className={`s-chip ${p.availability === "available" ? "!bg-mint !text-teal" : p.availability === "limited" ? "!bg-sand !text-marigold-deep" : "!bg-blush !text-coral"}`}>{AVAILABILITY_LABEL[p.availability]}</span>
+                {p.category && <span className="s-chip !bg-neutral-100 !text-charcoal">{p.category}</span>}
+                <span className={`s-chip ${p.availability === "available" ? "!bg-mint !text-teal" : p.availability === "limited" ? "!bg-neutral-100 !text-charcoal" : "!bg-blush !text-coral"}`}>{AVAILABILITY_LABEL[p.availability]}</span>
               </div>
               <Facts bedrooms={p.bedrooms} bathrooms={p.bathrooms} maxGuests={p.maxGuests} className="mt-3 !text-base" />
               {p.shortDescription && <p className="mt-4 text-lg text-charcoal">{p.shortDescription}</p>}
@@ -80,28 +84,9 @@ export function PropertyDetail({ property: p, site, similar, shareId, admin = nu
               </section>
             )}
 
-            {p.roomSections.rooms.length > 0 && (
+            {roomInfo.length > 0 && (
               <section aria-labelledby="h-rbr">
-                <h2 id="h-rbr" className="font-display text-2xl">Room by room</h2>
-                <div className="mt-4 space-y-6">
-                  {p.roomSections.rooms.map((room) => (
-                    <article key={room.id} className="rounded-2xl border border-line p-4">
-                      <h3 className="font-sans text-lg font-semibold text-plum">{room.name}</h3>
-                      {room.description && <p className="s-prose mt-1 text-[15px] text-charcoal">{room.description}</p>}
-                      {room.amenities.length > 0 && (
-                        <ul className="mt-3 flex flex-wrap gap-1.5">{room.amenities.map((a) => <li key={a} className="inline-flex items-center gap-1 rounded-full bg-mint px-2.5 py-1 text-xs font-medium text-teal"><Check className="size-3" aria-hidden />{a}</li>)}</ul>
-                      )}
-                      {room.media.some((m) => m.type === "image") && <div className="mt-3"><PhotoStrip photos={room.media.filter((m) => m.type === "image")} title={`${p.title}: ${room.name}`} /></div>}
-                      {room.media.some((m) => m.type === "video") && <div className="mt-3"><Videos videos={room.media.filter((m) => m.type === "video")} /></div>}
-                    </article>
-                  ))}
-                  {p.roomSections.other.length > 0 && (
-                    <article className="rounded-2xl border border-line p-4">
-                      <h3 className="font-sans text-lg font-semibold text-plum">More photos</h3>
-                      <div className="mt-3"><PhotoStrip photos={p.roomSections.other} title={p.title} /></div>
-                    </article>
-                  )}
-                </div>
+                <RoomCards photos={p.photos} rooms={roomInfo} title={p.title} />
               </section>
             )}
 
@@ -147,7 +132,7 @@ export function PropertyDetail({ property: p, site, similar, shareId, admin = nu
                     ))}
                   </dl>
                 )}
-                {pol.rules && <p className="s-prose mt-4 rounded-2xl bg-cream/60 p-4 text-[15px] ring-1 ring-line">{pol.rules}</p>}
+                {pol.rules && <p className="s-prose mt-4 rounded-2xl bg-white p-4 text-[15px] ring-1 ring-line">{pol.rules}</p>}
               </section>
             )}
 
@@ -170,8 +155,8 @@ export function PropertyDetail({ property: p, site, similar, shareId, admin = nu
                   <PriceLine price={p.price} size="lg" />
                   {p.price.weekday && p.price.weekend && p.price.weekday !== p.price.weekend && (
                     <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                      <div className="rounded-xl bg-cream p-2.5"><dt className="text-xs text-muted">Weekdays</dt><dd className="font-semibold text-plum">₹{p.price.weekday.toLocaleString("en-IN")}</dd></div>
-                      <div className="rounded-xl bg-cream p-2.5"><dt className="text-xs text-muted">Weekends</dt><dd className="font-semibold text-plum">₹{p.price.weekend.toLocaleString("en-IN")}</dd></div>
+                      <div className="rounded-xl border border-line bg-white p-2.5"><dt className="text-xs text-muted">Weekdays</dt><dd className="font-semibold text-plum">₹{p.price.weekday.toLocaleString("en-IN")}</dd></div>
+                      <div className="rounded-xl border border-line bg-white p-2.5"><dt className="text-xs text-muted">Weekends</dt><dd className="font-semibold text-plum">₹{p.price.weekend.toLocaleString("en-IN")}</dd></div>
                     </dl>
                   )}
                 </div>

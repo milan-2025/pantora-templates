@@ -13,7 +13,7 @@
   --blush: #f8e1dd;
   --mint: #dcedea;
   --lavender: #ebe2ef;
-  --paper: #fffdf8;
+  --paper: #ffffff;
   --marigold-deep: #a8651a;
   --line: rgb(59 31 74 / 0.12);
   --muted: #6b6372;
@@ -81,7 +81,7 @@
   .s-label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--plum); margin-bottom: 0.3rem; }
   .s-hint { font-size: 0.78rem; color: var(--muted); margin-top: 0.25rem; }
   .s-chip { display: inline-flex; align-items: center; gap: 0.35rem; border-radius: 999px; padding: 0.25rem 0.65rem; font-size: 0.78rem; font-weight: 500; background: var(--lavender); color: var(--plum); }
-  .s-skeleton { background: linear-gradient(90deg, #f1e9df 25%, #f8f2ea 37%, #f1e9df 63%); background-size: 400% 100%; animation: s-shimmer 1.4s ease infinite; border-radius: 0.75rem; }
+  .s-skeleton { background: linear-gradient(90deg, #ececec 25%, #f6f6f6 37%, #ececec 63%); background-size: 400% 100%; animation: s-shimmer 1.4s ease infinite; border-radius: 0.75rem; }
   .s-scroll-x { overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   .s-scroll-x::-webkit-scrollbar { display: none; }
   .s-prose { white-space: pre-line; line-height: 1.75; }
@@ -93,7 +93,7 @@
   }
   .s-pin.is-active { background: var(--plum); color: #fff; }
   .s-pin-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--plum); border: 3px solid #fff; box-shadow: 0 2px 6px rgb(0 0 0 / 0.3); transform: translate(-50%, -50%); }
-  .leaflet-container { font-family: var(--font-poppins), sans-serif; background: #eae4d8; }
+  .leaflet-container { font-family: var(--font-poppins), sans-serif; background: #f0f0f0; }
   .leaflet-div-icon { background: transparent; border: none; }
 }
 
