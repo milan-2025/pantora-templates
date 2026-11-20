@@ -8,7 +8,7 @@ import { FEATURE_ICONS } from "@/collections/Products";
 
 const link = (prefix: string, label: string) => [
   { name: `${prefix}Label`, type: "text" as const, label: `${label} text` },
-  { name: `${prefix}Url`, type: "text" as const, label: `${label} link`, admin: { description: "e.g. /wedding_planner or https://…" } },
+  { name: `${prefix}Url`, type: "text" as const, label: `${label} link`, admin: { description: "e.g. /wedding_planner_sheet or https://…" } },
 ];
 
 export const HeroBlock: Block = {
@@ -206,12 +206,40 @@ export const HtmlBlock: Block = {
   ],
 };
 
+export const ProductHubBlock: Block = {
+  slug: "productHub",
+  labels: { singular: "Our products (links)", plural: "Our products (links)" },
+  fields: [
+    { name: "eyebrow", type: "text", defaultValue: "Everything Pandora" },
+    { name: "heading", type: "text", defaultValue: "One place for life's big projects" },
+    { name: "text", type: "textarea" },
+    {
+      name: "cards",
+      type: "array",
+      labels: { singular: "Card", plural: "Cards" },
+      admin: {
+        description:
+          "Leave empty to show everything automatically: the online wedding planner, invite maker, stays, CRM and every published product. Add cards to choose your own.",
+      },
+      fields: [
+        { name: "title", type: "text", required: true },
+        { name: "text", type: "textarea" },
+        { name: "url", type: "text", required: true, label: "Link", admin: { description: "e.g. /planner, /shaadi, /wedding_planner_sheet or https://…" } },
+        { name: "buttonLabel", type: "text", label: "Link text", defaultValue: "Learn more" },
+        { name: "icon", type: "select", options: FEATURE_ICONS, defaultValue: "Gift" },
+        { name: "image", type: "upload", relationTo: "media", admin: { description: "Optional. Shown instead of the icon." } },
+      ],
+    },
+  ],
+};
+
 export const pageBlocks = [
   HeroBlock,
   RichTextBlock,
   ImageTextBlock,
   FeatureGridBlock,
   ProductCardsBlock,
+  ProductHubBlock,
   CtaBlock,
   FaqBlock,
   TestimonialsBlock,

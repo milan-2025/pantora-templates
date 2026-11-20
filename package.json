@@ -11,6 +11,8 @@
     "generate": "npm run payload generate:types && npm run payload generate:importmap",
     "seed": "npm run payload run scripts/seed.ts",
     "fill-preview": "npm run payload run scripts/fill-preview.ts",
+    "upgrade-home": "npm run payload run scripts/upgrade-home.ts",
+    "upgrade-home:apply": "npm run payload run scripts/upgrade-home.ts apply",
     "build-studio": "node scripts/build-studio.mjs",
     "test": "vitest run",
     "build-planner": "node scripts/build-planner.mjs"

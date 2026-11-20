@@ -1,16 +1,21 @@
 import type { MetadataRoute } from "next";
 import { getPayloadClient } from "@/lib/cms/queries";
 import { loadSitemap } from "@/lib/stays/pages";
+import { SITEMAP_LANDING_PAGES } from "@/lib/siteLinks";
 
 export const dynamic = "force-dynamic";
 
 /**
  * /sitemap.xml for the whole site: published pages, products and blog posts, plus every PUBLIC stay
- * (unlisted and private stays, share links, the host portal and dashboards are never listed).
+ * (unlisted and private stays, share links, the host portal and dashboards are never listed),
+ * and the stand-alone landing pages (planner, invite maker, CRM).
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
-  const out: MetadataRoute.Sitemap = [{ url: `${base}/`, changeFrequency: "weekly", priority: 1 }];
+  const out: MetadataRoute.Sitemap = [
+    { url: `${base}/`, changeFrequency: "weekly", priority: 1 },
+    ...SITEMAP_LANDING_PAGES.map((p) => ({ url: `${base}${p.url}`, changeFrequency: p.changeFrequency, priority: p.priority })),
+  ];
   try {
     const payload = await getPayloadClient();
     const published = { _status: { equals: "published" } } as const;

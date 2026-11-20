@@ -267,7 +267,7 @@ VIEWS.setup = function () {
     '<hr style="border:0;border-top:1px dashed #EADFC9;margin:14px 0"><div class="bar"><button class="btn" data-x="fresh">Start a fresh plan</button><button class="btn ghost" data-x="demo">Reload sample data</button></div></div>');
   data.addEventListener('click', async e => {
     const x = e.target.dataset.x; if (!x) return;
-    if (x === 'xlsx') { try { exportWorkbook(); } catch (err) { toast('Export failed: ' + err.message); } }
+    if (x === 'xlsx') { try { await exportWorkbook(); } catch (err) { toast('Export failed: ' + err.message); } }
     else if (x === 'json') exportJSON();
     else if (x === 'fresh') { if (await ask('Start a fresh plan?', 'This clears the guests, vendors, payments and everything else' + (CLOUD.on ? ' for everyone on this planner (a restore point is saved in Activity)' : '') + '. The task timeline, budget categories and ritual checklist stay as your starting template.', 'Start fresh')) { S = freshState(); replaced('Started a fresh plan'); toast('Fresh plan ready. Add your wedding details.'); renderAll(); } }
     else if (x === 'demo') { if (await ask('Reload the sample data?', 'This replaces your current plan with the Ananya & Arjun sample' + (CLOUD.on ? ' for everyone on this planner (a restore point is saved in Activity)' : '. Export a backup first if you want to keep your work') + '.', 'Replace with sample')) { S = demoState(); if (CLOUD.on) S.demo = false; replaced('Loaded the sample data'); renderAll(); } }
@@ -277,7 +277,7 @@ VIEWS.setup = function () {
     try {
       let next;
       if (/\.json$/i.test(file.name)) next = normalize(JSON.parse(await file.text()));
-      else next = importWorkbook(await file.arrayBuffer());
+      else next = await importWorkbook(await file.arrayBuffer());
       if (await ask('Import “' + file.name + '”?', 'This replaces what is in the planner now with the file’s data: ' + next.guests.length + ' guests, ' + next.vendors.length + ' vendor quotes, ' + next.payments.length + ' payments, ' + next.tasks.length + ' tasks.', 'Import')) { S = next; S.demo = false; replaced('Imported “' + file.name + '”'); toast('Imported ✔'); renderAll(); }
     } catch (err) { toast('Could not read that file: ' + err.message); }
     e.target.value = '';

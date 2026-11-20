@@ -20,6 +20,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   return (
     <>
       <Header site={settings} active="search" admin={admin} />
+      {/* The search screen's visible title is the filter bar; this gives search engines and screen readers its main heading. */}
+      <h1 className="sr-only">{initial.city ? `Stays in ${initial.city}` : `Search stays and holiday homes | ${settings.siteName}`}</h1>
       <SearchApp admin={admin} initial={initial} types={settings.propertyTypes} categories={settings.categories} features={settings.features} amenities={amenities} cfg={settings.map} />
     </>
   );

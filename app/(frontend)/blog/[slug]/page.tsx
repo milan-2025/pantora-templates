@@ -7,6 +7,9 @@ import { getPayloadClient, getPostBySlug } from "@/lib/cms/queries";
 import { mediaDoc } from "@/lib/format";
 import { SiteShell } from "@/components/SiteShell";
 import { MediaSlot } from "@/components/ui/MediaSlot";
+import { JsonLd } from "@/components/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/structuredData";
+import { DEFAULT_SHARE_IMAGE } from "@/lib/cms/seo";
 
 export const revalidate = 300;
 
@@ -36,7 +39,16 @@ export async function generateMetadata({ params }: Args): Promise<Metadata> {
   return {
     title,
     description,
-    openGraph: { type: "article", title, description, publishedTime: post.publishedAt ?? undefined, images: cover ? [cover.url] : undefined },
+    alternates: { canonical: `/blog/${post.slug}` },
+    openGraph: {
+      type: "article",
+      title,
+      description,
+      url: `/blog/${post.slug}`,
+      publishedTime: post.publishedAt ?? undefined,
+      images: cover ? [cover.url] : [DEFAULT_SHARE_IMAGE],
+    },
+    twitter: { card: "summary_large_image" },
   };
 }
 
@@ -55,7 +67,14 @@ export default async function BlogPost({ params }: Args) {
 
   return (
     <SiteShell>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+      <JsonLd data={jsonLd} />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Blog", path: "/blog" },
+          { name: post.title, path: `/blog/${post.slug}` },
+        ])}
+      />
       <article className="px-4 pb-24 pt-32 md:pt-40">
         <div className="mx-auto max-w-3xl">
           <Link href="/blog" className="mb-8 inline-flex items-center gap-1 text-sm font-medium text-teal hover:underline">

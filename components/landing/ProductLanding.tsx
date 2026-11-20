@@ -21,9 +21,12 @@ import { TrackEvent } from "@/components/TrackEvent";
 import { LiveDataProvider } from "./LiveData";
 import { RecentPurchases } from "./OfferWidgets";
 import { RefCapture } from "./RefCapture";
+import { RelatedLinks } from "./RelatedLinks";
+import { JsonLd } from "@/components/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/structuredData";
 import { checkoutHref } from "./types";
 
-/** The animated sales page for one product, e.g. /wedding_planner. All content comes from the admin. */
+/** The animated sales page for one product, e.g. /wedding_planner_sheet. All content comes from the admin. */
 export async function ProductLanding({ product, settings }: { product: Product; settings: SiteSetting }) {
   const payload = await getPayloadClient();
   const [offer, live] = await Promise.all([getOfferState(payload, product), getLiveData(payload, product)]);
@@ -39,6 +42,7 @@ export async function ProductLanding({ product, settings }: { product: Product; 
   return (
     <LiveDataProvider slug={product.slug} initial={live}>
       <RefCapture />
+      <JsonLd data={breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: product.name, path: `/${product.slug}` }])} />
       <TrackEvent event="ViewContent" value={offer.price} name={product.name} />
       <Nav links={links} cta={{ label: "Buy now", url: checkoutHref(product) }} />
       <main>
@@ -59,6 +63,7 @@ export async function ProductLanding({ product, settings }: { product: Product; 
           <ContactSection heading={product.contact.heading} text={product.contact.text} whatsappHref={wa} email={settings.supportEmail} />
         )}
         <FinalCTA {...props} />
+        <RelatedLinks product={product} />
       </main>
       <Footer settings={settings} />
       <FloatingActions whatsappHref={wa} buy={{ href: checkoutHref(product), price: live.price, label: "Get it now" }} />

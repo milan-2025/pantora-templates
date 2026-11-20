@@ -5,6 +5,9 @@ import { seoMetadata } from "@/lib/cms/seo";
 import { RenderBlocks } from "@/components/blocks/RenderBlocks";
 import { SiteShell } from "@/components/SiteShell";
 import { ProductLanding } from "@/components/landing/ProductLanding";
+import { JsonLd } from "@/components/JsonLd";
+import { pageDescription } from "@/lib/cms/pageText";
+import { breadcrumbJsonLd } from "@/lib/structuredData";
 
 export const revalidate = 300;
 
@@ -23,15 +26,15 @@ export async function generateStaticParams() {
 
 /**
  * pandoratemplates.com/<slug>
- *   → a Product's animated sales page (e.g. /wedding_planner), or
+ *   → a Product's animated sales page (e.g. /wedding_planner_sheet), or
  *   → a Page built from blocks in the admin (e.g. /ultimateweddingplanner, /terms).
  */
 export async function generateMetadata({ params }: Args): Promise<Metadata> {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
-  if (product) return seoMetadata(product.seo, { title: product.name, description: product.tagline });
+  if (product) return seoMetadata(product.seo, { title: product.name, description: product.tagline, path: `/${product.slug}` });
   const page = await getPageBySlug(slug);
-  if (page) return seoMetadata(page.seo, { title: page.title });
+  if (page) return seoMetadata(page.seo, { title: page.title, description: pageDescription(page.layout), path: `/${page.slug}` });
   return {};
 }
 
@@ -46,11 +49,17 @@ export default async function SlugPage({ params }: Args) {
   if (!page) notFound();
 
   // A page that is entirely the owner's own design (e.g. pasted HTML) can drop the site menu & footer.
-  if (page.hideHeaderFooter) return <RenderBlocks blocks={page.layout} settings={settings} />;
+  if (page.hideHeaderFooter) return <RenderBlocks blocks={page.layout} settings={settings} title={page.title} />;
 
   return (
     <SiteShell>
-      <RenderBlocks blocks={page.layout} settings={settings} />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: page.title, path: `/${page.slug}` },
+        ])}
+      />
+      <RenderBlocks blocks={page.layout} settings={settings} title={page.title} />
     </SiteShell>
   );
 }

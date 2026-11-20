@@ -47,6 +47,20 @@ export const getProducts = cache(async (ids?: string[]) => {
   return res.docs;
 });
 
+/** Name + address of every published product, for menus and footers (no images, so it is cheap). */
+export const getProductLinks = cache(async () => {
+  const payload = await getPayloadClient();
+  const res = await payload.find({
+    collection: "products",
+    where: published,
+    depth: 0,
+    limit: 50,
+    sort: "name",
+    select: { name: true, slug: true, tagline: true },
+  });
+  return res.docs.map((d) => ({ name: d.name, slug: d.slug, tagline: d.tagline ?? null }));
+});
+
 export const getPosts = cache(async () => {
   const payload = await getPayloadClient();
   const res = await payload.find({ collection: "posts", where: published, depth: 1, limit: 100, sort: "-publishedAt" });

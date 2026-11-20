@@ -1,6 +1,40 @@
-import { BellRing, Calculator, CalendarDays, FileSpreadsheet, Gift, Heart, RefreshCw, Smartphone, Users, Wallet } from "lucide-react";
+import {
+  BellRing,
+  Calculator,
+  CalendarDays,
+  CalendarHeart,
+  Dumbbell,
+  FileSpreadsheet,
+  Gift,
+  Heart,
+  House,
+  Mail,
+  RefreshCw,
+  ShoppingBag,
+  Smartphone,
+  Sparkles,
+  Users,
+  Wallet,
+} from "lucide-react";
 
-const icons = { Calculator, Users, BellRing, FileSpreadsheet, Smartphone, RefreshCw, Heart, CalendarDays, Wallet, Gift };
+const icons = {
+  Calculator,
+  Users,
+  BellRing,
+  FileSpreadsheet,
+  Smartphone,
+  RefreshCw,
+  Heart,
+  CalendarDays,
+  Wallet,
+  Gift,
+  CalendarHeart,
+  Mail,
+  House,
+  Dumbbell,
+  ShoppingBag,
+  Sparkles,
+};
 
 export function FeatureIcon({ name, className }: { name?: string | null; className?: string }) {
   const Icon = icons[(name ?? "Gift") as keyof typeof icons] ?? Gift;

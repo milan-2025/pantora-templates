@@ -207,6 +207,7 @@ a.lp-link{font-weight:600}
 .lp-final .lp-micro{color:#cdbfd6}
 .lp-foot{padding:26px 0 90px;text-align:center;font-size:13px;color:var(--muted)}
 .lp-foot a{color:var(--plum)}
+.lp-more{margin-top:10px;line-height:1.9}
 
 /* sticky CTA (phones) + WhatsApp */
 .lp-sticky{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:rgba(251,245,234,.95);backdrop-filter:blur(8px);border-top:1px solid var(--line);display:none;transform:translateY(110%);transition:transform .25s}
