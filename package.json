@@ -13,6 +13,8 @@
     "fill-preview": "npm run payload run scripts/fill-preview.ts",
     "upgrade-home": "npm run payload run scripts/upgrade-home.ts",
     "upgrade-home:apply": "npm run payload run scripts/upgrade-home.ts apply",
+    "publish-content": "npm run payload run scripts/publish-content.ts",
+    "publish-content:apply": "npm run payload run scripts/publish-content.ts apply",
     "build-studio": "node scripts/build-studio.mjs",
     "test": "vitest run",
     "build-planner": "node scripts/build-planner.mjs"
