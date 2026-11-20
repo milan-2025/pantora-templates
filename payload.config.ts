@@ -6,6 +6,7 @@ import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import sharp from "sharp";
 import { cloudinaryStorage } from "./lib/storage/cloudinary";
 import { brevoAdapter } from "./lib/brevo";
+import { autoPublishContent } from "./lib/content/autoPublish";
 
 import { Users } from "./collections/Users";
 import { Media } from "./collections/Media";
@@ -99,6 +100,8 @@ export default buildConfig({
     const models = Object.values((payload.db as unknown as { connection: { models: Record<string, Model> } }).connection.models);
     await Promise.allSettled(models.map((m) => m.createCollection()));
     await Promise.allSettled(models.map((m) => m.createIndexes()));
+    // Publishes the content pack in lib/content/ once, on the production site only (see autoPublish.ts).
+    await autoPublishContent(payload);
   },
   plugins: [
     // Images, videos and paid files go to Cloudinary once CLOUDINARY_URL is set;

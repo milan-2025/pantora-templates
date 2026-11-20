@@ -136,7 +136,7 @@ The animated sheet preview moved from code into the admin. Run `npm run fill-pre
 
 To link the homepage and menu to every product (the "Our products" section, Online Planner / Invites / Stays in the menu, and old `/wedding_planner` links fixed), run `npm run upgrade-home` against the live database. It only prints what it would change; run `npm run upgrade-home:apply` to save. It leaves anything you have already changed alone, and running it again changes nothing.
 
-To publish the new homepage, the real Workout Challenge page and ten blog posts (content in `lib/content/`), run `npm run publish-content` against the live database to see what would change, then `npm run publish-content:apply` to save and publish. Existing blog posts with the same address are left alone, the Workout Challenge's price, address and files are not touched, and running it again changes nothing.
+The new homepage, the real Workout Challenge page and ten blog posts (content in `lib/content/`) publish themselves once, the first time the production site starts after deploying (`lib/content/autoPublish.ts`; a marker in the `content_releases` collection stops it running twice, so later admin edits are never overwritten). Preview deployments and local development skip it; set `AUTO_PUBLISH_CONTENT=1` to allow it or `0` to switch it off. `npm run publish-content` shows what it would change, and `npm run publish-content:apply` publishes it by hand, e.g. to another database.
 
 ### Addresses
 - Landing pages outside the admin: `/planner` (online planner), `/shaadi` (invite maker), `/stays`, `/crm-software` (LeadFlow CRM sales page). `/CRM` and `/crm` open the CRM app itself; Next.js rewrites ignore letter case, so the sales page needs its own address.
