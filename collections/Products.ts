@@ -22,6 +22,12 @@ export const FEATURE_ICONS = [
   { label: "Calendar", value: "CalendarDays" },
   { label: "Wallet", value: "Wallet" },
   { label: "Gift", value: "Gift" },
+  { label: "Wedding calendar", value: "CalendarHeart" },
+  { label: "Invitation / mail", value: "Mail" },
+  { label: "House / stay", value: "House" },
+  { label: "Fitness", value: "Dumbbell" },
+  { label: "Shopping bag", value: "ShoppingBag" },
+  { label: "Sparkles", value: "Sparkles" },
 ];
 
 // Small helpers so each section reads cleanly below.

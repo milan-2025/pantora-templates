@@ -1,17 +1,29 @@
 import Link from "next/link";
+import { SmartLink } from "@/components/ui/SmartLink";
 import { MessageCircle } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import type { SiteSetting } from "@/payload-types";
 import { whatsappLink } from "@/lib/format";
+import { getProductLinks } from "@/lib/cms/queries";
+import { LANDING_PAGES } from "@/lib/siteLinks";
 
-export function Footer({ settings }: { settings: SiteSetting }) {
+/**
+ * Site footer. The "Products" column is built automatically (every published product + the planner, invite maker,
+ * stays and CRM), so every product page is always one click from every page. "Help" is the admin's footer links.
+ */
+export async function Footer({ settings }: { settings: SiteSetting }) {
   const wa = whatsappLink(settings.whatsappNumber, settings.whatsappMessage);
-  const links = settings.footerLinks ?? [];
+  const helpLinks = settings.footerLinks ?? [];
   const brand = settings.brandName || "Pandora Templates";
+  const products = await getProductLinks().catch(() => []);
+  const productLinks = [
+    ...LANDING_PAGES.map((p) => ({ label: p.label, url: p.url, title: p.description })),
+    ...products.map((p) => ({ label: p.name, url: `/${p.slug}`, title: p.tagline ?? undefined })),
+  ];
 
   return (
     <footer className="bg-plum px-4 pb-28 pt-14 text-cream md:pb-14">
-      <div className="mx-auto flex max-w-6xl flex-col gap-10 md:flex-row md:items-start md:justify-between">
+      <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,0.8fr)]">
         <div className="max-w-xs">
           <Logo tone="cream" />
           {settings.tagline && <p className="mt-4 text-sm text-cream/70">{settings.tagline}</p>}
@@ -44,13 +56,30 @@ export function Footer({ settings }: { settings: SiteSetting }) {
             )}
           </div>
         </div>
-        {!!links.length && (
-          <nav className="grid grid-cols-2 gap-x-10 gap-y-2 text-sm text-cream/80 md:gap-x-14">
-            {links.map((l) => (
-              <Link key={l.url + l.label} href={l.url} className="hover:text-marigold">
-                {l.label}
-              </Link>
+        <nav aria-label="Products" className="text-sm">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-marigold">Products</p>
+          <ul className="grid gap-x-8 gap-y-2 text-cream/80 sm:grid-cols-2 md:grid-cols-1">
+            {productLinks.map((l) => (
+              <li key={l.url}>
+                <SmartLink href={l.url} title={l.title} className="hover:text-marigold">
+                  {l.label}
+                </SmartLink>
+              </li>
             ))}
+          </ul>
+        </nav>
+        {!!helpLinks.length && (
+          <nav aria-label="Help" className="text-sm">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-marigold">Help</p>
+            <ul className="grid gap-y-2 text-cream/80">
+              {helpLinks.map((l) => (
+                <li key={l.url + l.label}>
+                  <SmartLink href={l.url} className="hover:text-marigold">
+                    {l.label}
+                  </SmartLink>
+                </li>
+              ))}
+            </ul>
           </nav>
         )}
       </div>
@@ -58,7 +87,9 @@ export function Footer({ settings }: { settings: SiteSetting }) {
         <span>
           © {new Date().getFullYear()} {brand}. All rights reserved.
         </span>
-        <span>pandoratemplates.com</span>
+        <Link href="/" className="hover:text-marigold">
+          pandoratemplates.com
+        </Link>
       </div>
     </footer>
   );

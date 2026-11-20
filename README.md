@@ -1,6 +1,6 @@
 # Pandora Templates website
 
-The full pandoratemplates.com site: a multi-product homepage, animated product sales pages (such as `/wedding_planner`), pages the owner builds in the admin (such as `/ultimateweddingplanner`), a blog, checkout with promo codes and affiliate commissions, and a **WordPress-style admin at `/admin`**, so day-to-day changes need no developer.
+The full pandoratemplates.com site: a multi-product homepage, animated product sales pages (such as `/wedding_planner_sheet`), pages the owner builds in the admin (such as `/ultimateweddingplanner`), a blog, checkout with promo codes and affiliate commissions, and a **WordPress-style admin at `/admin`**, so day-to-day changes need no developer.
 
 **Stack:** Next.js 16, Payload CMS 3 (the admin), MongoDB Atlas, Cloudinary for uploads, Tailwind CSS v4, Motion, Brevo (email).
 
@@ -18,16 +18,16 @@ Log in at **pandoratemplates.com/admin**. Every change is live a few seconds aft
 | Offer add-ons at checkout (upsells) | Product → **Upsells** tab → **Add Upsell**: pick another shop product, set its special price (₹) and an optional one-line pitch. Buyers see it as a tick-box card above the details form; ticked add-ons are added to the total, any promo code discounts the whole order, and the add-on's files are emailed and shown on the thank-you page. Add-on sales also count on that product's own sales counter and purchase popups. |
 | Upload the file buyers get | **Shop → Product files**, then pick it in the product's "Download file" field. For more than one file or link, add rows under **More files & links** (each row: button text + a file, a link, or both). Buyers get them all on the thank-you page and in the email. |
 | Make a new page (e.g. `/ultimateweddingplanner`) | **Content → Pages → Create new**. Set the slug (the page address), add sections with the **+** button, click **Publish**. |
-| Edit the homepage | **Content → Pages → Home** |
+| Edit the homepage | **Content → Pages → Home**. The **Our products (links)** section lists every product and landing page by itself; add your own cards to it to choose them instead. |
 | Write a blog post | **Content → Blog posts → Create new** (it appears at `/blog/<slug>`) |
 | Upload images or videos | **Content → Images & videos**, or straight from any image field |
 | Show a sales counter | Product → **Offer** tab → **Sales counter**: tick "Show the sales counter". It counts real paid orders on the website (refunds excluded); add genuine earlier sales (WhatsApp/Instagram) under "Real sales made before this website". It stays hidden until it reaches the minimum you set. |
-| Add an affiliate | **Shop → Affiliates → Create new**: name, code, customer discount %, commission %. Share `pandoratemplates.com/wedding_planner?ref=CODE`; visitors from that link see the discounted price on the product page, and the code is applied automatically at checkout. |
+| Add an affiliate | **Shop → Affiliates → Create new**: name, code, customer discount %, commission %. Share `pandoratemplates.com/wedding_planner_sheet?ref=CODE` (old `/wedding_planner?ref=CODE` links still work: they redirect and keep the code); visitors from that link see the discounted price on the product page, and the code is applied automatically at checkout. |
 | See what you owe affiliates | **💰 Affiliate earnings** in the menu. Pay them, then click **Mark as paid**. |
 | Manage the online wedding planner (plans, trial, customers) | **Wedding planner** in the menu. See "Online wedding planner" below. |
 | See orders | **Shop → Orders** |
 | Read contact-form messages | **Inbox → Contact messages** (also emailed to you) |
-| Change WhatsApp number, menu, footer links, Meta Pixel | **Settings → Site settings** |
+| Change WhatsApp number, menu, footer links, Meta Pixel | **Settings → Site settings**. The footer's **Products** column fills itself in (every published product plus the planner, invite maker, stays and CRM); the footer links you add here appear under **Help**. |
 | Add another admin | **Settings → Admin users** |
 
 Tips:
@@ -128,9 +128,18 @@ npm run dev                    # http://localhost:3000 (admin at /admin)
 | Payment gateway abstraction | `lib/payments.ts` |
 | Emails | `lib/email.ts` |
 | Starting content | `scripts/seed.ts` |
+| Link map: landing pages outside the admin, old addresses that redirect, robots.txt rules | `lib/siteLinks.ts` (used by `next.config.ts`, the footer, the homepage block, the sitemap and robots.txt) |
+| Search-engine data (breadcrumbs, organisation, website) | `lib/structuredData.ts`, `lib/cms/seo.ts`, `lib/cms/pageText.ts` |
 
 ### Upgrading an existing database
 The animated sheet preview moved from code into the admin. Run `npm run fill-preview` once against an existing database (production `DATABASE_URI` in `.env.local`) to give the Wedding Planner its preview back; it changes nothing if the product already has one. Don't re-run `npm run seed` on a live database: it overwrites the starting content.
+
+To link the homepage and menu to every product (the "Our products" section, Online Planner / Invites / Stays in the menu, and old `/wedding_planner` links fixed), run `npm run upgrade-home` against the live database. It only prints what it would change; run `npm run upgrade-home:apply` to save. It leaves anything you have already changed alone, and running it again changes nothing.
+
+### Addresses
+- Landing pages outside the admin: `/planner` (online planner), `/shaadi` (invite maker), `/stays`, `/crm-software` (LeadFlow CRM sales page). `/CRM` and `/crm` open the CRM app itself; Next.js rewrites ignore letter case, so the sales page needs its own address.
+- Old addresses redirect permanently: `/wedding_planner` → `/wedding_planner_sheet`, `/workout_challenge` → `/workout_challange`, `/crm-software.html` → `/crm-software`. Add more in `LEGACY_REDIRECTS` in `lib/siteLinks.ts`, but never for an address that is a live page.
+- Links to `/planner`, `/shaadi` and the CRM must be plain `<a>` tags (or `components/ui/SmartLink`), not Next's `<Link>`: they are not Next.js pages, and a prefetch of them never finishes.
 
 ### Changing the data model
 Edit `collections/*` and run `npm run generate` to update types and the admin import map. MongoDB needs no migrations: new fields simply appear.

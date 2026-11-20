@@ -32,6 +32,7 @@ type Args = { searchParams: Promise<{ product?: string }> };
 
 export default async function CheckoutPage({ searchParams }: Args) {
   const { product: slug } = await searchParams;
+  // A bare /checkout opens the wedding planner sheet (its old slug is resolved by loadCheckoutProduct).
   const loaded = await loadCheckoutProduct(slug || "wedding_planner");
   if (!loaded) notFound();
   const { payload, product } = loaded;

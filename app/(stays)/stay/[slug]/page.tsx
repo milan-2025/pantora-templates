@@ -5,6 +5,8 @@ import { PropertyDetail } from "@/components/stays/PropertyDetail";
 import { loadBySlug } from "@/lib/stays/pages";
 import { jsonLd, propertyMetadata } from "@/lib/stays/seo";
 import { browsingAdmin } from "@/lib/stays/server";
+import { JsonLd } from "@/components/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/structuredData";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +26,14 @@ export default async function StayPage({ params }: { params: Promise<{ slug: str
   return (
     <>
       {data.indexable && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(data.property, `/stay/${data.canonical}`) }} />}
+      {data.indexable && (
+        <JsonLd
+          data={breadcrumbJsonLd([
+            { name: "Stays", path: "/stays" },
+            { name: data.property.title, path: `/stay/${data.canonical}` },
+          ])}
+        />
+      )}
       <PropertyDetail property={data.property} site={data.site.settings} similar={data.similar} shareId={null} admin={data.admin} />
     </>
   );

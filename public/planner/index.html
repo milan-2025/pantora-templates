@@ -671,6 +671,7 @@ a.lp-link{font-weight:600}
 .lp-final .lp-micro{color:#cdbfd6}
 .lp-foot{padding:26px 0 90px;text-align:center;font-size:13px;color:var(--muted)}
 .lp-foot a{color:var(--plum)}
+.lp-more{margin-top:10px;line-height:1.9}
 
 /* sticky CTA (phones) + WhatsApp */
 .lp-sticky{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:rgba(251,245,234,.95);backdrop-filter:blur(8px);border-top:1px solid var(--line);display:none;transform:translateY(110%);transition:transform .25s}
@@ -751,7 +752,6 @@ a.lp-link{font-weight:600}
 <div id="lp"></div>
 <div id="gate"></div>
 <datalist id="dl-groups"></datalist><datalist id="dl-vendors"></datalist>
-<script src="/planner/xlsx.mini.min.js" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 'use strict';
@@ -1157,7 +1157,22 @@ function readTable(wb, sp) {
   return rows;
 }
 
-function importWorkbook(buf) {
+// The Excel library (250 KB) loads only when someone imports or exports, not on every visit.
+// It is in the offline worker's cache, so this also works offline once the planner has been opened.
+let xlsxLoading = null;
+function loadXlsx() {
+  if (window.XLSX) return Promise.resolve();
+  return xlsxLoading || (xlsxLoading = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = '/planner/xlsx.mini.min.js';
+    s.onload = () => resolve();
+    s.onerror = () => { xlsxLoading = null; s.remove(); reject(new Error('the Excel tool did not load. Check your connection and try again')); };
+    document.head.appendChild(s);
+  }));
+}
+
+async function importWorkbook(buf) {
+  await loadXlsx();
   const wb = XLSX.read(buf, { type: 'array' });
   const st = copy(S);
   let found = 0;
@@ -1227,7 +1242,8 @@ function sheetFrom(rows, hdrRow, spec, extra) {
   return ws;
 }
 
-function exportWorkbook() {
+async function exportWorkbook() {
+  await loadXlsx();
   const wb = XLSX.utils.book_new();
   const readme = XLSX.utils.aoa_to_sheet([
     ['Pandora Indian Wedding Planner  -  data export'],
@@ -1846,7 +1862,7 @@ function trialScreen() {
   $$('[data-s]', g).forEach(b => b.onclick = () => { const s = b.dataset.s; const st = s === 'fresh' ? freshState() : s === 'demo' ? demoState() : normalize(local); st.demo = false;
     const lpDate = store.get('pp_lp_date'); if (s === 'fresh' && lpDate && st.settings && !st.settings.date) st.settings.date = lpDate; // date picked on the landing page
     create(st); });
-  $('[data-file]', g).onchange = async e => { const f = e.target.files[0]; if (!f) return; try { const st = /\.json$/i.test(f.name) ? normalize(JSON.parse(await f.text())) : importWorkbook(await f.arrayBuffer()); create(st); } catch (err) { toast('Could not read that file: ' + err.message); } };
+  $('[data-file]', g).onchange = async e => { const f = e.target.files[0]; if (!f) return; try { const st = /\.json$/i.test(f.name) ? normalize(JSON.parse(await f.text())) : await importWorkbook(await f.arrayBuffer()); create(st); } catch (err) { toast('Could not read that file: ' + err.message); } };
   $('[data-out]', g).onclick = () => signOut();
 }
 
@@ -2164,7 +2180,8 @@ function landingScreen() {
       '<div class="lp-date"><input type="date" class="inp" data-lp-date aria-label="Wedding date"><div class="lp-left" data-lp-left></div></div>' +
       lpCta('Start planning free →', 'big', 'final') + '<p class="lp-micro">No card needed · <span data-trial-days>14</span> days free · Your date carries into your planner</p></div></section>' +
 
-    '<footer class="lp-foot"><div class="lp-w">© ' + new Date().getFullYear() + ' Pandora Templates · <a href="/">pandoratemplates.com</a> · <a href="/planner/login">Sign in</a> · Open the box. Everything’s ready.</div></footer>' +
+    '<footer class="lp-foot"><div class="lp-w">© ' + new Date().getFullYear() + ' Pandora Templates · <a href="/">pandoratemplates.com</a> · <a href="/planner/login">Sign in</a> · Open the box. Everything’s ready.' +
+    '<div class="lp-more">More for your wedding: <a href="/shaadi">Wedding invite maker</a> · <a href="/wedding_planner_sheet">Wedding planner spreadsheet</a> · <a href="/stays">Stays for your guests</a> · <a href="/contact">Contact</a></div></div></footer>' +
     '<div class="lp-sticky">' + lpCta('Start free trial', '', 'sticky') + '</div>' +
     '<a class="lp-wa" hidden target="_blank" rel="noopener" aria-label="Chat with us on WhatsApp"><svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><path fill="#fff" d="M16 3a13 13 0 0 0-11.2 19.6L3 29l6.6-1.7A13 13 0 1 0 16 3zm0 23.7a10.7 10.7 0 0 1-5.5-1.5l-.4-.2-3.9 1 1-3.8-.2-.4A10.7 10.7 0 1 1 16 26.7zm5.9-8c-.3-.2-1.9-.9-2.2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7.1a8.8 8.8 0 0 1-4.4-3.8c-.3-.6.3-.5.9-1.7.1-.2 0-.4 0-.5l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6a1.2 1.2 0 0 0-.9.4 3.6 3.6 0 0 0-1.1 2.7 6.3 6.3 0 0 0 1.3 3.3 14.3 14.3 0 0 0 5.5 4.9c2 .9 2.8.9 3.8.8a3.2 3.2 0 0 0 2.1-1.5 2.6 2.6 0 0 0 .2-1.5c-.1-.2-.3-.3-.5-.4z"/></svg></a>';
 
@@ -3437,7 +3454,7 @@ VIEWS.setup = function () {
     '<hr style="border:0;border-top:1px dashed #EADFC9;margin:14px 0"><div class="bar"><button class="btn" data-x="fresh">Start a fresh plan</button><button class="btn ghost" data-x="demo">Reload sample data</button></div></div>');
   data.addEventListener('click', async e => {
     const x = e.target.dataset.x; if (!x) return;
-    if (x === 'xlsx') { try { exportWorkbook(); } catch (err) { toast('Export failed: ' + err.message); } }
+    if (x === 'xlsx') { try { await exportWorkbook(); } catch (err) { toast('Export failed: ' + err.message); } }
     else if (x === 'json') exportJSON();
     else if (x === 'fresh') { if (await ask('Start a fresh plan?', 'This clears the guests, vendors, payments and everything else' + (CLOUD.on ? ' for everyone on this planner (a restore point is saved in Activity)' : '') + '. The task timeline, budget categories and ritual checklist stay as your starting template.', 'Start fresh')) { S = freshState(); replaced('Started a fresh plan'); toast('Fresh plan ready. Add your wedding details.'); renderAll(); } }
     else if (x === 'demo') { if (await ask('Reload the sample data?', 'This replaces your current plan with the Ananya & Arjun sample' + (CLOUD.on ? ' for everyone on this planner (a restore point is saved in Activity)' : '. Export a backup first if you want to keep your work') + '.', 'Replace with sample')) { S = demoState(); if (CLOUD.on) S.demo = false; replaced('Loaded the sample data'); renderAll(); } }
@@ -3447,7 +3464,7 @@ VIEWS.setup = function () {
     try {
       let next;
       if (/\.json$/i.test(file.name)) next = normalize(JSON.parse(await file.text()));
-      else next = importWorkbook(await file.arrayBuffer());
+      else next = await importWorkbook(await file.arrayBuffer());
       if (await ask('Import “' + file.name + '”?', 'This replaces what is in the planner now with the file’s data: ' + next.guests.length + ' guests, ' + next.vendors.length + ' vendor quotes, ' + next.payments.length + ' payments, ' + next.tasks.length + ' tasks.', 'Import')) { S = next; S.demo = false; replaced('Imported “' + file.name + '”'); toast('Imported ✔'); renderAll(); }
     } catch (err) { toast('Could not read that file: ' + err.message); }
     e.target.value = '';

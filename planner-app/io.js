@@ -59,7 +59,22 @@ function readTable(wb, sp) {
   return rows;
 }
 
-function importWorkbook(buf) {
+// The Excel library (250 KB) loads only when someone imports or exports, not on every visit.
+// It is in the offline worker's cache, so this also works offline once the planner has been opened.
+let xlsxLoading = null;
+function loadXlsx() {
+  if (window.XLSX) return Promise.resolve();
+  return xlsxLoading || (xlsxLoading = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = '/planner/xlsx.mini.min.js';
+    s.onload = () => resolve();
+    s.onerror = () => { xlsxLoading = null; s.remove(); reject(new Error('the Excel tool did not load. Check your connection and try again')); };
+    document.head.appendChild(s);
+  }));
+}
+
+async function importWorkbook(buf) {
+  await loadXlsx();
   const wb = XLSX.read(buf, { type: 'array' });
   const st = copy(S);
   let found = 0;
@@ -129,7 +144,8 @@ function sheetFrom(rows, hdrRow, spec, extra) {
   return ws;
 }
 
-function exportWorkbook() {
+async function exportWorkbook() {
+  await loadXlsx();
   const wb = XLSX.utils.book_new();
   const readme = XLSX.utils.aoa_to_sheet([
     ['Pandora Indian Wedding Planner  -  data export'],

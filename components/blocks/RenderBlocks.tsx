@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { SmartLink } from "@/components/ui/SmartLink";
 import { RichText } from "@payloadcms/richtext-lexical/react";
 import type { Page, SiteSetting } from "@/payload-types";
-import { getPayloadClient, getProducts } from "@/lib/cms/queries";
+import { getPayloadClient, getProductLinks, getProducts } from "@/lib/cms/queries";
 import { getOfferState } from "@/lib/pricing";
 import { formatINR, mediaDoc, whatsappLink } from "@/lib/format";
 import { buttonClasses } from "@/components/ui/Button";
@@ -12,29 +13,39 @@ import { FeatureIcon, ICON_TINTS } from "@/components/ui/FeatureIcon";
 import { FAQ } from "@/components/sections/FAQ";
 import { Testimonials } from "@/components/sections/Testimonials";
 import { ContactSection } from "@/components/sections/ContactSection";
+import { LinkCards, type LinkCard } from "@/components/sections/LinkCards";
+import { LANDING_PAGES } from "@/lib/siteLinks";
+import { mainHeadingPlan, withMainHeading } from "@/lib/cms/pageText";
 import { HtmlEmbed } from "./HtmlEmbed";
 
 type Block = NonNullable<Page["layout"]>[number];
 type BlockOf<T extends Block["blockType"]> = Extract<Block, { blockType: T }>;
 
-/** Renders the page-builder sections an editor stacked in the admin. */
-export async function RenderBlocks({ blocks, settings }: { blocks: Page["layout"]; settings: SiteSetting }) {
+/**
+ * Renders the page-builder sections an editor stacked in the admin.
+ * With `title`, the page is given exactly one <h1>: the hero's, else the first section's heading, else a hidden one.
+ */
+export async function RenderBlocks({ blocks, settings, title }: { blocks: Page["layout"]; settings: SiteSetting; title?: string | null }) {
   if (!blocks?.length) return null;
+  const plan = title ? mainHeadingPlan(blocks) : "hero";
   return (
     <>
+      {plan === "hidden" && <h1 className="sr-only">{title}</h1>}
       {blocks.map((block, i) => {
         const key = block.id ?? `${block.blockType}-${i}`;
         switch (block.blockType) {
           case "hero":
             return <HeroBlock key={key} block={block} first={i === 0} />;
           case "richText":
-            return <RichTextBlock key={key} block={block} />;
+            return <RichTextBlock key={key} block={block} main={plan === "promote" && i === 0} />;
           case "imageText":
             return <ImageTextBlock key={key} block={block} />;
           case "featureGrid":
             return <FeatureGridBlock key={key} block={block} />;
           case "productCards":
             return <ProductCardsBlock key={key} block={block} />;
+          case "productHub":
+            return <ProductHubBlock key={key} block={block} />;
           case "cta":
             return <CtaBlock key={key} block={block} />;
           case "faq":
@@ -57,6 +68,7 @@ export async function RenderBlocks({ blocks, settings }: { blocks: Page["layout"
                 text={block.text}
                 whatsappHref={whatsappLink(settings.whatsappNumber, settings.whatsappMessage)}
                 email={settings.supportEmail}
+                headingAs={plan === "promote" && i === 0 ? "h1" : "h2"}
               />
             );
           case "video":
@@ -74,9 +86,9 @@ export async function RenderBlocks({ blocks, settings }: { blocks: Page["layout"
 function Btn({ label, url, variant }: { label?: string | null; url?: string | null; variant?: "primary" | "outline" | "plum" }) {
   if (!label || !url) return null;
   return (
-    <Link href={url} className={buttonClasses({ variant, size: "lg" })}>
+    <SmartLink href={url} className={buttonClasses({ variant, size: "lg" })}>
       {label}
-    </Link>
+    </SmartLink>
   );
 }
 
@@ -116,11 +128,11 @@ function HeroBlock({ block, first }: { block: BlockOf<"hero">; first: boolean })
   );
 }
 
-function RichTextBlock({ block }: { block: BlockOf<"richText"> }) {
+function RichTextBlock({ block, main = false }: { block: BlockOf<"richText">; main?: boolean }) {
   return (
     <section className="px-4 py-14 md:py-20 first:pt-32">
       <Reveal className={`prose-pandora mx-auto ${block.width === "wide" ? "max-w-5xl" : "max-w-3xl"}`}>
-        <RichText data={block.content} />
+        <RichText data={main ? withMainHeading(block.content) : block.content} />
       </Reveal>
     </section>
   );
@@ -232,6 +244,25 @@ async function ProductCardsBlock({ block }: { block: BlockOf<"productCards"> }) 
       </div>
     </section>
   );
+}
+
+/** Icon for an automatic product card, guessed from its name. */
+const productIcon = (name: string) =>
+  /workout|fitness|gym/i.test(name) ? "Dumbbell" : /budget|expense|money/i.test(name) ? "Wallet" : /wedding|shaadi/i.test(name) ? "Heart" : "FileSpreadsheet";
+
+/** "Our products": links to every product and landing page (automatic), or the editor's own cards. */
+async function ProductHubBlock({ block }: { block: BlockOf<"productHub"> }) {
+  let cards: LinkCard[];
+  if (block.cards?.length) {
+    cards = block.cards.map((c) => ({ title: c.title, text: c.text, url: c.url, cta: c.buttonLabel, icon: c.icon, image: c.image }));
+  } else {
+    const products = await getProductLinks().catch(() => []);
+    cards = [
+      ...LANDING_PAGES.map((p) => ({ title: p.label, text: p.description, url: p.url, cta: p.cta, icon: p.icon })),
+      ...products.map((p) => ({ title: p.name, text: p.tagline, url: `/${p.slug}`, cta: "See what's inside", icon: productIcon(p.name) })),
+    ];
+  }
+  return <LinkCards id="explore" eyebrow={block.eyebrow} heading={block.heading} text={block.text} cards={cards} />;
 }
 
 const CTA_STYLES = {

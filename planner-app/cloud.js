@@ -241,7 +241,7 @@ function trialScreen() {
   $$('[data-s]', g).forEach(b => b.onclick = () => { const s = b.dataset.s; const st = s === 'fresh' ? freshState() : s === 'demo' ? demoState() : normalize(local); st.demo = false;
     const lpDate = store.get('pp_lp_date'); if (s === 'fresh' && lpDate && st.settings && !st.settings.date) st.settings.date = lpDate; // date picked on the landing page
     create(st); });
-  $('[data-file]', g).onchange = async e => { const f = e.target.files[0]; if (!f) return; try { const st = /\.json$/i.test(f.name) ? normalize(JSON.parse(await f.text())) : importWorkbook(await f.arrayBuffer()); create(st); } catch (err) { toast('Could not read that file: ' + err.message); } };
+  $('[data-file]', g).onchange = async e => { const f = e.target.files[0]; if (!f) return; try { const st = /\.json$/i.test(f.name) ? normalize(JSON.parse(await f.text())) : await importWorkbook(await f.arrayBuffer()); create(st); } catch (err) { toast('Could not read that file: ' + err.message); } };
   $('[data-out]', g).onclick = () => signOut();
 }
 

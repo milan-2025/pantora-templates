@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getPosts } from "@/lib/cms/queries";
+import { DEFAULT_SHARE_IMAGE } from "@/lib/cms/seo";
 import { SiteShell } from "@/components/SiteShell";
 import { MediaSlot } from "@/components/ui/MediaSlot";
 import { Reveal } from "@/components/ui/Reveal";
@@ -11,6 +12,8 @@ export const revalidate = 300;
 export const metadata: Metadata = {
   title: "Blog",
   description: "Wedding planning tips, budgeting guides and template how-tos.",
+  alternates: { canonical: "/blog" },
+  openGraph: { title: "Blog", description: "Wedding planning tips, budgeting guides and template how-tos.", url: "/blog", images: [DEFAULT_SHARE_IMAGE] },
 };
 
 const dateFmt = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "long", year: "numeric" });

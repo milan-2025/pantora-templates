@@ -8,11 +8,11 @@ import config from "@payload-config";
 import { WEDDING_PREVIEW } from "../lib/sheetPreview";
 
 const payload = await getPayload({ config });
-const found = await payload.find({ collection: "products", where: { slug: { equals: "wedding_planner" } }, limit: 1, depth: 0 });
+const found = await payload.find({ collection: "products", where: { slug: { in: ["wedding_planner_sheet", "wedding_planner"] } }, limit: 1, depth: 0 });
 const product = found.docs[0];
 
 if (!product) {
-  console.log("No product with the slug wedding_planner; nothing to do.");
+  console.log("No product with the slug wedding_planner_sheet (or wedding_planner); nothing to do.");
 } else if (product.preview?.sheets?.length) {
   console.log("The Wedding Planner already has a sheet preview; nothing changed.");
 } else {

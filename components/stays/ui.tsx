@@ -1,7 +1,9 @@
 /** Stays: presentational pieces shared by the public pages (no hooks, so they render on the server too). */
 import Link from "next/link";
+import { SmartLink } from "@/components/ui/SmartLink";
 import { Bath, BedDouble, Eye, MapPin, MessageCircle, Phone, Sparkles, Users } from "lucide-react";
 import { inr, waLink, waNumber } from "@/lib/stays/core";
+import { LANDING_PAGES } from "@/lib/siteLinks";
 import { CardCarousel } from "./Gallery";
 import type { AdminExtras, PublicCard } from "@/lib/stays/views";
 
@@ -78,7 +80,7 @@ export function Header({ site, active, admin = false }: { site: SiteInfo; active
 export function Footer({ site }: { site: SiteInfo }) {
   return (
     <footer className="mt-20 border-t border-line bg-white">
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-10 sm:grid-cols-3 sm:px-6">
+      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-10 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
         <div>
           <Brand site={site} />
           <p className="mt-3 max-w-xs text-sm text-muted">{site.tagline}</p>
@@ -89,6 +91,15 @@ export function Footer({ site }: { site: SiteInfo }) {
             <li><Link href="/stays/search" className="hover:text-plum">All stays</Link></li>
             <li><Link href="/stays/search?view=map" className="hover:text-plum">Map</Link></li>
             <li><Link href="/stays/host" className="hover:text-plum">List your property</Link></li>
+          </ul>
+        </div>
+        <div className="text-sm">
+          <p className="font-semibold text-plum">More from Pandora</p>
+          <ul className="mt-2 space-y-1.5 text-muted">
+            <li><Link href="/" className="hover:text-plum">Pandora Templates</Link></li>
+            {LANDING_PAGES.filter((p) => p.key !== "stays").map((p) => (
+              <li key={p.key}><SmartLink href={p.url} className="hover:text-plum">{p.label}</SmartLink></li>
+            ))}
           </ul>
         </div>
         <div className="text-sm">

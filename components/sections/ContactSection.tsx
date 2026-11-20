@@ -18,11 +18,14 @@ export function ContactSection({
   text,
   whatsappHref,
   email,
+  headingAs: Heading = "h2",
 }: {
   heading?: string | null;
   text?: string | null;
   whatsappHref?: string | null;
   email?: string | null;
+  /** "h1" when the form is the main section of its page (e.g. /contact). */
+  headingAs?: "h1" | "h2";
 }) {
   const pathname = usePathname();
   const [status, setStatus] = useState<Status>("idle");
@@ -55,7 +58,7 @@ export function ContactSection({
       <div className="mx-auto grid max-w-5xl gap-10 md:grid-cols-[1fr_1.2fr] md:gap-14">
         <Reveal className="min-w-0">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-teal">Contact</p>
-          <h2 className="font-display text-4xl md:text-5xl">{heading || "Get in touch"}</h2>
+          <Heading className="font-display text-4xl md:text-5xl">{heading || "Get in touch"}</Heading>
           {text && <p className="mt-4 text-lg leading-relaxed text-charcoal/75">{text}</p>}
           <div className="mt-8 space-y-3">
             {whatsappHref && (

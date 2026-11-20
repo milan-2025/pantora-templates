@@ -7,6 +7,7 @@ import { getPayload } from "payload";
 import config from "@payload-config";
 import { doc, h, p, ul } from "./lexical";
 import { WEDDING_PREVIEW } from "../lib/sheetPreview";
+import { PRODUCT_HUB_BLOCK } from "../lib/cms/homeUpgrade";
 
 const payload = await getPayload({ config });
 const ctx = { disableRevalidate: true };
@@ -51,7 +52,10 @@ await withRetry(() => payload.updateGlobal({
     instagramUrl: "https://www.instagram.com/pandoratemplates",
     supportEmail: "support@pandoratemplates.com",
     navLinks: [
-      { label: "Wedding Planner", url: "/wedding_planner" },
+      { label: "Wedding Planner", url: "/wedding_planner_sheet" },
+      { label: "Online Planner", url: "/planner" },
+      { label: "Invites", url: "/shaadi" },
+      { label: "Stays", url: "/stays" },
       { label: "Blog", url: "/blog" },
       { label: "Contact", url: "/contact" },
     ],
@@ -67,10 +71,10 @@ await withRetry(() => payload.updateGlobal({
 console.log("updated site-settings");
 
 /* ---------------- wedding planner product ---------------- */
-await upsert("products", "wedding_planner", {
+await upsert("products", "wedding_planner_sheet", {
   _status: "published",
   name: "The Wedding Planner Sheet",
-  slug: "wedding_planner",
+  slug: "wedding_planner_sheet",
   tagline: "Plan your wedding without losing your mind. One connected sheet for budget, guests, vendors and payments.",
   price: 2100,
   formats: ["Excel", "Google Sheets"],
@@ -230,12 +234,13 @@ await upsert("pages", "home", {
       eyebrow: "Pandora Templates",
       heading: "Open the box.",
       headingAccent: "Everything's ready.",
-      text: "Beautifully designed, ready-to-use templates for life's big projects: weddings, budgets, family and more.",
+      text: "Ready-to-use tools for life's big projects: plan your wedding online with your family, make digital invites, use planner sheets, find a stay and more.",
       primaryLabel: "Shop templates",
       primaryUrl: "/#products",
-      secondaryLabel: "See the Wedding Planner",
-      secondaryUrl: "/wedding_planner",
+      secondaryLabel: "Plan your wedding online",
+      secondaryUrl: "/planner",
     },
+    { ...PRODUCT_HUB_BLOCK },
     { blockType: "productCards", heading: "Templates for the big moments", text: "Done for you, made for you." },
     {
       blockType: "featureGrid",
@@ -251,7 +256,7 @@ await upsert("pages", "home", {
       heading: "Planning a wedding?",
       text: "Our Wedding Planner Sheet keeps your budget, guests, vendors and payments in one place.",
       buttonLabel: "See the Wedding Planner",
-      buttonUrl: "/wedding_planner",
+      buttonUrl: "/wedding_planner_sheet",
       style: "plum",
     },
   ],
@@ -338,7 +343,7 @@ await upsert("pages", "ultimateweddingplanner", {
       headingAccent: "bundle.",
       text: "This is an example page built from blocks in the admin. Edit the text, add images, then click Publish.",
       primaryLabel: "See the Wedding Planner",
-      primaryUrl: "/wedding_planner",
+      primaryUrl: "/wedding_planner_sheet",
     },
     {
       blockType: "richText",
@@ -348,7 +353,7 @@ await upsert("pages", "ultimateweddingplanner", {
         ul(["Add or reorder sections with the + button", "Upload images under Images & videos", "Set the page's Google title under the SEO tab"]),
       ),
     },
-    { blockType: "cta", heading: "Ready to start planning?", buttonLabel: "Get the planner", buttonUrl: "/wedding_planner", style: "teal" },
+    { blockType: "cta", heading: "Ready to start planning?", buttonLabel: "Get the planner", buttonUrl: "/wedding_planner_sheet", style: "teal" },
   ],
 });
 

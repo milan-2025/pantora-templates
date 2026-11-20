@@ -1,9 +1,15 @@
 import type { NextConfig } from "next";
 import { withPayload } from "@payloadcms/next/withPayload";
+import { LEGACY_REDIRECTS } from "./lib/siteLinks";
 
 const nextConfig: NextConfig = {
   experimental: { cpus: 2 },
+  // Old or mistyped addresses that are still shared in ads, chats and bookmarks.
+  async redirects() {
+    return LEGACY_REDIRECTS.map((r) => ({ ...r, permanent: true }));
+  },
   // LeadFlow CRM lives at /CRM (static screens in public/CRM, server code in app/api/crm).
+  // Rewrite paths match regardless of letter case, so /crm also opens the CRM app; the CRM sales page has its own address.
   async rewrites() {
     return {
       beforeFiles: [
@@ -12,7 +18,7 @@ const nextConfig: NextConfig = {
         { source: "/planner", destination: "/planner/index.html" },
         { source: "/planner/signup", destination: "/planner/index.html" },
         { source: "/planner/login", destination: "/planner/index.html" },
-        { source: "/crm", destination: "/crm-software.html" },
+        { source: "/crm-software", destination: "/crm-software.html" },
         { source: "/CRM/api.php", destination: "/api/crm" },
       ],
       afterFiles: [],

@@ -455,6 +455,12 @@ export interface Product {
                 | 'CalendarDays'
                 | 'Wallet'
                 | 'Gift'
+                | 'CalendarHeart'
+                | 'Mail'
+                | 'House'
+                | 'Dumbbell'
+                | 'ShoppingBag'
+                | 'Sparkles'
               )
             | null;
           title: string;
@@ -1034,12 +1040,12 @@ export interface Page {
             text?: string | null;
             primaryLabel?: string | null;
             /**
-             * e.g. /wedding_planner or https://…
+             * e.g. /wedding_planner_sheet or https://…
              */
             primaryUrl?: string | null;
             secondaryLabel?: string | null;
             /**
-             * e.g. /wedding_planner or https://…
+             * e.g. /wedding_planner_sheet or https://…
              */
             secondaryUrl?: string | null;
             image?: (string | null) | Media;
@@ -1090,7 +1096,7 @@ export interface Page {
             imageSide?: ('left' | 'right') | null;
             buttonLabel?: string | null;
             /**
-             * e.g. /wedding_planner or https://…
+             * e.g. /wedding_planner_sheet or https://…
              */
             buttonUrl?: string | null;
             id?: string | null;
@@ -1114,6 +1120,12 @@ export interface Page {
                         | 'CalendarDays'
                         | 'Wallet'
                         | 'Gift'
+                        | 'CalendarHeart'
+                        | 'Mail'
+                        | 'House'
+                        | 'Dumbbell'
+                        | 'ShoppingBag'
+                        | 'Sparkles'
                       )
                     | null;
                   title: string;
@@ -1137,11 +1149,58 @@ export interface Page {
             blockType: 'productCards';
           }
         | {
+            eyebrow?: string | null;
+            heading?: string | null;
+            text?: string | null;
+            /**
+             * Leave empty to show everything automatically: the online wedding planner, invite maker, stays, CRM and every published product. Add cards to choose your own.
+             */
+            cards?:
+              | {
+                  title: string;
+                  text?: string | null;
+                  /**
+                   * e.g. /planner, /shaadi, /wedding_planner_sheet or https://…
+                   */
+                  url: string;
+                  buttonLabel?: string | null;
+                  icon?:
+                    | (
+                        | 'Calculator'
+                        | 'Users'
+                        | 'BellRing'
+                        | 'FileSpreadsheet'
+                        | 'Smartphone'
+                        | 'RefreshCw'
+                        | 'Heart'
+                        | 'CalendarDays'
+                        | 'Wallet'
+                        | 'Gift'
+                        | 'CalendarHeart'
+                        | 'Mail'
+                        | 'House'
+                        | 'Dumbbell'
+                        | 'ShoppingBag'
+                        | 'Sparkles'
+                      )
+                    | null;
+                  /**
+                   * Optional. Shown instead of the icon.
+                   */
+                  image?: (string | null) | Media;
+                  id?: string | null;
+                }[]
+              | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'productHub';
+          }
+        | {
             heading: string;
             text?: string | null;
             buttonLabel?: string | null;
             /**
-             * e.g. /wedding_planner or https://…
+             * e.g. /wedding_planner_sheet or https://…
              */
             buttonUrl?: string | null;
             style?: ('plum' | 'teal' | 'cream') | null;
@@ -1937,6 +1996,26 @@ export interface PagesSelect<T extends boolean = true> {
               heading?: T;
               text?: T;
               products?: T;
+              id?: T;
+              blockName?: T;
+            };
+        productHub?:
+          | T
+          | {
+              eyebrow?: T;
+              heading?: T;
+              text?: T;
+              cards?:
+                | T
+                | {
+                    title?: T;
+                    text?: T;
+                    url?: T;
+                    buttonLabel?: T;
+                    icon?: T;
+                    image?: T;
+                    id?: T;
+                  };
               id?: T;
               blockName?: T;
             };

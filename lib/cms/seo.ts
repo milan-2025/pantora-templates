@@ -2,10 +2,16 @@ import type { Metadata } from "next";
 import type { Media } from "@/payload-types";
 import { mediaDoc } from "@/lib/format";
 
-/** Builds page metadata from an SEO group, with sensible fallbacks. */
+/** Shown when a page has no share image of its own (WhatsApp, Facebook, X, LinkedIn previews). */
+export const DEFAULT_SHARE_IMAGE = { url: "/og-default.jpg", width: 1200, height: 630, alt: "Pandora Templates: ready-to-use tools for life's big projects" };
+
+/**
+ * Builds page metadata from an SEO group, with sensible fallbacks.
+ * `path` (e.g. "/terms") sets the canonical address, so ?ref=… and other links count as one page in search.
+ */
 export function seoMetadata(
   seo: { title?: string | null; description?: string | null; image?: string | Media | null } | null | undefined,
-  fallback: { title: string; description?: string | null },
+  fallback: { title: string; description?: string | null; path?: string },
 ): Metadata {
   const title = seo?.title || fallback.title;
   const description = seo?.description || fallback.description || undefined;
@@ -13,6 +19,13 @@ export function seoMetadata(
   return {
     title,
     description,
-    openGraph: { title, description, images: image ? [{ url: image.url, alt: image.alt }] : undefined },
+    ...(fallback.path ? { alternates: { canonical: fallback.path } } : {}),
+    openGraph: {
+      title,
+      description,
+      ...(fallback.path ? { url: fallback.path } : {}),
+      images: image ? [{ url: image.url, alt: image.alt }] : [DEFAULT_SHARE_IMAGE],
+    },
+    twitter: { card: "summary_large_image" },
   };
 }
