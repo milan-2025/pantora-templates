@@ -8,7 +8,7 @@
 
 export type LandingPage = {
   /** Stable id, used by the homepage block to pick and order cards. */
-  key: "planner" | "invites" | "stays" | "crm";
+  key: "planner" | "invites" | "stays" | "crm" | "workout";
   label: string;
   url: string;
   /** One or two sentences for cards and link titles. */
@@ -18,7 +18,7 @@ export type LandingPage = {
   /** lucide icon name (see components/ui/FeatureIcon). */
   icon: string;
   /** Wedding pages link to each other; the rest stand alone. */
-  topic: "wedding" | "travel" | "business";
+  topic: "wedding" | "travel" | "business" | "fitness";
 };
 
 export const LANDING_PAGES: readonly LandingPage[] = [
@@ -57,6 +57,15 @@ export const LANDING_PAGES: readonly LandingPage[] = [
     cta: "Try it free",
     icon: "Users",
     topic: "business",
+  },
+  {
+    key: "workout",
+    label: "Pandora Workout",
+    url: "/workout",
+    description: "14 to 100-day workout challenges with a daily plan, guided workouts, streaks, gifts and friends to keep you going.",
+    cta: "Start free",
+    icon: "Dumbbell",
+    topic: "fitness",
   },
 ];
 
@@ -101,6 +110,7 @@ export const ROBOTS_DISALLOW: readonly string[] = [
 export const SITEMAP_LANDING_PAGES: readonly { url: string; priority: number; changeFrequency: "daily" | "weekly" | "monthly" }[] = [
   { url: "/planner", priority: 0.9, changeFrequency: "weekly" },
   { url: "/shaadi", priority: 0.8, changeFrequency: "monthly" },
+  { url: "/workout", priority: 0.8, changeFrequency: "weekly" },
   { url: "/crm-software", priority: 0.6, changeFrequency: "monthly" },
 ];
 

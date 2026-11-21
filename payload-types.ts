@@ -81,6 +81,14 @@ export interface Config {
     media: Media;
     'product-files': ProductFile;
     'contact-submissions': ContactSubmission;
+    'workout-plans': WorkoutPlan;
+    'workout-memberships': WorkoutMembership;
+    'workout-profiles': WorkoutProfile;
+    'workout-groups': WorkoutGroup;
+    'workout-feed': WorkoutFeed;
+    'workout-photos': WorkoutPhoto;
+    'workout-claims': WorkoutClaim;
+    'workout-logins': WorkoutLogin;
     users: User;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -103,6 +111,14 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     'product-files': ProductFilesSelect<false> | ProductFilesSelect<true>;
     'contact-submissions': ContactSubmissionsSelect<false> | ContactSubmissionsSelect<true>;
+    'workout-plans': WorkoutPlansSelect<false> | WorkoutPlansSelect<true>;
+    'workout-memberships': WorkoutMembershipsSelect<false> | WorkoutMembershipsSelect<true>;
+    'workout-profiles': WorkoutProfilesSelect<false> | WorkoutProfilesSelect<true>;
+    'workout-groups': WorkoutGroupsSelect<false> | WorkoutGroupsSelect<true>;
+    'workout-feed': WorkoutFeedSelect<false> | WorkoutFeedSelect<true>;
+    'workout-photos': WorkoutPhotosSelect<false> | WorkoutPhotosSelect<true>;
+    'workout-claims': WorkoutClaimsSelect<false> | WorkoutClaimsSelect<true>;
+    'workout-logins': WorkoutLoginsSelect<false> | WorkoutLoginsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -117,11 +133,13 @@ export interface Config {
     'site-settings': SiteSetting;
     'invite-plans': InvitePlan;
     'planner-landing': PlannerLanding;
+    'workout-settings': WorkoutSetting;
   };
   globalsSelect: {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     'invite-plans': InvitePlansSelect<false> | InvitePlansSelect<true>;
     'planner-landing': PlannerLandingSelect<false> | PlannerLandingSelect<true>;
+    'workout-settings': WorkoutSettingsSelect<false> | WorkoutSettingsSelect<true>;
   };
   locale: null;
   widgets: {
@@ -1359,6 +1377,294 @@ export interface ContactSubmission {
   createdAt: string;
 }
 /**
+ * The free challenge and the paid plans. Changes apply at once to everyone on the plan. Exactly one plan should be ticked as free.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "workout-plans".
+ */
+export interface WorkoutPlan {
+  id: string;
+  name: string;
+  /**
+   * E.g. basic. Don't change it once sold.
+   */
+  planId: string;
+  sortOrder?: number | null;
+  isFree?: boolean | null;
+  active?: boolean | null;
+  price?: number | null;
+  /**
+   * Length of the free challenge for the free plan (e.g. 14).
+   */
+  durationDays?: number | null;
+  /**
+   * People the buyer can add on their plan, besides themselves.
+   */
+  seats?: number | null;
+  /**
+   * Per person. Unused photos don't carry over.
+   */
+  photosPerWeek?: number | null;
+  tagline?: string | null;
+  /**
+   * E.g. “Best value”.
+   */
+  badge?: string | null;
+  features?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * One per buyer. The buyer adds friends/family as members, who then use the app on this plan. Change the plan or type a new date to extend.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "workout-memberships".
+ */
+export interface WorkoutMembership {
+  id: string;
+  ownerEmail: string;
+  plan: string | WorkoutPlan;
+  status?: ('active' | 'suspended') | null;
+  expiresAt?: string | null;
+  paidAt?: string | null;
+  amount?: number | null;
+  /**
+   * Days for money-back are counted from here.
+   */
+  termStart?: string | null;
+  promoCode?: string | null;
+  seatsOverride?: number | null;
+  photosOverride?: number | null;
+  /**
+   * From gifts and referrals. Added on top.
+   */
+  extraSeats?: number | null;
+  members?:
+    | {
+        email: string;
+        name?: string | null;
+        addedAt?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  referredBy?: string | null;
+  referralRewarded?: boolean | null;
+  adminNote?: string | null;
+  orderId?: string | null;
+  paymentId?: string | null;
+  orderPlan?: (string | null) | WorkoutPlan;
+  orderAmount?: number | null;
+  orderPaid?: boolean | null;
+  orderRef?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Everyone who signed in: their challenge, logs, gifts and buddy. Set per-person photo limits or free days here.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "workout-profiles".
+ */
+export interface WorkoutProfile {
+  id: string;
+  email: string;
+  name?: string | null;
+  phone?: string | null;
+  program?: string | null;
+  streak?: number | null;
+  lastActivityAt?: string | null;
+  freeStart?: string | null;
+  freeDaysOverride?: number | null;
+  /**
+   * Gifts/referrals not yet used on a plan. Added to their free days, or to a plan they buy.
+   */
+  bonusDays?: number | null;
+  photosOverride?: number | null;
+  bonusFreezes?: number | null;
+  refCode?: string | null;
+  referredBy?: string | null;
+  refCount?: number | null;
+  source?: string | null;
+  buddyStatus?: ('none' | 'waiting' | 'matched') | null;
+  buddyEmail?: string | null;
+  buddySince?: string | null;
+  buddyShareWa?: boolean | null;
+  buddyWaitingSince?: string | null;
+  buddyBlocked?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  reports?: number | null;
+  rewards?:
+    | {
+        key?: string | null;
+        title?: string | null;
+        note?: string | null;
+        at?: string | null;
+        reward?: string | null;
+        amount?: number | null;
+        code?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  reminderHour?: number | null;
+  rev?: number | null;
+  adminNote?: string | null;
+  /**
+   * Their logs. Edit with care.
+   */
+  state?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Days logged on time (count for money-back).
+   */
+  logged?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Complete days logged on time (count for gifts).
+   */
+  completed?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  push?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "workout-groups".
+ */
+export interface WorkoutGroup {
+  id: string;
+  name: string;
+  code: string;
+  maxOverride?: number | null;
+  ownerEmail: string;
+  mode?: ('together' | 'log') | null;
+  start?: string | null;
+  program?: string | null;
+  length?: number | null;
+  members?:
+    | {
+        email: string;
+        name?: string | null;
+        joinedAt?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "workout-feed".
+ */
+export interface WorkoutFeed {
+  id: string;
+  kind?: ('cheer' | 'nudge' | 'msg' | 'event') | null;
+  groupCode?: string | null;
+  toEmail?: string | null;
+  fromEmail?: string | null;
+  fromName?: string | null;
+  text?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Kept private: only the person sees them in the app.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "workout-photos".
+ */
+export interface WorkoutPhoto {
+  id: string;
+  email: string;
+  week?: string | null;
+  day?: string | null;
+  status?: ('pending' | 'ready') | null;
+  publicId: string;
+  note?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Claims from buyers who reached the days needed. Check their log, then: for money back, refund in the Razorpay dashboard and set Status to Paid. For free months, set Status to Approved and the membership is extended automatically.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "workout-claims".
+ */
+export interface WorkoutClaim {
+  id: string;
+  email: string;
+  membership?: (string | null) | WorkoutMembership;
+  counted?: number | null;
+  choice?: ('refund' | 'extend') | null;
+  percent?: number | null;
+  months?: number | null;
+  refundAmount?: number | null;
+  termStart?: string | null;
+  termEnd?: string | null;
+  paymentId?: string | null;
+  status?: ('pending' | 'approved' | 'paid' | 'done' | 'rejected') | null;
+  /**
+   * Shown to the person if you reject the claim.
+   */
+  adminNote?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "workout-logins".
+ */
+export interface WorkoutLogin {
+  id: string;
+  email: string;
+  codeHash: string;
+  expiresAt: string;
+  attempts?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
@@ -1464,6 +1770,38 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'contact-submissions';
         value: string | ContactSubmission;
+      } | null)
+    | ({
+        relationTo: 'workout-plans';
+        value: string | WorkoutPlan;
+      } | null)
+    | ({
+        relationTo: 'workout-memberships';
+        value: string | WorkoutMembership;
+      } | null)
+    | ({
+        relationTo: 'workout-profiles';
+        value: string | WorkoutProfile;
+      } | null)
+    | ({
+        relationTo: 'workout-groups';
+        value: string | WorkoutGroup;
+      } | null)
+    | ({
+        relationTo: 'workout-feed';
+        value: string | WorkoutFeed;
+      } | null)
+    | ({
+        relationTo: 'workout-photos';
+        value: string | WorkoutPhoto;
+      } | null)
+    | ({
+        relationTo: 'workout-claims';
+        value: string | WorkoutClaim;
+      } | null)
+    | ({
+        relationTo: 'workout-logins';
+        value: string | WorkoutLogin;
       } | null)
     | ({
         relationTo: 'users';
@@ -2228,6 +2566,200 @@ export interface ContactSubmissionsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "workout-plans_select".
+ */
+export interface WorkoutPlansSelect<T extends boolean = true> {
+  name?: T;
+  planId?: T;
+  sortOrder?: T;
+  isFree?: T;
+  active?: T;
+  price?: T;
+  durationDays?: T;
+  seats?: T;
+  photosPerWeek?: T;
+  tagline?: T;
+  badge?: T;
+  features?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "workout-memberships_select".
+ */
+export interface WorkoutMembershipsSelect<T extends boolean = true> {
+  ownerEmail?: T;
+  plan?: T;
+  status?: T;
+  expiresAt?: T;
+  paidAt?: T;
+  amount?: T;
+  termStart?: T;
+  promoCode?: T;
+  seatsOverride?: T;
+  photosOverride?: T;
+  extraSeats?: T;
+  members?:
+    | T
+    | {
+        email?: T;
+        name?: T;
+        addedAt?: T;
+        id?: T;
+      };
+  referredBy?: T;
+  referralRewarded?: T;
+  adminNote?: T;
+  orderId?: T;
+  paymentId?: T;
+  orderPlan?: T;
+  orderAmount?: T;
+  orderPaid?: T;
+  orderRef?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "workout-profiles_select".
+ */
+export interface WorkoutProfilesSelect<T extends boolean = true> {
+  email?: T;
+  name?: T;
+  phone?: T;
+  program?: T;
+  streak?: T;
+  lastActivityAt?: T;
+  freeStart?: T;
+  freeDaysOverride?: T;
+  bonusDays?: T;
+  photosOverride?: T;
+  bonusFreezes?: T;
+  refCode?: T;
+  referredBy?: T;
+  refCount?: T;
+  source?: T;
+  buddyStatus?: T;
+  buddyEmail?: T;
+  buddySince?: T;
+  buddyShareWa?: T;
+  buddyWaitingSince?: T;
+  buddyBlocked?: T;
+  reports?: T;
+  rewards?:
+    | T
+    | {
+        key?: T;
+        title?: T;
+        note?: T;
+        at?: T;
+        reward?: T;
+        amount?: T;
+        code?: T;
+        id?: T;
+      };
+  reminderHour?: T;
+  rev?: T;
+  adminNote?: T;
+  state?: T;
+  logged?: T;
+  completed?: T;
+  push?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "workout-groups_select".
+ */
+export interface WorkoutGroupsSelect<T extends boolean = true> {
+  name?: T;
+  code?: T;
+  maxOverride?: T;
+  ownerEmail?: T;
+  mode?: T;
+  start?: T;
+  program?: T;
+  length?: T;
+  members?:
+    | T
+    | {
+        email?: T;
+        name?: T;
+        joinedAt?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "workout-feed_select".
+ */
+export interface WorkoutFeedSelect<T extends boolean = true> {
+  kind?: T;
+  groupCode?: T;
+  toEmail?: T;
+  fromEmail?: T;
+  fromName?: T;
+  text?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "workout-photos_select".
+ */
+export interface WorkoutPhotosSelect<T extends boolean = true> {
+  email?: T;
+  week?: T;
+  day?: T;
+  status?: T;
+  publicId?: T;
+  note?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "workout-claims_select".
+ */
+export interface WorkoutClaimsSelect<T extends boolean = true> {
+  email?: T;
+  membership?: T;
+  counted?: T;
+  choice?: T;
+  percent?: T;
+  months?: T;
+  refundAmount?: T;
+  termStart?: T;
+  termEnd?: T;
+  paymentId?: T;
+  status?: T;
+  adminNote?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "workout-logins_select".
+ */
+export interface WorkoutLoginsSelect<T extends boolean = true> {
+  email?: T;
+  codeHash?: T;
+  expiresAt?: T;
+  attempts?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
@@ -2447,6 +2979,78 @@ export interface PlannerLanding {
   createdAt?: string | null;
 }
 /**
+ * Changes apply within a minute. Prices, friends and photos a week are set per plan under Workout plans.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "workout-settings".
+ */
+export interface WorkoutSetting {
+  id: string;
+  freeDays?: number | null;
+  groupMax?: number | null;
+  groupsPerPerson?: number | null;
+  waAfterDays?: number | null;
+  buddyOn?: boolean | null;
+  /**
+   * Unlocked automatically. Days only count when logged on the day (or the next day). Free days extend the plan (or the free challenge); a seat lets one more friend join the buyer's plan; a coupon shows the code you type here.
+   */
+  milestones?:
+    | {
+        /**
+         * Unique, never change
+         */
+        key: string;
+        title: string;
+        kind?: ('streak' | 'total') | null;
+        days: number;
+        reward?: ('days' | 'freeze' | 'coupon' | 'badge' | 'seat') | null;
+        /**
+         * Days / freezes / seats
+         */
+        amount?: number | null;
+        code?: string | null;
+        note?: string | null;
+        active?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  moneyBackOn?: boolean | null;
+  moneyBackRule?: ('logged' | 'completed') | null;
+  /**
+   * Within one paid year. The buyer picks money back OR free months. Only the buyer (not friends on their plan) can claim.
+   */
+  moneyBackTiers?:
+    | {
+        days: number;
+        percent?: number | null;
+        months?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  moneyBackTerms?: string | null;
+  refOn?: boolean | null;
+  refFriendOff?: number | null;
+  refReward?: ('days' | 'seat') | null;
+  refAmount?: number | null;
+  refMax?: number | null;
+  offerText?: string | null;
+  whatsappNumber?: string | null;
+  whatsappMessage?: string | null;
+  promoCodes?:
+    | {
+        code: string;
+        amountOff?: number | null;
+        validUntil?: string | null;
+        active?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  vapidPublic?: string | null;
+  vapidPrivate?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings_select".
  */
@@ -2545,6 +3149,64 @@ export interface PlannerLandingSelect<T extends boolean = true> {
   bundlePrice?: T;
   crossSellOn?: T;
   seededAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "workout-settings_select".
+ */
+export interface WorkoutSettingsSelect<T extends boolean = true> {
+  freeDays?: T;
+  groupMax?: T;
+  groupsPerPerson?: T;
+  waAfterDays?: T;
+  buddyOn?: T;
+  milestones?:
+    | T
+    | {
+        key?: T;
+        title?: T;
+        kind?: T;
+        days?: T;
+        reward?: T;
+        amount?: T;
+        code?: T;
+        note?: T;
+        active?: T;
+        id?: T;
+      };
+  moneyBackOn?: T;
+  moneyBackRule?: T;
+  moneyBackTiers?:
+    | T
+    | {
+        days?: T;
+        percent?: T;
+        months?: T;
+        id?: T;
+      };
+  moneyBackTerms?: T;
+  refOn?: T;
+  refFriendOff?: T;
+  refReward?: T;
+  refAmount?: T;
+  refMax?: T;
+  offerText?: T;
+  whatsappNumber?: T;
+  whatsappMessage?: T;
+  promoCodes?:
+    | T
+    | {
+        code?: T;
+        amountOff?: T;
+        validUntil?: T;
+        active?: T;
+        id?: T;
+      };
+  vapidPublic?: T;
+  vapidPrivate?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

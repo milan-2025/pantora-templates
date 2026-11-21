@@ -3,6 +3,7 @@ import { getPayloadClient } from "@/lib/cms/queries";
 import { markOrderPaid } from "@/lib/fulfil";
 import { markInvitePaid } from "@/lib/invites";
 import { markPlannerPaid } from "@/lib/planner/server";
+import { markWorkoutPaid } from "@/lib/workout/server";
 import { hmacHex, signaturesMatch } from "@/lib/payments";
 
 /**
@@ -45,7 +46,9 @@ export async function POST(req: Request) {
         const invite = await markInvitePaid(payload, orderId, payment?.id);
         // Or an online wedding planner upgrade.
         const planner = invite.found ? null : await markPlannerPaid(payload, orderId, payment?.id);
-        if (!invite.found && !planner?.found) console.log(`[webhook] no order ${orderId} on this site; ignored`);
+        // Or a workout app plan.
+        const workout = invite.found || planner?.found ? null : await markWorkoutPaid(payload, orderId, payment?.id);
+        if (!invite.found && !planner?.found && !workout?.found) console.log(`[webhook] no order ${orderId} on this site; ignored`);
       }
     }
   }

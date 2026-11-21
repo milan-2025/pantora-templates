@@ -17,7 +17,8 @@
     "publish-content:apply": "npm run payload run scripts/publish-content.ts apply",
     "build-studio": "node scripts/build-studio.mjs",
     "test": "vitest run",
-    "build-planner": "node scripts/build-planner.mjs"
+    "build-planner": "node scripts/build-planner.mjs",
+    "build-workout": "node scripts/build-workout.mjs"
   },
   "dependencies": {
     "@payloadcms/db-mongodb": "^3.90.2",

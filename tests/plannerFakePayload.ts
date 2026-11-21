@@ -32,7 +32,7 @@ const sortDocs = (docs: Doc[], sort?: string) => {
   return [...docs].sort((a, b) => ((a[k] ?? 0) < (b[k] ?? 0) ? -1 : (a[k] ?? 0) > (b[k] ?? 0) ? 1 : 0) * (desc ? -1 : 1));
 };
 const clone = <T,>(x: T): T => JSON.parse(JSON.stringify(x));
-const unique: Record<string, string[]> = { "planner-plans": ["planId"] };
+const unique: Record<string, string[]> = { "planner-plans": ["planId"], "workout-plans": ["planId"], "workout-profiles": ["email"], "workout-groups": ["code"] };
 export const fakePayload: any = {
   db,
   async find({ collection, where, sort, limit = 10 }: any) {
@@ -64,7 +64,9 @@ export const fakePayload: any = {
     db[collection] = coll(collection).filter((d) => !ms.includes(d));
     return { docs: ms };
   },
-  async findGlobal() { return null; },
+  globals: {} as Record<string, Doc>,
+  async findGlobal({ slug }: any) { return this.globals[slug] ? clone(this.globals[slug]) : null; },
+  async updateGlobal({ slug, data }: any) { this.globals[slug] = { ...(this.globals[slug] ?? {}), ...clone(data) }; return clone(this.globals[slug]); },
   async auth({ headers }: any) { return { user: headers.get("cookie")?.includes("admin=1") ? { id: "admin" } : null }; },
 };
 export const getPayloadClient = async () => fakePayload;
