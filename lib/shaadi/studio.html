@@ -1424,4 +1424,35 @@ rlRecord=function(){var cv=$("reelc");if(!cv.captureStream||!window.MediaRecorde
  $("rdl").disabled=true;prev=true;restartMusic();rlPlay(false);rec.start(1000);t0=performance.now();
  var left=function(){return RL.dur+1.2-(performance.now()-t0)/1000};rlStatus("Recording… keep this screen open ("+rlFmt(left())+" left)");
  tk=setInterval(function(){if(rec.state!="recording")return;var l=left();if(l<=0){rec.stop();return}rlStatus("Recording… keep this screen open ("+rlFmt(l)+" left)")},500)};
+/* ===== v17: connected to the online wedding planner (/planner) ===== */
+/* The planner owns the guest list and functions; RSVPs go into it. Not connected: a card offers the planner. */
+var PLN={linked:false},PSA=null,PLPULL=false;
+var _mm17=mineMeta;mineMeta=function(r){PLN=r.planner||{linked:false};PSA=PLN.psa||null;_mm17(r);setTimeout(plUI,0)};
+var _api17=api;api=function(m,p,b,t){if(b&&b.state&&PLN.linked&&/^\/invites\//.test(p))b.psa=PSA;
+ return _api17(m,p,b,t).then(function(r){if(PLN.linked&&r&&(r.reload||(r.psa&&r.psa!==PSA)))plPull();return r})};
+/* The planner changed names, date or functions while this editor was open: take its version of those. */
+function plPull(){var c=cred();if(PLPULL||!c.slug)return;PLPULL=true;
+ _api17("GET","/mine/"+c.slug,null,c.token).then(function(r){PLPULL=false;var st=r.state||{};["b","g","date","ev","gu","grp"].forEach(function(k){if(k in st)S[k]=st[k]});PLN=r.planner||PLN;PSA=PLN.psa||null;
+  fixOrd();syncUI();if(typeof evUI=="function")evUI();if(typeof gtUI=="function"){gtUI();gpUI();gsUI()}render();plUI();toast("Updated from your wedding planner")}).catch(function(){PLPULL=false})}
+function plSignup(src){var c=cred();return"/planner/signup?utm_source="+src+(c.slug&&c.token?"#ik="+encodeURIComponent(c.slug)+"."+c.token:"")}
+function plPitch(src){return'<div class="plc" style="border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:12px;background:rgba(224,182,87,.08);font-family:Inter,sans-serif;font-size:13px;line-height:1.5;text-align:left"><b style="font-size:14px">📋 Plan the whole wedding, not just the invite</b><br>The Pandora Wedding Planner keeps your guest list, who is coming to which function, rooms, cabs, vendors and budget in one place, shared with family. Connect this invite and every RSVP lands in your guest list by itself.<br><a href="'+esc(plSignup(src))+'" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;padding:9px 16px;border-radius:999px;text-decoration:none;background:#7b1e3a;color:#fff;font-weight:600">Try the planner free for 14 days</a></div>'}
+/* Linked: guests are edited in the planner, so the rows here are read-only. */
+var _gt17=gtUI;gtUI=function(){_gt17();if(PLN.linked)[].forEach.call($("gtab").querySelectorAll("[data-gi],[data-gd]"),function(x){if(x.hasAttribute("data-gd"))x.style.display="none";else x.disabled=true})};
+function plUI(){if(VIEW)return;if(PLN.linked&&$("gtab"))gtUI();
+ var gf=$("gimp")&&$("gimp").closest("fieldset");
+ if(gf){var hide=PLN.linked;["gg","gimp","gadd"].forEach(function(id){var e=$(id);if(!e)return;var box=id=="gadd"?e.parentNode:e;box.style.display=hide?"none":"";var lb=gf.querySelector('label[for="'+id+'"]');if(lb)lb.style.display=hide?"none":""});
+  var hint=gf.querySelector(".hint");if(hint&&hint.textContent.indexOf("Tip:")==0)hint.style.display=hide?"none":"";
+  var n=$("plg");if(hide&&!n){n=document.createElement("div");n.id="plg";gf.insertBefore(n,gf.querySelector("legend").nextSibling)}
+  if(n){if(!hide)n.remove();else n.innerHTML='<p class="hint" style="font-size:13px;margin:6px 0 10px">📋 <b>Your guest list comes from your wedding planner</b> ('+S.gu.length+' famil'+(S.gu.length==1?"y":"ies")+'). Add guests and tick who is invited to which function there; each family’s link shows only its functions. <a href="/planner#guests" target="_blank" rel="noopener">Open my planner</a></p>'}}
+ var ef=$("evs")&&$("evs").closest("fieldset"),eh=$("plev");
+ if(ef&&PLN.linked&&!eh){eh=document.createElement("p");eh.id="plev";eh.className="hint";ef.insertBefore(eh,$("evs"))}
+ if(eh){if(!PLN.linked)eh.remove();else eh.innerHTML="📋 Names, dates and venues of functions come from your planner, so change them there. Photos, icons, notes and maps links stay as you set them here."}
+ var bn=$("plb"),f=document.querySelector("form.ed");
+ if(PLN.linked&&PLN.note){if(!bn&&f){bn=document.createElement("div");bn.id="plb";bn.style.cssText="border:1px solid #e0b657;background:rgba(224,182,87,.14);border-radius:12px;padding:10px 12px;margin:0 0 12px;font:13px/1.45 Inter,sans-serif";f.insertBefore(bn,f.querySelector(".pubf"))}
+  if(bn)bn.innerHTML="📋 <b>Updated from your wedding planner:</b> "+esc(PLN.note)+". Check the invite, then press <b>"+(S.paid?"Save &amp; publish":"Save")+"</b> so guests see it."}else if(bn)bn.remove();
+ var ds=$("dsh"),dp=$("pldsh");if(ds){if(!dp){dp=document.createElement("div");dp.id="pldsh";ds.parentNode.appendChild(dp)}
+  dp.innerHTML=PLN.linked?'<p class="hint" style="font-size:13px">📋 Replies go straight into your planner’s Guest List (who is coming to which function, meals and blessings). <a href="/planner#dash" target="_blank" rel="noopener">See them in the planner</a></p>':plPitch("invite-rsvp")}}
+var _sv17=doSave;doSave=function(){_sv17();if(PLN.linked&&PLN.note){PLN.note="";setTimeout(plUI,1500)}};$("svp").onclick=doSave;
+var _done17=done;done=function(){_done17();if(PLN.linked)return;var c=$("cls");if(c&&!$("mc").querySelector(".plc")){var d=document.createElement("div");d.innerHTML=plPitch("invite-live");c.parentNode.insertBefore(d.firstChild,c)}};
+setTimeout(plUI,0);
 </script></body></html>

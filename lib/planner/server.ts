@@ -268,6 +268,15 @@ export async function savePlanner(payload: Payload, id: string, by: string, role
       overrideAccess: true,
     });
     if (rev % 25 === 0) void prune(payload, doc.id, rev).catch((e) => console.error("[planner-prune]", e));
+    if (doc.invite && ops.some((o) => "replace" in o || ("c" in o && (o.c === "guests" || o.c === "functions")) || ("k" in o && o.k === "settings"))) {
+      // Keep the connected wedding invite in step (guest list, functions, names, date). Loaded on demand: it imports this file.
+      try {
+        const { syncInvite } = await import("@/lib/invitePlanner");
+        await syncInvite(payload, { ...doc, state: after, rev });
+      } catch (e) {
+        console.error("[planner-invite-sync]", e);
+      }
+    }
     return { rev };
   }
   throw new PlannerError("Lots of changes at once. Please try again.", 409);
@@ -400,11 +409,22 @@ export async function markPlannerPaid(payload: Payload, orderId: string, payment
     depth: 0, overrideAccess: true,
   });
   if (!res.docs.length) return { found: true as const, alreadyPaid: true };
+  let bundleNote = "";
+  if (doc.orderBundle) {
+    // Planner + Invite bundle: the wedding invite goes live on Premium too.
+    try {
+      const { grantBundleInvite, inviteUrl } = await import("@/lib/invitePlanner");
+      const inv = await grantBundleInvite(payload, doc);
+      bundleNote = `<p>Your <b>wedding invite</b> is live on Premium too: <a href="${inviteUrl(inv.slug)}">${inviteUrl(inv.slug)}</a>. Open it from the planner's dashboard to finish the design.</p>`;
+    } catch (e) {
+      console.error("[planner-bundle-invite]", e);
+    }
+  }
   await sendWithBrevo({
     to: [{ email: doc.ownerEmail }],
     subject: `Your ${plan.name} plan is active 🎉`,
     html: emailShell(`<h2 style="margin:0 0 8px;color:#3B1F4A">Thank you!</h2><p>Your wedding planner is now on the <b>${esc(plan.name)}</b> plan, valid until <b>${expires.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</b>.</p>
-      ${plan.collaborators ? `<p>You can now invite up to ${plan.collaborators} family members from <b>Sharing</b> in the planner.</p>` : ""}<p>${button(`${siteUrl()}/planner`, "Open my planner")}</p>`),
+      ${plan.collaborators ? `<p>You can now invite up to ${plan.collaborators} family members from <b>Sharing</b> in the planner.</p>` : ""}${bundleNote}<p>${button(`${siteUrl()}/planner`, "Open my planner")}</p>`),
   }).catch((e) => console.error("[planner-paid-email]", e));
   return { found: true as const, alreadyPaid: false };
 }

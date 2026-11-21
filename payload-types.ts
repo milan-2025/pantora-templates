@@ -776,6 +776,16 @@ export interface Invite {
    */
   orderPlan?: ('basic' | 'premium' | 'royal') | null;
   paymentId?: string | null;
+  planner?: (string | null) | Planner;
+  /**
+   * Last time the planner changed this invite's draft (names, date or functions).
+   */
+  plannerSyncAt?: string | null;
+  /**
+   * What the planner changed, shown to the couple in the editor until they publish.
+   */
+  plannerNote?: string | null;
+  crossSellAt?: string | null;
   editToken?: string | null;
   state:
     | {
@@ -797,32 +807,6 @@ export interface Invite {
     | null;
   editSid?: string | null;
   editAt?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "invite-rsvps".
- */
-export interface InviteRsvp {
-  id: string;
-  invite: string | Invite;
-  name: string;
-  guests: number;
-  events?: string | null;
-  meal?: string | null;
-  /**
-   * Which side the guest is on (story templates)
-   */
-  side?: ('bride' | 'groom') | null;
-  /**
-   * Which guest link they replied from (if any)
-   */
-  guest?: string | null;
-  /**
-   * Blessing / note the guest left for the couple
-   */
-  message?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -888,9 +872,18 @@ export interface Planner {
    */
   orderPaid?: boolean | null;
   /**
+   * Planner + Invite bundle: paying also unlocks the linked invite on Premium.
+   */
+  orderBundle?: boolean | null;
+  /**
    * Set when the couple shares their run sheet by link (pandoratemplates.com/planner/share/<code>). Empty = no link. The couple turns it on or off in the planner.
    */
   shareToken?: string | null;
+  /**
+   * The invite connected to this planner (guest list, functions and RSVPs stay in step).
+   */
+  invite?: (string | null) | Invite;
+  crossSellAt?: string | null;
   state?:
     | {
         [k: string]: unknown;
@@ -965,6 +958,37 @@ export interface PlannerPlan {
     rituals?: number | null;
     milni?: number | null;
   };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "invite-rsvps".
+ */
+export interface InviteRsvp {
+  id: string;
+  invite: string | Invite;
+  name: string;
+  guests: number;
+  events?: string | null;
+  meal?: string | null;
+  /**
+   * Which side the guest is on (story templates)
+   */
+  side?: ('bride' | 'groom') | null;
+  /**
+   * Which guest link they replied from (if any)
+   */
+  guest?: string | null;
+  /**
+   * Blessing / note the guest left for the couple
+   */
+  message?: string | null;
+  /**
+   * Only for invites connected to a wedding planner.
+   */
+  plannerStatus?: ('applied' | 'review' | 'ignored') | null;
+  plannerFamily?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1784,6 +1808,10 @@ export interface InvitesSelect<T extends boolean = true> {
   orderId?: T;
   orderPlan?: T;
   paymentId?: T;
+  planner?: T;
+  plannerSyncAt?: T;
+  plannerNote?: T;
+  crossSellAt?: T;
   editToken?: T;
   state?: T;
   published?: T;
@@ -1805,6 +1833,8 @@ export interface InviteRsvpsSelect<T extends boolean = true> {
   side?: T;
   guest?: T;
   message?: T;
+  plannerStatus?: T;
+  plannerFamily?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1839,7 +1869,10 @@ export interface PlannersSelect<T extends boolean = true> {
   orderAmount?: T;
   paymentId?: T;
   orderPaid?: T;
+  orderBundle?: T;
   shareToken?: T;
+  invite?: T;
+  crossSellAt?: T;
   state?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2397,6 +2430,18 @@ export interface PlannerLanding {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Shown in the planner's upgrade window and invite card.
+   */
+  bundleOn?: boolean | null;
+  /**
+   * Planner Family plan + Wedding invite Premium. Planner promo codes work on it too.
+   */
+  bundlePrice?: number | null;
+  /**
+   * Two days after someone buys a planner plan (and has no invite) or an invite (and has no planner), email them about the other one. Sent once, by the daily reminders job (/api/shaadi/cron/reminders).
+   */
+  crossSellOn?: boolean | null;
   seededAt?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;
@@ -2496,6 +2541,9 @@ export interface PlannerLandingSelect<T extends boolean = true> {
         quote?: T;
         id?: T;
       };
+  bundleOn?: T;
+  bundlePrice?: T;
+  crossSellOn?: T;
   seededAt?: T;
   updatedAt?: T;
   createdAt?: T;

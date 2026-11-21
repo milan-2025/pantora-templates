@@ -124,6 +124,7 @@ export const Planners: CollectionConfig = {
         { name: "orderAmount", type: "number", admin: { readOnly: true } },
         { name: "paymentId", type: "text", admin: { readOnly: true } },
         { name: "orderPaid", type: "checkbox", defaultValue: false, admin: { readOnly: true, description: "Ticked once this order's payment was applied." } },
+        { name: "orderBundle", type: "checkbox", defaultValue: false, label: "Order includes the wedding invite", admin: { readOnly: true, description: "Planner + Invite bundle: paying also unlocks the linked invite on Premium." } },
       ],
     },
     {
@@ -135,6 +136,13 @@ export const Planners: CollectionConfig = {
         readOnly: true,
         description: "Set when the couple shares their run sheet by link (pandoratemplates.com/planner/share/<code>). Empty = no link. The couple turns it on or off in the planner.",
       },
+    },
+    {
+      type: "row",
+      fields: [
+        { name: "invite", type: "relationship", relationTo: "invites", index: true, label: "Wedding invite", admin: { readOnly: true, width: "50%", description: "The invite connected to this planner (guest list, functions and RSVPs stay in step)." } },
+        { name: "crossSellAt", type: "date", label: "Invite offer emailed", admin: { readOnly: true, width: "50%" } },
+      ],
     },
     // The whole planner (guests, budget, vendors…). Large, so hidden from the admin form.
     { name: "state", type: "json", admin: { hidden: true } },

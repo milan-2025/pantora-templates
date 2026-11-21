@@ -75,7 +75,8 @@ export const newToken = () => randomBytes(16).toString("hex");
 
 export type InviteState = Record<string, unknown>;
 
-export type Guest = { n: string; p: string; g: string; s?: number; r?: number };
+/** k = planner family, e/en = planner function ids/names the family is invited to (set when the invite is linked to a planner). */
+export type Guest = { n: string; p: string; g: string; s?: number; r?: number; k?: string; e?: string[]; en?: string[] };
 const str = (v: unknown, max: number) => String(v ?? "").trim().slice(0, max);
 
 /** Photos/videos may only be our own Cloudinary uploads (or small legacy inline images). */
@@ -138,6 +139,9 @@ export function cleanState(input: unknown): InviteState | null {
       g: str(g.g, 30),
       ...(g.s ? { s: Number(g.s) || 1 } : {}),
       ...(g.r ? { r: Number(g.r) || 1 } : {}),
+      ...(g.k ? { k: str(g.k, 80) } : {}),
+      ...(Array.isArray(g.e) ? { e: (g.e as unknown[]).map((x) => str(x, 40)).filter(Boolean).slice(0, 40) } : {}),
+      ...(Array.isArray(g.en) ? { en: (g.en as unknown[]).map((x) => str(x, 80).toLowerCase()).filter(Boolean).slice(0, 40) } : {}),
     })).filter((g) => g.n);
   }
   if (Array.isArray(o.grp)) o.grp = (o.grp as unknown[]).map((x) => str(x, 30)).filter(Boolean).slice(0, 12);
@@ -166,7 +170,9 @@ export function publicView(state: InviteState, guestSlug?: string | null, plan?:
   const gu = (Array.isArray(state.gu) ? state.gu : []) as Guest[];
   const idx = guestSlug ? guestSlugs(gu).indexOf(guestSlug) : -1;
   const guest = idx >= 0 ? gu[idx] : null;
-  const events = ((Array.isArray(state.ev) ? state.ev : []) as { a?: string[] }[]).filter((e) => {
+  const events = ((Array.isArray(state.ev) ? state.ev : []) as { a?: string[]; pk?: string; n?: string }[]).filter((e) => {
+    // A family from the wedding planner sees exactly the functions the planner invites it to.
+    if (guest?.e?.length) return e.pk ? guest.e.includes(String(e.pk)) : (guest.en ?? []).includes(String(e.n ?? "").trim().toLowerCase());
     const a = Array.isArray(e.a) ? e.a : [];
     return a.length === 0 || (guest !== null && a.includes(guest.g));
   });

@@ -72,8 +72,10 @@ function defaultMsgs() {
     pay: 'Namaste {vendor} 🙏\n\nAbout {bride} & {groom}’s wedding on {date}: {payment}.\n\nPlease confirm. Thank you!'
   };
 }
-const MSG_HELP = { invite: '{name} {bride} {groom} {date} {city}', remind: '{name} {bride} {groom} {date} {city}', stay: '{name} {hotel} {room} {checkin} {checkout} {pickup} {bride} {groom} {date} {city}', thanks: '{name} {gift} {bride} {groom} {date} {city}', pay: '{vendor} {payment} {amount} {due} {item} {bride} {groom} {date} {city}' };
-const msgText = k => k === 'invite' ? S.msg : ((S.msgs || {})[k] || defaultMsgs()[k] || '');
+const MSG_HELP = { invite: '{name} {link} {bride} {groom} {date} {city}', remind: '{name} {bride} {groom} {date} {city}', stay: '{name} {hotel} {room} {checkin} {checkout} {pickup} {bride} {groom} {date} {city}', thanks: '{name} {gift} {bride} {groom} {date} {city}', pay: '{vendor} {payment} {amount} {due} {item} {bride} {groom} {date} {city}' };
+/** The invitation; with a connected, live wedding invite, a line with the family's invite link is added if the template has no {link}. */
+function inviteText() { const t = S.msg || ''; return typeof INV !== 'undefined' && INV && INV.linked && INV.live && t.indexOf('{link}') < 0 ? t + '\n\n💌 Your invitation: {link}' : t; }
+const msgText = k => k === 'invite' ? inviteText() : ((S.msgs || {})[k] || defaultMsgs()[k] || '');
 function fillMsg(tpl, vals) {
   const s = S.settings, all = Object.assign({ bride: s.bride || '', groom: s.groom || '', date: dlong(s.date), city: s.city || '' }, vals || {});
   return String(tpl || '').split('\n').filter(line => {
