@@ -1,0 +1,15 @@
+{
+  "name": "Pandora Stays · Host portal",
+  "short_name": "Stays Host",
+  "description": "Manage your properties on Pandora Stays, even offline.",
+  "start_url": "/stays/host",
+  "scope": "/stays/host",
+  "display": "standalone",
+  "background_color": "#FBF5EA",
+  "theme_color": "#3B1F4A",
+  "icons": [
+    { "src": "/stays/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/stays/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/stays/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

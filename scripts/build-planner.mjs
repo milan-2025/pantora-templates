@@ -14,5 +14,9 @@ mkdirSync(new URL("../public/planner/", import.meta.url), { recursive: true });
 writeFileSync(new URL("../public/planner/index.html", import.meta.url), html);
 // The offline worker's version follows the page, so phones pick up each new build.
 const version = createHash("sha256").update(html).digest("hex").slice(0, 12);
-writeFileSync(new URL("../public/planner/sw.js", import.meta.url), src("sw.js").replace("/*VERSION*/", version));
+// Served from the site root (/planner-sw.js) so it may control /planner itself: a worker under /planner/ can only
+// control /planner/..., and Hostinger doesn't send the Service-Worker-Allowed header that would lift that limit.
+const sw = src("sw.js").replace("/*VERSION*/", version);
+writeFileSync(new URL("../public/planner-sw.js", import.meta.url), sw);
+writeFileSync(new URL("../public/planner/sw.js", import.meta.url), sw);
 console.log(`Wrote public/planner/index.html (${Math.round(html.length / 1024)} KB) and sw.js (${version})`);

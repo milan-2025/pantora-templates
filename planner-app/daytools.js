@@ -49,7 +49,8 @@ function installCard() {
 function registerSW() {
   if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
   if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') return;
-  navigator.serviceWorker.register('/planner/sw.js', { scope: '/planner' }).catch(() => null);
+  // The worker lives at the site root: a worker in /planner/ isn't allowed to control /planner itself on our host.
+  navigator.serviceWorker.register('/planner-sw.js', { scope: '/planner' }).catch(() => null);
 }
 document.addEventListener('click', e => {
   if (e.target.closest('#install')) installApp();

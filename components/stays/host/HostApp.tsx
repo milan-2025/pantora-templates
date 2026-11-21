@@ -49,10 +49,29 @@ export function HostApp() {
   const [err, setErr] = useState("");
   const load = useCallback(() => api<Me>("host", "me").then(setMe).catch((e) => setErr(e.message)), []);
   useEffect(() => { load(); }, [load]);
+  useEffect(() => registerHostSW(), []);
   if (err) return <Center><p className="text-coral">{err}</p></Center>;
   if (!me) return <Center><Loader2 className="size-6 animate-spin text-plum" /></Center>;
   if (!me.host) return <Auth site={me.settings} onIn={load} />;
   return <Portal me={me as Me & { host: Host }} onOut={() => { api("host", "logout", {}).finally(() => { location.hash = ""; load(); }); }} onMe={(host) => setMe({ ...me, host })} />;
+}
+
+/**
+ * Offline: the host-only worker keeps the portal and the host's last data on this device, and sends property edits
+ * made offline when the connection is back (see public/stays/host-sw.js).
+ */
+function registerHostSW() {
+  if (!("serviceWorker" in navigator)) return;
+  const flush = () => navigator.serviceWorker.ready.then((r) => r.active?.postMessage({ type: "flush" })).catch(() => null);
+  navigator.serviceWorker.register("/stays/host-sw.js", { scope: "/stays/host" }).then(async () => {
+    const r = await navigator.serviceWorker.ready;
+    // Files this first visit loaded before the worker started, so the next start works offline too.
+    const urls = performance.getEntriesByType("resource").map((x) => x.name).filter((u) => u.includes("/_next/static/"));
+    r.active?.postMessage({ type: "cache", urls });
+    if (navigator.onLine) flush();
+  }).catch(() => null);
+  window.addEventListener("online", flush);
+  return () => window.removeEventListener("online", flush);
 }
 
 function Center({ children }: { children: React.ReactNode }) {

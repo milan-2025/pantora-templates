@@ -1455,4 +1455,16 @@ function plUI(){if(VIEW)return;if(PLN.linked&&$("gtab"))gtUI();
 var _sv17=doSave;doSave=function(){_sv17();if(PLN.linked&&PLN.note){PLN.note="";setTimeout(plUI,1500)}};$("svp").onclick=doSave;
 var _done17=done;done=function(){_done17();if(PLN.linked)return;var c=$("cls");if(c&&!$("mc").querySelector(".plc")){var d=document.createElement("div");d.innerHTML=plPitch("invite-live");c.parentNode.insertBefore(d.firstChild,c)}};
 setTimeout(plUI,0);
+/* ===== v18: works offline (installed or not). The worker /shaadi-sw.js keeps this editor, the draft and offline autosaves on the device. ===== */
+(function(){if(!("serviceWorker" in navigator)||!(EM||/^\/shaadi\/?$/.test(location.pathname)))return;
+ ["/shaadi","/i/"].forEach(function(s){navigator.serviceWorker.register("/shaadi-sw.js",{scope:s}).catch(function(){})});
+ var fl=function(){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){if(r.active&&/\/(shaadi|i\/)$/.test(r.scope))r.active.postMessage({type:"flush"})})})};
+ addEventListener("online",function(){fl();toast("Back online. Saving your changes…")});
+ addEventListener("offline",function(){toast("You’re offline. Keep editing: changes are saved on this device.")});
+ navigator.serviceWorker.addEventListener("message",function(e){if(e.data&&e.data.type=="shaadi-synced")ss("Changes made offline are saved ✓")});
+ var _a18=api;api=function(m,p,b,t){return _a18(m,p,b,t).then(function(r){if(r&&r.queued)setTimeout(function(){ss("Saved on this device · syncs when you’re online")},0);if(r&&r.offline&&m=="GET")setTimeout(function(){toast("You’re offline. Showing the copy saved on this device.")},300);return r})};
+ /* First visit: the draft loaded before the worker was running, so load it once more through it to keep a copy. */
+ var warm=function(){var c=cred();if(c.slug&&c.token)fetch(API+"/mine/"+c.slug,{headers:{"x-edit-token":c.token}}).catch(function(){})};
+ if(!navigator.serviceWorker.controller)navigator.serviceWorker.addEventListener("controllerchange",function(){setTimeout(warm,1500)});
+ if(navigator.onLine)setTimeout(fl,3000)})();
 </script></body></html>
