@@ -1880,6 +1880,7 @@ async function openPlanner(id, preload) {
     else if (r.state) { CLOUD.base = stripLocal(normalize(copy(r.state))); S = normalize(copy(r.state)); }
     else { CLOUD.base = null; S = freshState(); }
     S.demo = false; CLOUD.rev = r.rev || 0; D = null;
+    saveCache(); // keep a copy on this device straight away, so the planner opens with no internet next time
     INV = { linked: false, loaded: false }; INV_AT = 0;
     hideLanding(); ungate(); renderAll(); setSync(CLOUD.readOnly ? 'ro' : 'saved'); startPolling(); maybeTour(); invAfterOpen();
     if (!CLOUD.readOnly && diffOps(CLOUD.base, stripLocal(S)).length) schedulePush();
@@ -2846,7 +2847,8 @@ function installCard() {
 function registerSW() {
   if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
   if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') return;
-  navigator.serviceWorker.register('/planner/sw.js', { scope: '/planner' }).catch(() => null);
+  // The worker lives at the site root: a worker in /planner/ isn't allowed to control /planner itself on our host.
+  navigator.serviceWorker.register('/planner-sw.js', { scope: '/planner' }).catch(() => null);
 }
 document.addEventListener('click', e => {
   if (e.target.closest('#install')) installApp();
