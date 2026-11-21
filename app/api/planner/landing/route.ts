@@ -1,6 +1,8 @@
 import { getPayloadClient } from "@/lib/cms/queries";
 import { route } from "@/lib/planner/http";
 import { getPlans } from "@/lib/planner/server";
+import { bundleInfo } from "@/lib/invitePlanner";
+import { getPlanConfig } from "@/lib/invites";
 import { SAMPLE_TESTIMONIALS } from "@/globals/PlannerLanding";
 
 type Doc = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -17,8 +19,12 @@ export const GET = route(async () => {
   const plans = (await getPlans(payload)).filter((p) => p.active || p.isTrial);
   const pixel = String(g.metaPixelId ?? "").replace(/\D/g, "");
   const wa = String(g.whatsappNumber ?? "").replace(/\D/g, "");
+  const bundle = await bundleInfo(payload);
+  // The invite's own Premium price, so the page can show what the bundle saves.
+  const premium = (await getPlanConfig(payload).catch(() => null))?.plans.find((p) => p.id === "premium");
   return {
     plans,
+    bundle: { on: bundle.on, price: bundle.price, invitePremium: Number(premium?.price) || null },
     metaPixelId: pixel || null,
     offerText: String(g.offerText ?? "").trim() || null,
     whatsapp: wa ? { number: wa, message: String(g.whatsappMessage ?? "") } : null,
