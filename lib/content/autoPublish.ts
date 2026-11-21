@@ -40,14 +40,24 @@ export async function autoPublishContent(payload: Payload): Promise<void> {
 
   try {
     const plan = await planContent(payload);
-    await plan.apply();
+    const res = await plan.apply();
+    if (res.failed.length) {
+      for (const f of res.failed) payload.logger.error(`Content pack: ${f.step} failed: ${f.error}`);
+      throw new Error(`${res.failed.length} step(s) failed`);
+    }
     await markers.updateOne({ _id: CONTENT_RELEASE_ID }, { $set: { doneAt: new Date(), changes: plan.changes, notes: plan.notes } });
     payload.logger.info(`Content pack "${CONTENT_RELEASE_ID}" published: ${plan.changes.length} change(s).`);
     for (const n of plan.notes) payload.logger.warn(`Content pack: ${n}`);
   } catch (err) {
-    payload.logger.error({ err }, `Content pack "${CONTENT_RELEASE_ID}" failed; it will be retried on the next start`);
+    payload.logger.error({ err }, `Content pack "${CONTENT_RELEASE_ID}" failed; it will be retried on the next start (or run it from /api/admin/publish-content)`);
     await markers.deleteOne({ _id: CONTENT_RELEASE_ID }).catch(() => undefined);
   }
+}
+
+/** Records a manual publish from the admin page, so the automatic one doesn't run again later. */
+export async function markContentPublished(payload: Payload, info: { changes: string[]; notes: string[] }): Promise<void> {
+  const db = (payload.db as unknown as { connection?: { db?: { collection: (name: string) => { updateOne: (f: object, u: object, o: object) => Promise<unknown> } } } }).connection?.db;
+  await db?.collection("content_releases").updateOne({ _id: CONTENT_RELEASE_ID }, { $set: { startedAt: new Date(), doneAt: new Date(), manual: true, ...info } }, { upsert: true }).catch(() => undefined);
 }
 
 type MarkerCollection<T> = {

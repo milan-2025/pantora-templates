@@ -14,12 +14,13 @@ import { WORKOUT_SLUG, planWorkoutUpdate } from "./workoutProduct";
 import { BLOG_POSTS } from "./blogPosts";
 import { mdToLexical } from "../cms/richTextMd";
 
-export type ContentPlan = { changes: string[]; notes: string[]; apply: () => Promise<void> };
+export type ApplyResult = { done: string[]; failed: { step: string; error: string }[] };
+export type ContentPlan = { changes: string[]; notes: string[]; apply: () => Promise<ApplyResult> };
 
 export async function planContent(payload: Payload): Promise<ContentPlan> {
   const changes: string[] = [];
   const notes: string[] = [];
-  const todo: Array<() => Promise<unknown>> = [];
+  const todo: Array<{ step: string; run: () => Promise<unknown> }> = [];
 
   // Homepage (depth 0 keeps relationships as ids, so they are saved back unchanged).
   const home = (await payload.find({ collection: "pages", where: { slug: { equals: "home" } }, limit: 1, depth: 0, draft: true })).docs[0];
@@ -30,7 +31,7 @@ export async function planContent(payload: Payload): Promise<ContentPlan> {
     const strip = (v: unknown) => JSON.stringify(v, (k, x) => (k === "id" || k === "blockName" ? undefined : x));
     if (strip(layout) !== strip(home.layout) || home._status !== "published") {
       changes.push(`Homepage: new layout (${layout.map((b) => b.blockType).join(" → ")}), published`);
-      todo.push(() => payload.update({ collection: "pages", id: home.id, data: { layout: layout as typeof home.layout, _status: "published" } }));
+      todo.push({ step: "Homepage", run: () => payload.update({ collection: "pages", id: home.id, data: { layout: layout as typeof home.layout, _status: "published" } }) });
     }
   }
 
@@ -42,7 +43,7 @@ export async function planContent(payload: Payload): Promise<ContentPlan> {
     const plan = planWorkoutUpdate(workout as unknown as Record<string, unknown>);
     if (plan.changes.length) {
       changes.push(...plan.changes.map((c) => `Workout Challenge: ${c}`));
-      todo.push(() => payload.update({ collection: "products", id: workout.id, data: { ...(plan.data as Partial<typeof workout>), _status: "published" } }));
+      todo.push({ step: "Workout Challenge page", run: () => payload.update({ collection: "products", id: workout.id, data: { ...(plan.data as Partial<typeof workout>), _status: "published" } }) });
     }
     if (!workout.downloadFile && !workout.googleSheetsCopyUrl) {
       notes.push("The Workout Challenge has no download file or Google Sheets link yet. Upload the .xlsx under Products → Workout Challenge Tracker → Download file, so buyers receive it.");
@@ -58,7 +59,7 @@ export async function planContent(payload: Payload): Promise<ContentPlan> {
     changes.push(`Blog: new post "${post.title}" at /blog/${post.slug}`);
     // Space the dates a few minutes apart so the blog list shows them in this order (first post on top).
     const publishedAt = new Date(now - i * 5 * 60_000).toISOString();
-    todo.push(() =>
+    todo.push({ step: `Blog post "${post.title}"`, run: () =>
       payload.create({
         collection: "posts",
         data: {
@@ -71,15 +72,20 @@ export async function planContent(payload: Payload): Promise<ContentPlan> {
           seo: { title: post.seoTitle ?? post.title, description: post.excerpt },
           _status: "published",
         },
-      }),
-    );
+      }) });
   });
 
   return {
     changes,
     notes,
+    // Each step runs on its own: one failure (say, the homepage) never stops the blog posts.
     apply: async () => {
-      for (const run of todo) await run();
+      const result: ApplyResult = { done: [], failed: [] };
+      for (const t of todo) {
+        try { await t.run(); result.done.push(t.step); }
+        catch (err) { result.failed.push({ step: t.step, error: err instanceof Error ? err.message : String(err) }); }
+      }
+      return result;
     },
   };
 }
