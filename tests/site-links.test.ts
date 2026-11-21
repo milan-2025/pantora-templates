@@ -27,7 +27,7 @@ describe("link map", () => {
     expect(r.sitemap).toMatch(/\/sitemap\.xml$/);
   });
   it("lists the landing pages that are not in the admin in the sitemap", () => {
-    expect(SITEMAP_LANDING_PAGES.map((p) => p.url)).toEqual(["/planner", "/shaadi", "/crm-software"]);
+    expect(SITEMAP_LANDING_PAGES.map((p) => p.url)).toEqual(["/planner", "/shaadi", "/workout", "/crm-software"]);
     for (const p of SITEMAP_LANDING_PAGES) expect(blocked(p.url)).toBe(false);
   });
   it("never redirects an address to itself or into a loop", () => {

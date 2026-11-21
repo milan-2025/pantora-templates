@@ -18,6 +18,10 @@ const nextConfig: NextConfig = {
         { source: "/planner", destination: "/planner/index.html" },
         { source: "/planner/signup", destination: "/planner/index.html" },
         { source: "/planner/login", destination: "/planner/index.html" },
+        // Workout app (static app in public/workout, server code in app/api/workout).
+        { source: "/workout", destination: "/workout/index.html" },
+        { source: "/workout/signup", destination: "/workout/index.html" },
+        { source: "/workout/login", destination: "/workout/index.html" },
         { source: "/crm-software", destination: "/crm-software.html" },
         { source: "/CRM/api.php", destination: "/api/crm" },
       ],
@@ -37,6 +41,7 @@ const nextConfig: NextConfig = {
       // Wedding planner: offline worker for /planner, and run sheets shared by link stay out of search engines.
       { source: "/planner-sw.js", headers: [{ key: "Cache-Control", value: "no-cache" }] },
       { source: "/planner/sw.js", headers: [{ key: "Cache-Control", value: "no-cache" }, { key: "Service-Worker-Allowed", value: "/planner" }] },
+      { source: "/workout-sw.js", headers: [{ key: "Cache-Control", value: "no-cache" }] },
       { source: "/planner/share/:token*", headers: [...noindex, { key: "X-Frame-Options", value: "DENY" }] },
     ];
   },
