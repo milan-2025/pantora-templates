@@ -98,4 +98,13 @@ describe("auto-publishing the content pack", () => {
       expect(site.writes).toContain("update pages/home");
     });
   });
+
+  it("still publishes the blog posts when the homepage step fails", async () => {
+    const site = fakeSite({ failOnce: true }); // the first write (the homepage) throws
+    await withEnv({ VERCEL_ENV: "production", AUTO_PUBLISH_CONTENT: undefined }, async () => {
+      await autoPublishContent(site.payload);
+      expect(site.writes.filter((w) => w.startsWith("create posts/"))).toHaveLength(BLOG_POSTS.length);
+      expect(site.markers.has(CONTENT_RELEASE_ID)).toBe(false); // the homepage is retried on the next start
+    });
+  });
 });
