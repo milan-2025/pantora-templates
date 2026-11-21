@@ -78,7 +78,7 @@ function guestProfile(g) {
   const famS = sec('Family / group', fam.length ? '<ul class="plist2">' + fam.map(x => '<li>' + profLink('guest', x.id, x.name || x.group) + '<small>' + [x.age && x.age !== 'Adult' ? x.age : '', x.rsvp].filter(Boolean).map(esc).join(' · ') + '</small>' + (phoneDigits(x.phone) ? telBtns(x.phone, { name: x.name }) : '') + '</li>').join('') + '</ul>' : '', grp + ' · ' + (fam.length + 1) + ' people');
   const sh = on('shagun') ? S.shagun.filter(x => lc(x.name) === lc(g.name) || (g.group && lc(x.group) === lc(g.group) && !x.name)) : [];
   const shS = sec('Shagun & gifts', sh.length ? '<table class="pt">' + sh.map(x => '<tr><td><b>' + esc(x.dir || '') + '</b><small>' + [x.fn, dshow(x.date), x.gift].filter(Boolean).map(esc).join(' · ') + '</small></td><td class="num">' + (x.amount ? inr(x.amount) : '') + '</td></tr>').join('') + '</table>' : '');
-  return head + quick + contact + events + stay + tr + famS + shS + more +
+  return head + quick + contact + events + (typeof invReplySec === 'function' ? invReplySec(g) : '') + stay + tr + famS + shS + more +
     '<div class="pfoot"><button class="btn" data-pa="edit-guest" data-ro-ok>✎ Edit in Guest List</button></div>';
 }
 

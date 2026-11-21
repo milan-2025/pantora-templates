@@ -21,5 +21,17 @@ export const InviteRsvps: CollectionConfig = {
     { name: "side", type: "select", options: [{ label: "Bride's side", value: "bride" }, { label: "Groom's side", value: "groom" }], admin: { description: "Which side the guest is on (story templates)" } },
     { name: "guest", type: "text", admin: { description: "Which guest link they replied from (if any)" } },
     { name: "message", type: "textarea", admin: { description: "Blessing / note the guest left for the couple" } },
+    {
+      name: "plannerStatus",
+      type: "select",
+      label: "In the wedding planner",
+      options: [
+        { label: "Added to the guest list", value: "applied" },
+        { label: "Waiting for the couple to match it", value: "review" },
+        { label: "Ignored by the couple", value: "ignored" },
+      ],
+      admin: { readOnly: true, description: "Only for invites connected to a wedding planner." },
+    },
+    { name: "plannerFamily", type: "text", label: "Planner family", admin: { readOnly: true } },
   ],
 };

@@ -98,6 +98,27 @@ export const PlannerLanding: GlobalConfig = {
         { name: "quote", type: "textarea", required: true, admin: { description: "Keep it to 1–3 sentences." } },
       ],
     },
+    {
+      type: "collapsible",
+      label: "Planner + Invite bundle and cross-sell emails",
+      admin: { initCollapsed: false },
+      fields: [
+        {
+          type: "row",
+          fields: [
+            { name: "bundleOn", type: "checkbox", label: "Offer the bundle", defaultValue: true, admin: { width: "30%", description: "Shown in the planner's upgrade window and invite card." } },
+            { name: "bundlePrice", type: "number", label: "Bundle price (₹)", defaultValue: 2999, min: 1, admin: { width: "35%", description: "Planner Family plan + Wedding invite Premium. Planner promo codes work on it too." } },
+          ],
+        },
+        {
+          name: "crossSellOn",
+          type: "checkbox",
+          label: "Send the cross-sell email",
+          defaultValue: true,
+          admin: { description: "Two days after someone buys a planner plan (and has no invite) or an invite (and has no planner), email them about the other one. Sent once, by the daily reminders job (/api/shaadi/cron/reminders)." },
+        },
+      ],
+    },
     { name: "seededAt", type: "date", admin: { hidden: true } },
   ],
 };

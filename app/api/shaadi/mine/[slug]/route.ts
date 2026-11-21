@@ -16,5 +16,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
     paid: isLive(invite),
     plan: invite.plan ?? null,
     expires: invite.expiresAt ?? null,
+    // Connected to the online wedding planner: it keeps guests and functions up to date.
+    planner: invite.planner
+      ? { linked: true, psa: invite.plannerSyncAt ?? null, note: invite.plannerSyncAt && (!invite.publishedAt || invite.plannerSyncAt > invite.publishedAt) ? invite.plannerNote ?? "" : "" }
+      : { linked: false },
   });
 }

@@ -157,7 +157,7 @@ VIEWS.rituals = () => byFnView({
 /* ---------- Guests ---------- */
 function waLink(g) {
   if (!phoneDigits(g.phone)) return '';
-  return waHref(g.phone, fillMsg(S.msg, guestVals(g)));
+  return waHref(g.phone, fillMsg(msgText('invite'), guestVals(g)));
 }
 /** Messages that make sense for this guest, most useful first. */
 function guestChoices(r, after) {

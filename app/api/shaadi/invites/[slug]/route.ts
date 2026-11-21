@@ -6,6 +6,29 @@ import { clientIp, rateLimit } from "@/lib/rateLimit";
 
 type Ctx = { params: Promise<{ slug: string }> };
 
+/**
+ * An invite connected to the wedding planner: the planner owns the guest list, so the saved guests always win
+ * (keeping the editor's "sent" marks). If the planner changed the draft after this editor loaded it
+ * (psa = the planner-sync time the editor knows), the planner's names, date and events are kept too and the
+ * editor is told to reload them, so an open editor never undoes the planner's changes.
+ */
+function withPlanner(invite: { planner?: unknown; plannerSyncAt?: string | null; state?: unknown }, state: Record<string, unknown>, psa: unknown) {
+  if (!invite.planner) return { state, reload: false };
+  const saved = (invite.state ?? {}) as Record<string, unknown>;
+  const mine = new Map(((state.gu ?? []) as { k?: string; n: string; s?: number; r?: number }[]).map((g) => [g.k || g.n, g]));
+  const out: Record<string, unknown> = {
+    ...state,
+    gu: ((saved.gu ?? []) as { k?: string; n: string; s?: number; r?: number }[]).map((g) => {
+      const m = mine.get(g.k || g.n);
+      return { ...g, ...(m?.s || g.s ? { s: Math.max(m?.s ?? 0, g.s ?? 0) } : {}), ...(m?.r || g.r ? { r: Math.max(m?.r ?? 0, g.r ?? 0) } : {}) };
+    }),
+    grp: saved.grp ?? state.grp,
+  };
+  const stale = Boolean(invite.plannerSyncAt) && (typeof psa !== "string" || psa < String(invite.plannerSyncAt));
+  if (stale) for (const k of ["b", "g", "date", "ev"]) if (k in saved) out[k] = saved[k];
+  return { state: out, reload: stale };
+}
+
 /** Autosaves the couple's draft (needs their private edit token). Guests keep seeing the last published version. */
 export async function PUT(req: Request, { params }: Ctx) {
   if (!rateLimit(`invite-save:${clientIp(req)}`, 120, 60_000)) return NextResponse.json({ error: "Too many saves" }, { status: 429 });
@@ -15,12 +38,13 @@ export async function PUT(req: Request, { params }: Ctx) {
   if (!invite) return NextResponse.json({ error: "Not allowed" }, { status: 403 });
 
   if (!lockFree(invite, editSession(req))) return NextResponse.json({ error: "locked" }, { status: 409 });
-  const body = (await req.json().catch(() => null)) as { state?: unknown } | null;
-  const state = cleanState(body?.state);
-  if (!state) return NextResponse.json({ error: "Invalid invite" }, { status: 400 });
+  const body = (await req.json().catch(() => null)) as { state?: unknown; psa?: unknown } | null;
+  const raw = cleanState(body?.state);
+  if (!raw) return NextResponse.json({ error: "Invalid invite" }, { status: 400 });
+  const { state, reload } = withPlanner(invite, raw, body?.psa);
 
   await payload.update({ collection: "invites", id: invite.id, data: { state, names: coupleNames(state) }, overrideAccess: true });
-  return NextResponse.json({ ok: true, paid: isLive(invite), plan: invite.plan ?? null });
+  return NextResponse.json({ ok: true, paid: isLive(invite), plan: invite.plan ?? null, ...(reload ? { reload: true } : {}) });
 }
 
 /**
@@ -62,7 +86,7 @@ export async function POST(req: Request, { params }: Ctx) {
   const invite = await authorize(req, payload, slug);
   if (!invite) return NextResponse.json({ error: "Not allowed" }, { status: 403 });
   const sid = editSession(req);
-  const body = (await req.json().catch(() => null)) as { op?: string; take?: boolean; release?: boolean; state?: unknown } | null;
+  const body = (await req.json().catch(() => null)) as { op?: string; take?: boolean; release?: boolean; state?: unknown; psa?: unknown } | null;
 
   if (body?.op === "lock") {
     if (!sid) return NextResponse.json({ error: "No editor session" }, { status: 400 });
@@ -72,16 +96,17 @@ export async function POST(req: Request, { params }: Ctx) {
     }
     if (!body.take && !lockFree(invite, sid)) return NextResponse.json({ ok: false, held: true, ago: lockAge(invite) });
     await payload.update({ collection: "invites", id: invite.id, data: { editSid: sid, editAt: new Date().toISOString() }, overrideAccess: true });
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, ...(invite.planner ? { psa: invite.plannerSyncAt ?? null } : {}) });
   }
 
   if (body?.op === "publish") {
     if (!lockFree(invite, sid)) return NextResponse.json({ error: "locked" }, { status: 409 });
-    const state = cleanState(body.state);
-    if (!state) return NextResponse.json({ error: "Invalid invite" }, { status: 400 });
+    const raw = cleanState(body.state);
+    if (!raw) return NextResponse.json({ error: "Invalid invite" }, { status: 400 });
+    const { state, reload } = withPlanner(invite, raw, body.psa);
     const publishedAt = new Date().toISOString();
     await payload.update({ collection: "invites", id: invite.id, data: { state, published: state, publishedAt, names: coupleNames(state) }, overrideAccess: true });
-    return NextResponse.json({ ok: true, publishedAt, live: isLive(invite) });
+    return NextResponse.json({ ok: true, publishedAt, live: isLive(invite), ...(reload ? { reload: true } : {}) });
   }
 
   return NextResponse.json({ error: "Unknown action" }, { status: 400 });

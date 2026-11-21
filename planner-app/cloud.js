@@ -257,7 +257,8 @@ async function openPlanner(id, preload) {
     else if (r.state) { CLOUD.base = stripLocal(normalize(copy(r.state))); S = normalize(copy(r.state)); }
     else { CLOUD.base = null; S = freshState(); }
     S.demo = false; CLOUD.rev = r.rev || 0; D = null;
-    hideLanding(); ungate(); renderAll(); setSync(CLOUD.readOnly ? 'ro' : 'saved'); startPolling(); maybeTour();
+    INV = { linked: false, loaded: false }; INV_AT = 0;
+    hideLanding(); ungate(); renderAll(); setSync(CLOUD.readOnly ? 'ro' : 'saved'); startPolling(); maybeTour(); invAfterOpen();
     if (!CLOUD.readOnly && diffOps(CLOUD.base, stripLocal(S)).length) schedulePush();
   } catch (e) {
     if (e.status === 401) return signOut(true);
@@ -320,10 +321,10 @@ async function upgradeModal(reason) {
   if (!CLOUD.on) { go('account'); return; }
   const m = modal('<h2>Choose your plan</h2>' + (reason ? '<div class="banner">' + esc(reason) + '</div>' : '') + '<div class="plans"><div class="empty">Loading plans…</div></div>');
   let plans = [];
-  try { plans = (await api('/plans')).plans.filter(p => !p.isTrial); } catch (e) { $('.plans', m).innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; return; }
+  try { if (typeof invLoad === 'function') await invLoad(); plans = (await api('/plans')).plans.filter(p => !p.isTrial); } catch (e) { $('.plans', m).innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; return; }
   const owner = CLOUD.meta.role === 'owner', cur = CLOUD.meta.plan;
   $('.plans', m).innerHTML = plans.map(p => '<div class="plan' + (p.badge ? ' hot' : '') + '">' + (p.badge ? '<span class="pb">' + esc(p.badge) + '</span>' : '') + '<h3>' + esc(p.name) + '</h3><div class="pp">' + inr(p.price) + '</div><div class="note">' + esc(p.tagline) + ' · valid ' + (p.durationDays % 365 === 0 ? (p.durationDays / 365) + ' year' + (p.durationDays > 365 ? 's' : '') : p.durationDays + ' days') + '</div><ul>' + p.features.map(f => '<li>' + esc(f) + '</li>').join('') + '</ul>' +
-    (owner ? '<button class="btn pri wide keep" data-buy="' + esc(p.id) + '">' + (cur.id === p.id && CLOUD.meta.status !== 'expired' ? 'Renew' : 'Choose ' + esc(p.name)) + '</button>' : '') + '</div>').join('');
+    (owner ? '<button class="btn pri wide keep" data-buy="' + esc(p.id) + '">' + (cur.id === p.id && CLOUD.meta.status !== 'expired' ? 'Renew' : 'Choose ' + esc(p.name)) + '</button>' : '') + '</div>').join('') + (typeof invBundleCard === 'function' ? invBundleCard(owner) : '');
   $('.plans', m).insertAdjacentHTML('afterend', owner ? '<div class="row2" style="margin-top:12px;align-items:flex-end"><label class="field">Promo code (optional)<input class="inp" data-coupon style="text-transform:uppercase"></label></div>' : '<p class="note">Only the planner’s owner (' + esc(CLOUD.meta.owner) + ') can upgrade. Ask them to open Plan &amp; billing.</p>');
   $$('[data-buy]', m).forEach(b => b.onclick = async () => {
     b.disabled = true; const label = b.textContent; b.textContent = 'Opening payment…';

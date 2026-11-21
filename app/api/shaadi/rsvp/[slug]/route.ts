@@ -23,6 +23,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
   if (!invite || !isLive(invite)) return NextResponse.json({ error: "not_live" }, { status: 404 });
   const parsed = bodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Please enter your name" }, { status: 400 });
-  await payload.create({ collection: "invite-rsvps", data: { invite: invite.id, ...parsed.data, side: parsed.data.side || undefined }, overrideAccess: true });
+  const rsvp = await payload.create({ collection: "invite-rsvps", data: { invite: invite.id, ...parsed.data, side: parsed.data.side || undefined }, overrideAccess: true });
+  if (invite.planner) {
+    // Connected to a wedding planner: the reply goes into the family's guest rows (or the couple's review list).
+    try {
+      const { routeReply } = await import("@/lib/invitePlanner");
+      await routeReply(payload, invite, rsvp);
+    } catch (e) {
+      console.error("[invite-rsvp-planner]", e);
+    }
+  }
   return NextResponse.json({ ok: true });
 }

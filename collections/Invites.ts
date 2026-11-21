@@ -196,6 +196,17 @@ export const Invites: CollectionConfig = {
         { name: "paymentId", type: "text", admin: { readOnly: true } },
       ],
     },
+    {
+      type: "collapsible",
+      label: "Wedding planner",
+      admin: { initCollapsed: true, description: "Set when the couple connects this invite to their online wedding planner. The planner then keeps the guest list and functions up to date, and RSVPs flow back into it." },
+      fields: [
+        { name: "planner", type: "relationship", relationTo: "planners", index: true, admin: { readOnly: true } },
+        { name: "plannerSyncAt", type: "date", admin: { readOnly: true, description: "Last time the planner changed this invite's draft (names, date or functions)." } },
+        { name: "plannerNote", type: "text", admin: { readOnly: true, description: "What the planner changed, shown to the couple in the editor until they publish." } },
+        { name: "crossSellAt", type: "date", label: "Planner offer emailed", admin: { readOnly: true } },
+      ],
+    },
     // The couple's private edit key. Never returned by the API or shown in the admin.
     { name: "editToken", type: "text", access: { read: () => false, update: () => false }, admin: { hidden: true } },
     // The whole design (names, theme, events, photos, guests…). Large, so hidden from the admin form.
