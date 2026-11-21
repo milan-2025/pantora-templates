@@ -732,6 +732,21 @@ a.lp-link{font-weight:600}
   .lp-sticky{display:block}
   .lp-sticky.on~.lp-wa{bottom:84px}
 }
+
+/* wedding invite section */
+.lp-inv{background:linear-gradient(180deg,#fff 0%,var(--cream) 100%)}
+.lp-bundle{margin:14px 0 4px;padding:10px 14px;border-radius:14px;background:var(--plum-soft);color:var(--plum);font-size:14.5px}
+.lp-invmock{position:relative;display:flex;flex-direction:column;align-items:center;gap:0}
+.lp-invcard{width:min(320px,90%);text-align:center;padding:30px 24px 26px;border-radius:22px;background:linear-gradient(160deg,#5b1830,#7b1e3a);color:#f7e7c6;box-shadow:0 24px 60px rgba(91,24,48,.35);border:2px solid #e0b657;font-family:var(--serif)}
+.lp-invcard small{display:block;font-size:13px;letter-spacing:.08em;text-transform:uppercase;opacity:.8;font-family:inherit}
+.lp-invcard b{display:block;font-size:32px;font-weight:400;color:#fff;margin:8px 0 4px}
+.lp-invcard span{display:block;font-size:15px;opacity:.85}
+.lp-invfn{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:16px 0 12px}
+.lp-invfn i{font-style:normal;font-size:12.5px;padding:4px 10px;border:1px solid rgba(224,182,87,.6);border-radius:999px}
+.lp-invcard em{color:#e0b657!important;font-size:15px}
+.lp-invfeed{width:min(360px,96%);margin-top:-18px;position:relative;box-shadow:0 18px 44px rgba(0,0,0,.16)}
+.lp-tools .lp-g3{margin-top:28px}
+.lp-tools .lp-rcard{background:var(--cream)}
 </style>
 </head>
 <body>
@@ -2080,7 +2095,7 @@ function lpPhone(src, alt, eager) {
 }
 
 const LP_FEATURES = [
-  ['guests', 'Guests & RSVP', 'Har family, har function, ek list mein.', ['Families grouped by bride’s side and groom’s side', 'RSVP per function: who’s coming to Haldi, who’s only at the Reception', 'Send your invite on WhatsApp in one tap, and see who still hasn’t got it', 'Search by name, family, city or phone']],
+  ['guests', 'Guests & RSVP', 'Har family, har function, ek list mein.', ['Families grouped by bride’s side and groom’s side', 'RSVP per function: who’s coming to Haldi, who’s only at the Reception', 'Send your invite on WhatsApp in one tap, with each family’s own invite link, and see who still hasn’t got it', 'Ready WhatsApp messages for invites, reminders and thank-yous', 'Duplicate and wrong phone numbers found and fixed for you']],
   ['functions', 'Every function', 'Roka se Vidaai tak, sab set.', ['Roka, Haldi, Mehndi, Sangeet, Baraat & Milni, Pheras, Reception…', 'Rename, switch off, or add your own functions', 'Date, time and countdown for each', 'Day-of run sheet: who does what, when']],
   ['budget', 'Budget', 'Kitna socha, kitna pakka, kitna diya.', ['Your total budget split into categories, ready to adjust', 'Planned vs committed vs paid, for every line', 'Warns you before a category goes over']],
   ['vendors', 'Vendors & quotes', 'Teen caterers, teen quotes? Compare side by side.', ['Log every quote with contact, rating and notes', 'Compare quotes for the same job and pick one', 'The chosen vendor flows straight into your budget']],
@@ -2139,8 +2154,32 @@ function landingScreen() {
     '<section class="lp-sec lp-featsec" id="lp-features"><div class="lp-w"><p class="lp-eyebrow c">Everything inside</p><h2 class="c">Built for Indian weddings, <em>not adapted to them.</em></h2>' +
       '<div class="lp-tabs" role="tablist">' + F.map((f, i) => '<button role="tab" data-ft="' + i + '"' + (i ? '' : ' aria-selected="true"') + '>' + esc(f[1]) + '</button>').join('') + '</div>' +
       '<div class="lp-feat"><div class="lp-feat-vis">' + lpPhone(F[0][0], F[0][1]) + '</div><div class="lp-feat-txt" aria-live="polite"></div></div>' +
-      '<div class="lp-also"><b>Also inside:</b> milni list · shopping & outfits · printable family handout · import & export to Excel · activity log & restore</div>' +
+      '<div class="lp-also"><b>Also inside:</b> milni list · shopping & outfits · printable family handout · import & export to Excel · activity log & restore · search everything (Ctrl+K) & undo · switch off the pages you don’t need</div>' +
     '</div></section>' +
+
+    // WEDDING INVITE (connected to the invite maker)
+    '<section class="lp-sec lp-inv"><div class="lp-w lp-split"><div><p class="lp-eyebrow">New · Digital wedding invite</p><h2>Invite bhejo, <em>RSVP khud aa jaayenge.</em></h2>' +
+      '<p>Make a beautiful digital invite from your planner in one tap. Names, date, functions and venues are already filled in from your plan.</p><ul class="lp-ticks">' +
+      '<li>Every family gets <b>its own invite link</b>, showing only the functions they’re invited to</li>' +
+      '<li>Send it from the Guest List on WhatsApp. The planner remembers who got it</li>' +
+      '<li>Replies land in your Guest List <b>by themselves</b>: who’s coming to which function, how many, veg or non-veg</li>' +
+      '<li>Blessings from guests are saved, with a thank-you message ready to send</li>' +
+      '<li>Change a function’s date or venue in the planner, and the invite updates too</li></ul>' +
+      '<div class="lp-bundle" data-lp-bundle hidden></div>' +
+      '<div class="lp-ctas">' + lpCta('Plan & invite, free', '', 'invite') + '<a class="lp-link" href="/shaadi" target="_blank" rel="noopener">See invite designs →</a></div></div>' +
+      '<div class="lp-invmock" aria-hidden="true"><div class="lp-invcard"><small>Together with their families</small><b>Aanya &amp; Rohan</b><span>request the pleasure of your company</span><div class="lp-invfn"><i>Mehendi · 12 Feb</i><i>Wedding · 14 Feb</i></div><em>Dear Sharma family 🙏</em></div>' +
+        '<div class="lp-famcard lp-invfeed"><div class="lp-act"><i style="background:#1F7A74">✓</i><div><b>Sharma family</b> replied: 4 coming<small>Mehendi, Wedding · veg · just now</small></div></div><div class="lp-act"><i style="background:#F2A93B">🙏</i><div><b>Verma ji</b> left a blessing<small>“Bahut bahut badhai!” · 5 min ago</small></div></div><div class="lp-act"><i style="background:#552C69">💌</i><div><b>12 families</b> got their invite<small>Sent from the Guest List · today</small></div></div></div></div>' +
+    '</div></section>' +
+
+    // SHAADI KE DIN BHI / everyday tools
+    '<section class="lp-sec lp-tools"><div class="lp-w"><p class="lp-eyebrow c">Made for the busy days</p><h2 class="c">Net chala jaaye, <em>planner nahi jaayega.</em></h2><p class="c lp-sub">Venues and village weddings often have no signal. Your planner still opens, and syncs when the internet is back.</p><div class="lp-g3">' +
+      '<div class="lp-rcard"><span>📶</span><b>Works without internet</b><p>Install it on your home screen like an app. It opens and works offline, and your changes sync later.</p></div>' +
+      '<div class="lp-rcard"><span>🎉</span><b>Wedding-day mode</b><p>Today’s functions, timings and who’s doing what, in big clear text. Tick off arrivals as guests reach.</p></div>' +
+      '<div class="lp-rcard"><span>📇</span><b>Contacts phone book</b><p>Every guest, vendor and helper with a number, in one place. Call or WhatsApp in one tap.</p></div>' +
+      '<div class="lp-rcard"><span>💬</span><b>Ready WhatsApp messages</b><p>Invites, reminders, payment follow-ups and thank-yous, filled in with each person’s name. Edit them to suit you.</p></div>' +
+      '<div class="lp-rcard"><span>🔗</span><b>Share the run sheet</b><p>Send vendors and helpers a view-only link to the day’s schedule. No sign-in needed for them.</p></div>' +
+      '<div class="lp-rcard"><span>🔍</span><b>Find anything, undo anything</b><p>Search every guest, vendor and payment in a second. Made a mistake? Undo it, or restore an earlier version.</p></div>' +
+    '</div><div class="lp-ctas c">' + lpCta('Start free trial →', 'big', 'tools') + '</div></div></section>' +
 
     // WHO IT'S FOR
     '<section class="lp-sec lp-who"><div class="lp-w"><h2 class="c">Made for <em>everyone</em> planning the shaadi</h2><div class="lp-g3">' +
@@ -2165,7 +2204,7 @@ function landingScreen() {
     '</div><div class="lp-ctas c">' + lpCta('Start free trial →', 'big', 'steps') + '</div></div></section>' +
 
     // DEVICES + EXCEL
-    '<section class="lp-sec lp-dev"><div class="lp-w"><h2 class="c">Laptop pe plan karo, <em>phone pe check karo.</em></h2><p class="c lp-sub">The same planner on every screen. Phones get a simple card view, with no sideways scrolling.</p>' +
+    '<section class="lp-sec lp-dev"><div class="lp-w"><h2 class="c">Laptop pe plan karo, <em>phone pe check karo.</em></h2><p class="c lp-sub">The same planner on every screen. Phones get a simple card view, with no sideways scrolling, and it works offline once installed.</p>' +
       '<div class="lp-browser"><div class="lp-bbar"><i></i><i></i><i></i><span>pandoratemplates.com/planner</span></div><img src="/planner/lp/desktop.webp" alt="The planner dashboard on a laptop" width="1280" height="800" loading="lazy" decoding="async"></div>' +
       '<div class="lp-excel"><span>📊</span><div><b>Already using the Pandora Excel planner?</b><p>Import your filled-in workbook in one click and carry on online. You can export back to Excel any time.</p></div></div>' +
     '</div></section>' +
@@ -2249,6 +2288,16 @@ function lpFill(root, c) {
   $('.lp-plans', root).innerHTML = (trial ? '<div class="lp-plan"><h3>' + esc(trial.name) + '</h3><div class="lp-pp">Free</div><div class="lp-pn">for ' + days + ' days · no card</div><ul class="lp-ticks">' + (trial.features || []).map(f => '<li>' + esc(f) + '</li>').join('') + '</ul>' + lpCta('Start free', 'ghost wide', 'plan trial') + '</div>' : '') +
     paid.map(p => '<div class="lp-plan' + (p.badge ? ' hot' : '') + '">' + (p.badge ? '<span class="lp-badge">' + esc(p.badge) + '</span>' : '') + '<h3>' + esc(p.name) + '</h3><div class="lp-pp">' + inr(p.price) + '</div><div class="lp-pn">one-time · valid ' + valid(p) + (p.tagline ? ' · ' + esc(p.tagline) : '') + '</div><ul class="lp-ticks">' + (p.features || []).map(f => '<li>' + esc(f) + '</li>').join('') + '</ul>' + lpCta('Start free, upgrade later', (p.badge ? '' : 'ghost ') + 'wide', 'plan ' + p.planId) + '</div>').join('') ||
     '<div class="lp-empty">Plans will appear here.</div>';
+  // Planner + Invite bundle (price from the admin)
+  const bundle = c.bundle && c.bundle.on ? c.bundle : null;
+  const fam = paid.find(p => p.planId === 'family');
+  const bb = $('[data-lp-bundle]', root);
+  if (bundle && bb) {
+    const save = fam && c.bundle.invitePremium ? fam.price + c.bundle.invitePremium - bundle.price : 0;
+    bb.innerHTML = '💍 <b>Planner + Invite bundle: ' + inr(bundle.price) + '</b> one-time' + (save > 0 ? ' · save ' + inr(save) : '') + '. Family plan and the invite on Premium, together.';
+    bb.hidden = false;
+  }
+  if (bundle) $('.lp-plans', root).insertAdjacentHTML('beforeend', '<div class="lp-plan hot"><span class="lp-badge">Best value</span><h3>Planner + Invite</h3><div class="lp-pp">' + inr(bundle.price) + '</div><div class="lp-pn">one-time' + (fam ? ' · ' + esc(fam.name) + ' plan' : '') + ' + digital invite Premium</div><ul class="lp-ticks"><li>Everything in ' + esc(fam ? fam.name : 'Family') + '</li><li>Digital wedding invite on Premium</li><li>Each family’s own invite link</li><li>RSVPs and blessings land in your Guest List</li></ul>' + lpCta('Start free, upgrade later', 'wide', 'plan bundle') + '</div>');
   if (c.offerText) {
     $('.lp-plans', root).insertAdjacentHTML('beforebegin', '<div class="lp-offer">🎉 ' + esc(c.offerText) + '</div>');
     const bar = $('.lp-offerbar', root); bar.innerHTML = '🎉 ' + esc(c.offerText) + ' · <a href="#lp-pricing">See plans</a>'; bar.hidden = false;
@@ -2269,7 +2318,9 @@ function lpFill(root, c) {
     ['What happens when the trial ends?', 'Your planner turns read-only. Nothing is deleted: you can still open it and export it to Excel. Upgrade' + (minPaid != null ? ' (from ' + inr(minPaid) + ', one-time)' : '') + ' to keep editing.'],
     ['Is it a subscription?', 'No. You pay once and the plan is valid for the time shown on it. Nothing renews automatically.'],
     ['Can my family use it on their phones?', maxCol ? 'Yes. On a paid plan you can invite up to ' + maxCol + ' family members by email. Each one signs in on their own phone, and you choose who can edit and who can only view.' : 'Yes. On a paid plan you can invite family members by email, with edit or view-only access.'],
-    ['Do I need to install an app?', 'No. It runs in the browser on any phone or laptop. On your phone you can “Add to Home screen” to open it like an app.'],
+    ['Do I need to install an app?', 'No. It runs in the browser on any phone or laptop. On your phone, tap “Add to Home screen” (or “Install app”) and it opens like an app, even without internet.'],
+    ['Does it work without internet?', 'Yes. Open it once with internet on your phone and it keeps a copy. After that it opens and works offline, even at a venue with no signal, and your changes sync when you’re back online.'],
+    ['Can I send digital invites from it?', 'Yes. Make a wedding invite from the planner in one tap, with your names, date and functions already filled in. Each family gets its own link, and their RSVPs fill in your Guest List automatically.' + (c.bundle && c.bundle.on ? ' The Planner + Invite bundle is ' + inr(c.bundle.price) + ', one-time.' : '')],
     ['Who can see my wedding details?', 'Only you and the people you invite. Your planner is saved to your account and opens only after signing in with an invited email. If you ask us for help, our support team can view it (read-only) to sort things out.'],
     ['I already have the Pandora Excel planner. Can I use it?', 'Yes. When you start, choose “Import my Pandora Excel” and your guests, budget, vendors and the rest come across. You can export back to Excel any time.'],
     ['How do I pay?', 'Inside the planner, with Razorpay: UPI, cards, netbanking and wallets. If you have a promo code, enter it there.'],

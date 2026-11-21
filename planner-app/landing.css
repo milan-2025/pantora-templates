@@ -268,3 +268,18 @@ a.lp-link{font-weight:600}
   .lp-sticky{display:block}
   .lp-sticky.on~.lp-wa{bottom:84px}
 }
+
+/* wedding invite section */
+.lp-inv{background:linear-gradient(180deg,#fff 0%,var(--cream) 100%)}
+.lp-bundle{margin:14px 0 4px;padding:10px 14px;border-radius:14px;background:var(--plum-soft);color:var(--plum);font-size:14.5px}
+.lp-invmock{position:relative;display:flex;flex-direction:column;align-items:center;gap:0}
+.lp-invcard{width:min(320px,90%);text-align:center;padding:30px 24px 26px;border-radius:22px;background:linear-gradient(160deg,#5b1830,#7b1e3a);color:#f7e7c6;box-shadow:0 24px 60px rgba(91,24,48,.35);border:2px solid #e0b657;font-family:var(--serif)}
+.lp-invcard small{display:block;font-size:13px;letter-spacing:.08em;text-transform:uppercase;opacity:.8;font-family:inherit}
+.lp-invcard b{display:block;font-size:32px;font-weight:400;color:#fff;margin:8px 0 4px}
+.lp-invcard span{display:block;font-size:15px;opacity:.85}
+.lp-invfn{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:16px 0 12px}
+.lp-invfn i{font-style:normal;font-size:12.5px;padding:4px 10px;border:1px solid rgba(224,182,87,.6);border-radius:999px}
+.lp-invcard em{color:#e0b657!important;font-size:15px}
+.lp-invfeed{width:min(360px,96%);margin-top:-18px;position:relative;box-shadow:0 18px 44px rgba(0,0,0,.16)}
+.lp-tools .lp-g3{margin-top:28px}
+.lp-tools .lp-rcard{background:var(--cream)}
