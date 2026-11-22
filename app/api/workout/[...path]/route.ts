@@ -6,6 +6,7 @@ import { WorkoutError, type WOp } from "@/lib/workout/core";
 import {
   accessOf, addMember, buddyAction, buddyView, claimMoneyBack, confirmPhoto, createGroup, deletePhoto, emailOf, getOrCreateProfile, getPlans, getSettings,
   getState, groupPost, groupPreview, groupView, inbox, joinGroup, leaveGroup, listPhotos, markWorkoutPaid, me, quote, removeMember, requestBuddy, saveState,
+  familyPost, familyView, setGroupGoal, signVoice, startPledge, verifyPledge,
   passwordLogin, refreshedToken, sendReminders, setMyPassword, signPhoto, startLogin, subscribePush, verifyLogin, workoutHasPassword,
 } from "@/lib/workout/server";
 
@@ -96,6 +97,12 @@ async function handle(req: Request, ctx: Ctx) {
     case "POST groups/leave": return leaveGroup(payload, email, b.code);
     case "GET groups/view": return groupView(payload, email, url.searchParams.get("code"));
     case "POST groups/post": limit(req, "post", 40, 60 * 60_000); return groupPost(payload, email, b.code, b);
+    case "POST groups/goal": limit(req, "goal", 20, 60 * 60_000); return setGroupGoal(payload, email, b.code, b);
+    case "GET family": return familyView(payload, email);
+    case "POST family/post": limit(req, "post", 40, 60 * 60_000); return familyPost(payload, email, b);
+    case "POST voice/sign": limit(req, "voice", 30, 60 * 60_000); return signVoice(payload, email);
+    case "POST pledge": limit(req, "pledge", 10, 60 * 60_000); return startPledge(payload, email, b);
+    case "POST pledge/verify": limit(req, "verify-pay", 20, 60_000); return verifyPledge(payload, email, b);
     case "GET buddy": return buddyView(payload, email);
     case "POST buddy/request": limit(req, "buddy", 10, 60_000); return requestBuddy(payload, email);
     case "POST buddy/action": limit(req, "buddy-act", 40, 60 * 60_000); return buddyAction(payload, email, b);

@@ -6,7 +6,7 @@ const initials = (n) => esc((n || '?').trim()[0] || '?').toUpperCase();
 
 ROUTES.together = function (args) {
   const tab = args[0] || SUB.together || (ME && ME.groups.length ? 'groups' : 'groups'); SUB.together = tab;
-  const tabs = [['groups', 'Groups'], ['buddy', 'Buddy'], ['plan', 'My plan’s people'], ['inbox', 'Messages' + (unread() ? ` (${unread()})` : '')]];
+  const tabs = [['groups', 'Groups'], ...(ME && ME.family ? [['family', '🏠 Family']] : []), ['buddy', 'Buddy'], ['plan', 'My plan’s people'], ['inbox', 'Messages' + (unread() ? ` (${unread()})` : '')]];
   return `<div class="tabs">${tabs.map(([k, n]) => `<button class="${tab === k ? 'on' : ''}" data-act="ttab" data-v="${k}">${n}</button>`).join('')}</div>` + (TG_TABS[tab] || TG_TABS.groups)(args.slice(1));
 };
 ROUTES.together.after = function (args) {
@@ -15,6 +15,7 @@ ROUTES.together.after = function (args) {
   if (tab === 'groups' && args[1] && (stale(GROUP) || GROUP.code !== args[1])) loadGroup(args[1]);
   if (tab === 'buddy' && ME && ME.buddy.status === 'matched' && stale(BUDDY)) loadBuddy();
   if (tab === 'inbox') markInboxSeen();
+  if (tab === 'family' && (!FAMILY || Date.now() - (FAMILY._at || 0) > 20000)) { if (FAMILY) FAMILY._at = Date.now(); loadFamily(); }
   const f = $('#gp-f'); if (f) f.onsubmit = (e) => { e.preventDefault(); const t = $('#gp-t').value.trim(); if (t) groupSend({ text: t }); };
 };
 ACT.ttab = (el) => go('together/' + el.dataset.v);
@@ -34,13 +35,14 @@ function groupScreen(code) {
   return `<a href="#together/groups" class="link">‹ All groups</a><div class="hero mt"><h2>${esc(g.name)}</h2><p class="muted sm">${g.mode === 'together' && PROGRAMS[g.program] ? `${PROGRAMS[g.program].emoji} ${esc(PROGRAMS[g.program].name)} · ${g.length} days from ${nice(g.start)}` : 'Everyone on their own plan, logging together'}</p>
       <div class="row"><a class="btn sm" target="_blank" rel="noopener" href="${wa(`Join my workout group "${g.name}" on Pandora Workout 💪 ${g.link}`)}">Invite on WhatsApp</a><button class="btn sm ghost" data-act="gcopy">Copy link</button></div>
       ${g.mode === 'together' && CH() && CH().groupCode !== g.code ? `<button class="link mt" data-act="gfollow">Follow this group’s challenge</button>` : ''}</div>
+    ${goalCard(g)}
     <div class="card ppl"><h3>🏆 This week<span class="sp"></span><span class="tiny muted">by XP</span></h3>${g.people.map((p, i) => `<div class="li"><span class="e">${['🥇', '🥈', '🥉'][i] || initials(p.name)}</span><div class="t"><b>${esc(p.name)}${p.email === CLOUD.email ? ' (you)' : ''}</b><small>🔥 ${p.streak} · Lv ${p.level}${p.day ? ' · day ' + p.day : ''} · ${p.todayDone ? '✅ done today' : p.workedOut ? '💪 worked out' : p.todayLogged ? '📝 logging' : '⏳ not yet today'}</small></div><div class="v">${fmt(p.weekXp)}</div>${p.email !== CLOUD.email ? `<button class="btn sm ghost" data-act="gcheer" data-to="${esc(p.email)}" data-n="${esc(p.name)}">${p.todayDone ? '👏' : '👉'}</button>` : ''}</div>`).join('')}</div>
-    <div class="card"><h3>💬 Group chat</h3><div class="feed" id="gp-feed">${g.feed.length ? g.feed.slice().reverse().map(msgHtml).join('') : '<p class="muted sm c">Say hi to get things going.</p>'}</div>
+    <div class="card"><h3>💬 Group chat<span class="sp"></span>${voiceSupported() ? '<button class="btn sm ghost" data-act="gvoice" aria-label="Voice note">🎤</button>' : ''}</h3><div class="feed" id="gp-feed">${g.feed.length ? g.feed.slice().reverse().map(msgHtml).join('') : '<p class="muted sm c">Say hi to get things going.</p>'}</div>
       <div class="presets">${PRESET_LIST.map(([k, t]) => `<button data-act="gpre" data-k="${k}">${t}</button>`).join('')}</div>
       <form class="row" id="gp-f"><input id="gp-t" maxlength="160" placeholder="Message the group"><button class="btn">Send</button></form></div>
     <button class="link" data-act="gleave">Leave this group</button>${mine ? '' : ''}`;
 }
-const msgHtml = (m) => m.kind === 'event' ? `<div class="msg ev"><b>${esc(m.from)}</b> ${esc(m.text)}</div>` : `<div class="msg ${m.fromMe ? 'me' : ''}"><small>${m.fromMe ? 'You' : esc(m.from)}${m.to ? ' → ' + (m.toMe ? 'you' : esc(m.to)) : ''} · ${ago(m.at)}</small>${esc(m.text)}</div>`;
+const msgHtml = (m) => m.kind === 'event' ? `<div class="msg ev"><b>${esc(m.from)}</b> ${esc(m.text)}</div>` : `<div class="msg ${m.fromMe ? 'me' : ''}"><small>${m.fromMe ? 'You' : esc(m.from)}${m.to ? ' → ' + (m.toMe ? 'you' : esc(m.to)) : ''} · ${ago(m.at)}</small>${m.kind === 'voice' ? voiceHtml(m) : esc(m.text)}</div>`;
 async function loadGroup(code) {
   try { GROUP = await api('groups/view?code=' + encodeURIComponent(code)); GROUP._at = Date.now(); if (ROUTE === 'together') { const y = window.scrollY; render(); window.scrollTo(0, y); const f = $('#gp-feed'); if (f) f.scrollTop = f.scrollHeight; } }
   catch (e) { toast(esc(e.message), 'bad'); if (e.status === 403 || e.status === 404) go('together/groups'); }
@@ -52,8 +54,8 @@ async function groupSend(body) {
 }
 ACT.gpre = (el) => groupSend({ preset: el.dataset.k });
 ACT.gcheer = (el) => {
-  sheet(`<h2>To ${esc(el.dataset.n)}</h2><div class="opts">${PRESET_LIST.slice(0, 7).map(([k, t]) => `<button class="opt" data-k="${k}"><span>${t}</span></button>`).join('')}</div>`);
-  $$('.opt[data-k]').forEach((b) => (b.onclick = () => { closeSheet(); groupSend({ to: el.dataset.to, kind: b.dataset.k === 'where' ? 'nudge' : 'cheer', preset: b.dataset.k }); toast('Sent 🙌'); }));
+  sheet(`<h2>To ${esc(el.dataset.n)}</h2><div class="opts">${PRESET_LIST.slice(0, 7).map(([k, t]) => `<button class="opt" data-k="${k}"><span>${t}</span></button>`).join('')}${voiceSupported() ? '<button class="opt" data-k="voice"><span>🎤 Send a voice note</span></button>' : ''}</div>`);
+  $$('.opt[data-k]').forEach((b) => (b.onclick = () => { if (b.dataset.k === 'voice') return ACT.gvoice({ dataset: { to: el.dataset.to, n: el.dataset.n } }); closeSheet(); groupSend({ to: el.dataset.to, kind: b.dataset.k === 'where' ? 'nudge' : 'cheer', preset: b.dataset.k }); toast('Sent 🙌'); }));
 };
 ACT.gcopy = () => { try { navigator.clipboard.writeText(GROUP.link); toast('Link copied'); } catch (e) { toast(GROUP.link); } };
 ACT.gleave = () => { sheet(`<h2>Leave “${esc(GROUP.name)}”?</h2><button class="btn big" id="gl-ok">Leave</button>`); $('#gl-ok').onclick = async () => { try { await api('groups/leave', { method: 'POST', body: { code: GROUP.code } }); if (CH() && CH().groupCode === GROUP.code) { S.challenge.groupCode = null; onChange({ quiet: true }); } GROUP = null; await refreshMe(); closeSheet(); go('together/groups'); } catch (e) { toast(esc(e.message), 'bad'); } }; };
@@ -62,9 +64,10 @@ ACT.gnew = () => {
   sheet(`<h2>Start a group</h2><label class="f">Group name</label><input id="gn-n" maxlength="50" placeholder="e.g. Sharma family fit squad">
     <label class="f">How do you want to do it?</label><div class="opts"><button class="opt on" data-m="together"><span class="e">🤝</span><span><b>Same challenge together</b><small>Everyone follows the same plan from the same day</small></span></button><button class="opt" data-m="log"><span class="e">📝</span><span><b>Just log together</b><small>Everyone on their own plan; share streaks and cheers</small></span></button></div>
     <div id="gn-ch"><label class="f">Challenge</label><select id="gn-p">${PROGRAM_IDS.map((id) => `<option value="${id}" ${CH() && CH().program === id ? 'selected' : ''}>${PROGRAMS[id].emoji} ${esc(PROGRAMS[id].name)}</option>`).join('')}</select>
-    <div class="grid2"><div><label class="f">Days</label><select id="gn-l">${LENGTHS.map((n) => `<option ${n === 30 ? 'selected' : ''}>${n}</option>`).join('')}</select></div><div><label class="f">Start</label><input id="gn-s" type="date" value="${monday(shift(today(), 7))}"></div></div></div>
+    <div class="grid2"><div><label class="f">Days</label><select id="gn-l">${lengthsOf(CH() ? CH().program : 'home').map((n) => `<option ${n === 30 ? 'selected' : ''}>${n}</option>`).join('')}</select></div><div><label class="f">Start</label><input id="gn-s" type="date" value="${monday(shift(today(), 7))}"></div></div></div>
     <button class="btn big mt" id="gn-ok">Create & get the invite link</button>`);
   let mode = 'together';
+  $('#gn-p').onchange = () => { const l = lengthsOf($('#gn-p').value), d = PROGRAMS[$('#gn-p').value].def; $('#gn-l').innerHTML = l.map((n) => `<option ${n === (d || 30) ? 'selected' : ''}>${n}</option>`).join(''); };
   $$('.opt[data-m]').forEach((b) => (b.onclick = () => { mode = b.dataset.m; $$('.opt[data-m]').forEach((x) => x.classList.toggle('on', x === b)); $('#gn-ch').hidden = mode !== 'together'; }));
   $('#gn-ok').onclick = async () => {
     try {
@@ -135,5 +138,5 @@ ACT.mremove = async (el) => { try { await api('members', { method: 'DELETE', bod
 /* ----- messages ----- */
 TG_TABS.inbox = function () {
   if (!INBOX.items.length) return '<div class="empty"><span class="e">📭</span>Cheers and nudges from your groups and buddy show up here.</div>';
-  return `<div class="card">${INBOX.items.map((m) => `<div class="li"><span class="e">${m.kind === 'nudge' ? '👉' : m.kind === 'event' ? '👋' : m.kind === 'cheer' ? '👏' : '💬'}</span><div class="t"><b>${esc(m.from)}</b><small>${esc(m.text)}</small></div><span class="tiny muted">${ago(m.at)}</span></div>`).join('')}</div>`;
+  return `<div class="card">${INBOX.items.map((m) => `<div class="li"><span class="e">${m.kind === 'nudge' ? '👉' : m.kind === 'event' ? '👋' : m.kind === 'cheer' ? '👏' : m.kind === 'voice' ? '🎤' : m.kind === 'alert' ? '🔥' : '💬'}</span><div class="t"><b>${esc(m.from)}</b><small>${esc(m.text)}</small></div><span class="tiny muted">${ago(m.at)}</span></div>`).join('')}</div>`;
 };

@@ -52,6 +52,9 @@ const EX = {
   breathe: { n: 'Deep breathing', p: [SEAT, '50,43 50,53 50,82 66,86 44,90 34,86 56,90 63,69 66,84 37,69 34,84'], t: 5000, hold: 1, cues: ['In for 4… out for 6', 'Relax your shoulders'] },
   walk: { n: 'Brisk walk', p: ['51,16 51,26 50,54 56,72 60,91 46,72 42,91 46,40 44,52 55,40 59,50', '51,16 51,26 50,54 46,72 42,91 56,72 60,91 55,40 59,50 46,40 44,52'], t: 1100, cues: ['Walk like you’re a bit late', 'You can talk, but not sing'] },
   jog: { n: 'Run', p: ['53,16 52,26 49,54 60,66 58,82 44,74 36,86 44,42 40,50 58,40 62,32', '53,16 52,26 49,54 44,74 36,86 60,66 58,82 58,40 62,32 44,42 40,50'], t: 700, cues: ['Easy pace: you should be able to talk', 'Short, light steps'] },
+  garba: { n: 'Garba steps', p: ['50,16 50,26 50,54 56,72 62,91 47,72 46,91 58,18 52,8 42,18 48,8', '50,16 50,26 50,54 53,72 54,91 44,72 38,91 60,36 56,44 40,36 44,44'], t: 900, cues: ['Step side to side and clap high, then low', 'Turn a little with each clap', 'Smile, it’s a festival!'] },
+  dandiya: { n: 'Dandiya strikes', p: ['50,16 50,26 50,54 53,72 54,91 47,72 46,91 62,30 72,22 40,34 34,28', '50,16 50,26 50,54 56,72 60,91 45,72 40,91 60,34 66,28 38,30 28,22'], t: 700, cues: ['Twist from the waist and strike left, then right', 'Bounce on soft knees'] },
+  bhangra: { n: 'Bhangra bounce', p: ['50,15 50,25 50,53 60,58 58,74 49,71 48,90 60,16 64,6 40,16 36,6', '50,16 50,26 50,54 51,72 52,91 40,58 42,74 62,18 66,8 38,18 34,8'], t: 650, cues: ['Arms up, shoulders bouncing', 'Lift one knee, then the other', 'Balle balle!'] },
   quad: { n: 'Standing quad stretch', p: ['50,16 50,26 50,54 50,72 52,91 48,74 36,62 60,36 70,30 42,48 37,60', '50,16 50,26 50,54 50,72 52,91 48,74 35,60 60,35 70,29 42,48 36,58'], t: 4000, hold: 1, side: 1, cues: ['Hold a wall for balance', 'Knees together', 'Switch legs halfway'] },
 };
 
@@ -116,7 +119,27 @@ function hiitSession(type, ph, k) {
   return { title: 'Fat-burn HIIT', kind: 'intervals', work, restSec: rest, blocks: [{ label: 'Warm-up', rounds: 1, rest: 10, items: WARM }, { label: `${work}s on · ${rest}s off`, rounds, rest: 60, items: list.map((e) => s(e, Math.round(work * k))) }, { label: 'Cool-down', rounds: 1, rest: 5, items: COOL }] };
 }
 
-/* ----- the six challenges ----- */
+/* ----- festival and wedding challenges ----- */
+const DANCE = (k, secs) => [s('garba', scale(secs, k)), s('dandiya', scale(secs, k)), s('bhangra', scale(Math.round(secs * 0.8), k)), s('highknees', scale(Math.round(secs * 0.5), k)), s('garba', scale(secs, k))];
+function navratriSession(type, ph, k) {
+  if (type === 'F') return { title: 'Garba flow & stretch', kind: 'rest', blocks: [{ label: 'Easy dance', rounds: 1, rest: 10, items: [s('garba', 60), s('dandiya', 45)] }, { label: 'Stretch', rounds: 1, rest: 5, items: [s('quad', 40), s('hamstring', 40), s('butterfly', 40), s('breathe', 60)] }] };
+  const secs = [35, 40, 45, 50][ph], rounds = [2, 3, 3, 4][ph];
+  return { title: type === 'B' ? 'Bhangra burn' : 'Garba cardio', kind: 'intervals', work: secs, restSec: 20, blocks: [{ label: 'Warm-up', rounds: 1, rest: 10, items: WARM }, { label: `Dance ${secs}s · breathe 20s`, rounds, rest: 45, items: type === 'B' ? [s('bhangra', scale(secs, k)), s('jacks', scale(secs, k)), s('bhangra', scale(secs, k)), s('skater', scale(secs - 10, k))] : DANCE(k, secs) }, { label: 'Cool-down', rounds: 1, rest: 5, items: COOL }] };
+}
+function diwaliSession(type, ph, k) {
+  const rounds = [2, 2, 3, 3][ph], push = ph < 2 ? 'kneepush' : 'pushup';
+  if (type === 'A') return { title: 'Glow-up full body', kind: 'circuit', blocks: [{ label: 'Warm-up', rounds: 1, rest: 10, items: WARM }, { label: 'Circuit', rounds, rest: 50, items: [s('jacks', scale(30, k)), r('squat', scale(12, k)), r(push, scale(8, k)), s('climber', scale(25, k)), s('plank', scale(25, k))] }, { label: 'Cool-down', rounds: 1, rest: 5, items: COOL }] };
+  if (type === 'B') return { title: 'Sculpt & core', kind: 'circuit', blocks: [{ label: 'Warm-up', rounds: 1, rest: 10, items: WARM }, { label: 'Circuit', rounds, rest: 50, items: [r('lunge', scale(10, k)), r('bridge', scale(14, k)), r('bicycle', scale(16, k)), s('sideplank', scale(25, k)), r('superman', scale(10, k))] }, { label: 'Cool-down', rounds: 1, rest: 5, items: COOL }] };
+  return { title: 'Festive dance cardio', kind: 'intervals', work: 40, restSec: 20, blocks: [{ label: 'Warm-up', rounds: 1, rest: 10, items: WARM }, { label: 'Dance 40s · breathe 20s', rounds: rounds + 1, rest: 45, items: [s('bhangra', scale(40, k)), s('boxing', scale(40, k)), s('garba', scale(40, k)), s('skater', scale(30, k))] }, { label: 'Cool-down', rounds: 1, rest: 5, items: COOL }] };
+}
+function shaadiSession(type, ph, k) {
+  const rounds = [2, 3, 3, 4][ph], push = ['wallpush', 'kneepush', 'kneepush', 'pushup'][ph];
+  if (type === 'S') return { title: 'Sculpt: arms, back & legs', kind: 'circuit', blocks: [{ label: 'Warm-up', rounds: 1, rest: 10, items: WARM }, { label: 'Circuit', rounds, rest: 50, items: [r('squat', scale(12, k)), r(push, scale(10, k)), r('dips', scale(10, k)), r('lunge', scale(10, k)), r('superman', scale(10, k)), s('plank', scale(30, k))] }, { label: 'Cool-down', rounds: 1, rest: 5, items: COOL }] };
+  if (type === 'C') return ph < 2 ? walkSession('I', ph, k) : hiitSession('H', ph, k);
+  return { title: 'Posture & glow yoga', kind: 'flow', blocks: [{ label: 'Flow', rounds: ph > 1 ? 2 : 1, rest: 10, items: [s('breathe', 60), s('catcow', 45), s('cobra', 30), s('warrior', 40), s('chairpose', 30), s('tree', 30), s('downdog', 40), s('child', 60)] }] };
+}
+
+/* ----- the challenges ----- */
 const PROGRAMS = {
   home: {
     name: 'Beginner Home Workout', emoji: '🏠', level: 'Beginner', gear: 'No equipment', color: '#FF5A36',
@@ -154,8 +177,27 @@ const PROGRAMS = {
     week: ['H', 'C', 'H', 'M', 'H', 'C', 'M'], make: hiitSession,
     tests: [{ id: 'burpee1', name: 'Burpees in 1 minute', unit: 'reps', up: 1, how: 'Step back if you need to.' }, { id: 'jacks1', name: 'Jumping jacks in 1 minute', unit: 'reps', up: 1, how: 'Full arm swing.' }, { id: 'pulse', name: 'Resting pulse', unit: 'bpm', up: 0, how: 'Count for 30 seconds after waking, ×2.' }],
   },
+  shaadi: {
+    name: 'Shaadi Fit', emoji: '💍', level: 'All levels', gear: 'A chair and a mat', color: '#E11D74', lengths: [45, 60, 75, 90, 100], def: 90, event: 1, tag: 'For the bride, groom & family',
+    blurb: 'Your wedding countdown: toned arms and back for the outfit, cardio for the sangeet, and yoga for posture and calm on the big day.',
+    week: ['S', 'C', 'P', 'S', 'C', 'S', 'M'], make: shaadiSession,
+    tests: [{ id: 'pushups', name: 'Push-ups in one go', unit: 'reps', up: 1, how: 'Wall, knee or full: note which.' }, { id: 'plank', name: 'Plank hold', unit: 'sec', up: 1, how: 'Until your hips drop.' }, { id: 'walk1k', name: '1 km brisk walk', unit: 'min', up: 0, how: 'As fast as you comfortably can.' }],
+  },
+  diwali: {
+    name: 'Diwali Glow 21', emoji: '🪔', level: 'Beginner+', gear: 'No equipment', color: '#F59E0B', lengths: [21], def: 21, tag: 'Festival special',
+    blurb: '21 days to feel your best for the festive season: full-body circuits, sculpt and core, and festive dance cardio.',
+    week: ['A', 'C', 'B', 'M', 'A', 'C', 'M'], make: diwaliSession,
+    tests: [{ id: 'squats1', name: 'Squats in 1 minute', unit: 'reps', up: 1, how: 'Full squats, chest up.' }, { id: 'plank', name: 'Plank hold', unit: 'sec', up: 1, how: 'Until your hips drop.' }],
+  },
+  navratri: {
+    name: 'Navratri Dance Cardio', emoji: '💃', level: 'All levels', gear: 'Space to dance', color: '#D946EF', lengths: [9, 18], def: 9, tag: 'Festival special',
+    blurb: 'Nine nights, nine workouts: garba, dandiya and bhangra moves in cardio intervals. Fun first, sweat second.',
+    week: ['D', 'B', 'D', 'F', 'D', 'B', 'D', 'F', 'D'], make: navratriSession,
+    tests: [{ id: 'jacks1', name: 'Jumping jacks in 1 minute', unit: 'reps', up: 1, how: 'Full arm swing.' }, { id: 'pulse', name: 'Resting pulse', unit: 'bpm', up: 0, how: 'Count for 30 seconds after waking, ×2.' }],
+  },
 };
 const PROGRAM_IDS = Object.keys(PROGRAMS);
+const lengthsOf = (id) => (PROGRAMS[id] && PROGRAMS[id].lengths) || LENGTHS;
 const LENGTHS = [14, 21, 30, 45, 60, 75, 90, 100];
 
 function fmtDur(sec) { sec = Math.round(sec); if (sec < 60) return sec + 's'; const m = Math.floor(sec / 60), x = sec % 60; return x ? m + ':' + String(x).padStart(2, '0') : m + ' min'; }
@@ -172,13 +214,13 @@ function planDay(ch, n, extraScale) {
   const len = ch.length || 30;
   const ph = Math.min(3, Math.floor((4 * (n - 1)) / len));
   const k = Math.max(0.6, Math.min(1.5, (ch.adj || 1) * (extraScale || 1)));
-  const slot = prog.week[(n - 1) % 7];
+  const slot = prog.week[(n - 1) % prog.week.length];
   const test = testDays(len).includes(n);
   let sess;
   if (slot === 'M') sess = MOBILITY;
   else if (ch.program === 'c25k') {
     if (slot === 'R') {
-      const runDays = []; for (let i = 1; i <= len; i++) if (prog.week[(i - 1) % 7] === 'R') runDays.push(i);
+      const runDays = []; for (let i = 1; i <= len; i++) if (prog.week[(i - 1) % prog.week.length] === 'R') runDays.push(i);
       sess = runSession(runDays.length > 1 ? runDays.indexOf(n) / (runDays.length - 1) : 0, k);
     } else if (slot === 'W') sess = walkSession('W', Math.min(ph, 1), k);
     else sess = { title: 'Rest day', kind: 'rest', blocks: [{ label: 'Gentle stretch', rounds: 1, rest: 5, items: [s('quad', 40), s('hamstring', 40), s('calf', 30), s('breathe', 60)] }] };

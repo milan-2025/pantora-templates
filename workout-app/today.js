@@ -4,7 +4,7 @@ let ROUTE = 'today', SUB = {};
 let RENDER_T = null;
 function requestRender() { clearTimeout(RENDER_T); RENDER_T = setTimeout(() => { const a = document.activeElement; if (a && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && a.closest('#main')) { RENDER_T = setTimeout(requestRender, 600); return; } render(); }, 30); }
 function go(r) { if (location.hash !== '#' + r) location.hash = r; else render(); }
-window.addEventListener('hashchange', () => { if (!KEEP_SHEET) closeSheet(); KEEP_SHEET = false; render(); window.scrollTo(0, 0); });
+window.addEventListener('hashchange', () => { if (doHash()) return; if (!KEEP_SHEET) closeSheet(); KEEP_SHEET = false; render(); window.scrollTo(0, 0); });
 let KEEP_SHEET = false;
 function render() {
   if (!CLOUD.email) return;
@@ -39,7 +39,7 @@ function checkLevelUp() {
   const lv = levelOf(xpAll().total).level;
   if (lv > (S.game.level || 1)) {
     S.game.level = lv; onChange({ quiet: true });
-    setTimeout(() => { confetti(160); chime(); sheet(`<div class="celebrate"><span class="e">🆙</span><h2>Level ${lv}!</h2><p class="muted">You’re now <b>${esc(LEVELS[Math.min(lv, LEVELS.length) - 1])}</b>. Keep stacking days.</p>${lv === 5 ? '<p class="pill gold">🎨 Ocean theme unlocked (Me → Theme)</p>' : ''}<button class="btn big mt" data-close>Let’s go</button></div>`); }, 400);
+    setTimeout(() => { confetti(160); chime(); sheet(`<div class="celebrate"><span class="e">🆙</span><h2>Level ${lv}!</h2><p class="muted">You’re now <b>${esc(LEVELS[Math.min(lv, LEVELS.length) - 1])}</b>. Keep stacking days.</p>${lv === 5 ? '<p class="pill gold">🎨 Ocean colour unlocked (Me → Look)</p>' : ''}<button class="btn big mt" data-close>Let’s go</button></div>`); }, 400);
   }
 }
 
@@ -50,6 +50,9 @@ ROUTES.today = function () {
   h += accessBanner();
   const fz = freezeOffer();
   if (fz) h += `<div class="banner ice"><span class="e">🧊</span><div class="sp"><b>Save your ${fz.streak}-day streak?</b><div class="sm muted">You missed ${nice(fz.day, true)}. Use a streak freeze (${freezes().left} left).</div></div><button class="btn sm" data-act="freeze" data-d="${fz.day}">Use</button></div>`;
+  h += recapBanner();
+  h += retestBanner(plan);
+  h += pledgeCard('today');
   if (comeback() && plan && !r.w) h += `<div class="banner hot"><span class="e">🔁</span><div><b>Welcome back!</b><div class="sm muted">Comeback mode: today’s workout is 30% lighter. Just show up.</div></div></div>`;
 
   // hero: challenge progress, streak and level
@@ -65,13 +68,14 @@ ROUTES.today = function () {
     const p = PROGRAMS[CH().program];
     h += `<div class="hero"><div class="prog"><div class="ring" style="--p:${Math.round((st.n / st.len) * 100)}"><div><b>${st.n}</b><small>of ${st.len}</small></div></div>
       <div class="sp"><div class="chips" style="margin-bottom:8px"><span class="flame ${si.cur ? 'hot' : 'cold'}"><span class="f">🔥</span>${si.cur} day${si.cur === 1 ? '' : 's'}</span><span class="pill">🧊 ${freezes().left}</span></div>
-      <b style="font-family:var(--fh);font-size:17px">${p.emoji} ${esc(p.name)}</b><div class="sm muted">${plan ? esc(plan.phaseName) + ' phase' : ''}${CH().groupCode ? ' · with your group' : ''}</div></div></div>
+      <b style="font-family:var(--fh);font-size:17px">${p.emoji} ${esc(p.name)}</b><div class="sm muted">${plan ? esc(plan.phaseName) + ' phase' : ''}${CH().groupCode ? ' · with your group' : ''}</div>${CH().event && CH().event >= t ? `<div class="pill hot mt" style="margin-top:6px">💍 ${diff(t, CH().event) ? plural(diff(t, CH().event), 'day') + ' to the wedding' : 'Wedding day! 🎉'}</div>` : ''}</div></div>
       <div class="row mt sm"><span class="pill gold">Lv ${lv.level}</span><div class="xpbar sp"><i style="width:${lv.pct}%"></i></div><span class="muted tiny">${fmt(xp.total - lv.from)}/${fmt(lv.to - lv.from)} XP</span></div></div>`;
   }
 
-  // today's workout
+  // morning check-in, then today's workout
+  if (CH() && !st.before && !st.over) h += checkinCard(r);
   if (plan) h += workoutCard(plan, r);
-  else if (!CH() || st.over) h += `<div class="card"><h3>🏃 Today’s activity</h3>${actsList(r)}<div class="row mt"><button class="btn sm" data-act="activity">+ Add activity</button>${r.w ? '<span class="pill ok">✓ Workout logged</span>' : `<button class="btn sm ghost" data-act="wdone">Mark a workout done</button>`}</div></div>`;
+  else if (!CH() || st.over) h += `<div class="card"><h3>🏃 Today’s activity</h3>${actsList(r)}<div class="row mt wrap"><button class="btn sm" data-act="activity">+ Add activity</button>${r.w ? '<span class="pill ok">✓ Workout logged</span>' : `<button class="btn sm ghost" data-act="wdone">Mark a workout done</button><button class="btn sm ghost" data-act="quick">⏱ 10-minute workout</button>`}</div></div>`;
 
   // checkpoints
   const cp = checkpoints(r), need = T().need;
@@ -100,6 +104,7 @@ ROUTES.today = function () {
 };
 ROUTES.today.after = function () {
   const t = today();
+  bindCheckin();
   const w = $('#t-weight'); if (w) w.onchange = () => { setDay(t, { weight: w.value ? Number(w.value) : null }); };
   const n = $('#t-note'); if (n) n.onchange = () => { setDay(t, { note: n.value.trim() || null }); };
 };
@@ -120,10 +125,10 @@ function workoutCard(plan, r) {
   const sess = plan.session, first = sess.blocks.find((b) => b.label !== 'Warm-up') || sess.blocks[0];
   const items = []; sess.blocks.forEach((b) => b.items.forEach((it) => { if (!items.some((x) => x.ex === it.ex && x.fast === it.fast)) items.push(it); }));
   const done = r.w || r.rest;
-  return `<div class="card ${done ? '' : 'pulse'}"><div class="wo">${figureSvg(first.items[0].ex)}<div class="sp"><span class="pill ${plan.test ? 'gold' : 'hot'}">${plan.test ? '📈 Test day' : plan.rest ? '🌿 Recovery day' : 'Day ' + plan.n}</span><h3 style="margin-top:8px">${esc(sess.title)}</h3><div class="meta"><span>⏱ ~${plan.mins} min</span><span>${sess.blocks.reduce((a, b) => a + b.items.length * b.rounds, 0)} moves</span>${CH().adj && CH().adj !== 1 ? `<span>${CH().adj > 1 ? '⬆️ harder' : '⬇️ easier'}</span>` : ''}</div></div></div>
+  return `<div class="card ${done ? '' : 'pulse'}"><div class="wo">${figureSvg(first.items[0].ex)}<div class="sp"><span class="pill ${plan.test ? 'gold' : 'hot'}">${plan.test ? '📈 Test day' : plan.rest ? '🌿 Recovery day' : 'Day ' + plan.n}</span><h3 style="margin-top:8px">${esc(sess.title)}</h3><div class="meta"><span>⏱ ~${plan.mins} min</span><span>${sess.blocks.reduce((a, b) => a + b.items.length * b.rounds, 0)} moves</span>${CH().adj && CH().adj !== 1 ? `<span>${CH().adj > 1 ? '⬆️ harder' : '⬇️ easier'}</span>` : ''}${checkinPill(r)}</div></div></div>
     <div class="exs">${items.map((it) => `<div class="ex" data-act="exinfo" data-ex="${it.ex}">${figureSvg(it.ex)}<b>${esc(EX[it.ex].n)}</b><small>${it.reps ? it.reps + ' reps' : fmtDur(it.secs)}${it.fast ? ' fast' : ''}</small></div>`).join('')}</div>
     ${done ? `<div class="row mt"><span class="pill ok">✓ ${r.rest && !r.w ? 'Rest day done' : 'Done' + (r.mins ? ' · ' + r.mins + ' min' : '')}</span><span class="sp"></span><button class="link" data-act="undo-w">Undo</button><button class="btn sm ghost" data-act="play">Do it again</button></div>`
-      : `<button class="btn big mt" data-act="play">▶ ${plan.rest ? 'Start the flow' : 'Start workout'}</button><div class="row mt" style="justify-content:center;gap:18px">${plan.rest ? '<button class="link" data-act="restdone">Just mark rest day done</button>' : '<button class="link" data-act="wdone">I did my own workout</button>'}<button class="link" data-act="adjust">Easier / harder</button></div>`}
+      : `<button class="btn big mt" data-act="play">▶ ${plan.rest ? 'Start the flow' : 'Start workout'}</button><div class="row mt" style="justify-content:center;gap:18px">${plan.rest ? '<button class="link" data-act="restdone">Just mark rest day done</button>' : '<button class="link" data-act="wdone">I did my own workout</button>'}<button class="link" data-act="adjust">Easier / harder</button></div>${plan.rest ? '' : '<button class="btn ghost big mt" data-act="quick">⏱ Only 10 minutes? Do a short version</button>'}`}
     ${plan.test ? `<div class="banner warn mt" style="margin-bottom:0"><span class="e">📈</span><div class="sp"><b>Test yourself today</b><div class="sm muted">${PROGRAMS[CH().program].tests.map((x) => esc(x.name)).join(' · ')}</div></div><button class="btn sm" data-act="tests">Log tests</button></div>` : ''}</div>`;
 }
 
@@ -206,10 +211,11 @@ function checkpointSheet(k) {
   const cfg = { water: { n: 'Water', u: 'glasses', step: 1, max: 30, e: '💧' }, sleep: { n: 'Sleep last night', u: 'hours', step: 0.5, max: 14, e: '😴' }, mob: { n: 'Stretching / mobility', u: 'minutes', step: 5, max: 120, e: '🧘' }, steps: { n: 'Steps', u: 'steps', step: 500, max: 60000, e: '👟' } }[k];
   let v = num(r[k]);
   if (k === 'water') { setDay(t, { water: v + 1 }); toast(`💧 ${v + 1} of ${T().water} glasses${v + 1 === T().water ? ' · goal hit!' : ''}`); vibrate(15); return; }
-  sheet(`<h2>${cfg.e} ${cfg.n}</h2><div class="stepper"><button id="st-m">−</button><b id="st-v">${k === 'steps' ? fmt(v) : v}</b><button id="st-p">+</button></div><p class="c muted">${cfg.u} · goal ${k === 'steps' ? fmt(T()[k]) : T()[k]}</p>${k === 'steps' ? '<input id="st-in" type="number" inputmode="numeric" placeholder="Or type the number from your phone">' : ''}<button class="btn big mt" id="st-ok">Save</button>`);
+  sheet(`<h2>${cfg.e} ${cfg.n}</h2><div class="stepper"><button id="st-m">−</button><b id="st-v">${k === 'steps' ? fmt(v) : v}</b><button id="st-p">+</button></div><p class="c muted">${cfg.u} · goal ${k === 'steps' ? fmt(T()[k]) : T()[k]}</p>${k === 'steps' ? `<div class="chipsel" id="st-q" style="justify-content:center">${[1000, 2000, 5000, 8000, 10000].map((n, i) => `<button data-v="${n}" data-add="${i < 2 ? 1 : 0}">${i < 2 ? '+' : ''}${n / 1000}k</button>`).join('')}</div><input id="st-in" class="mt" type="number" inputmode="numeric" placeholder="Or type the number from your phone"><button class="btn ghost big mt" data-act="pedo">🚶 Count steps on a walk</button>` : ''}<button class="btn big mt" id="st-ok">Save</button>`);
   const show = () => { $('#st-v').textContent = k === 'steps' ? fmt(v) : v; };
   holdRepeat($('#st-m'), () => { v = Math.max(0, v - cfg.step); show(); }); holdRepeat($('#st-p'), () => { v = Math.min(cfg.max, v + cfg.step); show(); });
   if ($('#st-in')) $('#st-in').oninput = (e) => { v = num(e.target.value); show(); };
+  $$('#st-q button').forEach((b) => (b.onclick = () => { v = Math.min(cfg.max, (b.dataset.add === '1' ? v : 0) + Number(b.dataset.v)); show(); vibrate(10); }));
   $('#st-ok').onclick = () => { setDay(t, { [k]: v || null }); closeSheet(); };
 }
 
@@ -273,20 +279,35 @@ function celebrateGifts(gifts) {
 function setupWizard(o) {
   o = o || {};
   const free = ME && ME.access && ME.access.kind === 'free';
-  const st = { program: (CH() && CH().program) || 'home', length: free ? (ME.limits.freeDays || 14) : 30, start: today() };
+  const freeDays = free ? (ME.limits.freeDays || 14) : 0;
+  const st = { program: (CH() && CH().program) || 'home', length: free ? freeDays : 30, start: today(), event: (CH() && CH().event) || '' };
+  /** Lengths this challenge comes in; on the free challenge, only those that fit in the free days (or the free days themselves). */
+  const lens = () => { const all = lengthsOf(st.program); if (!free) return all; const fit = all.filter((n) => n <= freeDays); return fit.length ? fit : [freeDays]; };
+  const fixLength = () => { const l = lens(); if (!l.includes(st.length)) st.length = l.includes(PROGRAMS[st.program].def) ? PROGRAMS[st.program].def : l.includes(30) ? 30 : l[l.length - 1]; };
   const step1 = () => {
-    sheet(`<h2>${o.next ? 'Your next challenge' : 'Pick your challenge'}</h2><p class="muted">You can switch later. Each one has a plan for every day.</p><div class="opts">${PROGRAM_IDS.map((id) => { const p = PROGRAMS[id]; return `<button class="opt ${st.program === id ? 'on' : ''}" data-p="${id}"><span class="e">${p.emoji}</span><span><b>${esc(p.name)}</b><small>${esc(p.level)} · ${esc(p.gear)}<br>${esc(p.blurb)}</small></span></button>`; }).join('')}</div><button class="btn big mt" id="w-n">Next</button>`, { full: false });
+    sheet(`<h2>${o.next ? 'Your next challenge' : 'Pick your challenge'}</h2><p class="muted">You can switch later. Each one has a plan for every day.</p><div class="opts">${PROGRAM_IDS.map((id) => { const p = PROGRAMS[id]; return `<button class="opt ${st.program === id ? 'on' : ''}" data-p="${id}"><span class="e">${p.emoji}</span><span><b>${esc(p.name)}</b>${p.tag ? ` <span class="pill hot" style="padding:2px 8px;font-size:11px">${esc(p.tag)}</span>` : ''}<small>${esc(p.level)} · ${esc(p.gear)}${p.lengths ? ' · ' + p.lengths.join(' / ') + ' days' : ''}<br>${esc(p.blurb)}</small></span></button>`; }).join('')}</div><button class="btn big mt" id="w-n">Next</button>`, { full: false });
     $$('.opt[data-p]').forEach((b) => (b.onclick = () => { st.program = b.dataset.p; $$('.opt[data-p]').forEach((x) => x.classList.toggle('on', x === b)); }));
     $('#w-n').onclick = step2;
   };
   const step2 = () => {
-    const mon = monday(shift(today(), 7));
-    sheet(`<h2>How long?</h2>${free ? `<p class="muted">Your free challenge is ${st.length} days. Plans unlock 14 to 100 days and unlimited challenges.</p>` : '<p class="muted">The plan stretches into four phases: Foundation, Build, Strengthen, Peak.</p>'}
-      <div class="chipsel" id="w-len">${LENGTHS.map((n) => `<button data-v="${n}" class="${st.length === n ? 'on' : ''}" ${free && n !== st.length ? 'disabled style="opacity:.4"' : ''}>${n} days</button>`).join('')}</div>
+    const mon = monday(shift(today(), 7)), p = PROGRAMS[st.program];
+    fixLength();
+    const all = lengthsOf(st.program), ok = lens();
+    sheet(`<h2>How long?</h2>${free ? `<p class="muted">Your free challenge is up to ${freeDays} days. Plans unlock every length and unlimited challenges.</p>` : '<p class="muted">The plan stretches into four phases: Foundation, Build, Strengthen, Peak.</p>'}
+      ${p.event ? `<label class="f">💍 Wedding date (optional)</label><input type="date" id="w-ev" value="${esc(st.event)}" min="${today()}"><p class="tiny muted" id="w-evm">${st.event ? '' : 'We’ll count down to it on your Today screen.'}</p>` : ''}
+      <div class="chipsel" id="w-len">${all.map((n) => `<button data-v="${n}" class="${st.length === n ? 'on' : ''}" ${ok.includes(n) ? '' : 'disabled style="opacity:.4"'}>${n} days</button>`).join('')}${free && !all.includes(freeDays) && ok[0] === freeDays ? `<button data-v="${freeDays}" class="on">${freeDays} days (free)</button>` : ''}</div>
       <label class="f">Start</label><div class="chipsel" id="w-st"><button data-v="${today()}" class="on">Today</button><button data-v="${shift(today(), 1)}">Tomorrow</button><button data-v="${mon}">Monday ${nice(mon)}</button></div>
       <div class="row mt"><button class="btn ghost" id="w-b">Back</button><button class="btn sp" id="w-n">Next</button></div>`);
-    $$('#w-len button').forEach((b) => (b.onclick = () => { if (b.disabled) return; st.length = Number(b.dataset.v); $$('#w-len button').forEach((x) => x.classList.toggle('on', x === b)); }));
+    const pickLen = (n) => { st.length = n; $$('#w-len button').forEach((x) => x.classList.toggle('on', Number(x.dataset.v) === n)); };
+    $$('#w-len button').forEach((b) => (b.onclick = () => { if (!b.disabled) pickLen(Number(b.dataset.v)); }));
     $$('#w-st button').forEach((b) => (b.onclick = () => { st.start = b.dataset.v; $$('#w-st button').forEach((x) => x.classList.toggle('on', x === b)); }));
+    const ev = $('#w-ev'); if (ev) ev.onchange = () => {
+      st.event = ev.value;
+      if (!st.event) return;
+      const days = diff(st.start, st.event) + 1, fit = ok.filter((n) => n <= days);
+      $('#w-evm').textContent = days < 7 ? 'That’s very soon. Pick a short plan and focus on the yoga days.' : `${days} days to go. ${fit.length ? `We picked the ${fit[fit.length - 1]}-day plan so it ends by then.` : ''}`;
+      if (fit.length) pickLen(fit[fit.length - 1]);
+    };
     $('#w-b').onclick = step1; $('#w-n').onclick = step3;
   };
   const step3 = () => {
@@ -305,11 +326,12 @@ function setupWizard(o) {
       S.profile.targets = { water: clamp(num($('#w-wa').value) || 8, 1, 30), sleep: clamp(num($('#w-sl').value) || 7, 1, 14), steps: clamp(num($('#w-stp').value) || 8000, 500, 50000), mob: clamp(num($('#w-mo').value) || 10, 1, 120), need };
       if (CH() && !o.next) archiveChallenge('stopped');
       S.challenge = { id: uid(), program: st.program, length: st.length, start: st.start, adj: 1, groupCode: o.groupCode || null };
+      if (PROGRAMS[st.program].event && st.event) S.challenge.event = st.event;
       onChange(); closeSheet(); confetti(); go('today');
       setTimeout(() => toast(st.start === today() ? 'Day 1! Start with the tests, then today’s workout.' : `See you on ${nice(st.start, true)}!`), 600);
     };
   };
-  if (o.program) { st.program = o.program; if (o.length && !free) st.length = o.length; if (o.start) st.start = o.start; step3(); } else step1();
+  if (o.program) { st.program = o.program; if (o.length && !free) st.length = o.length; if (o.start) st.start = o.start; if (free) fixLength(); step3(); } else step1();
 }
 function archiveChallenge(status) {
   const c = CH(); if (!c) return;

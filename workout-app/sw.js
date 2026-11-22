@@ -58,9 +58,11 @@ async function whatsNew() {
 }
 self.addEventListener('push', (e) => {
   e.waitUntil(whatsNew().then((m) => {
-    const title = m ? `${m.from} ${m.kind === 'nudge' ? 'nudged you 👉' : m.kind === 'event' ? '' : 'says'}`.trim() : 'Time to move 💪';
-    const body = m ? m.text : 'Your streak is waiting. Today’s workout takes about 15 minutes.';
-    return self.registration.showNotification(title, { body, icon: '/workout/icon-192.png', badge: '/workout/icon-192.png', tag: m ? 'wk-msg' : 'wk-reminder', renotify: true, data: { hash: m ? 'together/inbox' : 'today' } });
+    const alert = m && m.kind === 'alert';
+    const title = alert ? '🔥 Streak at risk' : m ? `${m.from} ${m.kind === 'nudge' ? 'nudged you 👉' : m.kind === 'event' ? '' : m.kind === 'voice' ? 'sent a voice note 🎤' : 'says'}`.trim() : 'Time to move 💪';
+    const body = alert ? m.text.replace(/^🔥 /, '') : m && m.kind === 'voice' ? 'Tap to listen' : m ? m.text : 'Your streak is waiting. Today’s workout takes about 15 minutes.';
+    const hash = alert ? 'today' : m ? (m.group === 'family' ? 'together/family' : 'together/inbox') : 'today';
+    return self.registration.showNotification(title, { body, icon: '/workout/icon-192.png', badge: '/workout/icon-192.png', tag: alert ? 'wk-streak' : m ? 'wk-msg' : 'wk-reminder', renotify: true, data: { hash } });
   }));
 });
 self.addEventListener('notificationclick', (e) => {

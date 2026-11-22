@@ -32,6 +32,7 @@ PROG_TABS.dash = function () {
   const c7 = []; const cl = []; for (let i = 6; i >= 0; i--) { const d = shift(today(), -i); c7.push(checkpoints(dayRow(d))); cl.push(WD[new Date(d + 'T12:00:00').getDay()].slice(0, 2)); }
   return `<div class="grid2"><div class="stat"><b>${x.complete}</b><small>complete days</small></div><div class="stat"><b>🔥 ${x.cur}</b><small>streak · best ${x.best}</small></div><div class="stat"><b>${x.workouts}</b><small>workouts</small></div><div class="stat"><b>${fmt(x.mins)}</b><small>minutes moved</small></div></div>
     <div class="card mt"><div class="lvl"><div class="n">${lv.level}</div><div class="sp"><b>${esc(lv.name)}</b><div class="xpbar mt" style="margin-top:6px"><i style="width:${lv.pct}%"></i></div><small class="muted">${fmt(x.xp)} XP · ${fmt(lv.to - x.xp)} to level ${lv.level + 1}</small></div></div></div>
+    ${journeyCard()}
     <div class="card"><h3>⏱ Minutes per week</h3>${barChart(weeks, labels, { unit: 'min' })}</div>
     <div class="card"><h3>✅ Checkpoints, last 7 days</h3>${barChart(c7, cl, { cls: 'bar2' })}</div>
     <div class="card"><h3>⚖️ Weight</h3>${lineChart(w)}</div>
@@ -46,7 +47,8 @@ function weekReport() {
   return `<div class="card"><h3>🗓 Last week’s report<span class="sp"></span><span class="pill gold">${grade[0]}</span></h3><p class="muted sm">${nice(m)} – ${nice(shift(m, 6))} · ${grade[1]}</p>
     <div class="li"><span class="e">✅</span><div class="t"><b>Complete days</b></div><div class="v">${done}/7</div></div><div class="li"><span class="e">💪</span><div class="t"><b>Workouts</b><small>${mins} min</small></div><div class="v">${wo}</div></div>
     <div class="li"><span class="e">💧</span><div class="t"><b>Water goal hit</b></div><div class="v">${water}/7</div></div><div class="li"><span class="e">😴</span><div class="t"><b>Sleep goal hit</b></div><div class="v">${sleep}/7</div></div>
-    ${mealDays ? `<div class="li"><span class="e">🍽</span><div class="t"><b>Average calories</b><small>on ${mealDays} day${mealDays === 1 ? '' : 's'} logged</small></div><div class="v">${fmt(kcal / mealDays)}</div></div>` : ''}</div>`;
+    ${mealDays ? `<div class="li"><span class="e">🍽</span><div class="t"><b>Average calories</b><small>on ${mealDays} day${mealDays === 1 ? '' : 's'} logged</small></div><div class="v">${fmt(kcal / mealDays)}</div></div>` : ''}
+    ${weekNumbers(m).logged ? '<button class="btn big mt" data-act="recap">📤 Share my week</button>' : ''}</div>`;
 }
 
 PROG_TABS.map = function () {
@@ -90,8 +92,9 @@ PROG_TABS.tests = function () {
     if (!rows.length) return `<div class="li"><span class="e">⏱</span><div class="t"><b>${esc(t.name)}</b><small>Not tested yet</small></div></div>`;
     const first = num(rows[0].v), last = num(rows[rows.length - 1].v), best = t.up ? Math.max(...rows.map((p) => num(p.v))) : Math.min(...rows.map((p) => num(p.v)));
     const ch = first ? Math.round(((last - first) / first) * 100) * (t.up ? 1 : -1) : 0;
-    return `<div class="li"><span class="e">${ch > 0 ? '🚀' : '⏱'}</span><div class="t"><b>${esc(t.name)}</b><small>Start ${first} → now ${last} ${esc(t.unit)} · best ${best}</small></div><div class="v" style="color:${ch > 0 ? 'var(--ok)' : 'var(--mu)'}">${rows.length > 1 ? (ch > 0 ? '+' : '') + ch + '%' : '–'}</div></div>`;
-  }).join('')}</div>`;
+    return `<div class="li"><span class="e">${ch > 0 ? '🚀' : '⏱'}</span><div class="t"><b>${esc(t.name)}</b><small>Start ${first} → now ${last} ${esc(t.unit)} · best ${best}${t.up ? '' : ' (lower is better)'}</small></div><div class="v" style="color:${ch > 0 ? 'var(--ok)' : 'var(--mu)'}">${rows.length > 1 ? (ch > 0 ? '+' : '') + ch + '%' : '–'}</div></div>${rows.length > 1 ? `<div style="padding:0 0 10px 50px">${lineChart(rows.map((p) => [p.d, num(p.v)]))}</div>` : ''}`;
+  }).join('')}</div>
+    <p class="tiny muted c">Retest every 2 weeks: we’ll remind you on the Today screen.</p>`;
 };
 function testsSheet() {
   const list = CH() ? PROGRAMS[CH().program].tests : PROGRAMS.home.tests;
@@ -162,10 +165,23 @@ async function uploadPhoto(file) {
   } catch (e) { if (e.status === 402 && e.data && e.data.reason === 'photos') upgradeSheet(e.message); else toast(esc(e.message), 'bad'); }
 }
 ACT.phview = (el) => { const p = PHOTOS.photos.find((x) => x.id === el.dataset.id); sheet(`<img src="${esc(p.url)}" style="width:100%;border-radius:18px" alt=""><p class="muted c">${nice(p.day, true)}</p><button class="link" id="ph-del" style="display:block;margin:auto">Delete photo</button><p class="tiny muted c">Deleting doesn’t give the week’s photo back.</p>`); $('#ph-del').onclick = async () => { try { await api('photos/delete', { method: 'POST', body: { id: p.id } }); closeSheet(); loadPhotos(true); } catch (e) { toast(esc(e.message), 'bad'); } }; };
-ACT.phcmp = () => {
-  const ps = PHOTOS.photos, a = ps[ps.length - 1], b = ps[0];
-  sheet(`<h2>Before / after</h2><div class="cmp"><img src="${esc(a.url)}" alt=""><img class="b" id="cmp-b" src="${esc(b.url)}" alt=""><input type="range" min="0" max="100" value="50" id="cmp-r"></div><div class="row mt sm muted"><span>${nice(a.day)}</span><span class="sp"></span><span>${nice(b.day)}</span></div>`);
-  $('#cmp-r').oninput = (e) => { $('#cmp-b').style.clipPath = `inset(0 0 0 ${e.target.value}%)`; };
+/* Before / after: drag the line across the photo; pick any two photos to compare. */
+ACT.phcmp = (el, ev, ai, bi) => {
+  const ps = PHOTOS.photos.slice().sort((x, y) => (x.day < y.day ? -1 : 1));
+  ai = ai == null ? 0 : ai; bi = bi == null ? ps.length - 1 : bi;
+  const a = ps[ai], b = ps[bi], days = diff(a.day, b.day);
+  const opt = (sel) => ps.map((p, i) => `<option value="${i}" ${i === sel ? 'selected' : ''}>${nice(p.day)}</option>`).join('');
+  sheet(`<h2>Before / after</h2><p class="muted sm">${days > 0 ? plural(days, 'day') + ' apart. ' : ''}Drag across the photo.</p><div class="cmp" id="cmp"><img src="${esc(a.url)}" alt="Before"><img class="b" id="cmp-b" src="${esc(b.url)}" alt="After"><span class="cmp-l" id="cmp-l"><i></i></span><em class="cmp-t l">Before</em><em class="cmp-t r">After</em></div>
+    <div class="grid2 mt"><select id="cmp-a">${opt(ai)}</select><select id="cmp-z">${opt(bi)}</select></div>`);
+  const box = $('#cmp'), set = (pct) => { pct = clamp(pct, 0, 100); $('#cmp-b').style.clipPath = `inset(0 0 0 ${pct}%)`; $('#cmp-l').style.left = pct + '%'; };
+  const at = (e) => { const r = box.getBoundingClientRect(); set(((e.clientX - r.left) / r.width) * 100); };
+  let drag = false;
+  box.addEventListener('pointerdown', (e) => { drag = true; box.setPointerCapture(e.pointerId); at(e); });
+  box.addEventListener('pointermove', (e) => { if (drag) at(e); });
+  ['pointerup', 'pointercancel'].forEach((t) => box.addEventListener(t, () => { drag = false; }));
+  set(50);
+  $('#cmp-a').onchange = () => ACT.phcmp(null, null, Number($('#cmp-a').value), bi);
+  $('#cmp-z').onchange = () => ACT.phcmp(null, null, ai, Number($('#cmp-z').value));
 };
 
 /* ----- lifetime: the long view ----- */
@@ -175,6 +191,7 @@ PROG_TABS.life = function () {
   for (let i = 0; i < 53 * 7; i++) { const d = shift(start, i); if (d > t) break; const r = dayRow(d), cp = checkpoints(r); cells += `<i class="${r && r.fz ? 'z' : isComplete(r) ? 'c' : cp >= 2 ? 'b' : isLogged(r) ? 'a' : ''}" title="${d}"></i>`; }
   const goals = S.goals.slice().sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0));
   return `<div class="card"><h3>🗓 Your year</h3><div class="heat">${cells}</div><div class="row tiny muted mt"><span>Less</span><i style="width:10px;height:10px;border-radius:3px;background:var(--line)"></i><i style="width:10px;height:10px;border-radius:3px;background:color-mix(in srgb,var(--ok) 35%,var(--line))"></i><i style="width:10px;height:10px;border-radius:3px;background:var(--ok)"></i><span>More</span></div></div>
+    ${journeyCard()}
     <div class="grid2"><div class="stat"><b>${x.workouts}</b><small>workouts, all time</small></div><div class="stat"><b>${fmt(x.mins / 60)} h</b><small>moved</small></div><div class="stat"><b>${x.km.toFixed(1)} km</b><small>walked, run, cycled</small></div><div class="stat"><b>${x.best}</b><small>longest streak</small></div></div>
     <div class="card mt"><h3>🎯 Long-term goals<span class="sp"></span><button class="btn sm" data-act="goaladd">+ Goal</button></h3>${goals.length ? goals.map(goalRow).join('') : '<p class="muted sm">Set a goal for the months ahead: a weight, a test score, a number of workouts. We’ll track it for you.</p>'}</div>
     <div class="card"><h3>🏁 Challenges</h3>${S.challenges.length || CH() ? (CH() ? `<div class="li"><span class="e">${PROGRAMS[CH().program].emoji}</span><div class="t"><b>${esc(PROGRAMS[CH().program].name)} · ${CH().length} days</b><small>Now · day ${Math.max(0, chDay())}</small></div></div>` : '') + S.challenges.slice().reverse().map((c) => `<div class="li"><span class="e">${PROGRAMS[c.program].emoji}</span><div class="t"><b>${esc(PROGRAMS[c.program].name)} · ${c.length} days</b><small>${nice(c.start)} – ${nice(c.end)} · ${c.complete} complete days</small></div><span class="pill ${c.status === 'finished' ? 'ok' : ''}">${c.status === 'finished' ? '🎓 Finished' : 'Stopped'}</span></div>`).join('') : '<p class="muted sm">Your finished challenges will show here.</p>'}</div>`;

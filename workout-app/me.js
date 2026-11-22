@@ -1,17 +1,36 @@
 /* ---------- Me: profile, plan, goals, reminders, theme, Excel import, export ---------- */
 const THEMES = [
-  { id: 'ember', n: 'Ember', bg: 'linear-gradient(135deg,#0B1020,#FF5A36)', ok: () => true },
-  { id: 'day', n: 'Day', bg: 'linear-gradient(135deg,#F4F6FB,#FF5A36)', ok: () => true },
-  { id: 'ocean', n: 'Ocean', bg: 'linear-gradient(135deg,#06141B,#22D3EE)', ok: (x) => x.level >= 5, how: 'Reach level 5' },
-  { id: 'rose', n: 'Rose', bg: 'linear-gradient(135deg,#150A12,#FF6FB5)', ok: (x) => x.perfectWeeks >= 1, how: 'Have a perfect week' },
-  { id: 'gold', n: 'Gold', bg: 'linear-gradient(135deg,#120E05,#FFC53D)', ok: (x) => x.level >= 12 || (ME && ME.gifts.some((g) => g.key === 'total50')), how: '50 complete days or level 12' },
+  { id: 'ember', n: 'Ember', c: '#FF5A36', ok: () => true },
+  { id: 'ocean', n: 'Ocean', c: '#0EA5E9', ok: (x) => x.level >= 5, how: 'Reach level 5' },
+  { id: 'rose', n: 'Rose', c: '#EC4899', ok: (x) => x.perfectWeeks >= 1, how: 'Have a perfect week' },
+  { id: 'gold', n: 'Gold', c: '#E0A100', ok: (x) => x.level >= 12 || (ME && ME.gifts.some((g) => g.key === 'total50')), how: '50 complete days or level 12' },
 ];
+/* Light or dark (or follow the phone). Kept on the device too, so the page opens in the right colours before sign-in. */
+const MODES = [['light', '☀️', 'Light'], ['dark', '🌙', 'Dark'], ['auto', '📱', 'Like my phone']];
+const darkQ = window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : null;
+function modePref() { return (S && S.prefs && S.prefs.mode) || store.get('wk_mode') || 'light'; }
+function applyMode() {
+  const want = modePref(), m = want === 'auto' ? (darkQ && darkQ.matches ? 'dark' : 'light') : want;
+  document.documentElement.dataset.mode = m; store.set('wk_mode', want);
+  const meta = $('meta[name=theme-color]'); if (meta) meta.content = m === 'dark' ? '#0B1020' : '#F4F6FB';
+  $$('#modebtn,.lp-mode').forEach((b) => { b.textContent = m === 'dark' ? '🌙' : '☀️'; b.title = m === 'dark' ? 'Dark (tap for light)' : 'Light (tap for dark)'; });
+  return m;
+}
+function toggleMode() {
+  const next = document.documentElement.dataset.mode === 'dark' ? 'light' : 'dark';
+  if (S && S.prefs && CLOUD.email) { S.prefs.mode = next; onChange({ quiet: true }); } else store.set('wk_mode', next);
+  applyMode();
+}
+if (darkQ && darkQ.addEventListener) darkQ.addEventListener('change', () => { if (modePref() === 'auto') applyMode(); });
+document.addEventListener('click', (e) => { if (e.target.closest('#modebtn,.lp-mode')) { e.preventDefault(); toggleMode(); } });
 function applyTheme() {
+  if (S.prefs.theme === 'day') { S.prefs.theme = 'ember'; if (!S.prefs.mode) S.prefs.mode = 'light'; } // the old "Day" theme is now light mode
+  if (!S.prefs.mode) S.prefs.mode = store.get('wk_mode') || 'light';
   const x = stats(), want = THEMES.find((t) => t.id === S.prefs.theme) || THEMES[0];
   const th = want.ok(x) ? want.id : 'ember';
   if (th === 'ember') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = th;
   store.set('wk_theme', th === 'ember' ? '' : th);
-  const m = $('meta[name=theme-color]'); if (m) m.content = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#0B1020';
+  applyMode();
 }
 
 ROUTES.me = function () {
@@ -25,8 +44,11 @@ ROUTES.me = function () {
     <div class="card"><h3>🔔 Reminders & sound</h3>
       <div class="setrow"><div class="t"><b>Daily reminder</b><small>${p.reminderHour != null ? `At ${hourLabel(p.reminderHour)}, only if you haven’t logged yet` : 'A nudge if you haven’t logged by your chosen time'}</small></div>${p.reminderHour != null ? `<select id="me-hr" style="width:auto">${hourOpts(p.reminderHour)}</select>` : ''}<label class="switch"><input type="checkbox" id="me-rem" ${p.reminderHour != null ? 'checked' : ''}><span></span></label></div>
       <div class="setrow"><div class="t"><b>Beeps</b><small>Countdown beeps in workouts</small></div><label class="switch"><input type="checkbox" id="me-snd" ${S.prefs.sound ? 'checked' : ''}><span></span></label></div>
-      <div class="setrow"><div class="t"><b>Voice coach</b><small>Reads out each move</small></div><label class="switch"><input type="checkbox" id="me-vc" ${S.prefs.voice ? 'checked' : ''}><span></span></label></div></div>
-    <div class="card"><h3>🎨 Theme</h3><div class="themes">${THEMES.map((t) => `<button style="background:${t.bg}" class="${(S.prefs.theme || 'ember') === t.id ? 'on' : ''}" data-act="theme" data-v="${t.id}" ${t.ok(x) ? '' : 'disabled'} title="${esc(t.ok(x) ? t.n : t.how)}">${t.ok(x) ? esc(t.n) : ''}</button>`).join('')}</div><p class="tiny muted mt">Unlock more themes by levelling up.</p></div>
+      <div class="setrow"><div class="t"><b>Voice coach</b><small>Reads out each move</small></div><label class="switch"><input type="checkbox" id="me-vc" ${S.prefs.voice ? 'checked' : ''}><span></span></label></div>
+      <div class="setrow"><div class="t"><b>Coach language</b><small>Hindi uses your phone’s Hindi voice</small></div><div class="seg" style="width:auto"><button data-act="lang" data-v="en" class="${HI() ? '' : 'on'}">English</button><button data-act="lang" data-v="hi" class="${HI() ? 'on' : ''}">हिंदी</button></div></div>
+      <div class="setrow"><div class="t"><b>9 pm streak alert</b><small>Only if your streak is at risk that day (needs reminders on)</small></div><label class="switch"><input type="checkbox" id="me-sa" ${S.prefs.streakAlert !== false ? 'checked' : ''}><span></span></label></div></div>
+    <div class="card"><h3>🎨 Look</h3><label class="f" style="margin-top:0">Light or dark</label><div class="seg">${MODES.map(([k, e, n]) => `<button data-act="mode" data-v="${k}" class="${modePref() === k ? 'on' : ''}">${e} ${n}</button>`).join('')}</div>
+      <label class="f">Colour</label><div class="themes">${THEMES.map((t) => `<button style="background:${t.c}" class="${(S.prefs.theme || 'ember') === t.id ? 'on' : ''}" data-act="theme" data-v="${t.id}" ${t.ok(x) ? '' : 'disabled'} title="${esc(t.ok(x) ? t.n : t.how)}">${t.ok(x) ? esc(t.n) : ''}</button>`).join('')}</div><p class="tiny muted mt">Unlock more colours by levelling up. The ☀️/🌙 button at the top switches light and dark any time.</p></div>
     <div class="card"><h3>📦 Your data</h3><div class="setrow"><div class="t"><b>Import from the Excel tracker</b><small>Bought the Workout Challenge sheet? Bring your days, meals, body log and tests in.</small></div><label class="btn sm ghost" for="me-x">Import</label><input type="file" id="me-x" accept=".xlsx,.xls,.csv" hidden></div>
       <div class="setrow"><div class="t"><b>Download everything</b><small>Your full log as a spreadsheet (CSV) or backup file</small></div><button class="btn sm ghost" data-act="exportcsv">CSV</button><button class="btn sm ghost" data-act="exportjson">Backup</button></div></div>
     <div class="card"><h3>💬 Help</h3>${ME && ME.whatsapp ? `<a class="btn sm" target="_blank" rel="noopener" href="https://wa.me/${esc(ME.whatsapp.number)}?text=${encodeURIComponent(ME.whatsapp.message)}">Ask us on WhatsApp</a>` : ''} <button class="btn sm ghost" id="me-install" ${INSTALL.evt ? '' : 'hidden'}>📲 Install the app</button>
@@ -43,11 +65,14 @@ ROUTES.me.after = function () {
   const hr = $('#me-hr'); if (hr) hr.onchange = () => enableReminders(Number(hr.value));
   $('#me-snd').onchange = (e) => { S.prefs.sound = e.target.checked; onChange({ quiet: true }); };
   $('#me-vc').onchange = (e) => { S.prefs.voice = e.target.checked; onChange({ quiet: true }); };
+  $('#me-sa').onchange = (e) => { S.prefs.streakAlert = e.target.checked; onChange({ quiet: true }); };
   $('#me-x').onchange = (e) => e.target.files[0] && importExcel(e.target.files[0]);
   const ins = $('#me-install'); if (ins) ins.onclick = doInstall;
 };
 ACT.need = (el) => { S.profile.targets.need = Number(el.dataset.v); onChange(); };
 ACT.theme = (el) => { S.prefs.theme = el.dataset.v; onChange(); applyTheme(); };
+ACT.lang = (el) => { S.prefs.lang = el.dataset.v; onChange(); say(el.dataset.v === 'hi' ? 'नमस्ते! मैं आपका कोच हूँ.' : 'Hi! I’m your coach.'); };
+ACT.mode = (el) => { S.prefs.mode = el.dataset.v; onChange(); applyTheme(); };
 ACT.setpw = () => {
   const has = ME && ME.hasPassword;
   sheet(`<h2>${has ? 'Change password' : 'Set a password'}</h2><p class="muted">Then you can sign in with ${esc(CLOUD.email)} and this password, or with a code like now.</p>

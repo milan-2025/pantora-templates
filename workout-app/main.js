@@ -13,6 +13,7 @@ function showApp() {
 function afterStart() {
   saveAuthForWorker();
   pollInbox();
+  if (doHash()) return;
   const join = store.get('wk_join');
   if (join) { joinFlow(join); return; }
   if (!CH() && !S.days.length && !S.challenges.length) setTimeout(() => setupWizard(), 500);

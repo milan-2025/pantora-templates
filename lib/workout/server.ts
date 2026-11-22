@@ -3,11 +3,12 @@ import { createHash, randomBytes, randomInt } from "crypto";
 import type { Payload } from "payload";
 import { sendWithBrevo } from "@/lib/brevo";
 import { PasswordError, checkLogin, hasPassword, removePassword, setPassword } from "@/lib/auth/passwords";
+import { getPaymentProvider } from "@/lib/payments";
 import { applyPromo, findAffiliate } from "@/lib/pricing";
 import { codesMatch, hashCode, makeToken, readToken } from "@/lib/planner/core";
 import {
   DEFAULT_MILESTONES, DEFAULT_MONEYBACK, WorkoutError, applyOps, bestStreak, countOnTime, firstName, istDate, levelOf, moneyBackProgress,
-  newMilestones, normEmail, shiftDay, streakOf, validEmail, waNumber, weekStart, weekXp, xpOf, isComplete, isLogged, targetsOf,
+  newMilestones, normEmail, shiftDay, streakOf, validEmail, waNumber, weekStart, weekXp, xpOf, isComplete, isLogged, targetsOf, isoDay, dayDiff,
   type Milestone, type MoneyBackTier, type Row, type WOp, type WState,
 } from "./core";
 import { makeVapidKeys, sendPush, validSub, type PushSub, type VapidKeys } from "./push";
@@ -21,7 +22,7 @@ const secret = () => `${process.env.PAYLOAD_SECRET || "dev-secret-change-me"}:wo
 const siteUrl = () => process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 const P = "workout-profiles" as const, M = "workout-memberships" as const, PL = "workout-plans" as const, G = "workout-groups" as const;
-const F = "workout-feed" as const, PH = "workout-photos" as const, CL = "workout-claims" as const, LG = "workout-logins" as const;
+const F = "workout-feed" as const, PH = "workout-photos" as const, CL = "workout-claims" as const, LG = "workout-logins" as const, PG = "workout-pledges" as const;
 
 export const SESSION_DAYS = 120;
 const CODE_MINUTES = 15;
@@ -33,6 +34,13 @@ export type Settings = {
   milestones: Milestone[]; moneyBackOn: boolean; moneyBackRule: "logged" | "completed"; moneyBackTiers: MoneyBackTier[]; moneyBackTerms: string;
   refOn: boolean; refFriendOff: number; refReward: "days" | "seat"; refAmount: number; refMax: number;
   offerText: string; whatsappNumber: string; whatsappMessage: string; promoCodes: Doc[]; vapidPublic: string; vapidPrivate: string;
+  pledgeOn: boolean; pledgeNeed: number; pledgeMinDays: number; pledgeAmounts: number[]; pledgeCharity: string; pledgeTerms: string;
+};
+
+/** "199, 499, 999" → [199, 499, 999] (₹1 to ₹10,000, at most 5). */
+export const parseAmounts = (v: unknown) => {
+  const list = String(v ?? "199, 499, 999").split(/[^0-9]+/).map(Number).filter((x) => x >= 1 && x <= 10000);
+  return [...new Set(list)].sort((a, b) => a - b).slice(0, 5);
 };
 
 let cache: { at: number; s: Settings } | null = null;
@@ -55,6 +63,8 @@ export async function getSettings(payload: Payload): Promise<Settings> {
     refOn: g.refOn !== false, refFriendOff: n(g.refFriendOff, 100), refReward: g.refReward === "seat" ? "seat" : "days", refAmount: n(g.refAmount, 30), refMax: n(g.refMax, 12),
     offerText: g.offerText ?? "", whatsappNumber: g.whatsappNumber ?? "", whatsappMessage: g.whatsappMessage ?? "", promoCodes: g.promoCodes ?? [],
     vapidPublic: g.vapidPublic ?? "", vapidPrivate: g.vapidPrivate ?? "",
+    pledgeOn: g.pledgeOn === true && Boolean(String(g.pledgeCharity ?? "").trim()), pledgeNeed: Math.min(100, Math.max(50, n(g.pledgeNeed, 80))), pledgeMinDays: Math.max(7, n(g.pledgeMinDays, 14)),
+    pledgeAmounts: parseAmounts(g.pledgeAmounts), pledgeCharity: String(g.pledgeCharity ?? "").trim(), pledgeTerms: g.pledgeTerms ?? "",
   };
   cache = { at: Date.now(), s };
   return s;
@@ -75,7 +85,7 @@ export async function vapidKeys(payload: Payload): Promise<VapidKeys> {
 export type PlanView = { id: string; planId: string; name: string; price: number; durationDays: number; seats: number; photosPerWeek: number; isFree: boolean; active: boolean; tagline: string; badge: string; features: string[] };
 
 export const DEFAULT_WORKOUT_PLANS = [
-  { name: "Free challenge", planId: "free", isFree: true, active: false, price: 0, durationDays: 14, seats: 0, photosPerWeek: 1, sortOrder: 0, tagline: "One 14-day challenge, free", badge: "", features: [{ text: "Any of the 6 challenges" }, { text: "Workout player, streaks and gifts" }, { text: "Join friends' groups" }] },
+  { name: "Free challenge", planId: "free", isFree: true, active: false, price: 0, durationDays: 14, seats: 0, photosPerWeek: 1, sortOrder: 0, tagline: "One 14-day challenge, free", badge: "", features: [{ text: "Any challenge, including festival specials" }, { text: "Workout player, streaks and gifts" }, { text: "Join friends' groups" }] },
   {
     name: "Basic", planId: "basic", isFree: false, active: true, price: 999, durationDays: 365, seats: 3, photosPerWeek: 1, sortOrder: 10, tagline: "A whole year, for you + 3", badge: "",
     features: [{ text: "Unlimited challenges, 14 to 100 days" }, { text: "Add 3 friends or family free" }, { text: "Groups and a random accountability buddy" }, { text: "1 progress photo a week" }, { text: "Money-back promise" }],
@@ -375,6 +385,8 @@ export async function me(payload: Payload, email: string, now = Date.now()) {
     offerText: s.offerText, whatsapp: s.whatsappNumber ? { number: s.whatsappNumber, message: s.whatsappMessage } : null,
     vapid: s.vapidPublic || (await vapidKeys(payload)).publicKey,
     refCodeUsed: profile.referredBy ?? "",
+    pledge: await pledgeState(payload, profile),
+    family: Boolean(access.isPaid && access.membership && (access.kind === "owner" ? (access.membership.members ?? []).length > 0 : true)),
   };
 }
 
@@ -445,7 +457,7 @@ export async function createGroup(payload: Payload, email: string, b: Doc) {
   const name = String(b.name ?? "").trim().slice(0, 50) || `${firstName(profile.name, email)}'s crew`;
   const mode = b.mode === "log" ? "log" : "together";
   const start = typeof b.start === "string" && /^\d{4}-\d{2}-\d{2}$/.test(b.start) ? b.start : istDate();
-  const length = Math.min(100, Math.max(14, Math.round(Number(b.length) || 30)));
+  const length = Math.min(100, Math.max(7, Math.round(Number(b.length) || 30)));
   const program = typeof b.program === "string" ? b.program.slice(0, 30) : "";
   for (let i = 0; i < 5; i++) {
     try {
@@ -515,11 +527,12 @@ export async function groupView(payload: Payload, email: string, code: unknown) 
   const profiles = await payload.find({ collection: P, where: { email: { in: emails } }, limit: 100, depth: 0, overrideAccess: true });
   const by = new Map((profiles.docs as Doc[]).map((p) => [p.email, p]));
   const people = emails.map((e) => publicStatus(by.get(e) ?? null, e)).sort((a, b) => b.weekXp - a.weekXp);
+  const goal = await groupGoal(payload, g, by); // first, so a "goal reached" message is in this feed
   const feed = await payload.find({ collection: F, where: { groupCode: { equals: g.code } }, sort: "-createdAt", limit: 60, depth: 0, overrideAccess: true });
   return {
     code: g.code, name: g.name, mode: g.mode, program: g.program ?? "", length: g.length ?? null, start: g.start ?? "", owner: g.ownerEmail === email,
-    link: `${siteUrl()}/workout?join=${g.code}`, people,
-    feed: (feed.docs as Doc[]).map((f) => ({ id: String(f.id), kind: f.kind, from: f.fromName, fromMe: f.fromEmail === email, to: f.toEmail ? firstName(by.get(f.toEmail)?.name, f.toEmail) : "", toMe: f.toEmail === email, text: f.text, at: f.createdAt })),
+    link: `${siteUrl()}/workout?join=${g.code}`, people, goal,
+    feed: await Promise.all((feed.docs as Doc[]).map((f) => feedItem(f, email, f.toEmail ? firstName(by.get(f.toEmail)?.name, f.toEmail) : ""))),
   };
 }
 
@@ -529,9 +542,13 @@ export const PRESETS: Record<string, string> = {
   together: "🤝 Let's do it together tomorrow", tired: "😮‍💨 Tough one today, but I showed up",
 };
 
-async function post(payload: Payload, f: { kind: string; groupCode?: string; toEmail?: string; fromEmail: string; fromName: string; text: string }) {
+async function post(payload: Payload, f: { kind: string; groupCode?: string; toEmail?: string; fromEmail: string; fromName: string; text: string; voiceId?: string; secs?: number }) {
   await payload.create({ collection: F, data: f as never, overrideAccess: true });
   if (f.toEmail) void notify(payload, [f.toEmail]).catch(() => null);
+  else if (f.groupCode?.startsWith("f-")) {
+    const m = (await payload.findByID({ collection: M, id: f.groupCode.slice(2), depth: 0, overrideAccess: true }).catch(() => null)) as Doc | null;
+    if (m) void notify(payload, [m.ownerEmail, ...((m.members ?? []) as Doc[]).map((x) => x.email)].filter((e: string) => e && e !== f.fromEmail)).catch(() => null);
+  }
   else if (f.groupCode && f.kind !== "event") {
     const g = (await payload.find({ collection: G, where: { code: { equals: f.groupCode } }, limit: 1, depth: 0, overrideAccess: true })).docs[0] as Doc | undefined;
     if (g) void notify(payload, ((g.members ?? []) as Doc[]).map((x) => x.email).filter((e: string) => e !== f.fromEmail)).catch(() => null);
@@ -546,12 +563,160 @@ export async function groupPost(payload: Payload, email: string, code: unknown, 
   const profile = await findProfile(payload, email);
   const to = typeof b.to === "string" ? normEmail(b.to) : "";
   if (to && !members.some((x) => x.email === to)) throw new WorkoutError("They're not in this group");
+  const voice = voiceOf(email, b.voice);
+  if (voice) {
+    await post(payload, { kind: "voice", groupCode: g.code, toEmail: to || undefined, fromEmail: email, fromName: firstName(profile?.name, email), text: `🎤 Voice note (${voice.secs}s)`, voiceId: voice.id, secs: voice.secs });
+    return { ok: true };
+  }
   const kind = b.kind === "nudge" ? "nudge" : b.kind === "cheer" ? "cheer" : "msg";
   let text = typeof b.preset === "string" && PRESETS[b.preset] ? PRESETS[b.preset] : String(b.text ?? "").trim().replace(/\s+/g, " ").slice(0, 160);
   if (kind === "cheer" && !text) text = "👏 cheered you on";
   if (kind === "nudge" && !text) text = "👉 nudged you to work out today";
   if (!text) throw new WorkoutError("Type a message");
   await post(payload, { kind, groupCode: g.code, toEmail: to || undefined, fromEmail: email, fromName: firstName(profile?.name, email), text });
+  return { ok: true };
+}
+
+/* ---------- voice notes (groups and family only: people you know) ---------- */
+
+const VOICE_PER_DAY = 20, VOICE_MAX_SECS = 15;
+const voiceOwner = (email: string) => createHash("sha1").update(email).digest("hex").slice(0, 12);
+
+/** A voice note the sender uploaded: only ids under their own folder are accepted. */
+function voiceOf(email: string, v: unknown) {
+  if (!v || typeof v !== "object") return null;
+  const id = String((v as Doc).id ?? "");
+  if (!new RegExp(`^workout-voice/${voiceOwner(email)}/[a-f0-9]{24}$`).test(id)) throw new WorkoutError("That voice note didn't upload. Try again.");
+  const secs = Math.min(VOICE_MAX_SECS, Math.max(1, Math.round(Number((v as Doc).secs) || 1)));
+  return { id, secs };
+}
+
+/** Signs a direct, private upload of one short voice note to Cloudinary (audio goes to its "video" endpoint). */
+export async function signVoice(payload: Payload, email: string, now = Date.now()) {
+  const since = new Date(now - 864e5).toISOString();
+  const sent = (await payload.count({ collection: F, where: { and: [{ fromEmail: { equals: email } }, { kind: { equals: "voice" } }, { createdAt: { greater_than: since } }] }, overrideAccess: true })).totalDocs;
+  if (sent >= VOICE_PER_DAY) throw new WorkoutError(`That's ${VOICE_PER_DAY} voice notes today. Try again tomorrow.`, 429);
+  const c = await cloud();
+  const cfg = c.config();
+  if (!cfg.cloud_name || !cfg.api_key || !cfg.api_secret) throw new WorkoutError("Voice notes aren't set up yet", 503);
+  const publicId = `workout-voice/${voiceOwner(email)}/${randomBytes(12).toString("hex")}`;
+  const timestamp = Math.floor(now / 1000);
+  const params = { public_id: publicId, timestamp, type: "authenticated" };
+  return { id: publicId, maxSecs: VOICE_MAX_SECS, url: `https://api.cloudinary.com/v1_1/${cfg.cloud_name}/video/upload`, fields: { ...params, api_key: cfg.api_key, signature: c.utils.api_sign_request(params, cfg.api_secret) } };
+}
+
+/** Private, signed link to play a voice note (as mp3, which every phone can play). */
+async function voiceUrl(id: string | undefined) {
+  if (!id) return "";
+  const c = await cloud();
+  return c.config().cloud_name ? c.url(id, { resource_type: "video", type: "authenticated", sign_url: true, secure: true, format: "mp3" }) : "";
+}
+const feedItem = async (f: Doc, email: string, toName = "") => ({
+  id: String(f.id), kind: f.kind, from: f.fromName, fromMe: f.fromEmail === email, to: toName, toMe: f.toEmail === email, text: f.text, at: f.createdAt,
+  ...(f.kind === "voice" ? { voice: await voiceUrl(f.voiceId), secs: f.secs ?? 0 } : {}),
+});
+
+/* ---------- group shared goal ---------- */
+
+export const GOAL_KINDS = { workouts: "workouts", minutes: "minutes moved", km: "km", steps: "steps", complete: "complete days" } as const;
+type GoalKind = keyof typeof GOAL_KINDS;
+const STEP_KM = 0.00075; // a usual walking step is about 75 cm
+
+/** One person's share of a goal between two days (inclusive). */
+export function goalAmount(st: WState, kind: GoalKind, from: string, to: string) {
+  const t = targetsOf(st);
+  let n = 0;
+  for (const r of st.days ?? []) {
+    if (r.id < from || r.id > to) continue;
+    const acts = Array.isArray(r.acts) ? (r.acts as Doc[]) : [];
+    if (kind === "workouts") n += r.w ? 1 : 0;
+    else if (kind === "minutes") n += (Number(r.mins) || 0) + acts.reduce((a, x) => a + (Number(x.min) || 0), 0);
+    else if (kind === "km") n += acts.reduce((a, x) => a + (Number(x.km) || 0), 0) + (Number(r.steps) || 0) * STEP_KM;
+    else if (kind === "steps") n += Number(r.steps) || 0;
+    else if (kind === "complete") n += isComplete(r, t) ? 1 : 0;
+  }
+  return Math.round(n * 10) / 10;
+}
+
+export async function setGroupGoal(payload: Payload, email: string, code: unknown, b: Doc) {
+  const g = await groupByCode(payload, code);
+  if (g.ownerEmail !== email) throw new WorkoutError("Only the person who started the group can set its goal", 403);
+  if (b.clear) {
+    await payload.update({ collection: G, id: g.id, data: { goalKind: null, goalTarget: null, goalStart: null, goalEnd: null, goalDoneAt: null } as never, overrideAccess: true });
+    return { ok: true };
+  }
+  const kind = String(b.kind ?? "") as GoalKind;
+  if (!(kind in GOAL_KINDS)) throw new WorkoutError("Pick what to count");
+  const target = Math.round(Number(b.target) || 0);
+  if (target < 1 || target > 10_000_000) throw new WorkoutError("Type a target");
+  const start = isoDay(b.start) ? String(b.start) : istDate();
+  const end = isoDay(b.end) ? String(b.end) : shiftDay(start, 29);
+  if (end < start || dayDiff(start, end) > 366) throw new WorkoutError("The end date should be after the start, within a year");
+  await payload.update({ collection: G, id: g.id, data: { goalKind: kind, goalTarget: target, goalStart: start, goalEnd: end, goalDoneAt: null } as never, overrideAccess: true });
+  const profile = await findProfile(payload, email);
+  await post(payload, { kind: "event", groupCode: g.code, fromEmail: email, fromName: firstName(profile?.name, email), text: `set a group goal: ${fmtGoal(kind, target)} by ${end} 🎯` });
+  return { ok: true };
+}
+const fmtGoal = (kind: GoalKind, target: number) => `${target.toLocaleString("en-IN")} ${GOAL_KINDS[kind]}`;
+
+/** Progress of a group's goal; posts a celebration the first time it's reached. */
+async function groupGoal(payload: Payload, g: Doc, profiles: Map<string, Doc>, now = Date.now()) {
+  if (!g.goalKind || !g.goalTarget || !g.goalStart || !g.goalEnd) return null;
+  const kind = g.goalKind as GoalKind, today = istDate(now);
+  const to = today < g.goalEnd ? today : g.goalEnd;
+  const people = ((g.members ?? []) as Doc[]).map((m) => {
+    const p = profiles.get(m.email);
+    return { name: firstName(p?.name ?? m.name, m.email), amount: p ? goalAmount((p.state ?? {}) as WState, kind, g.goalStart, to) : 0 };
+  }).sort((a, b) => b.amount - a.amount);
+  const total = Math.round(people.reduce((a, x) => a + x.amount, 0) * 10) / 10;
+  let doneAt = g.goalDoneAt ?? null;
+  if (!doneAt && total >= g.goalTarget && today <= shiftDay(g.goalEnd, 1)) {
+    doneAt = new Date(now).toISOString();
+    const res = await payload.update({ collection: G, where: { and: [{ id: { equals: g.id } }, { or: [{ goalDoneAt: { exists: false } }, { goalDoneAt: { equals: null } }] }] }, data: { goalDoneAt: doneAt } as never, overrideAccess: true }).catch(() => ({ docs: [] }));
+    if (res.docs.length) await post(payload, { kind: "event", groupCode: g.code, fromEmail: "pandora", fromName: "🎉 The group", text: `reached the goal: ${fmtGoal(kind, g.goalTarget)}! Amazing teamwork.` });
+  }
+  return { kind, label: GOAL_KINDS[kind], target: g.goalTarget, start: g.goalStart, end: g.goalEnd, total, pct: Math.min(100, Math.round((total / g.goalTarget) * 100)), done: Boolean(doneAt), daysLeft: Math.max(0, dayDiff(today, g.goalEnd)), people };
+}
+
+/* ---------- family league: everyone on one plan ---------- */
+
+const familyCode = (m: Doc) => `f-${m.id}`;
+async function familyOf(payload: Payload, email: string) {
+  const profile = await getOrCreateProfile(payload, email);
+  const a = await accessOf(payload, profile);
+  if (!a.membership || !a.isPaid || (a.kind !== "owner" && a.kind !== "member")) return null;
+  const m = a.membership;
+  const emails = [m.ownerEmail as string, ...((m.members ?? []) as Doc[]).map((x) => x.email as string)].filter((e, i, l) => e && l.indexOf(e) === i);
+  return { m, emails, profile };
+}
+
+/** This week's scoreboard of the buyer and everyone on their plan, last week's winner, and the family feed. */
+export async function familyView(payload: Payload, email: string, now = Date.now()) {
+  const f = await familyOf(payload, email);
+  if (!f || f.emails.length < 2) return { on: false };
+  const profiles = await payload.find({ collection: P, where: { email: { in: f.emails } }, limit: 20, depth: 0, overrideAccess: true });
+  const by = new Map((profiles.docs as Doc[]).map((p) => [p.email, p]));
+  const people = f.emails.map((e) => publicStatus(by.get(e) ?? null, e, now)).sort((a, b) => b.weekXp - a.weekXp);
+  const lastMon = shiftDay(weekStart(istDate(now)), -7);
+  const last = f.emails.map((e) => ({ name: firstName(by.get(e)?.name, e), xp: weekXp(((by.get(e)?.state ?? {}) as WState), lastMon) })).sort((a, b) => b.xp - a.xp)[0];
+  const feed = await payload.find({ collection: F, where: { groupCode: { equals: familyCode(f.m) } }, sort: "-createdAt", limit: 30, depth: 0, overrideAccess: true });
+  return {
+    on: true, people, lastWinner: last && last.xp > 0 ? last : null,
+    feed: await Promise.all((feed.docs as Doc[]).map((x) => feedItem(x, email, x.toEmail ? firstName(by.get(x.toEmail)?.name, x.toEmail) : ""))),
+  };
+}
+
+export async function familyPost(payload: Payload, email: string, b: Doc) {
+  const f = await familyOf(payload, email);
+  if (!f) throw new WorkoutError("Family cheers are for people on the same plan", 403);
+  const to = typeof b.to === "string" ? normEmail(b.to) : "";
+  if (to && !f.emails.includes(to)) throw new WorkoutError("They're not on your plan");
+  const fromName = firstName(f.profile.name, email);
+  const voice = voiceOf(email, b.voice);
+  if (voice) { await post(payload, { kind: "voice", groupCode: familyCode(f.m), toEmail: to || undefined, fromEmail: email, fromName, text: `🎤 Voice note (${voice.secs}s)`, voiceId: voice.id, secs: voice.secs }); return { ok: true }; }
+  const text = typeof b.preset === "string" && PRESETS[b.preset] ? PRESETS[b.preset] : String(b.text ?? "").trim().replace(/\s+/g, " ").slice(0, 160);
+  if (!text) throw new WorkoutError("Type a message");
+  await post(payload, { kind: b.preset === "where" ? "nudge" : b.preset ? "cheer" : "msg", groupCode: familyCode(f.m), toEmail: to || undefined, fromEmail: email, fromName, text });
   return { ok: true };
 }
 
@@ -646,13 +811,15 @@ export async function inbox(payload: Payload, email: string, since: string) {
   const me = await findProfile(payload, email);
   const codes = (await myGroups(payload, email)).map((g) => g.code);
   if (me?.buddyEmail) codes.push(pairCode(email, me.buddyEmail));
+  const fam = await familyOf(payload, email).catch(() => null);
+  if (fam) codes.push(familyCode(fam.m));
   const after = since && !Number.isNaN(Date.parse(since)) ? since : new Date(Date.now() - 7 * 864e5).toISOString();
   const res = await payload.find({
     collection: F,
     where: { and: [{ createdAt: { greater_than: after } }, { fromEmail: { not_equals: email } }, { or: [{ toEmail: { equals: email } }, { groupCode: { in: codes.length ? codes : ["-"] } }] }] },
     sort: "-createdAt", limit: 30, depth: 0, overrideAccess: true,
   });
-  return (res.docs as Doc[]).map((f) => ({ id: String(f.id), kind: f.kind, from: f.fromName, text: f.text, toMe: f.toEmail === email, group: f.groupCode?.startsWith("b-") ? "buddy" : f.groupCode, at: f.createdAt }));
+  return (res.docs as Doc[]).map((f) => ({ id: String(f.id), kind: f.kind, from: f.fromName, text: f.text, toMe: f.toEmail === email, group: f.groupCode?.startsWith("b-") ? "buddy" : f.groupCode?.startsWith("f-") ? "family" : f.groupCode, at: f.createdAt }));
 }
 
 export async function subscribePush(payload: Payload, email: string, sub: unknown, hour: unknown) {
@@ -681,14 +848,43 @@ async function notify(payload: Payload, emails: string[]) {
   }
 }
 
-/** Hourly: a reminder push to people whose reminder hour is now and who haven't logged today. */
+export const STREAK_ALERT_HOUR = 21;
+
+/**
+ * Hourly: a reminder push to people whose reminder hour is now and who haven't logged today.
+ * At 9 pm India time, people with a streak of 2+ that today hasn't saved yet get a "streak at risk" alert
+ * (once a day; they can turn it off under Me).
+ */
 export async function sendReminders(payload: Payload, now = Date.now()) {
   const hour = new Date(now + 5.5 * 3600_000).getUTCHours();
   const today = istDate(now);
+  let alerted: string[] = [];
+  if (hour === STREAK_ALERT_HOUR) {
+    const risk = await payload.find({ collection: P, where: { streak: { greater_than: 1 } }, limit: 5000, depth: 0, overrideAccess: true, select: { email: true, push: true, state: true, streak: true, completed: true, lastAlertDay: true } });
+    const due = (risk.docs as Doc[]).filter((p) => {
+      const st = (p.state ?? {}) as WState, prefs = (st.prefs ?? {}) as Doc;
+      return Array.isArray(p.push) && p.push.length && prefs.streakAlert !== false && p.lastAlertDay !== today && !(p.completed ?? []).includes(today) && !isComplete((st.days ?? []).find((r) => r.id === today), targetsOf(st));
+    });
+    for (const p of due) {
+      await payload.update({ collection: P, id: p.id, data: { lastAlertDay: today } as never, overrideAccess: true });
+      await payload.create({ collection: F, data: { kind: "alert", toEmail: p.email, fromEmail: "pandora", fromName: "Pandora Workout", text: `🔥 Your ${p.streak}-day streak ends at midnight. A 10-minute workout and your checkpoints will save it.` } as never, overrideAccess: true });
+    }
+    await notify(payload, due.map((p) => p.email));
+    alerted = due.map((p) => p.email);
+  }
+  let settled = 0;
+  if (hour === 7) {
+    // Pledges whose last loggable day has passed, for people who haven't opened the app since.
+    const ended = await payload.find({ collection: PG, where: { and: [{ status: { equals: "active" } }, { end: { less_than: shiftDay(today, -1) } }] }, limit: 500, depth: 0, overrideAccess: true });
+    for (const em of [...new Set((ended.docs as Doc[]).map((d) => d.email as string))]) {
+      const prof = await findProfile(payload, em);
+      if (prof) { await settlePledges(payload, prof, now); settled++; }
+    }
+  }
   const res = await payload.find({ collection: P, where: { reminderHour: { equals: hour } }, limit: 2000, depth: 0, overrideAccess: true, select: { email: true, push: true, state: true } });
-  const due = (res.docs as Doc[]).filter((p) => Array.isArray(p.push) && p.push.length && !isLogged(((p.state ?? {}) as WState).days?.find((r: Row) => r.id === today)));
+  const due = (res.docs as Doc[]).filter((p) => !alerted.includes(p.email) && Array.isArray(p.push) && p.push.length && !isLogged(((p.state ?? {}) as WState).days?.find((r: Row) => r.id === today)));
   await notify(payload, due.map((p) => p.email));
-  return { checked: res.docs.length, sent: due.length, hour };
+  return { checked: res.docs.length, sent: due.length, streakAlerts: alerted.length, pledgesSettled: settled, hour };
 }
 
 /* ---------- progress photos ---------- */
@@ -787,6 +983,104 @@ export async function claimMoneyBack(payload: Payload, email: string, choice: un
     html: shell(`<h2 style="margin:0 0 8px">What a year!</h2><p>You logged <b>${mb.counted} days</b>. We've received your claim for <b>${ch === "refund" ? `${mb.reached.percent}% of your payment back` : `${mb.reached.months} free months`}</b> and will confirm within 7 working days.</p>`),
   }).catch(() => null);
   return { ok: true };
+}
+
+/* ---------- pledge: money on finishing a challenge ---------- */
+
+/** How a pledge looks to its owner. */
+const pledgeOut = (d: Doc) => ({
+  id: String(d.id), amount: d.amount, start: d.start, end: d.end, needed: d.needed, counted: d.counted ?? 0, needPercent: d.needPercent, status: d.status, charity: d.charity ?? "", challengeId: d.challengeId ?? "",
+});
+
+/** Complete days logged on time between two days (inclusive). */
+const onTimeComplete = (profile: Doc, from: string, to: string) => ((profile.completed ?? []) as string[]).filter((d) => d >= from && d <= to).length;
+
+/** Settles running pledges that have ended (the day after the last day, since that day can still be logged). */
+export async function settlePledges(payload: Payload, profile: Doc, now = Date.now()) {
+  const today = istDate(now);
+  const res = await payload.find({ collection: PG, where: { and: [{ email: { equals: profile.email } }, { status: { equals: "active" } }] }, limit: 10, depth: 0, overrideAccess: true });
+  for (const d of res.docs as Doc[]) {
+    const counted = onTimeComplete(profile, d.start, d.end);
+    if (today <= shiftDay(d.end, 1)) {
+      if (counted !== (d.counted ?? 0)) await payload.update({ collection: PG, id: d.id, data: { counted } as never, overrideAccess: true });
+      continue;
+    }
+    const won = counted >= d.needed;
+    const upd = await payload.update({ collection: PG, where: { and: [{ id: { equals: d.id } }, { status: { equals: "active" } }] }, data: { counted, status: won ? "won" : "lost", settledAt: new Date(now).toISOString() } as never, overrideAccess: true });
+    if (!upd.docs.length) continue;
+    await sendWithBrevo({
+      to: [{ email: profile.email }],
+      subject: won ? `You did it! Your ₹${d.amount} is coming back 🏆` : `Your pledge ended: ₹${d.amount} goes to ${d.charity}`,
+      html: shell(won
+        ? `<h2 style="margin:0 0 8px">Pledge won!</h2><p>You completed <b>${counted} of ${d.needed}</b> days needed. We'll refund <b>₹${d.amount}</b> to your original payment method within 7 working days.</p>`
+        : `<h2 style="margin:0 0 8px">So close.</h2><p>You completed <b>${counted}</b> of the <b>${d.needed}</b> days needed, so your ₹${d.amount} goes to <b>${esc(d.charity)}</b> as promised. Every day you showed up still counts. Ready for another go?</p><p>${button(`${siteUrl()}/workout`, "Open the app")}</p>`),
+    }).catch((e) => console.error("[workout-pledge-email]", e));
+  }
+}
+
+export async function pledgeState(payload: Payload, profile: Doc) {
+  const s = await getSettings(payload);
+  await settlePledges(payload, profile);
+  const res = await payload.find({ collection: PG, where: { and: [{ email: { equals: profile.email } }, { status: { not_equals: "pending" } }] }, sort: "-createdAt", limit: 5, depth: 0, overrideAccess: true });
+  return {
+    on: s.pledgeOn, amounts: s.pledgeAmounts, needPercent: s.pledgeNeed, minDays: s.pledgeMinDays, charity: s.pledgeCharity, terms: s.pledgeTerms,
+    list: (res.docs as Doc[]).map(pledgeOut),
+  };
+}
+
+/** Starts a pledge for the rest of the current challenge: a Razorpay order for the amount. */
+export async function startPledge(payload: Payload, email: string, b: Doc, now = Date.now()) {
+  const s = await getSettings(payload);
+  if (!s.pledgeOn) throw new WorkoutError("Pledges aren't open right now");
+  const amount = Math.round(Number(b.amount) || 0);
+  if (!s.pledgeAmounts.includes(amount)) throw new WorkoutError("Pick one of the amounts");
+  const profile = await getOrCreateProfile(payload, email);
+  const a = await accessOf(payload, profile, now);
+  if (!a.canLog) throw new WorkoutError("Your plan has ended. Renew to start a pledge.", 402, { reason: "expired" });
+  const ch = (((profile.state ?? {}) as WState).challenge ?? null) as Doc | null;
+  if (!ch || !isoDay(ch.start) || !(Number(ch.length) > 0) || String(ch.id ?? "") !== String(b.challengeId ?? "")) throw new WorkoutError("Start a challenge first, then put money on it");
+  const today = istDate(now), end = shiftDay(ch.start, Number(ch.length) - 1), start = ch.start > today ? ch.start : today;
+  const days = dayDiff(start, end) + 1;
+  if (days < s.pledgeMinDays) throw new WorkoutError(`A pledge needs at least ${s.pledgeMinDays} days left in the challenge`);
+  const running = await payload.count({ collection: PG, where: { and: [{ email: { equals: email } }, { status: { equals: "active" } }] }, overrideAccess: true });
+  if (running.totalDocs) throw new WorkoutError("You already have a pledge running");
+  const needed = Math.ceil((days * s.pledgeNeed) / 100);
+  const order = await getPaymentProvider().createOrder({
+    amount, currency: "INR", customer: { name: profile.name || email, email, phone: profile.phone || "", city: "" } as never,
+    description: `Pandora Workout pledge – ${days} days`,
+  });
+  await payload.delete({ collection: PG, where: { and: [{ email: { equals: email } }, { status: { equals: "pending" } }] }, overrideAccess: true }).catch(() => null);
+  await payload.create({
+    collection: PG,
+    data: { email, amount, program: `${ch.program ?? ""} · ${ch.length} days`, challengeId: String(ch.id), start, end, needPercent: s.pledgeNeed, needed, counted: 0, charity: s.pledgeCharity, status: "pending", orderId: order.orderId } as never,
+    overrideAccess: true,
+  });
+  return { orderId: order.orderId, provider: order.provider, clientData: order.clientData ?? null, amount, days, needed };
+}
+
+/** Marks a pledge paid (from the app's confirmation or Razorpay's webhook). Safe to call twice. */
+export async function markPledgePaid(payload: Payload, orderId: string, paymentId?: string) {
+  const d = (await payload.find({ collection: PG, where: { orderId: { equals: orderId } }, limit: 1, depth: 0, overrideAccess: true })).docs[0] as Doc | undefined;
+  if (!d) return { found: false as const };
+  if (d.status !== "pending") return { found: true as const, alreadyPaid: true };
+  const res = await payload.update({ collection: PG, where: { and: [{ id: { equals: d.id } }, { status: { equals: "pending" } }] }, data: { status: "active", paymentId: paymentId ?? "" } as never, depth: 0, overrideAccess: true });
+  if (!res.docs.length) return { found: true as const, alreadyPaid: true };
+  await sendWithBrevo({
+    to: [{ email: d.email }],
+    subject: `₹${d.amount} on the line. You've got this 💪`,
+    html: shell(`<h2 style="margin:0 0 8px">Your pledge is on</h2><p>Complete <b>${d.needed} days</b> between ${d.start} and ${d.end} (logged on the day or the next day) and you get your <b>₹${d.amount}</b> back. Miss it and it goes to <b>${esc(d.charity)}</b>.</p><p>${button(`${siteUrl()}/workout`, "Open the app")}</p>`),
+  }).catch((e) => console.error("[workout-pledge-email]", e));
+  return { found: true as const, alreadyPaid: false };
+}
+
+export async function verifyPledge(payload: Payload, email: string, b: Doc) {
+  const d = (await payload.find({ collection: PG, where: { and: [{ email: { equals: email } }, { status: { in: ["pending", "active"] } }] }, sort: "-createdAt", limit: 1, depth: 0, overrideAccess: true })).docs[0] as Doc | undefined;
+  if (!d) throw new WorkoutError("No pledge to confirm");
+  if (d.status === "active") return { ok: true, pledge: pledgeOut(d) };
+  const result = await getPaymentProvider().verify({ orderId: d.orderId, payload: b });
+  if (!result.ok) throw new WorkoutError("Payment could not be verified");
+  await markPledgePaid(payload, d.orderId, result.paymentId);
+  return { ok: true, pledge: pledgeOut({ ...d, status: "active" }) };
 }
 
 /* ---------- payments ---------- */

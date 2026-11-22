@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0E1320">
+<meta name="theme-color" content="#F4F6FB">
 <title>Pandora Workout: daily workout challenge app with streaks, friends & rewards</title>
 <meta name="description" content="A 14 to 100-day workout challenge app: a plan for every day, guided workouts, streaks, levels and gifts, friends and a buddy to keep you going, and a money-back promise. Start a free 14-day challenge.">
 <link rel="canonical" href="https://pandoratemplates.com/workout">
@@ -14,16 +14,19 @@
 <link rel="icon" href="/workout/icon-192.png">
 <link rel="manifest" href="/workout/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/workout/apple-touch-icon.png">
-<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Workout">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script>try { document.documentElement.classList.add(localStorage.getItem('wk_token') ? 'boot-app' : 'boot-out'); var th = localStorage.getItem('wk_theme'); if (th) document.documentElement.dataset.theme = th; } catch (e) { document.documentElement.classList.add('boot-out'); }</script>
-<style>:root{--bg:#0B1020;--bg2:#10172A;--card:#151D33;--card2:#1C2642;--line:#26304D;--tx:#EEF2FA;--mu:#8D98B3;--ac:#FF5A36;--ac2:#FF8A3D;--gold:#FFC53D;--ok:#B8F23A;--blue:#5B8CFF;--pink:#FF6FB5;--bad:#FF5D6C;--ring:rgba(255,90,54,.18);--sh:0 10px 30px rgba(0,0,0,.35);--r:20px;--fh:'Sora',system-ui,sans-serif;--fb:'Inter',system-ui,sans-serif;--safe:env(safe-area-inset-bottom,0px)}
-[data-theme=ocean]{--bg:#06141B;--bg2:#0A1E27;--card:#0E2733;--card2:#123241;--line:#1A4152;--ac:#22D3EE;--ac2:#38BDF8;--ring:rgba(34,211,238,.18)}
-[data-theme=gold]{--bg:#120E05;--bg2:#1A1508;--card:#231C0B;--card2:#2E250F;--line:#3E3216;--ac:#FFC53D;--ac2:#F59E0B;--ring:rgba(255,197,61,.2)}
-[data-theme=rose]{--bg:#150A12;--bg2:#1E0E1A;--card:#271324;--card2:#331A2F;--line:#45233F;--ac:#FF6FB5;--ac2:#F472B6;--ring:rgba(255,111,181,.2)}
-[data-theme=day]{--bg:#F4F6FB;--bg2:#FFFFFF;--card:#FFFFFF;--card2:#F1F4FA;--line:#E2E7F1;--tx:#141B2D;--mu:#68738C;--ok:#5FA80F;--gold:#E0A100;--sh:0 8px 24px rgba(20,27,45,.08)}
+<script>try { var de = document.documentElement; de.classList.add(localStorage.getItem('wk_token') ? 'boot-app' : 'boot-out'); var th = localStorage.getItem('wk_theme'); if (th && th !== 'day') de.dataset.theme = th;
+  var md = localStorage.getItem('wk_mode') || 'light'; if (md === 'auto') md = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; de.dataset.mode = md;
+  document.querySelector('meta[name=theme-color]').content = md === 'dark' ? '#0B1020' : '#F4F6FB'; } catch (e) { document.documentElement.classList.add('boot-out'); }</script>
+<style>/* Colours: a light and a dark base (data-mode), each with 4 accent themes (data-theme). Light is the default. */
+:root{--bg:#F4F6FB;--bg2:#FFFFFF;--card:#FFFFFF;--card2:#F1F4FA;--line:#E2E7F1;--tx:#141B2D;--mu:#5F6B85;--ac:#FF5A36;--ac2:#FF8A3D;--gold:#D99100;--ok:#4E9A06;--okx:#fff;--blue:#3B6FE0;--pink:#E5488F;--bad:#E5384B;--ring:rgba(255,90,54,.16);--sh:0 8px 24px rgba(20,27,45,.07);--r:20px;--fh:'Sora',system-ui,sans-serif;--fb:'Inter',system-ui,sans-serif;--safe:env(safe-area-inset-bottom,0px);color-scheme:light}
+[data-mode=dark]{--bg:#0B1020;--bg2:#10172A;--card:#151D33;--card2:#1C2642;--line:#26304D;--tx:#EEF2FA;--mu:#8D98B3;--gold:#FFC53D;--ok:#B8F23A;--okx:#122000;--blue:#5B8CFF;--pink:#FF6FB5;--bad:#FF5D6C;--ring:rgba(255,90,54,.18);--sh:0 10px 30px rgba(0,0,0,.35);color-scheme:dark}
+[data-theme=ocean]{--ac:#0891B2;--ac2:#0EA5E9;--ring:rgba(8,145,178,.16)}[data-mode=dark][data-theme=ocean]{--bg:#06141B;--bg2:#0A1E27;--card:#0E2733;--card2:#123241;--line:#1A4152;--ac:#22D3EE;--ac2:#38BDF8;--ring:rgba(34,211,238,.18)}
+[data-theme=gold]{--ac:#C98A00;--ac2:#E0A100;--ring:rgba(201,138,0,.16)}[data-mode=dark][data-theme=gold]{--bg:#120E05;--bg2:#1A1508;--card:#231C0B;--card2:#2E250F;--line:#3E3216;--ac:#FFC53D;--ac2:#F59E0B;--ring:rgba(255,197,61,.2)}
+[data-theme=rose]{--ac:#DB2777;--ac2:#EC4899;--ring:rgba(219,39,119,.14)}[data-mode=dark][data-theme=rose]{--bg:#150A12;--bg2:#1E0E1A;--card:#271324;--card2:#331A2F;--line:#45233F;--ac:#FF6FB5;--ac2:#F472B6;--ring:rgba(255,111,181,.2)}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 var(--fb);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
 h1,h2,h3,h4{font-family:var(--fh);margin:0 0 .4em;letter-spacing:-.01em;line-height:1.15}h2{font-size:22px}h3{font-size:17px}
 a{color:var(--ac)}button{font:inherit;color:inherit}input,select,textarea{font:inherit;color:var(--tx);background:var(--bg2);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;width:100%;outline:none}
@@ -31,8 +34,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--ac);box-shadow:0 0 0 
 .boot-out #app{display:none}.boot-app #lp{display:none}
 .muted{color:var(--mu)}.tiny{font-size:12px}.sm{font-size:13px}.c{text-align:center}.row{display:flex;gap:10px;align-items:center}.wrap{flex-wrap:wrap}.sp{flex:1}.mt{margin-top:14px}.mb{margin-bottom:14px}.hide{display:none!important}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:12px 20px;background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff;font-weight:700;cursor:pointer;text-decoration:none;transition:transform .12s,filter .2s;white-space:nowrap}
-[data-theme=gold] .btn{color:#1A1200}.btn:active{transform:scale(.97)}.btn:disabled{opacity:.55;cursor:default}
-.btn.big{width:100%;padding:15px 22px;font-size:16px}.btn.sm{padding:8px 14px;font-size:13px}.btn.ghost{background:var(--card2);color:var(--tx);border:1px solid var(--line)}.btn.ok{background:var(--ok);color:#122000}.btn.dark{background:var(--tx);color:var(--bg)}
+[data-mode=dark][data-theme=gold] .btn{color:#1A1200}.btn:active{transform:scale(.97)}.btn:disabled{opacity:.55;cursor:default}
+.btn.big{width:100%;padding:15px 22px;font-size:16px}.btn.sm{padding:8px 14px;font-size:13px}.btn.ghost{background:var(--card2);color:var(--tx);border:1px solid var(--line)}.btn.ok{background:var(--ok);color:var(--okx)}.btn.dark{background:var(--tx);color:var(--bg)}
 .link{background:none;border:0;color:var(--ac);cursor:pointer;padding:6px 0;font-weight:600}
 .pill{display:inline-flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:600}.pill.ok{color:var(--ok)}.pill.hot{color:var(--ac);border-color:var(--ac)}.pill.gold{color:var(--gold)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:14px;box-shadow:var(--sh)}
@@ -89,19 +92,19 @@ input:focus,select:focus,textarea:focus{border-color:var(--ac);box-shadow:0 0 0 
 .cps{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 .cp{position:relative;background:var(--bg2);border:1.5px solid var(--line);border-radius:16px;padding:10px 4px 8px;text-align:center;cursor:pointer;user-select:none;transition:border-color .2s,transform .12s}
 .cp:active{transform:scale(.96)}.cp .e{font-size:22px;display:block}.cp b{display:block;font:700 14px var(--fh);margin-top:2px}.cp small{display:block;color:var(--mu);font-size:10.5px}
-.cp.done{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,var(--bg2))}.cp.done::after{content:'✓';position:absolute;top:-7px;right:-5px;width:20px;height:20px;border-radius:50%;background:var(--ok);color:#122000;font:800 12px/20px var(--fb)}
+.cp.done{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,var(--bg2))}.cp.done::after{content:'✓';position:absolute;top:-7px;right:-5px;width:20px;height:20px;border-radius:50%;background:var(--ok);color:var(--okx);font:800 12px/20px var(--fb)}
 .cp-need{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--mu)}
 .stepper{display:flex;align-items:center;gap:12px;justify-content:center;margin:10px 0}.stepper button{width:52px;height:52px;border-radius:50%;border:1px solid var(--line);background:var(--card2);font-size:24px;cursor:pointer}.stepper b{font:800 40px var(--fh);min-width:90px;text-align:center}
 /* quests */
 .q{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}.q:first-of-type{border-top:0}
-.q .ck{width:26px;height:26px;border-radius:9px;border:2px solid var(--line);display:grid;place-items:center;flex:none;font-weight:800;font-size:14px}.q.done .ck{background:var(--ok);border-color:var(--ok);color:#122000}.q.done span{color:var(--mu);text-decoration:line-through}
+.q .ck{width:26px;height:26px;border-radius:9px;border:2px solid var(--line);display:grid;place-items:center;flex:none;font-weight:800;font-size:14px}.q.done .ck{background:var(--ok);border-color:var(--ok);color:var(--okx)}.q.done span{color:var(--mu);text-decoration:line-through}
 .q em{margin-left:auto;font-style:normal;color:var(--gold);font-weight:700;font-size:12.5px}
 .chest{display:flex;align-items:center;gap:12px;margin-top:10px;padding:12px;border-radius:16px;background:linear-gradient(135deg,color-mix(in srgb,var(--gold) 22%,var(--card)),var(--card));border:1px solid color-mix(in srgb,var(--gold) 50%,var(--line));cursor:pointer}
 .chest .e{font-size:34px}.chest.ready .e{animation:wob 1s ease-in-out infinite}@keyframes wob{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg) scale(1.1)}}
 /* week strip */
 .week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center}.week div{font-size:11px;color:var(--mu)}
 .week i{display:grid;place-items:center;margin:4px auto 0;width:36px;height:36px;border-radius:50%;border:2px solid var(--line);font-style:normal;font-weight:700;font-size:13px;color:var(--tx)}
-.week i.c{background:var(--ok);border-color:var(--ok);color:#122000}.week i.l{border-color:var(--ok)}.week i.z{background:#7dd3fc;border-color:#7dd3fc;color:#05324a}.week i.m{border-style:dashed;opacity:.6}.week i.t{box-shadow:0 0 0 3px var(--ring);border-color:var(--ac)}
+.week i.c{background:var(--ok);border-color:var(--ok);color:var(--okx)}.week i.l{border-color:var(--ok)}.week i.z{background:#7dd3fc;border-color:#7dd3fc;color:#05324a}.week i.m{border-style:dashed;opacity:.6}.week i.t{box-shadow:0 0 0 3px var(--ring);border-color:var(--ac)}
 .moods{display:flex;justify-content:space-between;gap:6px}.moods button{flex:1;font-size:26px;background:var(--bg2);border:1.5px solid var(--line);border-radius:14px;padding:8px 0;cursor:pointer;filter:grayscale(.8);transition:transform .15s}.moods button.on{filter:none;border-color:var(--ac);transform:scale(1.06)}
 .banner{display:flex;gap:12px;align-items:center;padding:14px;border-radius:18px;margin-bottom:14px;background:var(--card2);border:1px solid var(--line)}.banner .e{font-size:26px}.banner.warn{border-color:var(--gold)}.banner.hot{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 10%,var(--card))}.banner.ice{border-color:#7dd3fc;background:color-mix(in srgb,#7dd3fc 10%,var(--card))}
 /* lists */
@@ -110,7 +113,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ac);box-shadow:0 0 0 
 .empty{text-align:center;padding:26px 10px;color:var(--mu)}.empty .e{font-size:40px;display:block;margin-bottom:6px}
 .stat{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:12px}.stat b{display:block;font:800 24px var(--fh)}.stat small{color:var(--mu);font-size:12px}
 /* sheets */
-.sheet-wrap{position:fixed;inset:0;z-index:170;background:rgba(3,6,14,.6);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .2s}
+.sheet-wrap{position:fixed;inset:0;z-index:170;background:rgba(12,18,34,.45);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .2s}
 .sheet-wrap.in{opacity:1}.sheet{position:relative;width:100%;max-width:560px;max-height:92vh;overflow:auto;background:var(--bg2);border-radius:26px 26px 0 0;padding:24px 20px calc(24px + var(--safe));transform:translateY(30px);transition:transform .25s cubic-bezier(.2,.9,.3,1)}
 .sheet-wrap.in .sheet{transform:none}.sheet .x{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;border:0;background:var(--card2);cursor:pointer;z-index:2}
 @media (min-width:700px){.sheet-wrap{align-items:center}.sheet{border-radius:26px;max-height:88vh}}
@@ -136,7 +139,7 @@ label.f{display:block;font-size:13px;font-weight:600;color:var(--mu);margin:12px
 .pl-ring{position:relative}.pl-ring svg{position:absolute;inset:-14px;width:calc(100% + 28px);height:calc(100% + 28px);transform:rotate(-90deg)}
 /* map, heatmap, charts */
 .map{display:grid;grid-template-columns:repeat(10,1fr);gap:5px}.map button{aspect-ratio:1;border-radius:8px;border:1px solid var(--line);background:var(--bg2);font-size:10.5px;color:var(--mu);cursor:pointer;padding:0}
-.map .c{background:var(--ok);border-color:var(--ok);color:#122000;font-weight:700}.map .l{background:color-mix(in srgb,var(--ok) 30%,var(--bg2));color:var(--tx)}.map .z{background:#7dd3fc;color:#05324a}.map .m{background:color-mix(in srgb,var(--bad) 22%,var(--bg2))}.map .t{outline:2px solid var(--ac);outline-offset:1px}.map .r{font-style:italic}
+.map .c{background:var(--ok);border-color:var(--ok);color:var(--okx);font-weight:700}.map .l{background:color-mix(in srgb,var(--ok) 30%,var(--bg2));color:var(--tx)}.map .z{background:#7dd3fc;color:#05324a}.map .m{background:color-mix(in srgb,var(--bad) 22%,var(--bg2))}.map .t{outline:2px solid var(--ac);outline-offset:1px}.map .r{font-style:italic}
 .heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,1fr);gap:3px;overflow-x:auto;padding-bottom:4px}.heat i{width:12px;height:12px;border-radius:3px;background:var(--line)}.heat i.a{background:color-mix(in srgb,var(--ok) 35%,var(--line))}.heat i.b{background:color-mix(in srgb,var(--ok) 65%,var(--line))}.heat i.c{background:var(--ok)}.heat i.z{background:#7dd3fc}
 .chart{width:100%;height:auto;display:block}.chart text{fill:var(--mu);font:10px var(--fb)}.chart .gl{stroke:var(--line)}.chart .bar{fill:var(--ac)}.chart .bar2{fill:var(--gold)}.chart .ln{fill:none;stroke:var(--ac);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}.chart .ar{fill:var(--ring)}.chart .pt{fill:var(--ac)}
 /* rewards */
@@ -170,6 +173,20 @@ button,a,label,input,select,[data-act],.btn{touch-action:manipulation}
 .stepper b{font-variant-numeric:tabular-nums}
 input,select,textarea{font-size:16px}/* 16px+ stops iPhones zooming in when a field is tapped */
 [hidden]{display:none!important}
+/* light/dark switch in the header and on the landing page */
+#modebtn,.lp-mode{cursor:pointer;color:var(--tx)}
+/* quick thali */
+.thali{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.th-i{position:relative;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:10px 6px 8px;text-align:center;cursor:pointer;user-select:none;-webkit-user-select:none}
+.th-i.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 8%,var(--card))}.th-i .e{font-size:26px;display:block}.th-i b{display:block;font-size:12.5px;line-height:1.2;margin-top:2px}.th-i small{display:block;color:var(--mu);font-size:10.5px}
+.th-c{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:6px}.th-c button{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--card2);font-size:16px;cursor:pointer;-webkit-user-select:none;user-select:none}.th-c em{font-style:normal;font:800 16px var(--fh);min-width:18px}
+@media (max-width:380px){.thali{grid-template-columns:repeat(2,1fr)}}
+/* voice notes */
+.vplay{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:999px;padding:6px 14px 6px 10px;background:var(--ac);color:#fff;font-weight:700;cursor:pointer}.vplay i{width:60px;height:4px;border-radius:2px;background:rgba(255,255,255,.45);position:relative;overflow:hidden}
+.vplay.on i::after{content:'';position:absolute;inset:0;background:#fff;animation:vp 1.2s ease-in-out infinite}@keyframes vp{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+/* pledge + before/after */
+.pledge{border-color:color-mix(in srgb,var(--gold) 55%,var(--line));background:linear-gradient(135deg,color-mix(in srgb,var(--gold) 12%,var(--card)),var(--card))}
+.cmp{touch-action:none;cursor:ew-resize}.cmp-l{position:absolute;top:0;bottom:0;width:3px;margin-left:-1.5px;background:#fff;box-shadow:0 0 8px rgba(0,0,0,.4)}.cmp-l i{position:absolute;top:50%;left:50%;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.cmp-l i::before{content:'⇆';position:absolute;inset:0;display:grid;place-items:center;color:#111;font-size:16px;font-style:normal}.cmp-t{position:absolute;top:10px;font-style:normal;font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.5);border-radius:8px;padding:2px 8px}.cmp-t.l{left:10px}.cmp-t.r{right:10px}
 
 #lp{--lpw:1120px;overflow-x:hidden}
 .lp-nav{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:14px;padding:calc(12px + env(safe-area-inset-top,0px)) max(18px,calc(50vw - var(--lpw)/2)) 12px;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
@@ -186,9 +203,9 @@ input,select,textarea{font-size:16px}/* 16px+ stops iPhones zooming in when a fi
 .lp-mini-top{display:flex;align-items:center;justify-content:space-between;font-family:var(--fh)}.lp-mini-card{display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:10px;margin:14px 0}.lp-mini-card .fig{width:76px;height:76px;background:var(--bg2);border-radius:14px}.lp-mini-card small{color:var(--ac);font-weight:700;font-size:11px}.lp-mini-card b{display:block;font-size:14px}
 .lp-mini-bar{height:7px;border-radius:4px;background:var(--line);margin-top:8px;overflow:hidden}.lp-mini-bar i{display:block;height:100%;width:40%;background:linear-gradient(90deg,var(--gold),var(--ac));animation:grow 3s ease-in-out infinite alternate}@keyframes grow{to{width:78%}}
 .lp-mini-cps{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px}.lp-mini-cps span{display:grid;place-items:center;height:44px;border-radius:12px;background:var(--bg2);border:1.5px solid var(--line);font-size:18px}.lp-mini-cps .on{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,var(--bg2))}
-.lp-mini-q{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:7px 0;border-top:1px solid var(--line)}.lp-mini-q span{width:18px;height:18px;border-radius:6px;background:var(--ok);color:#122000;font-size:11px;display:grid;place-items:center;font-weight:800}.lp-mini-q.off span{background:none;border:2px solid var(--line)}.lp-mini-q em{margin-left:auto;color:var(--gold);font-style:normal;font-weight:700}
+.lp-mini-q{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:7px 0;border-top:1px solid var(--line)}.lp-mini-q span{width:18px;height:18px;border-radius:6px;background:var(--ok);color:var(--okx);font-size:11px;display:grid;place-items:center;font-weight:800}.lp-mini-q.off span{background:none;border:2px solid var(--line)}.lp-mini-q em{margin-left:auto;color:var(--gold);font-style:normal;font-weight:700}
 .lp-mini-chest{margin-top:10px;padding:10px;border-radius:14px;background:color-mix(in srgb,var(--gold) 18%,var(--card));font-size:12.5px}
-.lp-mini-week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:14px;text-align:center}.lp-mini-week small{display:block;color:var(--mu);font-size:10px}.lp-mini-week i{display:grid;place-items:center;width:26px;height:26px;margin:3px auto 0;border-radius:50%;border:2px solid var(--line);font-style:normal;font-size:11px;font-weight:800}.lp-mini-week i.c{background:var(--ok);border-color:var(--ok);color:#122000}.lp-mini-week i.t{border-color:var(--ac);box-shadow:0 0 0 3px var(--ring)}
+.lp-mini-week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:14px;text-align:center}.lp-mini-week small{display:block;color:var(--mu);font-size:10px}.lp-mini-week i{display:grid;place-items:center;width:26px;height:26px;margin:3px auto 0;border-radius:50%;border:2px solid var(--line);font-style:normal;font-size:11px;font-weight:800}.lp-mini-week i.c{background:var(--ok);border-color:var(--ok);color:var(--okx)}.lp-mini-week i.t{border-color:var(--ac);box-shadow:0 0 0 3px var(--ring)}
 .lp-toast{position:absolute;left:14px;right:14px;bottom:16px;background:var(--gold);color:#1a1200;border-radius:14px;padding:10px 12px;font-size:13px;font-weight:600;animation:tpop 4s ease-in-out infinite}@keyframes tpop{0%,15%{opacity:0;transform:translateY(16px)}25%,85%{opacity:1;transform:none}100%{opacity:0}}
 .lp-sec{max-width:var(--lpw);margin:0 auto;padding:70px 18px}.lp-sec h2{font:800 clamp(30px,4.2vw,46px)/1.05 var(--fh);letter-spacing:-.03em;margin:0 0 14px}.lp-sec h2 span{color:var(--ac)}
 .lp-lead{color:var(--mu);font-size:17px;max-width:640px}.lp-lead.c,.c.lp-lead{margin-left:auto;margin-right:auto}.lp-sec .c{text-align:center}
@@ -196,7 +213,7 @@ input,select,textarea{font-size:16px}/* 16px+ stops iPhones zooming in when a fi
 .lp-card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px}.lp-card .e{font-size:30px;display:block;margin-bottom:10px}.lp-card b{display:block;font-family:var(--fh);font-size:16.5px;margin-bottom:6px}.lp-card p{color:var(--mu);margin:0;font-size:14.5px}
 .lp-progs{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:28px}.lp-prog{position:relative;overflow:hidden;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px}.lp-prog::before{content:'';position:absolute;inset:0 0 auto;height:4px;background:var(--pc)}.lp-prog .e{font-size:34px}.lp-prog b{display:block;font:700 18px var(--fh);margin:8px 0 2px}.lp-prog small{color:var(--pc);font-weight:700}.lp-prog p{color:var(--mu);font-size:14px;margin:8px 0 0}
 .lp-split{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:center}.lp-split.rev>:first-child{order:2}
-.lp-ticks{list-style:none;padding:0;margin:18px 0 0}.lp-ticks li{position:relative;padding:7px 0 7px 30px;color:var(--mu)}.lp-ticks li::before{content:'✓';position:absolute;left:0;top:7px;width:20px;height:20px;border-radius:50%;background:var(--ok);color:#122000;font-weight:800;font-size:12px;display:grid;place-items:center}.lp-ticks b{color:var(--tx)}
+.lp-ticks{list-style:none;padding:0;margin:18px 0 0}.lp-ticks li{position:relative;padding:7px 0 7px 30px;color:var(--mu)}.lp-ticks li::before{content:'✓';position:absolute;left:0;top:7px;width:20px;height:20px;border-radius:50%;background:var(--ok);color:var(--okx);font-weight:800;font-size:12px;display:grid;place-items:center}.lp-ticks b{color:var(--tx)}
 .lp-player{justify-self:center;width:min(360px,100%);text-align:center;background:radial-gradient(100% 70% at 50% 20%,color-mix(in srgb,var(--ac) 18%,var(--card)),var(--card));border:1px solid var(--line);border-radius:32px;padding:26px}
 .lp-pl-fig .fig{width:200px;height:200px}.lp-player b{display:block;font:700 22px var(--fh)}.lp-pl-t{font:800 64px/1.1 var(--fh);letter-spacing:-.03em}.lp-player small{color:var(--mu)}
 .lp-pl-ctl{display:flex;justify-content:center;gap:14px;margin-top:16px}.lp-pl-ctl span{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;background:var(--bg2);border:1px solid var(--line)}.lp-pl-ctl .m{width:66px;height:66px;background:linear-gradient(135deg,var(--ac),var(--ac2));border:0;font-size:22px}
@@ -222,6 +239,7 @@ input,select,textarea{font-size:16px}/* 16px+ stops iPhones zooming in when a fi
     <div class="hello"><small id="hi-sm"></small><b id="hi"></b></div>
     <span class="sp"></span>
     <div id="sync" class="sync"></div>
+    <button class="iconbtn" id="modebtn" type="button" aria-label="Light or dark"></button>
     <a href="#together" class="iconbtn" id="bell" aria-label="Messages">🔔<i id="bell-n" hidden></i></a>
   </header>
   <nav class="nav" id="nav">
@@ -297,6 +315,9 @@ const EX = {
   breathe: { n: 'Deep breathing', p: [SEAT, '50,43 50,53 50,82 66,86 44,90 34,86 56,90 63,69 66,84 37,69 34,84'], t: 5000, hold: 1, cues: ['In for 4… out for 6', 'Relax your shoulders'] },
   walk: { n: 'Brisk walk', p: ['51,16 51,26 50,54 56,72 60,91 46,72 42,91 46,40 44,52 55,40 59,50', '51,16 51,26 50,54 46,72 42,91 56,72 60,91 55,40 59,50 46,40 44,52'], t: 1100, cues: ['Walk like you’re a bit late', 'You can talk, but not sing'] },
   jog: { n: 'Run', p: ['53,16 52,26 49,54 60,66 58,82 44,74 36,86 44,42 40,50 58,40 62,32', '53,16 52,26 49,54 44,74 36,86 60,66 58,82 58,40 62,32 44,42 40,50'], t: 700, cues: ['Easy pace: you should be able to talk', 'Short, light steps'] },
+  garba: { n: 'Garba steps', p: ['50,16 50,26 50,54 56,72 62,91 47,72 46,91 58,18 52,8 42,18 48,8', '50,16 50,26 50,54 53,72 54,91 44,72 38,91 60,36 56,44 40,36 44,44'], t: 900, cues: ['Step side to side and clap high, then low', 'Turn a little with each clap', 'Smile, it’s a festival!'] },
+  dandiya: { n: 'Dandiya strikes', p: ['50,16 50,26 50,54 53,72 54,91 47,72 46,91 62,30 72,22 40,34 34,28', '50,16 50,26 50,54 56,72 60,91 45,72 40,91 60,34 66,28 38,30 28,22'], t: 700, cues: ['Twist from the waist and strike left, then right', 'Bounce on soft knees'] },
+  bhangra: { n: 'Bhangra bounce', p: ['50,15 50,25 50,53 60,58 58,74 49,71 48,90 60,16 64,6 40,16 36,6', '50,16 50,26 50,54 51,72 52,91 40,58 42,74 62,18 66,8 38,18 34,8'], t: 650, cues: ['Arms up, shoulders bouncing', 'Lift one knee, then the other', 'Balle balle!'] },
   quad: { n: 'Standing quad stretch', p: ['50,16 50,26 50,54 50,72 52,91 48,74 36,62 60,36 70,30 42,48 37,60', '50,16 50,26 50,54 50,72 52,91 48,74 35,60 60,35 70,29 42,48 36,58'], t: 4000, hold: 1, side: 1, cues: ['Hold a wall for balance', 'Knees together', 'Switch legs halfway'] },
 };
 
@@ -361,7 +382,27 @@ function hiitSession(type, ph, k) {
   return { title: 'Fat-burn HIIT', kind: 'intervals', work, restSec: rest, blocks: [{ label: 'Warm-up', rounds: 1, rest: 10, items: WARM }, { label: `${work}s on · ${rest}s off`, rounds, rest: 60, items: list.map((e) => s(e, Math.round(work * k))) }, { label: 'Cool-down', rounds: 1, rest: 5, items: COOL }] };
 }
 
-/* ----- the six challenges ----- */
+/* ----- festival and wedding challenges ----- */
+const DANCE = (k, secs) => [s('garba', scale(secs, k)), s('dandiya', scale(secs, k)), s('bhangra', scale(Math.round(secs * 0.8), k)), s('highknees', scale(Math.round(secs * 0.5), k)), s('garba', scale(secs, k))];
+function navratriSession(type, ph, k) {
+  if (type === 'F') return { title: 'Garba flow & stretch', kind: 'rest', blocks: [{ label: 'Easy dance', rounds: 1, rest: 10, items: [s('garba', 60), s('dandiya', 45)] }, { label: 'Stretch', rounds: 1, rest: 5, items: [s('quad', 40), s('hamstring', 40), s('butterfly', 40), s('breathe', 60)] }] };
+  const secs = [35, 40, 45, 50][ph], rounds = [2, 3, 3, 4][ph];
+  return { title: type === 'B' ? 'Bhangra burn' : 'Garba cardio', kind: 'intervals', work: secs, restSec: 20, blocks: [{ label: 'Warm-up', rounds: 1, rest: 10, items: WARM }, { label: `Dance ${secs}s · breathe 20s`, rounds, rest: 45, items: type === 'B' ? [s('bhangra', scale(secs, k)), s('jacks', scale(secs, k)), s('bhangra', scale(secs, k)), s('skater', scale(secs - 10, k))] : DANCE(k, secs) }, { label: 'Cool-down', rounds: 1, rest: 5, items: COOL }] };
+}
+function diwaliSession(type, ph, k) {
+  const rounds = [2, 2, 3, 3][ph], push = ph < 2 ? 'kneepush' : 'pushup';
+  if (type === 'A') return { title: 'Glow-up full body', kind: 'circuit', blocks: [{ label: 'Warm-up', rounds: 1, rest: 10, items: WARM }, { label: 'Circuit', rounds, rest: 50, items: [s('jacks', scale(30, k)), r('squat', scale(12, k)), r(push, scale(8, k)), s('climber', scale(25, k)), s('plank', scale(25, k))] }, { label: 'Cool-down', rounds: 1, rest: 5, items: COOL }] };
+  if (type === 'B') return { title: 'Sculpt & core', kind: 'circuit', blocks: [{ label: 'Warm-up', rounds: 1, rest: 10, items: WARM }, { label: 'Circuit', rounds, rest: 50, items: [r('lunge', scale(10, k)), r('bridge', scale(14, k)), r('bicycle', scale(16, k)), s('sideplank', scale(25, k)), r('superman', scale(10, k))] }, { label: 'Cool-down', rounds: 1, rest: 5, items: COOL }] };
+  return { title: 'Festive dance cardio', kind: 'intervals', work: 40, restSec: 20, blocks: [{ label: 'Warm-up', rounds: 1, rest: 10, items: WARM }, { label: 'Dance 40s · breathe 20s', rounds: rounds + 1, rest: 45, items: [s('bhangra', scale(40, k)), s('boxing', scale(40, k)), s('garba', scale(40, k)), s('skater', scale(30, k))] }, { label: 'Cool-down', rounds: 1, rest: 5, items: COOL }] };
+}
+function shaadiSession(type, ph, k) {
+  const rounds = [2, 3, 3, 4][ph], push = ['wallpush', 'kneepush', 'kneepush', 'pushup'][ph];
+  if (type === 'S') return { title: 'Sculpt: arms, back & legs', kind: 'circuit', blocks: [{ label: 'Warm-up', rounds: 1, rest: 10, items: WARM }, { label: 'Circuit', rounds, rest: 50, items: [r('squat', scale(12, k)), r(push, scale(10, k)), r('dips', scale(10, k)), r('lunge', scale(10, k)), r('superman', scale(10, k)), s('plank', scale(30, k))] }, { label: 'Cool-down', rounds: 1, rest: 5, items: COOL }] };
+  if (type === 'C') return ph < 2 ? walkSession('I', ph, k) : hiitSession('H', ph, k);
+  return { title: 'Posture & glow yoga', kind: 'flow', blocks: [{ label: 'Flow', rounds: ph > 1 ? 2 : 1, rest: 10, items: [s('breathe', 60), s('catcow', 45), s('cobra', 30), s('warrior', 40), s('chairpose', 30), s('tree', 30), s('downdog', 40), s('child', 60)] }] };
+}
+
+/* ----- the challenges ----- */
 const PROGRAMS = {
   home: {
     name: 'Beginner Home Workout', emoji: '🏠', level: 'Beginner', gear: 'No equipment', color: '#FF5A36',
@@ -399,8 +440,27 @@ const PROGRAMS = {
     week: ['H', 'C', 'H', 'M', 'H', 'C', 'M'], make: hiitSession,
     tests: [{ id: 'burpee1', name: 'Burpees in 1 minute', unit: 'reps', up: 1, how: 'Step back if you need to.' }, { id: 'jacks1', name: 'Jumping jacks in 1 minute', unit: 'reps', up: 1, how: 'Full arm swing.' }, { id: 'pulse', name: 'Resting pulse', unit: 'bpm', up: 0, how: 'Count for 30 seconds after waking, ×2.' }],
   },
+  shaadi: {
+    name: 'Shaadi Fit', emoji: '💍', level: 'All levels', gear: 'A chair and a mat', color: '#E11D74', lengths: [45, 60, 75, 90, 100], def: 90, event: 1, tag: 'For the bride, groom & family',
+    blurb: 'Your wedding countdown: toned arms and back for the outfit, cardio for the sangeet, and yoga for posture and calm on the big day.',
+    week: ['S', 'C', 'P', 'S', 'C', 'S', 'M'], make: shaadiSession,
+    tests: [{ id: 'pushups', name: 'Push-ups in one go', unit: 'reps', up: 1, how: 'Wall, knee or full: note which.' }, { id: 'plank', name: 'Plank hold', unit: 'sec', up: 1, how: 'Until your hips drop.' }, { id: 'walk1k', name: '1 km brisk walk', unit: 'min', up: 0, how: 'As fast as you comfortably can.' }],
+  },
+  diwali: {
+    name: 'Diwali Glow 21', emoji: '🪔', level: 'Beginner+', gear: 'No equipment', color: '#F59E0B', lengths: [21], def: 21, tag: 'Festival special',
+    blurb: '21 days to feel your best for the festive season: full-body circuits, sculpt and core, and festive dance cardio.',
+    week: ['A', 'C', 'B', 'M', 'A', 'C', 'M'], make: diwaliSession,
+    tests: [{ id: 'squats1', name: 'Squats in 1 minute', unit: 'reps', up: 1, how: 'Full squats, chest up.' }, { id: 'plank', name: 'Plank hold', unit: 'sec', up: 1, how: 'Until your hips drop.' }],
+  },
+  navratri: {
+    name: 'Navratri Dance Cardio', emoji: '💃', level: 'All levels', gear: 'Space to dance', color: '#D946EF', lengths: [9, 18], def: 9, tag: 'Festival special',
+    blurb: 'Nine nights, nine workouts: garba, dandiya and bhangra moves in cardio intervals. Fun first, sweat second.',
+    week: ['D', 'B', 'D', 'F', 'D', 'B', 'D', 'F', 'D'], make: navratriSession,
+    tests: [{ id: 'jacks1', name: 'Jumping jacks in 1 minute', unit: 'reps', up: 1, how: 'Full arm swing.' }, { id: 'pulse', name: 'Resting pulse', unit: 'bpm', up: 0, how: 'Count for 30 seconds after waking, ×2.' }],
+  },
 };
 const PROGRAM_IDS = Object.keys(PROGRAMS);
+const lengthsOf = (id) => (PROGRAMS[id] && PROGRAMS[id].lengths) || LENGTHS;
 const LENGTHS = [14, 21, 30, 45, 60, 75, 90, 100];
 
 function fmtDur(sec) { sec = Math.round(sec); if (sec < 60) return sec + 's'; const m = Math.floor(sec / 60), x = sec % 60; return x ? m + ':' + String(x).padStart(2, '0') : m + ' min'; }
@@ -417,13 +477,13 @@ function planDay(ch, n, extraScale) {
   const len = ch.length || 30;
   const ph = Math.min(3, Math.floor((4 * (n - 1)) / len));
   const k = Math.max(0.6, Math.min(1.5, (ch.adj || 1) * (extraScale || 1)));
-  const slot = prog.week[(n - 1) % 7];
+  const slot = prog.week[(n - 1) % prog.week.length];
   const test = testDays(len).includes(n);
   let sess;
   if (slot === 'M') sess = MOBILITY;
   else if (ch.program === 'c25k') {
     if (slot === 'R') {
-      const runDays = []; for (let i = 1; i <= len; i++) if (prog.week[(i - 1) % 7] === 'R') runDays.push(i);
+      const runDays = []; for (let i = 1; i <= len; i++) if (prog.week[(i - 1) % prog.week.length] === 'R') runDays.push(i);
       sess = runSession(runDays.length > 1 ? runDays.indexOf(n) / (runDays.length - 1) : 0, k);
     } else if (slot === 'W') sess = walkSession('W', Math.min(ph, 1), k);
     else sess = { title: 'Rest day', kind: 'rest', blocks: [{ label: 'Gentle stretch', rounds: 1, rest: 5, items: [s('quad', 40), s('hamstring', 40), s('calf', 30), s('breathe', 60)] }] };
@@ -674,7 +734,7 @@ function comeback() {
   for (let i = 1; i <= 3; i++) { const r = dayRow(shift(t, -i)); if (isLogged(r) || (r && r.fz)) return false; }
   return true;
 }
-function todayPlan() { const st = chStatus(); if (!st || st.before || st.over) return null; return planDay(CH(), st.n, comeback() ? 0.7 : 1); }
+function todayPlan() { const st = chStatus(); if (!st || st.before || st.over) return null; return planDay(CH(), st.n, (comeback() ? 0.7 : 1) * checkinScale(dayRow(today()))); }
 
 /* ----- daily quests: 3 a day, picked by the date ----- */
 const QUESTS = [
@@ -781,7 +841,33 @@ function beep(freq, ms, vol) {
   try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const o = AC.createOscillator(), g = AC.createGain(); o.frequency.value = freq || 880; o.type = 'sine'; g.gain.value = vol || 0.15; o.connect(g); g.connect(AC.destination); const t = AC.currentTime; g.gain.setValueAtTime(vol || 0.15, t); g.gain.exponentialRampToValueAtTime(0.001, t + (ms || 150) / 1000); o.start(t); o.stop(t + (ms || 150) / 1000); } catch (e) { /* no audio */ }
 }
 const chime = () => { beep(660, 120); setTimeout(() => beep(880, 120), 120); setTimeout(() => beep(1320, 260), 240); };
-function say(text) { if (!S.prefs.voice || !window.speechSynthesis) return; try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = 'en-IN'; u.rate = 1.02; speechSynthesis.speak(u); } catch (e) { /* no voice */ } }
+/* ----- voice coach: English or Hindi ----- */
+const HI = () => S.prefs.lang === 'hi';
+const VOICE_LINES = {
+  start: { en: (t) => `${t}. Let's go!`, hi: (t) => `${t}. चलो, शुरू करते हैं!` },
+  rest: { en: (n, r) => `Rest. Next: ${n}${r ? ', ' + r + ' reps' : ''}.`, hi: (n, r) => `आराम करो. अगला: ${n}${r ? ', ' + r + ' बार' : ''}.` },
+  reps: { en: (n, r) => `${n}, ${r} reps`, hi: (n, r) => `${n}, ${r} बार` },
+  secs: { en: (n, sec) => `${n}, ${sec >= 60 ? Math.round(sec / 60) + ' minute' + (Math.round(sec / 60) === 1 ? '' : 's') : sec + ' seconds'}`, hi: (n, sec) => `${n}, ${sec >= 60 ? Math.round(sec / 60) + ' मिनट' : sec + ' सेकंड'}` },
+  fast: { en: () => 'Go fast!', hi: () => 'तेज़ी से!' },
+  side: { en: () => 'Switch sides', hi: () => 'साइड बदलो' },
+  left: { en: (m) => `${m} minute${m === 1 ? '' : 's'} left`, hi: (m) => `${m} मिनट बाकी` },
+  half: { en: () => 'Halfway there. Keep going!', hi: () => 'आधा हो गया. लगे रहो!' },
+  last: { en: () => 'Last one. Give it everything!', hi: () => 'आख़िरी वाला. पूरा ज़ोर लगाओ!' },
+  done: { en: () => 'Workout complete. Great job!', hi: () => 'वर्कआउट पूरा! शाबाश!' },
+};
+const line = (k, ...a) => VOICE_LINES[k][HI() ? 'hi' : 'en'](...a);
+let VOICES = [], NO_HI_TOLD = false;
+if (window.speechSynthesis) { const load = () => { try { VOICES = speechSynthesis.getVoices(); } catch (e) { VOICES = []; } }; load(); try { speechSynthesis.onvoiceschanged = load; } catch (e) { /* none */ } }
+function pickVoice(lang) { const l = lang.toLowerCase(); return VOICES.find((v) => v.lang.toLowerCase().replace('_', '-') === l) || VOICES.find((v) => v.lang.toLowerCase().startsWith(l.slice(0, 2))) || null; }
+function say(text) {
+  if (!S.prefs.voice || !window.speechSynthesis) return;
+  try {
+    speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text);
+    const lang = HI() ? 'hi-IN' : 'en-IN', v = pickVoice(lang);
+    if (HI() && !v && VOICES.length && !NO_HI_TOLD) { NO_HI_TOLD = true; toast('No Hindi voice on this phone. Add one in your phone’s text-to-speech settings.', 'bad'); }
+    u.lang = lang; if (v) u.voice = v; u.rate = HI() ? 0.98 : 1.02; speechSynthesis.speak(u);
+  } catch (e) { /* no voice */ }
+}
 function confetti(n) {
   const c = document.createElement('canvas'); c.className = 'confetti'; document.body.appendChild(c);
   const ctx = c.getContext('2d'), W = (c.width = innerWidth), H = (c.height = innerHeight);
@@ -1034,7 +1120,7 @@ let ROUTE = 'today', SUB = {};
 let RENDER_T = null;
 function requestRender() { clearTimeout(RENDER_T); RENDER_T = setTimeout(() => { const a = document.activeElement; if (a && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && a.closest('#main')) { RENDER_T = setTimeout(requestRender, 600); return; } render(); }, 30); }
 function go(r) { if (location.hash !== '#' + r) location.hash = r; else render(); }
-window.addEventListener('hashchange', () => { if (!KEEP_SHEET) closeSheet(); KEEP_SHEET = false; render(); window.scrollTo(0, 0); });
+window.addEventListener('hashchange', () => { if (doHash()) return; if (!KEEP_SHEET) closeSheet(); KEEP_SHEET = false; render(); window.scrollTo(0, 0); });
 let KEEP_SHEET = false;
 function render() {
   if (!CLOUD.email) return;
@@ -1069,7 +1155,7 @@ function checkLevelUp() {
   const lv = levelOf(xpAll().total).level;
   if (lv > (S.game.level || 1)) {
     S.game.level = lv; onChange({ quiet: true });
-    setTimeout(() => { confetti(160); chime(); sheet(`<div class="celebrate"><span class="e">🆙</span><h2>Level ${lv}!</h2><p class="muted">You’re now <b>${esc(LEVELS[Math.min(lv, LEVELS.length) - 1])}</b>. Keep stacking days.</p>${lv === 5 ? '<p class="pill gold">🎨 Ocean theme unlocked (Me → Theme)</p>' : ''}<button class="btn big mt" data-close>Let’s go</button></div>`); }, 400);
+    setTimeout(() => { confetti(160); chime(); sheet(`<div class="celebrate"><span class="e">🆙</span><h2>Level ${lv}!</h2><p class="muted">You’re now <b>${esc(LEVELS[Math.min(lv, LEVELS.length) - 1])}</b>. Keep stacking days.</p>${lv === 5 ? '<p class="pill gold">🎨 Ocean colour unlocked (Me → Look)</p>' : ''}<button class="btn big mt" data-close>Let’s go</button></div>`); }, 400);
   }
 }
 
@@ -1080,6 +1166,9 @@ ROUTES.today = function () {
   h += accessBanner();
   const fz = freezeOffer();
   if (fz) h += `<div class="banner ice"><span class="e">🧊</span><div class="sp"><b>Save your ${fz.streak}-day streak?</b><div class="sm muted">You missed ${nice(fz.day, true)}. Use a streak freeze (${freezes().left} left).</div></div><button class="btn sm" data-act="freeze" data-d="${fz.day}">Use</button></div>`;
+  h += recapBanner();
+  h += retestBanner(plan);
+  h += pledgeCard('today');
   if (comeback() && plan && !r.w) h += `<div class="banner hot"><span class="e">🔁</span><div><b>Welcome back!</b><div class="sm muted">Comeback mode: today’s workout is 30% lighter. Just show up.</div></div></div>`;
 
   // hero: challenge progress, streak and level
@@ -1095,13 +1184,14 @@ ROUTES.today = function () {
     const p = PROGRAMS[CH().program];
     h += `<div class="hero"><div class="prog"><div class="ring" style="--p:${Math.round((st.n / st.len) * 100)}"><div><b>${st.n}</b><small>of ${st.len}</small></div></div>
       <div class="sp"><div class="chips" style="margin-bottom:8px"><span class="flame ${si.cur ? 'hot' : 'cold'}"><span class="f">🔥</span>${si.cur} day${si.cur === 1 ? '' : 's'}</span><span class="pill">🧊 ${freezes().left}</span></div>
-      <b style="font-family:var(--fh);font-size:17px">${p.emoji} ${esc(p.name)}</b><div class="sm muted">${plan ? esc(plan.phaseName) + ' phase' : ''}${CH().groupCode ? ' · with your group' : ''}</div></div></div>
+      <b style="font-family:var(--fh);font-size:17px">${p.emoji} ${esc(p.name)}</b><div class="sm muted">${plan ? esc(plan.phaseName) + ' phase' : ''}${CH().groupCode ? ' · with your group' : ''}</div>${CH().event && CH().event >= t ? `<div class="pill hot mt" style="margin-top:6px">💍 ${diff(t, CH().event) ? plural(diff(t, CH().event), 'day') + ' to the wedding' : 'Wedding day! 🎉'}</div>` : ''}</div></div>
       <div class="row mt sm"><span class="pill gold">Lv ${lv.level}</span><div class="xpbar sp"><i style="width:${lv.pct}%"></i></div><span class="muted tiny">${fmt(xp.total - lv.from)}/${fmt(lv.to - lv.from)} XP</span></div></div>`;
   }
 
-  // today's workout
+  // morning check-in, then today's workout
+  if (CH() && !st.before && !st.over) h += checkinCard(r);
   if (plan) h += workoutCard(plan, r);
-  else if (!CH() || st.over) h += `<div class="card"><h3>🏃 Today’s activity</h3>${actsList(r)}<div class="row mt"><button class="btn sm" data-act="activity">+ Add activity</button>${r.w ? '<span class="pill ok">✓ Workout logged</span>' : `<button class="btn sm ghost" data-act="wdone">Mark a workout done</button>`}</div></div>`;
+  else if (!CH() || st.over) h += `<div class="card"><h3>🏃 Today’s activity</h3>${actsList(r)}<div class="row mt wrap"><button class="btn sm" data-act="activity">+ Add activity</button>${r.w ? '<span class="pill ok">✓ Workout logged</span>' : `<button class="btn sm ghost" data-act="wdone">Mark a workout done</button><button class="btn sm ghost" data-act="quick">⏱ 10-minute workout</button>`}</div></div>`;
 
   // checkpoints
   const cp = checkpoints(r), need = T().need;
@@ -1130,6 +1220,7 @@ ROUTES.today = function () {
 };
 ROUTES.today.after = function () {
   const t = today();
+  bindCheckin();
   const w = $('#t-weight'); if (w) w.onchange = () => { setDay(t, { weight: w.value ? Number(w.value) : null }); };
   const n = $('#t-note'); if (n) n.onchange = () => { setDay(t, { note: n.value.trim() || null }); };
 };
@@ -1150,10 +1241,10 @@ function workoutCard(plan, r) {
   const sess = plan.session, first = sess.blocks.find((b) => b.label !== 'Warm-up') || sess.blocks[0];
   const items = []; sess.blocks.forEach((b) => b.items.forEach((it) => { if (!items.some((x) => x.ex === it.ex && x.fast === it.fast)) items.push(it); }));
   const done = r.w || r.rest;
-  return `<div class="card ${done ? '' : 'pulse'}"><div class="wo">${figureSvg(first.items[0].ex)}<div class="sp"><span class="pill ${plan.test ? 'gold' : 'hot'}">${plan.test ? '📈 Test day' : plan.rest ? '🌿 Recovery day' : 'Day ' + plan.n}</span><h3 style="margin-top:8px">${esc(sess.title)}</h3><div class="meta"><span>⏱ ~${plan.mins} min</span><span>${sess.blocks.reduce((a, b) => a + b.items.length * b.rounds, 0)} moves</span>${CH().adj && CH().adj !== 1 ? `<span>${CH().adj > 1 ? '⬆️ harder' : '⬇️ easier'}</span>` : ''}</div></div></div>
+  return `<div class="card ${done ? '' : 'pulse'}"><div class="wo">${figureSvg(first.items[0].ex)}<div class="sp"><span class="pill ${plan.test ? 'gold' : 'hot'}">${plan.test ? '📈 Test day' : plan.rest ? '🌿 Recovery day' : 'Day ' + plan.n}</span><h3 style="margin-top:8px">${esc(sess.title)}</h3><div class="meta"><span>⏱ ~${plan.mins} min</span><span>${sess.blocks.reduce((a, b) => a + b.items.length * b.rounds, 0)} moves</span>${CH().adj && CH().adj !== 1 ? `<span>${CH().adj > 1 ? '⬆️ harder' : '⬇️ easier'}</span>` : ''}${checkinPill(r)}</div></div></div>
     <div class="exs">${items.map((it) => `<div class="ex" data-act="exinfo" data-ex="${it.ex}">${figureSvg(it.ex)}<b>${esc(EX[it.ex].n)}</b><small>${it.reps ? it.reps + ' reps' : fmtDur(it.secs)}${it.fast ? ' fast' : ''}</small></div>`).join('')}</div>
     ${done ? `<div class="row mt"><span class="pill ok">✓ ${r.rest && !r.w ? 'Rest day done' : 'Done' + (r.mins ? ' · ' + r.mins + ' min' : '')}</span><span class="sp"></span><button class="link" data-act="undo-w">Undo</button><button class="btn sm ghost" data-act="play">Do it again</button></div>`
-      : `<button class="btn big mt" data-act="play">▶ ${plan.rest ? 'Start the flow' : 'Start workout'}</button><div class="row mt" style="justify-content:center;gap:18px">${plan.rest ? '<button class="link" data-act="restdone">Just mark rest day done</button>' : '<button class="link" data-act="wdone">I did my own workout</button>'}<button class="link" data-act="adjust">Easier / harder</button></div>`}
+      : `<button class="btn big mt" data-act="play">▶ ${plan.rest ? 'Start the flow' : 'Start workout'}</button><div class="row mt" style="justify-content:center;gap:18px">${plan.rest ? '<button class="link" data-act="restdone">Just mark rest day done</button>' : '<button class="link" data-act="wdone">I did my own workout</button>'}<button class="link" data-act="adjust">Easier / harder</button></div>${plan.rest ? '' : '<button class="btn ghost big mt" data-act="quick">⏱ Only 10 minutes? Do a short version</button>'}`}
     ${plan.test ? `<div class="banner warn mt" style="margin-bottom:0"><span class="e">📈</span><div class="sp"><b>Test yourself today</b><div class="sm muted">${PROGRAMS[CH().program].tests.map((x) => esc(x.name)).join(' · ')}</div></div><button class="btn sm" data-act="tests">Log tests</button></div>` : ''}</div>`;
 }
 
@@ -1236,10 +1327,11 @@ function checkpointSheet(k) {
   const cfg = { water: { n: 'Water', u: 'glasses', step: 1, max: 30, e: '💧' }, sleep: { n: 'Sleep last night', u: 'hours', step: 0.5, max: 14, e: '😴' }, mob: { n: 'Stretching / mobility', u: 'minutes', step: 5, max: 120, e: '🧘' }, steps: { n: 'Steps', u: 'steps', step: 500, max: 60000, e: '👟' } }[k];
   let v = num(r[k]);
   if (k === 'water') { setDay(t, { water: v + 1 }); toast(`💧 ${v + 1} of ${T().water} glasses${v + 1 === T().water ? ' · goal hit!' : ''}`); vibrate(15); return; }
-  sheet(`<h2>${cfg.e} ${cfg.n}</h2><div class="stepper"><button id="st-m">−</button><b id="st-v">${k === 'steps' ? fmt(v) : v}</b><button id="st-p">+</button></div><p class="c muted">${cfg.u} · goal ${k === 'steps' ? fmt(T()[k]) : T()[k]}</p>${k === 'steps' ? '<input id="st-in" type="number" inputmode="numeric" placeholder="Or type the number from your phone">' : ''}<button class="btn big mt" id="st-ok">Save</button>`);
+  sheet(`<h2>${cfg.e} ${cfg.n}</h2><div class="stepper"><button id="st-m">−</button><b id="st-v">${k === 'steps' ? fmt(v) : v}</b><button id="st-p">+</button></div><p class="c muted">${cfg.u} · goal ${k === 'steps' ? fmt(T()[k]) : T()[k]}</p>${k === 'steps' ? `<div class="chipsel" id="st-q" style="justify-content:center">${[1000, 2000, 5000, 8000, 10000].map((n, i) => `<button data-v="${n}" data-add="${i < 2 ? 1 : 0}">${i < 2 ? '+' : ''}${n / 1000}k</button>`).join('')}</div><input id="st-in" class="mt" type="number" inputmode="numeric" placeholder="Or type the number from your phone"><button class="btn ghost big mt" data-act="pedo">🚶 Count steps on a walk</button>` : ''}<button class="btn big mt" id="st-ok">Save</button>`);
   const show = () => { $('#st-v').textContent = k === 'steps' ? fmt(v) : v; };
   holdRepeat($('#st-m'), () => { v = Math.max(0, v - cfg.step); show(); }); holdRepeat($('#st-p'), () => { v = Math.min(cfg.max, v + cfg.step); show(); });
   if ($('#st-in')) $('#st-in').oninput = (e) => { v = num(e.target.value); show(); };
+  $$('#st-q button').forEach((b) => (b.onclick = () => { v = Math.min(cfg.max, (b.dataset.add === '1' ? v : 0) + Number(b.dataset.v)); show(); vibrate(10); }));
   $('#st-ok').onclick = () => { setDay(t, { [k]: v || null }); closeSheet(); };
 }
 
@@ -1303,20 +1395,35 @@ function celebrateGifts(gifts) {
 function setupWizard(o) {
   o = o || {};
   const free = ME && ME.access && ME.access.kind === 'free';
-  const st = { program: (CH() && CH().program) || 'home', length: free ? (ME.limits.freeDays || 14) : 30, start: today() };
+  const freeDays = free ? (ME.limits.freeDays || 14) : 0;
+  const st = { program: (CH() && CH().program) || 'home', length: free ? freeDays : 30, start: today(), event: (CH() && CH().event) || '' };
+  /** Lengths this challenge comes in; on the free challenge, only those that fit in the free days (or the free days themselves). */
+  const lens = () => { const all = lengthsOf(st.program); if (!free) return all; const fit = all.filter((n) => n <= freeDays); return fit.length ? fit : [freeDays]; };
+  const fixLength = () => { const l = lens(); if (!l.includes(st.length)) st.length = l.includes(PROGRAMS[st.program].def) ? PROGRAMS[st.program].def : l.includes(30) ? 30 : l[l.length - 1]; };
   const step1 = () => {
-    sheet(`<h2>${o.next ? 'Your next challenge' : 'Pick your challenge'}</h2><p class="muted">You can switch later. Each one has a plan for every day.</p><div class="opts">${PROGRAM_IDS.map((id) => { const p = PROGRAMS[id]; return `<button class="opt ${st.program === id ? 'on' : ''}" data-p="${id}"><span class="e">${p.emoji}</span><span><b>${esc(p.name)}</b><small>${esc(p.level)} · ${esc(p.gear)}<br>${esc(p.blurb)}</small></span></button>`; }).join('')}</div><button class="btn big mt" id="w-n">Next</button>`, { full: false });
+    sheet(`<h2>${o.next ? 'Your next challenge' : 'Pick your challenge'}</h2><p class="muted">You can switch later. Each one has a plan for every day.</p><div class="opts">${PROGRAM_IDS.map((id) => { const p = PROGRAMS[id]; return `<button class="opt ${st.program === id ? 'on' : ''}" data-p="${id}"><span class="e">${p.emoji}</span><span><b>${esc(p.name)}</b>${p.tag ? ` <span class="pill hot" style="padding:2px 8px;font-size:11px">${esc(p.tag)}</span>` : ''}<small>${esc(p.level)} · ${esc(p.gear)}${p.lengths ? ' · ' + p.lengths.join(' / ') + ' days' : ''}<br>${esc(p.blurb)}</small></span></button>`; }).join('')}</div><button class="btn big mt" id="w-n">Next</button>`, { full: false });
     $$('.opt[data-p]').forEach((b) => (b.onclick = () => { st.program = b.dataset.p; $$('.opt[data-p]').forEach((x) => x.classList.toggle('on', x === b)); }));
     $('#w-n').onclick = step2;
   };
   const step2 = () => {
-    const mon = monday(shift(today(), 7));
-    sheet(`<h2>How long?</h2>${free ? `<p class="muted">Your free challenge is ${st.length} days. Plans unlock 14 to 100 days and unlimited challenges.</p>` : '<p class="muted">The plan stretches into four phases: Foundation, Build, Strengthen, Peak.</p>'}
-      <div class="chipsel" id="w-len">${LENGTHS.map((n) => `<button data-v="${n}" class="${st.length === n ? 'on' : ''}" ${free && n !== st.length ? 'disabled style="opacity:.4"' : ''}>${n} days</button>`).join('')}</div>
+    const mon = monday(shift(today(), 7)), p = PROGRAMS[st.program];
+    fixLength();
+    const all = lengthsOf(st.program), ok = lens();
+    sheet(`<h2>How long?</h2>${free ? `<p class="muted">Your free challenge is up to ${freeDays} days. Plans unlock every length and unlimited challenges.</p>` : '<p class="muted">The plan stretches into four phases: Foundation, Build, Strengthen, Peak.</p>'}
+      ${p.event ? `<label class="f">💍 Wedding date (optional)</label><input type="date" id="w-ev" value="${esc(st.event)}" min="${today()}"><p class="tiny muted" id="w-evm">${st.event ? '' : 'We’ll count down to it on your Today screen.'}</p>` : ''}
+      <div class="chipsel" id="w-len">${all.map((n) => `<button data-v="${n}" class="${st.length === n ? 'on' : ''}" ${ok.includes(n) ? '' : 'disabled style="opacity:.4"'}>${n} days</button>`).join('')}${free && !all.includes(freeDays) && ok[0] === freeDays ? `<button data-v="${freeDays}" class="on">${freeDays} days (free)</button>` : ''}</div>
       <label class="f">Start</label><div class="chipsel" id="w-st"><button data-v="${today()}" class="on">Today</button><button data-v="${shift(today(), 1)}">Tomorrow</button><button data-v="${mon}">Monday ${nice(mon)}</button></div>
       <div class="row mt"><button class="btn ghost" id="w-b">Back</button><button class="btn sp" id="w-n">Next</button></div>`);
-    $$('#w-len button').forEach((b) => (b.onclick = () => { if (b.disabled) return; st.length = Number(b.dataset.v); $$('#w-len button').forEach((x) => x.classList.toggle('on', x === b)); }));
+    const pickLen = (n) => { st.length = n; $$('#w-len button').forEach((x) => x.classList.toggle('on', Number(x.dataset.v) === n)); };
+    $$('#w-len button').forEach((b) => (b.onclick = () => { if (!b.disabled) pickLen(Number(b.dataset.v)); }));
     $$('#w-st button').forEach((b) => (b.onclick = () => { st.start = b.dataset.v; $$('#w-st button').forEach((x) => x.classList.toggle('on', x === b)); }));
+    const ev = $('#w-ev'); if (ev) ev.onchange = () => {
+      st.event = ev.value;
+      if (!st.event) return;
+      const days = diff(st.start, st.event) + 1, fit = ok.filter((n) => n <= days);
+      $('#w-evm').textContent = days < 7 ? 'That’s very soon. Pick a short plan and focus on the yoga days.' : `${days} days to go. ${fit.length ? `We picked the ${fit[fit.length - 1]}-day plan so it ends by then.` : ''}`;
+      if (fit.length) pickLen(fit[fit.length - 1]);
+    };
     $('#w-b').onclick = step1; $('#w-n').onclick = step3;
   };
   const step3 = () => {
@@ -1335,11 +1442,12 @@ function setupWizard(o) {
       S.profile.targets = { water: clamp(num($('#w-wa').value) || 8, 1, 30), sleep: clamp(num($('#w-sl').value) || 7, 1, 14), steps: clamp(num($('#w-stp').value) || 8000, 500, 50000), mob: clamp(num($('#w-mo').value) || 10, 1, 120), need };
       if (CH() && !o.next) archiveChallenge('stopped');
       S.challenge = { id: uid(), program: st.program, length: st.length, start: st.start, adj: 1, groupCode: o.groupCode || null };
+      if (PROGRAMS[st.program].event && st.event) S.challenge.event = st.event;
       onChange(); closeSheet(); confetti(); go('today');
       setTimeout(() => toast(st.start === today() ? 'Day 1! Start with the tests, then today’s workout.' : `See you on ${nice(st.start, true)}!`), 600);
     };
   };
-  if (o.program) { st.program = o.program; if (o.length && !free) st.length = o.length; if (o.start) st.start = o.start; step3(); } else step1();
+  if (o.program) { st.program = o.program; if (o.length && !free) st.length = o.length; if (o.start) st.start = o.start; if (free) fixLength(); step3(); } else step1();
 }
 function archiveChallenge(status) {
   const c = CH(); if (!c) return;
@@ -1357,7 +1465,7 @@ function startPlayer(plan) {
   PL.el = document.createElement('div'); PL.el.className = 'player'; document.body.appendChild(PL.el);
   document.body.style.overflow = 'hidden';
   try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then((l) => { PL.lock = l; }).catch(() => {}); } catch (e) { /* no wake lock */ }
-  say(`${plan.session.title}. Let's go!`);
+  say(line('start', plan.session.title));
   loadStep(true);
 }
 function loadStep(autoStart) {
@@ -1366,11 +1474,11 @@ function loadStep(autoStart) {
   PL.left = s.rest || s.secs || 0; PL.half = false;
   PL.run = !!(autoStart && (s.rest || s.secs));
   drawPlayer();
-  if (s.rest) { const n = PL.steps[PL.i + 1]; if (n) say(`Rest. Next: ${EX[n.ex].n}${n.reps ? ', ' + n.reps + ' reps' : ''}.`); }
-  else say(`${EX[s.ex].n}${s.reps ? ', ' + s.reps + ' reps' : ', ' + spoken(s.secs)}${s.fast ? '. Go fast!' : ''}`);
+  const exLeft = PL.steps.slice(PL.i).filter((x) => x.ex).length, exAll = PL.steps.filter((x) => x.ex).length;
+  if (s.rest) { const n = PL.steps[PL.i + 1]; if (n) say(line('rest', EX[n.ex].n, n.reps)); }
+  else say((exLeft === 1 && exAll > 3 ? line('last') + ' ' : exAll > 6 && exLeft === Math.ceil(exAll / 2) ? line('half') + ' ' : '') + (s.reps ? line('reps', EX[s.ex].n, s.reps) : line('secs', EX[s.ex].n, s.secs)) + (s.fast ? '. ' + line('fast') : ''));
   clearInterval(PL.t); PL.lastTick = Date.now(); PL.t = setInterval(tick, 250);
 }
-const spoken = (sec) => (sec >= 60 ? `${Math.round(sec / 60)} minute${Math.round(sec / 60) === 1 ? '' : 's'}` : `${sec} seconds`);
 function tick() {
   const now = Date.now(), dt = (now - PL.lastTick) / 1000; PL.lastTick = now;
   if (!PL.run) return;
@@ -1379,8 +1487,8 @@ function tick() {
   const before = Math.ceil(PL.left); PL.left -= dt; const after = Math.ceil(PL.left);
   if (after !== before) {
     if (after <= 3 && after > 0) beep(after === 1 ? 990 : 660, 120);
-    if (s.ex && EX[s.ex].side && !PL.half && PL.left <= (s.secs || 0) / 2) { PL.half = true; say('Switch sides'); beep(520, 200); }
-    if (s.secs >= 120 && after > 0 && after % 60 === 0) say(`${after / 60} minute${after === 60 ? '' : 's'} left`);
+    if (s.ex && EX[s.ex].side && !PL.half && PL.left <= (s.secs || 0) / 2) { PL.half = true; say(line('side')); beep(520, 200); }
+    if (s.secs >= 120 && after > 0 && after % 60 === 0) say(line('left', after / 60));
   }
   if (PL.left <= 0) { beep(1320, 280); vibrate(80); PL.i++; loadStep(true); return; }
   updateTimer();
@@ -1401,7 +1509,7 @@ function drawPlayer() {
     <div class="pl-ctl"><button id="pl-prev" aria-label="Back">⏮</button>
       ${s.rest || s.secs ? `<button class="main" id="pl-pp" aria-label="Pause">${PL.run ? '⏸' : '▶'}</button>` : `<button class="main" id="pl-done" aria-label="Done">✓</button>`}
       <button id="pl-next" aria-label="Skip">⏭</button></div>
-    <div class="row mt" style="justify-content:center;gap:18px"><button class="link" id="pl-snd">${S.prefs.sound ? '🔊 Sound on' : '🔇 Sound off'}</button><button class="link" id="pl-vc">${S.prefs.voice ? '🗣 Voice on' : '🤐 Voice off'}</button>${s.rest ? '<button class="link" id="pl-add">+20s</button>' : ex ? '<button class="link" id="pl-info">How to</button>' : ''}</div>`;
+    <div class="row mt" style="justify-content:center;gap:18px"><button class="link" id="pl-snd">${S.prefs.sound ? '🔊 Sound on' : '🔇 Sound off'}</button><button class="link" id="pl-vc">${S.prefs.voice ? '🗣 Voice on' : '🤐 Voice off'}</button>${S.prefs.voice ? `<button class="link" id="pl-lang">${HI() ? 'हिं → EN' : 'EN → हिं'}</button>` : ''}${s.rest ? '<button class="link" id="pl-add">+20s</button>' : ex ? '<button class="link" id="pl-info">How to</button>' : ''}</div>`;
   $('#pl-x', PL.el).onclick = askEnd;
   $('#pl-prev', PL.el).onclick = () => { PL.i = Math.max(0, PL.i - 1); loadStep(false); };
   $('#pl-next', PL.el).onclick = () => { PL.i++; loadStep(true); };
@@ -1411,6 +1519,7 @@ function drawPlayer() {
   const info = $('#pl-info', PL.el); if (info) info.onclick = () => { PL.run = false; drawPlayer(); exerciseSheet(s.ex); };
   $('#pl-snd', PL.el).onclick = () => { S.prefs.sound = !S.prefs.sound; onChange({ quiet: true }); drawPlayer(); };
   $('#pl-vc', PL.el).onclick = () => { S.prefs.voice = !S.prefs.voice; if (!S.prefs.voice && window.speechSynthesis) speechSynthesis.cancel(); onChange({ quiet: true }); drawPlayer(); };
+  const lg = $('#pl-lang', PL.el); if (lg) lg.onclick = () => { S.prefs.lang = HI() ? 'en' : 'hi'; onChange({ quiet: true }); drawPlayer(); say(HI() ? 'हिंदी में कोच' : 'Coach in English'); };
   if (ex) { let ci = 0; clearInterval(PL.cueT); PL.cueT = setInterval(() => { const c = $('#pl-cue', PL.el); if (!c || !ex.cues.length) return; ci = (ci + 1) % ex.cues.length; c.textContent = ex.cues[ci]; }, 4000); }
   animateFigures();
 }
@@ -1429,7 +1538,7 @@ function endPlayer(done) {
   try { PL.lock && PL.lock.release(); } catch (e) { /* none */ }
   if (window.speechSynthesis) speechSynthesis.cancel();
   if (PL.el) PL.el.remove(); PL.el = null; document.body.style.overflow = '';
-  if (done) { say('Workout complete. Great job!'); finishWorkout({ mins: Math.max(1, Math.round((Date.now() - PL.started) / 60000)), rest: PL.plan && PL.plan.rest }); }
+  if (done) { say(line('done')); finishWorkout({ mins: Math.max(1, Math.round((Date.now() - PL.started) / 60000)), rest: PL.plan && PL.plan.rest }); }
 }
 
 /* ===== progress.js ===== */
@@ -1467,6 +1576,7 @@ PROG_TABS.dash = function () {
   const c7 = []; const cl = []; for (let i = 6; i >= 0; i--) { const d = shift(today(), -i); c7.push(checkpoints(dayRow(d))); cl.push(WD[new Date(d + 'T12:00:00').getDay()].slice(0, 2)); }
   return `<div class="grid2"><div class="stat"><b>${x.complete}</b><small>complete days</small></div><div class="stat"><b>🔥 ${x.cur}</b><small>streak · best ${x.best}</small></div><div class="stat"><b>${x.workouts}</b><small>workouts</small></div><div class="stat"><b>${fmt(x.mins)}</b><small>minutes moved</small></div></div>
     <div class="card mt"><div class="lvl"><div class="n">${lv.level}</div><div class="sp"><b>${esc(lv.name)}</b><div class="xpbar mt" style="margin-top:6px"><i style="width:${lv.pct}%"></i></div><small class="muted">${fmt(x.xp)} XP · ${fmt(lv.to - x.xp)} to level ${lv.level + 1}</small></div></div></div>
+    ${journeyCard()}
     <div class="card"><h3>⏱ Minutes per week</h3>${barChart(weeks, labels, { unit: 'min' })}</div>
     <div class="card"><h3>✅ Checkpoints, last 7 days</h3>${barChart(c7, cl, { cls: 'bar2' })}</div>
     <div class="card"><h3>⚖️ Weight</h3>${lineChart(w)}</div>
@@ -1481,7 +1591,8 @@ function weekReport() {
   return `<div class="card"><h3>🗓 Last week’s report<span class="sp"></span><span class="pill gold">${grade[0]}</span></h3><p class="muted sm">${nice(m)} – ${nice(shift(m, 6))} · ${grade[1]}</p>
     <div class="li"><span class="e">✅</span><div class="t"><b>Complete days</b></div><div class="v">${done}/7</div></div><div class="li"><span class="e">💪</span><div class="t"><b>Workouts</b><small>${mins} min</small></div><div class="v">${wo}</div></div>
     <div class="li"><span class="e">💧</span><div class="t"><b>Water goal hit</b></div><div class="v">${water}/7</div></div><div class="li"><span class="e">😴</span><div class="t"><b>Sleep goal hit</b></div><div class="v">${sleep}/7</div></div>
-    ${mealDays ? `<div class="li"><span class="e">🍽</span><div class="t"><b>Average calories</b><small>on ${mealDays} day${mealDays === 1 ? '' : 's'} logged</small></div><div class="v">${fmt(kcal / mealDays)}</div></div>` : ''}</div>`;
+    ${mealDays ? `<div class="li"><span class="e">🍽</span><div class="t"><b>Average calories</b><small>on ${mealDays} day${mealDays === 1 ? '' : 's'} logged</small></div><div class="v">${fmt(kcal / mealDays)}</div></div>` : ''}
+    ${weekNumbers(m).logged ? '<button class="btn big mt" data-act="recap">📤 Share my week</button>' : ''}</div>`;
 }
 
 PROG_TABS.map = function () {
@@ -1525,8 +1636,9 @@ PROG_TABS.tests = function () {
     if (!rows.length) return `<div class="li"><span class="e">⏱</span><div class="t"><b>${esc(t.name)}</b><small>Not tested yet</small></div></div>`;
     const first = num(rows[0].v), last = num(rows[rows.length - 1].v), best = t.up ? Math.max(...rows.map((p) => num(p.v))) : Math.min(...rows.map((p) => num(p.v)));
     const ch = first ? Math.round(((last - first) / first) * 100) * (t.up ? 1 : -1) : 0;
-    return `<div class="li"><span class="e">${ch > 0 ? '🚀' : '⏱'}</span><div class="t"><b>${esc(t.name)}</b><small>Start ${first} → now ${last} ${esc(t.unit)} · best ${best}</small></div><div class="v" style="color:${ch > 0 ? 'var(--ok)' : 'var(--mu)'}">${rows.length > 1 ? (ch > 0 ? '+' : '') + ch + '%' : '–'}</div></div>`;
-  }).join('')}</div>`;
+    return `<div class="li"><span class="e">${ch > 0 ? '🚀' : '⏱'}</span><div class="t"><b>${esc(t.name)}</b><small>Start ${first} → now ${last} ${esc(t.unit)} · best ${best}${t.up ? '' : ' (lower is better)'}</small></div><div class="v" style="color:${ch > 0 ? 'var(--ok)' : 'var(--mu)'}">${rows.length > 1 ? (ch > 0 ? '+' : '') + ch + '%' : '–'}</div></div>${rows.length > 1 ? `<div style="padding:0 0 10px 50px">${lineChart(rows.map((p) => [p.d, num(p.v)]))}</div>` : ''}`;
+  }).join('')}</div>
+    <p class="tiny muted c">Retest every 2 weeks: we’ll remind you on the Today screen.</p>`;
 };
 function testsSheet() {
   const list = CH() ? PROGRAMS[CH().program].tests : PROGRAMS.home.tests;
@@ -1597,10 +1709,23 @@ async function uploadPhoto(file) {
   } catch (e) { if (e.status === 402 && e.data && e.data.reason === 'photos') upgradeSheet(e.message); else toast(esc(e.message), 'bad'); }
 }
 ACT.phview = (el) => { const p = PHOTOS.photos.find((x) => x.id === el.dataset.id); sheet(`<img src="${esc(p.url)}" style="width:100%;border-radius:18px" alt=""><p class="muted c">${nice(p.day, true)}</p><button class="link" id="ph-del" style="display:block;margin:auto">Delete photo</button><p class="tiny muted c">Deleting doesn’t give the week’s photo back.</p>`); $('#ph-del').onclick = async () => { try { await api('photos/delete', { method: 'POST', body: { id: p.id } }); closeSheet(); loadPhotos(true); } catch (e) { toast(esc(e.message), 'bad'); } }; };
-ACT.phcmp = () => {
-  const ps = PHOTOS.photos, a = ps[ps.length - 1], b = ps[0];
-  sheet(`<h2>Before / after</h2><div class="cmp"><img src="${esc(a.url)}" alt=""><img class="b" id="cmp-b" src="${esc(b.url)}" alt=""><input type="range" min="0" max="100" value="50" id="cmp-r"></div><div class="row mt sm muted"><span>${nice(a.day)}</span><span class="sp"></span><span>${nice(b.day)}</span></div>`);
-  $('#cmp-r').oninput = (e) => { $('#cmp-b').style.clipPath = `inset(0 0 0 ${e.target.value}%)`; };
+/* Before / after: drag the line across the photo; pick any two photos to compare. */
+ACT.phcmp = (el, ev, ai, bi) => {
+  const ps = PHOTOS.photos.slice().sort((x, y) => (x.day < y.day ? -1 : 1));
+  ai = ai == null ? 0 : ai; bi = bi == null ? ps.length - 1 : bi;
+  const a = ps[ai], b = ps[bi], days = diff(a.day, b.day);
+  const opt = (sel) => ps.map((p, i) => `<option value="${i}" ${i === sel ? 'selected' : ''}>${nice(p.day)}</option>`).join('');
+  sheet(`<h2>Before / after</h2><p class="muted sm">${days > 0 ? plural(days, 'day') + ' apart. ' : ''}Drag across the photo.</p><div class="cmp" id="cmp"><img src="${esc(a.url)}" alt="Before"><img class="b" id="cmp-b" src="${esc(b.url)}" alt="After"><span class="cmp-l" id="cmp-l"><i></i></span><em class="cmp-t l">Before</em><em class="cmp-t r">After</em></div>
+    <div class="grid2 mt"><select id="cmp-a">${opt(ai)}</select><select id="cmp-z">${opt(bi)}</select></div>`);
+  const box = $('#cmp'), set = (pct) => { pct = clamp(pct, 0, 100); $('#cmp-b').style.clipPath = `inset(0 0 0 ${pct}%)`; $('#cmp-l').style.left = pct + '%'; };
+  const at = (e) => { const r = box.getBoundingClientRect(); set(((e.clientX - r.left) / r.width) * 100); };
+  let drag = false;
+  box.addEventListener('pointerdown', (e) => { drag = true; box.setPointerCapture(e.pointerId); at(e); });
+  box.addEventListener('pointermove', (e) => { if (drag) at(e); });
+  ['pointerup', 'pointercancel'].forEach((t) => box.addEventListener(t, () => { drag = false; }));
+  set(50);
+  $('#cmp-a').onchange = () => ACT.phcmp(null, null, Number($('#cmp-a').value), bi);
+  $('#cmp-z').onchange = () => ACT.phcmp(null, null, ai, Number($('#cmp-z').value));
 };
 
 /* ----- lifetime: the long view ----- */
@@ -1610,6 +1735,7 @@ PROG_TABS.life = function () {
   for (let i = 0; i < 53 * 7; i++) { const d = shift(start, i); if (d > t) break; const r = dayRow(d), cp = checkpoints(r); cells += `<i class="${r && r.fz ? 'z' : isComplete(r) ? 'c' : cp >= 2 ? 'b' : isLogged(r) ? 'a' : ''}" title="${d}"></i>`; }
   const goals = S.goals.slice().sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0));
   return `<div class="card"><h3>🗓 Your year</h3><div class="heat">${cells}</div><div class="row tiny muted mt"><span>Less</span><i style="width:10px;height:10px;border-radius:3px;background:var(--line)"></i><i style="width:10px;height:10px;border-radius:3px;background:color-mix(in srgb,var(--ok) 35%,var(--line))"></i><i style="width:10px;height:10px;border-radius:3px;background:var(--ok)"></i><span>More</span></div></div>
+    ${journeyCard()}
     <div class="grid2"><div class="stat"><b>${x.workouts}</b><small>workouts, all time</small></div><div class="stat"><b>${fmt(x.mins / 60)} h</b><small>moved</small></div><div class="stat"><b>${x.km.toFixed(1)} km</b><small>walked, run, cycled</small></div><div class="stat"><b>${x.best}</b><small>longest streak</small></div></div>
     <div class="card mt"><h3>🎯 Long-term goals<span class="sp"></span><button class="btn sm" data-act="goaladd">+ Goal</button></h3>${goals.length ? goals.map(goalRow).join('') : '<p class="muted sm">Set a goal for the months ahead: a weight, a test score, a number of workouts. We’ll track it for you.</p>'}</div>
     <div class="card"><h3>🏁 Challenges</h3>${S.challenges.length || CH() ? (CH() ? `<div class="li"><span class="e">${PROGRAMS[CH().program].emoji}</span><div class="t"><b>${esc(PROGRAMS[CH().program].name)} · ${CH().length} days</b><small>Now · day ${Math.max(0, chDay())}</small></div></div>` : '') + S.challenges.slice().reverse().map((c) => `<div class="li"><span class="e">${PROGRAMS[c.program].emoji}</span><div class="t"><b>${esc(PROGRAMS[c.program].name)} · ${c.length} days</b><small>${nice(c.start)} – ${nice(c.end)} · ${c.complete} complete days</small></div><span class="pill ${c.status === 'finished' ? 'ok' : ''}">${c.status === 'finished' ? '🎓 Finished' : 'Stopped'}</span></div>`).join('') : '<p class="muted sm">Your finished challenges will show here.</p>'}</div>`;
@@ -1653,6 +1779,7 @@ ROUTES.food = function () {
   return `<div class="row mb"><button class="iconbtn" data-act="fday" data-v="-1">‹</button><div class="sp c"><b style="font-family:var(--fh)">${d === today() ? 'Today' : nice(d, true)}</b></div><button class="iconbtn" data-act="fday" data-v="1" ${d >= today() ? 'disabled style="opacity:.4"' : ''}>›</button></div>
     <div class="hero"><div class="prog"><div class="ring" style="--p:${tk ? clamp((kcal / tk) * 100, 0, 100) : 0}"><div><b>${fmt(kcal)}</b><small>${tk ? 'of ' + fmt(tk) : 'kcal'}</small></div></div><div class="ring" style="--p:${tp ? clamp((prot / tp) * 100, 0, 100) : 0};--c:var(--ok)"><div><b>${Math.round(prot)}g</b><small>${tp ? 'of ' + tp + 'g' : 'protein'}</small></div></div>
       <div class="sp sm muted">${tk || tp ? '' : 'Set daily targets for calories and protein if you track them.'}<br><button class="link" data-act="ftargets">${tk || tp ? 'Change targets' : 'Set targets'}</button></div></div></div>
+    <button class="btn big mb" data-act="thali">🍛 Quick thali: tap what’s on your plate</button>
     ${SLOTS.map(([k, e, n]) => { const ms = meals.filter((m) => (m.slot || 's') === k); return `<div class="card"><h3>${e} ${n}<span class="sp"></span><span class="muted tiny">${ms.length ? fmt(ms.reduce((a, m) => a + num(m.kcal), 0)) + ' kcal' : ''}</span><button class="btn sm ghost" data-act="fadd" data-slot="${k}">+ Add</button></h3>${ms.map((m) => `<div class="li"><div class="t"><b>${esc(m.n)}</b><small>${esc(m.qty || '')} · ${fmt(num(m.kcal))} kcal · ${Math.round(num(m.p))} g protein</small></div><button class="link" data-act="fdel" data-id="${m.id}">✕</button></div>`).join('')}</div>`; }).join('')}
     <p class="tiny muted c">Numbers are rough home-cooked averages. Good enough to spot patterns, not for medical use.</p>`;
 };
@@ -1697,7 +1824,7 @@ const initials = (n) => esc((n || '?').trim()[0] || '?').toUpperCase();
 
 ROUTES.together = function (args) {
   const tab = args[0] || SUB.together || (ME && ME.groups.length ? 'groups' : 'groups'); SUB.together = tab;
-  const tabs = [['groups', 'Groups'], ['buddy', 'Buddy'], ['plan', 'My plan’s people'], ['inbox', 'Messages' + (unread() ? ` (${unread()})` : '')]];
+  const tabs = [['groups', 'Groups'], ...(ME && ME.family ? [['family', '🏠 Family']] : []), ['buddy', 'Buddy'], ['plan', 'My plan’s people'], ['inbox', 'Messages' + (unread() ? ` (${unread()})` : '')]];
   return `<div class="tabs">${tabs.map(([k, n]) => `<button class="${tab === k ? 'on' : ''}" data-act="ttab" data-v="${k}">${n}</button>`).join('')}</div>` + (TG_TABS[tab] || TG_TABS.groups)(args.slice(1));
 };
 ROUTES.together.after = function (args) {
@@ -1706,6 +1833,7 @@ ROUTES.together.after = function (args) {
   if (tab === 'groups' && args[1] && (stale(GROUP) || GROUP.code !== args[1])) loadGroup(args[1]);
   if (tab === 'buddy' && ME && ME.buddy.status === 'matched' && stale(BUDDY)) loadBuddy();
   if (tab === 'inbox') markInboxSeen();
+  if (tab === 'family' && (!FAMILY || Date.now() - (FAMILY._at || 0) > 20000)) { if (FAMILY) FAMILY._at = Date.now(); loadFamily(); }
   const f = $('#gp-f'); if (f) f.onsubmit = (e) => { e.preventDefault(); const t = $('#gp-t').value.trim(); if (t) groupSend({ text: t }); };
 };
 ACT.ttab = (el) => go('together/' + el.dataset.v);
@@ -1725,13 +1853,14 @@ function groupScreen(code) {
   return `<a href="#together/groups" class="link">‹ All groups</a><div class="hero mt"><h2>${esc(g.name)}</h2><p class="muted sm">${g.mode === 'together' && PROGRAMS[g.program] ? `${PROGRAMS[g.program].emoji} ${esc(PROGRAMS[g.program].name)} · ${g.length} days from ${nice(g.start)}` : 'Everyone on their own plan, logging together'}</p>
       <div class="row"><a class="btn sm" target="_blank" rel="noopener" href="${wa(`Join my workout group "${g.name}" on Pandora Workout 💪 ${g.link}`)}">Invite on WhatsApp</a><button class="btn sm ghost" data-act="gcopy">Copy link</button></div>
       ${g.mode === 'together' && CH() && CH().groupCode !== g.code ? `<button class="link mt" data-act="gfollow">Follow this group’s challenge</button>` : ''}</div>
+    ${goalCard(g)}
     <div class="card ppl"><h3>🏆 This week<span class="sp"></span><span class="tiny muted">by XP</span></h3>${g.people.map((p, i) => `<div class="li"><span class="e">${['🥇', '🥈', '🥉'][i] || initials(p.name)}</span><div class="t"><b>${esc(p.name)}${p.email === CLOUD.email ? ' (you)' : ''}</b><small>🔥 ${p.streak} · Lv ${p.level}${p.day ? ' · day ' + p.day : ''} · ${p.todayDone ? '✅ done today' : p.workedOut ? '💪 worked out' : p.todayLogged ? '📝 logging' : '⏳ not yet today'}</small></div><div class="v">${fmt(p.weekXp)}</div>${p.email !== CLOUD.email ? `<button class="btn sm ghost" data-act="gcheer" data-to="${esc(p.email)}" data-n="${esc(p.name)}">${p.todayDone ? '👏' : '👉'}</button>` : ''}</div>`).join('')}</div>
-    <div class="card"><h3>💬 Group chat</h3><div class="feed" id="gp-feed">${g.feed.length ? g.feed.slice().reverse().map(msgHtml).join('') : '<p class="muted sm c">Say hi to get things going.</p>'}</div>
+    <div class="card"><h3>💬 Group chat<span class="sp"></span>${voiceSupported() ? '<button class="btn sm ghost" data-act="gvoice" aria-label="Voice note">🎤</button>' : ''}</h3><div class="feed" id="gp-feed">${g.feed.length ? g.feed.slice().reverse().map(msgHtml).join('') : '<p class="muted sm c">Say hi to get things going.</p>'}</div>
       <div class="presets">${PRESET_LIST.map(([k, t]) => `<button data-act="gpre" data-k="${k}">${t}</button>`).join('')}</div>
       <form class="row" id="gp-f"><input id="gp-t" maxlength="160" placeholder="Message the group"><button class="btn">Send</button></form></div>
     <button class="link" data-act="gleave">Leave this group</button>${mine ? '' : ''}`;
 }
-const msgHtml = (m) => m.kind === 'event' ? `<div class="msg ev"><b>${esc(m.from)}</b> ${esc(m.text)}</div>` : `<div class="msg ${m.fromMe ? 'me' : ''}"><small>${m.fromMe ? 'You' : esc(m.from)}${m.to ? ' → ' + (m.toMe ? 'you' : esc(m.to)) : ''} · ${ago(m.at)}</small>${esc(m.text)}</div>`;
+const msgHtml = (m) => m.kind === 'event' ? `<div class="msg ev"><b>${esc(m.from)}</b> ${esc(m.text)}</div>` : `<div class="msg ${m.fromMe ? 'me' : ''}"><small>${m.fromMe ? 'You' : esc(m.from)}${m.to ? ' → ' + (m.toMe ? 'you' : esc(m.to)) : ''} · ${ago(m.at)}</small>${m.kind === 'voice' ? voiceHtml(m) : esc(m.text)}</div>`;
 async function loadGroup(code) {
   try { GROUP = await api('groups/view?code=' + encodeURIComponent(code)); GROUP._at = Date.now(); if (ROUTE === 'together') { const y = window.scrollY; render(); window.scrollTo(0, y); const f = $('#gp-feed'); if (f) f.scrollTop = f.scrollHeight; } }
   catch (e) { toast(esc(e.message), 'bad'); if (e.status === 403 || e.status === 404) go('together/groups'); }
@@ -1743,8 +1872,8 @@ async function groupSend(body) {
 }
 ACT.gpre = (el) => groupSend({ preset: el.dataset.k });
 ACT.gcheer = (el) => {
-  sheet(`<h2>To ${esc(el.dataset.n)}</h2><div class="opts">${PRESET_LIST.slice(0, 7).map(([k, t]) => `<button class="opt" data-k="${k}"><span>${t}</span></button>`).join('')}</div>`);
-  $$('.opt[data-k]').forEach((b) => (b.onclick = () => { closeSheet(); groupSend({ to: el.dataset.to, kind: b.dataset.k === 'where' ? 'nudge' : 'cheer', preset: b.dataset.k }); toast('Sent 🙌'); }));
+  sheet(`<h2>To ${esc(el.dataset.n)}</h2><div class="opts">${PRESET_LIST.slice(0, 7).map(([k, t]) => `<button class="opt" data-k="${k}"><span>${t}</span></button>`).join('')}${voiceSupported() ? '<button class="opt" data-k="voice"><span>🎤 Send a voice note</span></button>' : ''}</div>`);
+  $$('.opt[data-k]').forEach((b) => (b.onclick = () => { if (b.dataset.k === 'voice') return ACT.gvoice({ dataset: { to: el.dataset.to, n: el.dataset.n } }); closeSheet(); groupSend({ to: el.dataset.to, kind: b.dataset.k === 'where' ? 'nudge' : 'cheer', preset: b.dataset.k }); toast('Sent 🙌'); }));
 };
 ACT.gcopy = () => { try { navigator.clipboard.writeText(GROUP.link); toast('Link copied'); } catch (e) { toast(GROUP.link); } };
 ACT.gleave = () => { sheet(`<h2>Leave “${esc(GROUP.name)}”?</h2><button class="btn big" id="gl-ok">Leave</button>`); $('#gl-ok').onclick = async () => { try { await api('groups/leave', { method: 'POST', body: { code: GROUP.code } }); if (CH() && CH().groupCode === GROUP.code) { S.challenge.groupCode = null; onChange({ quiet: true }); } GROUP = null; await refreshMe(); closeSheet(); go('together/groups'); } catch (e) { toast(esc(e.message), 'bad'); } }; };
@@ -1753,9 +1882,10 @@ ACT.gnew = () => {
   sheet(`<h2>Start a group</h2><label class="f">Group name</label><input id="gn-n" maxlength="50" placeholder="e.g. Sharma family fit squad">
     <label class="f">How do you want to do it?</label><div class="opts"><button class="opt on" data-m="together"><span class="e">🤝</span><span><b>Same challenge together</b><small>Everyone follows the same plan from the same day</small></span></button><button class="opt" data-m="log"><span class="e">📝</span><span><b>Just log together</b><small>Everyone on their own plan; share streaks and cheers</small></span></button></div>
     <div id="gn-ch"><label class="f">Challenge</label><select id="gn-p">${PROGRAM_IDS.map((id) => `<option value="${id}" ${CH() && CH().program === id ? 'selected' : ''}>${PROGRAMS[id].emoji} ${esc(PROGRAMS[id].name)}</option>`).join('')}</select>
-    <div class="grid2"><div><label class="f">Days</label><select id="gn-l">${LENGTHS.map((n) => `<option ${n === 30 ? 'selected' : ''}>${n}</option>`).join('')}</select></div><div><label class="f">Start</label><input id="gn-s" type="date" value="${monday(shift(today(), 7))}"></div></div></div>
+    <div class="grid2"><div><label class="f">Days</label><select id="gn-l">${lengthsOf(CH() ? CH().program : 'home').map((n) => `<option ${n === 30 ? 'selected' : ''}>${n}</option>`).join('')}</select></div><div><label class="f">Start</label><input id="gn-s" type="date" value="${monday(shift(today(), 7))}"></div></div></div>
     <button class="btn big mt" id="gn-ok">Create & get the invite link</button>`);
   let mode = 'together';
+  $('#gn-p').onchange = () => { const l = lengthsOf($('#gn-p').value), d = PROGRAMS[$('#gn-p').value].def; $('#gn-l').innerHTML = l.map((n) => `<option ${n === (d || 30) ? 'selected' : ''}>${n}</option>`).join(''); };
   $$('.opt[data-m]').forEach((b) => (b.onclick = () => { mode = b.dataset.m; $$('.opt[data-m]').forEach((x) => x.classList.toggle('on', x === b)); $('#gn-ch').hidden = mode !== 'together'; }));
   $('#gn-ok').onclick = async () => {
     try {
@@ -1826,7 +1956,7 @@ ACT.mremove = async (el) => { try { await api('members', { method: 'DELETE', bod
 /* ----- messages ----- */
 TG_TABS.inbox = function () {
   if (!INBOX.items.length) return '<div class="empty"><span class="e">📭</span>Cheers and nudges from your groups and buddy show up here.</div>';
-  return `<div class="card">${INBOX.items.map((m) => `<div class="li"><span class="e">${m.kind === 'nudge' ? '👉' : m.kind === 'event' ? '👋' : m.kind === 'cheer' ? '👏' : '💬'}</span><div class="t"><b>${esc(m.from)}</b><small>${esc(m.text)}</small></div><span class="tiny muted">${ago(m.at)}</span></div>`).join('')}</div>`;
+  return `<div class="card">${INBOX.items.map((m) => `<div class="li"><span class="e">${m.kind === 'nudge' ? '👉' : m.kind === 'event' ? '👋' : m.kind === 'cheer' ? '👏' : m.kind === 'voice' ? '🎤' : m.kind === 'alert' ? '🔥' : '💬'}</span><div class="t"><b>${esc(m.from)}</b><small>${esc(m.text)}</small></div><span class="tiny muted">${ago(m.at)}</span></div>`).join('')}</div>`;
 };
 
 /* ===== rewards.js ===== */
@@ -1836,6 +1966,7 @@ ROUTES.rewards = function () {
   let h = `<div class="hero"><div class="lvl"><div class="n">${lv.level}</div><div class="sp"><small class="muted">Level ${lv.level}</small><h2 style="margin:0">${esc(lv.name)}</h2><div class="xpbar mt" style="margin-top:8px"><i style="width:${lv.pct}%"></i></div><small class="muted">${fmt(x.xp)} XP · ${fmt(lv.to - x.xp)} XP to ${esc(LEVELS[Math.min(lv.level, LEVELS.length - 1)])}</small></div></div>
     <div class="grid3 mt"><div class="stat"><b>🔥 ${x.cur}</b><small>streak</small></div><div class="stat"><b>🧊 ${fr.left}</b><small>freezes</small></div><div class="stat"><b>🏅 ${BADGES.filter((b) => b.ok(x)).length}</b><small>badges</small></div></div></div>`;
   h += giftRoad();
+  h += pledgeCard('rewards');
   h += moneyBackCard();
   h += referralCard();
   const fresh = newBadges().map((b) => b.id);
@@ -1911,18 +2042,37 @@ ACT.buy = async (el) => {
 /* ===== me.js ===== */
 /* ---------- Me: profile, plan, goals, reminders, theme, Excel import, export ---------- */
 const THEMES = [
-  { id: 'ember', n: 'Ember', bg: 'linear-gradient(135deg,#0B1020,#FF5A36)', ok: () => true },
-  { id: 'day', n: 'Day', bg: 'linear-gradient(135deg,#F4F6FB,#FF5A36)', ok: () => true },
-  { id: 'ocean', n: 'Ocean', bg: 'linear-gradient(135deg,#06141B,#22D3EE)', ok: (x) => x.level >= 5, how: 'Reach level 5' },
-  { id: 'rose', n: 'Rose', bg: 'linear-gradient(135deg,#150A12,#FF6FB5)', ok: (x) => x.perfectWeeks >= 1, how: 'Have a perfect week' },
-  { id: 'gold', n: 'Gold', bg: 'linear-gradient(135deg,#120E05,#FFC53D)', ok: (x) => x.level >= 12 || (ME && ME.gifts.some((g) => g.key === 'total50')), how: '50 complete days or level 12' },
+  { id: 'ember', n: 'Ember', c: '#FF5A36', ok: () => true },
+  { id: 'ocean', n: 'Ocean', c: '#0EA5E9', ok: (x) => x.level >= 5, how: 'Reach level 5' },
+  { id: 'rose', n: 'Rose', c: '#EC4899', ok: (x) => x.perfectWeeks >= 1, how: 'Have a perfect week' },
+  { id: 'gold', n: 'Gold', c: '#E0A100', ok: (x) => x.level >= 12 || (ME && ME.gifts.some((g) => g.key === 'total50')), how: '50 complete days or level 12' },
 ];
+/* Light or dark (or follow the phone). Kept on the device too, so the page opens in the right colours before sign-in. */
+const MODES = [['light', '☀️', 'Light'], ['dark', '🌙', 'Dark'], ['auto', '📱', 'Like my phone']];
+const darkQ = window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : null;
+function modePref() { return (S && S.prefs && S.prefs.mode) || store.get('wk_mode') || 'light'; }
+function applyMode() {
+  const want = modePref(), m = want === 'auto' ? (darkQ && darkQ.matches ? 'dark' : 'light') : want;
+  document.documentElement.dataset.mode = m; store.set('wk_mode', want);
+  const meta = $('meta[name=theme-color]'); if (meta) meta.content = m === 'dark' ? '#0B1020' : '#F4F6FB';
+  $$('#modebtn,.lp-mode').forEach((b) => { b.textContent = m === 'dark' ? '🌙' : '☀️'; b.title = m === 'dark' ? 'Dark (tap for light)' : 'Light (tap for dark)'; });
+  return m;
+}
+function toggleMode() {
+  const next = document.documentElement.dataset.mode === 'dark' ? 'light' : 'dark';
+  if (S && S.prefs && CLOUD.email) { S.prefs.mode = next; onChange({ quiet: true }); } else store.set('wk_mode', next);
+  applyMode();
+}
+if (darkQ && darkQ.addEventListener) darkQ.addEventListener('change', () => { if (modePref() === 'auto') applyMode(); });
+document.addEventListener('click', (e) => { if (e.target.closest('#modebtn,.lp-mode')) { e.preventDefault(); toggleMode(); } });
 function applyTheme() {
+  if (S.prefs.theme === 'day') { S.prefs.theme = 'ember'; if (!S.prefs.mode) S.prefs.mode = 'light'; } // the old "Day" theme is now light mode
+  if (!S.prefs.mode) S.prefs.mode = store.get('wk_mode') || 'light';
   const x = stats(), want = THEMES.find((t) => t.id === S.prefs.theme) || THEMES[0];
   const th = want.ok(x) ? want.id : 'ember';
   if (th === 'ember') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = th;
   store.set('wk_theme', th === 'ember' ? '' : th);
-  const m = $('meta[name=theme-color]'); if (m) m.content = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#0B1020';
+  applyMode();
 }
 
 ROUTES.me = function () {
@@ -1936,8 +2086,11 @@ ROUTES.me = function () {
     <div class="card"><h3>🔔 Reminders & sound</h3>
       <div class="setrow"><div class="t"><b>Daily reminder</b><small>${p.reminderHour != null ? `At ${hourLabel(p.reminderHour)}, only if you haven’t logged yet` : 'A nudge if you haven’t logged by your chosen time'}</small></div>${p.reminderHour != null ? `<select id="me-hr" style="width:auto">${hourOpts(p.reminderHour)}</select>` : ''}<label class="switch"><input type="checkbox" id="me-rem" ${p.reminderHour != null ? 'checked' : ''}><span></span></label></div>
       <div class="setrow"><div class="t"><b>Beeps</b><small>Countdown beeps in workouts</small></div><label class="switch"><input type="checkbox" id="me-snd" ${S.prefs.sound ? 'checked' : ''}><span></span></label></div>
-      <div class="setrow"><div class="t"><b>Voice coach</b><small>Reads out each move</small></div><label class="switch"><input type="checkbox" id="me-vc" ${S.prefs.voice ? 'checked' : ''}><span></span></label></div></div>
-    <div class="card"><h3>🎨 Theme</h3><div class="themes">${THEMES.map((t) => `<button style="background:${t.bg}" class="${(S.prefs.theme || 'ember') === t.id ? 'on' : ''}" data-act="theme" data-v="${t.id}" ${t.ok(x) ? '' : 'disabled'} title="${esc(t.ok(x) ? t.n : t.how)}">${t.ok(x) ? esc(t.n) : ''}</button>`).join('')}</div><p class="tiny muted mt">Unlock more themes by levelling up.</p></div>
+      <div class="setrow"><div class="t"><b>Voice coach</b><small>Reads out each move</small></div><label class="switch"><input type="checkbox" id="me-vc" ${S.prefs.voice ? 'checked' : ''}><span></span></label></div>
+      <div class="setrow"><div class="t"><b>Coach language</b><small>Hindi uses your phone’s Hindi voice</small></div><div class="seg" style="width:auto"><button data-act="lang" data-v="en" class="${HI() ? '' : 'on'}">English</button><button data-act="lang" data-v="hi" class="${HI() ? 'on' : ''}">हिंदी</button></div></div>
+      <div class="setrow"><div class="t"><b>9 pm streak alert</b><small>Only if your streak is at risk that day (needs reminders on)</small></div><label class="switch"><input type="checkbox" id="me-sa" ${S.prefs.streakAlert !== false ? 'checked' : ''}><span></span></label></div></div>
+    <div class="card"><h3>🎨 Look</h3><label class="f" style="margin-top:0">Light or dark</label><div class="seg">${MODES.map(([k, e, n]) => `<button data-act="mode" data-v="${k}" class="${modePref() === k ? 'on' : ''}">${e} ${n}</button>`).join('')}</div>
+      <label class="f">Colour</label><div class="themes">${THEMES.map((t) => `<button style="background:${t.c}" class="${(S.prefs.theme || 'ember') === t.id ? 'on' : ''}" data-act="theme" data-v="${t.id}" ${t.ok(x) ? '' : 'disabled'} title="${esc(t.ok(x) ? t.n : t.how)}">${t.ok(x) ? esc(t.n) : ''}</button>`).join('')}</div><p class="tiny muted mt">Unlock more colours by levelling up. The ☀️/🌙 button at the top switches light and dark any time.</p></div>
     <div class="card"><h3>📦 Your data</h3><div class="setrow"><div class="t"><b>Import from the Excel tracker</b><small>Bought the Workout Challenge sheet? Bring your days, meals, body log and tests in.</small></div><label class="btn sm ghost" for="me-x">Import</label><input type="file" id="me-x" accept=".xlsx,.xls,.csv" hidden></div>
       <div class="setrow"><div class="t"><b>Download everything</b><small>Your full log as a spreadsheet (CSV) or backup file</small></div><button class="btn sm ghost" data-act="exportcsv">CSV</button><button class="btn sm ghost" data-act="exportjson">Backup</button></div></div>
     <div class="card"><h3>💬 Help</h3>${ME && ME.whatsapp ? `<a class="btn sm" target="_blank" rel="noopener" href="https://wa.me/${esc(ME.whatsapp.number)}?text=${encodeURIComponent(ME.whatsapp.message)}">Ask us on WhatsApp</a>` : ''} <button class="btn sm ghost" id="me-install" ${INSTALL.evt ? '' : 'hidden'}>📲 Install the app</button>
@@ -1954,11 +2107,14 @@ ROUTES.me.after = function () {
   const hr = $('#me-hr'); if (hr) hr.onchange = () => enableReminders(Number(hr.value));
   $('#me-snd').onchange = (e) => { S.prefs.sound = e.target.checked; onChange({ quiet: true }); };
   $('#me-vc').onchange = (e) => { S.prefs.voice = e.target.checked; onChange({ quiet: true }); };
+  $('#me-sa').onchange = (e) => { S.prefs.streakAlert = e.target.checked; onChange({ quiet: true }); };
   $('#me-x').onchange = (e) => e.target.files[0] && importExcel(e.target.files[0]);
   const ins = $('#me-install'); if (ins) ins.onclick = doInstall;
 };
 ACT.need = (el) => { S.profile.targets.need = Number(el.dataset.v); onChange(); };
 ACT.theme = (el) => { S.prefs.theme = el.dataset.v; onChange(); applyTheme(); };
+ACT.lang = (el) => { S.prefs.lang = el.dataset.v; onChange(); say(el.dataset.v === 'hi' ? 'नमस्ते! मैं आपका कोच हूँ.' : 'Hi! I’m your coach.'); };
+ACT.mode = (el) => { S.prefs.mode = el.dataset.v; onChange(); applyTheme(); };
 ACT.setpw = () => {
   const has = ME && ME.hasPassword;
   sheet(`<h2>${has ? 'Change password' : 'Set a password'}</h2><p class="muted">Then you can sign in with ${esc(CLOUD.email)} and this password, or with a code like now.</p>
@@ -2038,13 +2194,374 @@ async function importExcel(file) {
   } catch (e) { toast(esc(e.message || 'Couldn’t read that file'), 'bad'); }
 }
 
+/* ===== extras.js ===== */
+/* ---------- extras: morning check-in, 10-minute mode, shortcuts, step counter, weekly recap card, journeys,
+   retests, thali logging, group goals, family league, voice notes and pledges ---------- */
+
+/* ===== morning check-in: 10 seconds that shape today's workout ===== */
+const ENERGY = [['😫', 'Drained'], ['😕', 'Low'], ['😐', 'Okay'], ['🙂', 'Good'], ['🤩', 'Great']];
+/** Today's workout size from the check-in: tired or short on sleep → 20% lighter; great and rested → 10% harder. */
+function checkinScale(row) {
+  if (!row || !row.ci) return 1;
+  const sl = num(row.sleep);
+  if (row.ci <= 2 || (sl && sl < 5.5)) return 0.8;
+  if (row.ci >= 5 && (!sl || sl >= 7)) return 1.1;
+  return 1;
+}
+function checkinPill(row) {
+  const k = checkinScale(row);
+  return k < 1 ? '<span>😴 lighter today</span>' : k > 1 ? '<span>⚡ a bit harder today</span>' : '';
+}
+function checkinCard(row) {
+  if (row && row.ci) return '';
+  const hr = new Date().getHours();
+  if (hr >= 15 || (row && (row.w || row.rest))) return '';
+  const sl = num(row && row.sleep);
+  return `<div class="card ckin"><h3>☀️ Morning check-in<span class="sp"></span><span class="muted tiny">10 seconds</span></h3>
+    <label class="f" style="margin-top:0">How long did you sleep?</label><div class="chipsel" id="ck-sl">${[5, 6, 7, 8, 9].map((h) => `<button data-v="${h}" class="${sl === h ? 'on' : ''}">${h === 5 ? '≤5' : h === 9 ? '9+' : h} h</button>`).join('')}</div>
+    <label class="f">How’s your energy?</label><div class="moods" id="ck-en">${ENERGY.map(([e, n], i) => `<button data-v="${i + 1}" title="${n}">${e}</button>`).join('')}</div>
+    <p class="tiny muted mt">Tired days get a lighter workout. Great days get a little extra.</p></div>`;
+}
+function bindCheckin() {
+  const box = $('.ckin'); if (!box) return;
+  let sl = num((dayRow(today()) || {}).sleep) || 0;
+  $$('#ck-sl button', box).forEach((b) => (b.onclick = () => { sl = Number(b.dataset.v); $$('#ck-sl button', box).forEach((x) => x.classList.toggle('on', x === b)); }));
+  $$('#ck-en button', box).forEach((b) => (b.onclick = () => {
+    if (!canLog()) return;
+    const ci = Number(b.dataset.v), r = dayRow(today()) || {};
+    const patch = { ci, mood: r.mood || ci }; if (sl) patch.sleep = sl;
+    setDay(today(), patch); vibrate(20);
+    const k = checkinScale(dayRow(today()));
+    toast(k < 1 ? '😴 Got it. Today’s workout is 20% lighter. Showing up is what counts.' : k > 1 ? '⚡ Feeling great! Today’s workout is a bit harder.' : '👍 Thanks! Today’s plan stays as it is.');
+  }));
+}
+ACT['do-checkin'] = () => { go('today'); setTimeout(() => { const c = $('.ckin'); if (c) c.scrollIntoView({ behavior: 'smooth', block: 'center' }); else toast('Already checked in today ✓'); }, 250); };
+
+/* ===== "Only 10 minutes?": a short version of today's workout ===== */
+function shortSession(sess) {
+  const cool = { label: 'Stretch', rounds: 1, rest: 0, items: [s('quad', 30), s('child', 30)] };
+  if (sess.kind === 'cardio') {
+    const main = sess.blocks.flatMap((b) => b.items).find((it) => it.ex === 'jog') || { ex: 'walk' };
+    return { title: '10-minute ' + (main.ex === 'jog' ? 'run' : 'brisk walk'), kind: 'cardio', blocks: [{ label: 'Warm-up', rounds: 1, rest: 0, items: [s('walk', 60)] }, { label: 'Keep going', rounds: 1, rest: 0, items: [s(main.ex, 480)] }, cool] };
+  }
+  const main = sess.blocks.find((b) => !/warm|cool/i.test(b.label)) || sess.blocks[0];
+  const items = main.items.slice(0, 5);
+  const roundSecs = items.reduce((a, it) => a + (it.secs || (it.reps || 10) * (((EX[it.ex] && EX[it.ex].t) || 2000) / 1000) + 5) + 15, 0);
+  const rounds = clamp(Math.floor(450 / Math.max(60, roundSecs)), 1, 3);
+  return { title: '10-minute ' + sess.title.toLowerCase(), kind: sess.kind === 'flow' || sess.kind === 'rest' ? 'flow' : 'circuit', blocks: [{ label: 'Warm-up', rounds: 1, rest: 5, items: [s('march', 45)] }, { label: 'Quick round', rounds, rest: 30, items }, cool] };
+}
+function quickPlan() {
+  const p = todayPlan();
+  const base = p ? p.session : homeSession('A', 1, 1);
+  const sess = shortSession(base);
+  return { n: p ? p.n : 0, phase: p ? p.phase : 0, phaseName: p ? p.phaseName : '', rest: false, test: false, session: sess, mins: estMinutes(sess), quick: 1 };
+}
+ACT.quick = () => { if (canLog()) startPlayer(quickPlan()); };
+ACT['do-quick'] = ACT.quick;
+ACT['do-play'] = () => { const p = todayPlan(); if (!canLog()) return; if (p) startPlayer(p); else ACT.quick(); };
+ACT['do-water'] = () => { if (!canLog()) return; const v = num((dayRow(today()) || {}).water) + 1; setDay(today(), { water: v }); toast(`💧 ${v} of ${T().water} glasses${v === T().water ? ' · goal hit!' : ''}`); vibrate(15); };
+
+/** Home-screen shortcuts and notification links open /workout#do-<action>. Returns true when it handled one. */
+function doHash() {
+  const m = (location.hash || '').match(/^#do-([a-z]+)$/);
+  if (!m) return false;
+  try { history.replaceState(null, '', location.pathname + location.search + '#today'); } catch (e) { /* ignore */ }
+  if (!CLOUD.email) return true;
+  render();
+  const f = ACT['do-' + m[1]]; if (f) setTimeout(() => f(), 150);
+  return true;
+}
+
+/* ===== step counter: counts steps with the phone's motion sensor while this screen is open ===== */
+const PEDO = { on: false, n: 0, last: 0, avg: 9.8, prev: 0, lock: null, h: null };
+function pedoStep(e) {
+  const a = e.accelerationIncludingGravity; if (!a) return;
+  const m = Math.sqrt((a.x || 0) ** 2 + (a.y || 0) ** 2 + (a.z || 0) ** 2);
+  PEDO.avg = PEDO.avg * 0.95 + m * 0.05; // slow average = gravity
+  const v = m - PEDO.avg, now = Date.now();
+  if (PEDO.prev <= 1.2 && v > 1.2 && now - PEDO.last > 280) { PEDO.n++; PEDO.last = now; const el = $('#pd-n'); if (el) el.textContent = fmt(PEDO.n); }
+  PEDO.prev = v;
+}
+async function pedoStart() {
+  try { if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function' && (await DeviceMotionEvent.requestPermission()) !== 'granted') { toast('Allow motion access to count steps.', 'bad'); return false; } } catch (e) { toast('Allow motion access to count steps.', 'bad'); return false; }
+  if (!('ondevicemotion' in window)) { toast('This phone can’t count steps in the browser. Type them in from your phone’s health app instead.', 'bad'); return false; }
+  PEDO.on = true; PEDO.n = 0; PEDO.last = 0; PEDO.prev = 0;
+  window.addEventListener('devicemotion', pedoStep);
+  try { if (navigator.wakeLock) PEDO.lock = await navigator.wakeLock.request('screen'); } catch (e) { /* none */ }
+  return true;
+}
+function pedoStop() { PEDO.on = false; window.removeEventListener('devicemotion', pedoStep); try { PEDO.lock && PEDO.lock.release(); } catch (e) { /* none */ } PEDO.lock = null; }
+ACT.pedo = async () => {
+  if (!canLog()) return;
+  sheet(`<div class="c"><span style="font-size:52px">🚶</span><h2>Step counter</h2><p class="muted">Keep this screen open and the phone in your hand or pocket while you walk. Steps are added to today when you stop.</p>
+    <div class="pl-timer" id="pd-n">0</div><p class="muted">steps this walk</p><button class="btn big mt" id="pd-go">Start counting</button><button class="link mt" data-close style="display:block;margin:10px auto 0">Close</button>
+    <p class="tiny muted mt">Counts only while the app is open. For all-day steps, type in the number from Google Fit or Apple Health.</p></div>`);
+  const b = $('#pd-go');
+  b.onclick = async () => {
+    if (!PEDO.on) { if (await pedoStart()) { b.textContent = 'Stop & add steps'; vibrate(30); } return; }
+    pedoStop(); const n = PEDO.n; closeSheet();
+    if (n > 0) { const cur = num((dayRow(today()) || {}).steps); setDay(today(), { steps: cur + n }); confetti(50); toast(`👟 +${fmt(n)} steps · ${fmt(cur + n)} today`); }
+  };
+};
+const _closeSheetPedo = closeSheet;
+// eslint-disable-next-line no-func-assign
+closeSheet = function () { if (PEDO.on && $('#pd-n')) pedoStop(); _closeSheetPedo(); };
+
+/* ===== weekly recap card (an image to share on WhatsApp or Stories) ===== */
+function weekNumbers(mon) {
+  const days = [0, 1, 2, 3, 4, 5, 6].map((i) => dayRow(shift(mon, i)));
+  const done = days.filter(isComplete).length, wo = days.filter((x) => x && x.w).length;
+  const mins = days.reduce((a, x) => a + num(x && x.mins) + ((x && x.acts) || []).reduce((b, q) => b + num(q.min), 0), 0);
+  const steps = days.reduce((a, x) => a + num(x && x.steps), 0);
+  const xp = xpAll(); let wxp = 0; for (let i = 0; i < 7; i++) wxp += xp.per[shift(mon, i)] || 0;
+  const grade = done >= 6 ? 'A+' : done >= 5 ? 'A' : done >= 3 ? 'B' : done >= 1 ? 'C' : '–';
+  return { days, done, wo, mins, steps, wxp, grade, logged: days.filter(isLogged).length };
+}
+async function recapImage(mon) {
+  const w = weekNumbers(mon), si = streakInfo(), name = (S.profile.name || CLOUD.email.split('@')[0]).split(' ')[0];
+  const cs = getComputedStyle(document.documentElement), ac = cs.getPropertyValue('--ac').trim() || '#FF5A36', ac2 = cs.getPropertyValue('--ac2').trim() || '#FF8A3D';
+  const W = 1080, H = 1920, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d');
+  try { await Promise.race([document.fonts.load('800 80px Sora'), new Promise((ok) => setTimeout(ok, 1200))]); } catch (e) { /* use the fallback */ }
+  const F = (wt, px) => `${wt} ${px}px Sora, Inter, system-ui, sans-serif`;
+  const g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#0B1020'); g.addColorStop(0.55, '#141B33'); g.addColorStop(1, ac); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  x.globalAlpha = 0.18; x.fillStyle = ac2; x.beginPath(); x.arc(W - 120, 260, 360, 0, 7); x.fill(); x.globalAlpha = 1;
+  x.fillStyle = '#fff'; x.textAlign = 'left';
+  x.font = F(700, 44); x.fillText('🔥 Pandora Workout', 90, 170);
+  x.font = F(600, 40); x.fillStyle = 'rgba(255,255,255,.7)'; x.fillText(`${nice(mon)} – ${nice(shift(mon, 6))}`, 90, 250);
+  x.fillStyle = '#fff'; x.font = F(800, 92); x.fillText(`${name}’s week`, 90, 380);
+  x.font = F(800, 330); x.fillStyle = ac2; x.fillText(w.grade, 80, 720);
+  x.fillStyle = '#fff'; x.font = F(700, 52); x.fillText(w.done >= 5 ? 'Outstanding week!' : w.done >= 3 ? 'Solid week.' : w.done ? 'Small wins add up.' : 'Fresh start next week.', 90, 820);
+  const stat = (i, big, small) => { const cx = 90 + (i % 2) * 470, cy = 900 + Math.floor(i / 2) * 250; x.fillStyle = 'rgba(255,255,255,.08)'; x.beginPath(); x.roundRect ? x.roundRect(cx, cy, 430, 210, 36) : x.rect(cx, cy, 430, 210); x.fill(); x.fillStyle = '#fff'; x.font = F(800, 86); x.fillText(big, cx + 36, cy + 110); x.font = F(500, 38); x.fillStyle = 'rgba(255,255,255,.7)'; x.fillText(small, cx + 36, cy + 170); };
+  stat(0, `${w.done}/7`, 'complete days'); stat(1, String(w.wo), 'workouts'); stat(2, fmt(w.mins), 'minutes moved'); stat(3, `🔥 ${si.cur}`, 'day streak');
+  // the week as 7 circles
+  const y = 1480; for (let i = 0; i < 7; i++) { const cx = 150 + i * 130, dd = w.days[i]; x.beginPath(); x.arc(cx, y, 50, 0, 7); x.fillStyle = isComplete(dd) ? '#B8F23A' : isLogged(dd) ? 'rgba(184,242,58,.35)' : 'rgba(255,255,255,.1)'; x.fill(); x.fillStyle = isComplete(dd) ? '#122000' : '#fff'; x.font = F(700, 34); x.textAlign = 'center'; x.fillText(WD[(i + 1) % 7].slice(0, 2), cx, y + 12); }
+  x.textAlign = 'left'; x.fillStyle = '#fff'; x.font = F(600, 40); x.fillText(`+${fmt(w.wxp)} XP${w.steps ? ' · ' + fmt(w.steps) + ' steps' : ''}`, 90, 1640);
+  x.font = F(700, 44); x.fillText('Join me: pandoratemplates.com/workout', 90, 1790);
+  if (ME && ME.referral) { x.font = F(500, 34); x.fillStyle = 'rgba(255,255,255,.75)'; x.fillText(`₹${ME.referral.friendOff} off with code ${ME.referral.code}`, 90, 1845); }
+  return new Promise((ok) => c.toBlob(ok, 'image/png'));
+}
+async function recapSheet(mon) {
+  mon = mon || monday(shift(today(), -7));
+  S.game.recap = mon; onChange({ quiet: true });
+  sheet(`<h2>📤 Your week, ready to share</h2><div id="rc-img" class="c"><p class="muted">Making your card…</p></div><div class="row mt"><button class="btn sp" id="rc-share">Share</button><a class="btn ghost" id="rc-dl" download="my-week.png">Save</a></div><p class="tiny muted mt c">Shows your first name, stats and streak. Nothing else.</p>`);
+  let blob; try { blob = await recapImage(mon); } catch (e) { blob = null; }
+  if (!blob) { const b = $('#rc-img'); if (b) b.innerHTML = '<p class="muted">Couldn’t make the card on this phone.</p>'; return; }
+  const url = URL.createObjectURL(blob), w = weekNumbers(mon);
+  $('#rc-img').innerHTML = `<img src="${url}" alt="Your week" style="width:min(100%,300px);border-radius:18px;box-shadow:var(--sh)">`;
+  $('#rc-dl').href = url;
+  $('#rc-share').onclick = async () => {
+    const text = `My week on Pandora Workout: ${w.done}/7 complete days, ${w.wo} workouts 💪 ${(ME && ME.referral && ME.referral.link) || 'https://pandoratemplates.com/workout'}`;
+    const file = new File([blob], 'my-week.png', { type: 'image/png' });
+    try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+    window.open(wa(text), '_blank', 'noopener');
+  };
+}
+ACT.recap = () => recapSheet();
+function recapBanner() {
+  const lastMon = monday(shift(today(), -7));
+  if (new Date().getDay() !== 1 && new Date().getDay() !== 2) return '';
+  if (S.game.recap === lastMon || !weekNumbers(lastMon).logged) return '';
+  return `<div class="banner hot"><span class="e">📤</span><div class="sp"><b>Your week in review is ready</b><div class="sm muted">Grade ${weekNumbers(lastMon).grade} · share it with your people</div></div><button class="btn sm" data-act="recap">See it</button></div>`;
+}
+
+/* ===== journeys: your kilometres as trips across India ===== */
+const JOURNEYS = [
+  { e: '🌊', n: 'Marine Drive, end to end', km: 3.6 }, { e: '🌉', n: 'Howrah Bridge → Victoria Memorial', km: 5 }, { e: '🏰', n: 'Charminar → Golconda Fort', km: 11 },
+  { e: '🏖', n: 'Marina Beach, end to end', km: 13 }, { e: '🏙', n: 'Delhi → Gurugram', km: 32 }, { e: '⛰', n: 'Mumbai → Lonavala', km: 83 },
+  { e: '🐘', n: 'Bengaluru → Mysuru', km: 145 }, { e: '🚂', n: 'Mumbai → Pune', km: 150 }, { e: '🕌', n: 'Delhi → Agra (Taj Mahal)', km: 233 },
+  { e: '🏯', n: 'Delhi → Jaipur', km: 280 }, { e: '🌴', n: 'Mumbai → Goa', km: 590 }, { e: '🪔', n: 'Delhi → Varanasi', km: 820 }, { e: '🇮🇳', n: 'Kanyakumari → Kashmir', km: 3700 },
+];
+const STEP_KM = 0.00075;
+function totalKm() { return S.days.reduce((a, d) => a + num(d.steps) * STEP_KM + (d.acts || []).reduce((b, q) => b + num(q.km), 0), 0); }
+function journeyCard() {
+  const km = totalKm(), doneN = JOURNEYS.filter((j) => km >= j.km).length, next = JOURNEYS[doneN];
+  if (doneN > num(S.game.jr)) { const j = JOURNEYS[doneN - 1]; S.game.jr = doneN; setTimeout(() => { onChange({ quiet: true }); if (S.game.jrSeen) { confetti(160); chime(); toast(`${j.e} You’ve covered ${esc(j.n)}!`); } S.game.jrSeen = 1; }, 300); }
+  const prevKm = doneN ? JOURNEYS[doneN - 1].km : 0;
+  return `<div class="card"><h3>🗺 Your journey<span class="sp"></span><span class="pill">${km.toFixed(1)} km</span></h3>
+    ${next ? `<div class="row"><span style="font-size:34px">${next.e}</span><div class="sp"><b>${esc(next.n)}</b><div class="sm muted">${(next.km - km).toFixed(1)} km to go · about ${fmt(Math.ceil((next.km - km) / STEP_KM))} steps</div><div class="bar mt" style="margin-top:8px"><i style="width:${clamp(((km - prevKm) / (next.km - prevKm)) * 100, 2, 100)}%"></i></div></div></div>` : '<p><b>🇮🇳 You’ve walked the length of India!</b></p>'}
+    ${doneN ? `<div class="chips mt">${JOURNEYS.slice(0, doneN).reverse().slice(0, 6).map((j) => `<span class="pill ok">${j.e} ${esc(j.n.split(' → ').pop().split(',')[0])}</span>`).join('')}</div>` : ''}
+    <p class="tiny muted mt">Counts your steps (about 75 cm each) and the km of walks, runs and rides you log.</p></div>`;
+}
+
+/* ===== retests every 2 weeks ===== */
+function retestBanner(plan) {
+  if (plan && plan.test) return '';
+  const last = S.prs.map((p) => p.d).sort().pop();
+  if (!last || diff(last, today()) < 14) return '';
+  return `<div class="banner warn"><span class="e">📈</span><div class="sp"><b>Retest day</b><div class="sm muted">It’s been ${diff(last, today())} days since your last test. See how much stronger you are.</div></div><button class="btn sm" data-act="tests">Test</button></div>`;
+}
+
+/* ===== quick thali ===== */
+const THALI = [['🫓', 'Roti / chapati'], ['🍚', 'Rice (cooked)'], ['🥣', 'Dal (tadka)'], ['🥦', 'Mixed veg sabzi'], ['🧀', 'Paneer butter masala'], ['🍗', 'Chicken curry'], ['🥚', 'Egg curry'], ['🥛', 'Curd (dahi)'], ['🥗', 'Green salad'], ['🥤', 'Buttermilk (chaas)'], ['🧈', 'Ghee'], ['🍮', 'Gulab jamun']];
+const EXTRA_FOODS = { 'Papad (roasted)': ['Papad (roasted)', '1', 35, 2] };
+const foodByName = (n) => FOODS.find((f) => f[0] === n) || EXTRA_FOODS[n];
+ACT.thali = () => {
+  if (!canLog()) return;
+  const d = FOOD_DAY || today(), hr = new Date().getHours(), cnt = {};
+  let slot = hr < 11 ? 'b' : hr < 16 ? 'l' : hr < 19 ? 's' : 'd';
+  const items = THALI.filter(([, n]) => foodByName(n)).concat([['🫓', 'Papad (roasted)']]);
+  sheet(`<h2>🍛 Quick thali</h2><p class="muted">Tap what’s on your plate: one tap per roti or katori.</p><div class="chipsel" id="th-slot">${SLOTS.map(([k, e, n]) => `<button data-v="${k}" class="${slot === k ? 'on' : ''}">${e} ${n}</button>`).join('')}</div>
+    <div class="thali mt">${items.map(([e, n], i) => { const f = foodByName(n); return `<div class="th-i" data-i="${i}"><span class="e">${e}</span><b>${esc(n.split(' (')[0].split(' / ')[0])}</b><small>${esc(f[1])}</small><div class="th-c"><button data-m="${i}" aria-label="Less">−</button><em id="th-${i}">0</em><button data-p="${i}" aria-label="More">+</button></div></div>`; }).join('')}</div>
+    <div class="row mt"><div class="sp"><b id="th-k">0 kcal</b><div class="sm muted" id="th-p">0 g protein</div></div><button class="btn" id="th-ok" disabled>Add thali</button></div>`);
+  $$('#th-slot button').forEach((b) => (b.onclick = () => { slot = b.dataset.v; $$('#th-slot button').forEach((x) => x.classList.toggle('on', x === b)); }));
+  const upd = () => {
+    let k = 0, p = 0; Object.keys(cnt).forEach((i) => { const f = foodByName(items[i][1]); k += f[2] * cnt[i]; p += f[3] * cnt[i]; $('#th-' + i).textContent = cnt[i]; });
+    $('#th-k').textContent = fmt(k) + ' kcal'; $('#th-p').textContent = Math.round(p) + ' g protein'; $('#th-ok').disabled = !k;
+  };
+  const bump = (i, by) => { cnt[i] = Math.max(0, (cnt[i] || 0) + by); if (!cnt[i]) { delete cnt[i]; $('#th-' + i).textContent = 0; } $$('.th-i')[i].classList.toggle('on', !!cnt[i]); vibrate(8); upd(); };
+  $$('.th-i').forEach((el) => { const i = Number(el.dataset.i); el.onclick = (e) => { if (!e.target.closest('button')) bump(i, 1); }; });
+  $$('[data-p]').forEach((b) => holdRepeat(b, () => bump(Number(b.dataset.p), 1)));
+  $$('[data-m]').forEach((b) => holdRepeat(b, () => bump(Number(b.dataset.m), -1)));
+  $('#th-ok').onclick = () => {
+    let k = 0, p = 0; const parts = [];
+    Object.keys(cnt).forEach((i) => { const f = foodByName(items[i][1]); k += f[2] * cnt[i]; p += f[3] * cnt[i]; parts.push(`${cnt[i]} ${f[0].split(' (')[0].split(' / ')[0].toLowerCase()}`); });
+    S.meals.push({ id: uid(), d, slot, n: 'Thali', qty: parts.join(', ').slice(0, 120), kcal: Math.round(k), p: Math.round(p * 10) / 10 });
+    onChange(); closeSheet(); toast(`🍛 Thali added · ${fmt(k)} kcal`);
+  };
+};
+
+/* ===== voice notes (groups and family): record up to 15 seconds ===== */
+const VOICE = { rec: null, chunks: [], t0: 0, timer: null, stream: null };
+function voiceSupported() { return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder); }
+/** Opens the recorder; `send(voice)` posts { id, secs } where the message should go. */
+function voiceSheet(toName, send) {
+  if (!voiceSupported()) return toast('This browser can’t record audio.', 'bad');
+  sheet(`<div class="c"><span style="font-size:52px" id="vr-e">🎤</span><h2>Voice note${toName ? ' to ' + esc(toName) : ''}</h2><p class="muted" id="vr-m">Up to 15 seconds. Say something nice!</p><div class="pl-timer" id="vr-t">0:00</div>
+    <button class="btn big mt" id="vr-go">● Record</button><button class="link mt" data-close style="display:block;margin:10px auto 0">Cancel</button></div>`);
+  const btn = $('#vr-go');
+  const stopAll = () => { clearInterval(VOICE.timer); try { VOICE.stream && VOICE.stream.getTracks().forEach((t) => t.stop()); } catch (e) { /* none */ } };
+  btn.onclick = async () => {
+    if (VOICE.rec && VOICE.rec.state === 'recording') { VOICE.rec.stop(); return; }
+    try { VOICE.stream = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch (e) { return toast('Allow the microphone to record.', 'bad'); }
+    VOICE.chunks = []; VOICE.rec = new MediaRecorder(VOICE.stream); VOICE.t0 = Date.now();
+    VOICE.rec.ondataavailable = (e) => { if (e.data && e.data.size) VOICE.chunks.push(e.data); };
+    VOICE.rec.onstop = async () => {
+      stopAll();
+      const secs = Math.max(1, Math.min(15, Math.round((Date.now() - VOICE.t0) / 1000)));
+      const blob = new Blob(VOICE.chunks, { type: VOICE.rec.mimeType || 'audio/webm' });
+      if (!$('#vr-go')) return; // closed
+      btn.disabled = true; btn.textContent = 'Sending…'; $('#vr-e').textContent = '📤';
+      try {
+        const up = await api('voice/sign', { method: 'POST' });
+        const fd = new FormData(); Object.entries(up.fields).forEach(([k, v]) => fd.append(k, v)); fd.append('file', blob, 'voice');
+        const res = await fetch(up.url, { method: 'POST', body: fd }); if (!res.ok) throw new Error('Upload failed. Try again.');
+        await send({ id: up.id, secs }); closeSheet(); toast('🎤 Sent!'); markCheered();
+      } catch (e) { toast(esc(e.message || 'Couldn’t send'), 'bad'); btn.disabled = false; btn.textContent = '● Record again'; }
+    };
+    VOICE.rec.start(); btn.textContent = '■ Stop & send'; $('#vr-e').textContent = '🔴'; vibrate(30);
+    VOICE.timer = setInterval(() => { const sec = Math.floor((Date.now() - VOICE.t0) / 1000); const t = $('#vr-t'); if (t) t.textContent = '0:' + pad(sec); else { clearInterval(VOICE.timer); if (VOICE.rec.state === 'recording') { VOICE.chunks = []; VOICE.rec.onstop = stopAll; VOICE.rec.stop(); } } if (sec >= 15 && VOICE.rec.state === 'recording') VOICE.rec.stop(); }, 250);
+  };
+}
+const voiceHtml = (m) => `<button class="vplay" data-act="vplay" data-src="${esc(m.voice || '')}">▶ <span>${m.secs || ''}s</span><i></i></button>`;
+let VPLAY = null;
+ACT.vplay = (el) => {
+  if (!el.dataset.src) return toast('Voice notes need internet.', 'bad');
+  if (VPLAY && !VPLAY.paused) { VPLAY.pause(); $$('.vplay.on').forEach((b) => b.classList.remove('on')); if (VPLAY._el === el) return; }
+  VPLAY = new Audio(el.dataset.src); VPLAY._el = el; el.classList.add('on');
+  VPLAY.onended = () => el.classList.remove('on'); VPLAY.play().catch(() => { el.classList.remove('on'); toast('Couldn’t play that voice note', 'bad'); });
+};
+ACT.gvoice = (el) => voiceSheet(el.dataset.n || '', (v) => api('groups/post', { method: 'POST', body: { code: GROUP.code, to: el.dataset.to || undefined, voice: v } }).then(() => loadGroup(GROUP.code)));
+
+/* ===== group shared goal ===== */
+const GOAL_UNITS = { workouts: ['💪', 'workouts'], minutes: ['⏱', 'minutes'], km: ['🗺', 'km'], steps: ['👟', 'steps'], complete: ['✅', 'complete days'] };
+function goalCard(g) {
+  const gl = g.goal;
+  if (!gl) return g.owner ? `<div class="card"><h3>🎯 Group goal</h3><p class="muted sm">Give the group something to chase together: “500 km by month-end” or “100 workouts in 30 days”.</p><button class="btn" data-act="ggoal">Set a group goal</button></div>` : '';
+  const [e, unit] = GOAL_UNITS[gl.kind] || ['🎯', gl.label];
+  return `<div class="card"><h3>🎯 ${fmt(gl.target)} ${unit} together<span class="sp"></span>${gl.done ? '<span class="pill ok">🎉 Done!</span>' : `<span class="pill">${plural(gl.daysLeft, 'day')} left</span>`}</h3>
+    <div class="row"><span style="font-size:30px">${e}</span><div class="sp"><b style="font-family:var(--fh);font-size:20px">${fmt(gl.total)}</b> <span class="muted">/ ${fmt(gl.target)} ${unit}</span><div class="bar mt" style="margin-top:6px;height:12px"><i style="width:${gl.pct}%;background:linear-gradient(90deg,var(--gold),var(--ac))"></i></div></div></div>
+    <div class="mt">${gl.people.filter((p) => p.amount > 0).map((p) => `<span class="pill" style="margin:0 6px 6px 0">${esc(p.name)} · ${fmt(p.amount)}</span>`).join('') || '<span class="muted sm">No one has added to it yet. Be the first!</span>'}</div>
+    <p class="tiny muted">${nice(gl.start)} – ${nice(gl.end)}${g.owner ? ' · <button class="link tiny" data-act="ggoal">Change</button>' : ''}</p></div>`;
+}
+ACT.ggoal = () => {
+  const gl = GROUP && GROUP.goal;
+  sheet(`<h2>🎯 Group goal</h2><p class="muted">Everyone’s logs add up. The group gets a celebration when you hit it.</p>
+    <label class="f">Count</label><select id="gg-k">${Object.entries(GOAL_UNITS).map(([k, [e, n]]) => `<option value="${k}" ${gl && gl.kind === k ? 'selected' : ''}>${e} ${n}</option>`).join('')}</select>
+    <div class="grid2"><div><label class="f">Target</label><input id="gg-t" type="number" inputmode="numeric" value="${gl ? gl.target : 100}"></div><div><label class="f">By</label><input id="gg-e" type="date" value="${gl ? gl.end : shift(today(), 29)}" min="${today()}"></div></div>
+    <p class="tiny muted">Ideas: 100 workouts in 30 days for 5 people · 500 km by the end of the month · 1,00,000 steps this week.</p>
+    <button class="btn big mt" id="gg-ok">Save goal</button>${gl ? '<button class="link mt" id="gg-x" style="display:block;margin:10px auto 0">Remove the goal</button>' : ''}`);
+  $('#gg-ok').onclick = async () => { try { await api('groups/goal', { method: 'POST', body: { code: GROUP.code, kind: $('#gg-k').value, target: Number($('#gg-t').value), start: today(), end: $('#gg-e').value } }); closeSheet(); confetti(60); loadGroup(GROUP.code); } catch (e) { toast(esc(e.message), 'bad'); } };
+  const x = $('#gg-x'); if (x) x.onclick = async () => { try { await api('groups/goal', { method: 'POST', body: { code: GROUP.code, clear: true } }); closeSheet(); loadGroup(GROUP.code); } catch (e) { toast(esc(e.message), 'bad'); } };
+};
+
+/* ===== family league: everyone on one plan ===== */
+let FAMILY = null;
+TG_TABS.family = function () {
+  if (!FAMILY) return '<div class="empty"><span class="e">🏠</span>Loading your family league…</div>';
+  if (!FAMILY.on) return `<div class="card c"><span style="font-size:52px">🏠</span><h2>Family league</h2><p class="muted">Add people to your plan and you’ll all be on one weekly scoreboard.</p><a class="btn" href="#together/plan">Add my people</a></div>`;
+  const f = FAMILY;
+  return `<div class="hero"><h2>🏠 Family league</h2><p class="muted sm">Everyone on your plan, ranked by this week’s XP. Resets every Monday.</p>${f.lastWinner ? `<p class="pill gold">👑 Last week: ${esc(f.lastWinner.name)} (${fmt(f.lastWinner.xp)} XP)</p>` : ''}</div>
+    <div class="card ppl"><h3>🏆 This week</h3>${f.people.map((p, i) => `<div class="li"><span class="e">${['🥇', '🥈', '🥉'][i] || initials(p.name)}</span><div class="t"><b>${esc(p.name)}${p.email === CLOUD.email ? ' (you)' : ''}</b><small>🔥 ${p.streak} · Lv ${p.level} · ${p.todayDone ? '✅ done today' : p.workedOut ? '💪 worked out' : '⏳ not yet today'}</small></div><div class="v">${fmt(p.weekXp)}</div>${p.email !== CLOUD.email ? `<button class="btn sm ghost" data-act="fcheer" data-to="${esc(p.email)}" data-n="${esc(p.name)}">${p.todayDone ? '👏' : '👉'}</button>` : ''}</div>`).join('')}</div>
+    <div class="card"><h3>💬 Family chat<span class="sp"></span>${voiceSupported() ? '<button class="btn sm ghost" data-act="fvoice">🎤</button>' : ''}</h3><div class="feed">${f.feed.length ? f.feed.slice().reverse().map(msgHtml).join('') : '<p class="muted sm c">Cheer each other on. Even a 👏 helps.</p>'}</div>
+      <div class="presets">${PRESET_LIST.map(([k, t]) => `<button data-act="fpre" data-k="${k}">${t}</button>`).join('')}</div></div>`;
+};
+async function loadFamily() { try { FAMILY = await api('family'); FAMILY._at = Date.now(); if (ROUTE === 'together' && SUB.together === 'family') { const y = window.scrollY; render(); window.scrollTo(0, y); } } catch (e) { /* offline */ } }
+const familySend = (body) => api('family/post', { method: 'POST', body }).then(() => { markCheered(); return loadFamily(); }).catch((e) => toast(esc(e.message), 'bad'));
+ACT.fpre = (el) => familySend({ preset: el.dataset.k });
+ACT.fcheer = (el) => {
+  sheet(`<h2>To ${esc(el.dataset.n)}</h2><div class="opts">${PRESET_LIST.slice(0, 7).map(([k, t]) => `<button class="opt" data-k="${k}"><span>${t}</span></button>`).join('')}${voiceSupported() ? '<button class="opt" data-k="voice"><span>🎤 Send a voice note</span></button>' : ''}</div>`);
+  $$('.opt[data-k]').forEach((b) => (b.onclick = () => { if (b.dataset.k === 'voice') return voiceSheet(el.dataset.n, (v) => familySend({ to: el.dataset.to, voice: v })); closeSheet(); familySend({ to: el.dataset.to, preset: b.dataset.k }); toast('Sent 🙌'); }));
+};
+ACT.fvoice = () => voiceSheet('the family', (v) => familySend({ voice: v }));
+
+/* ===== pledge: put money on finishing your challenge ===== */
+function pledgeNow() { const p = ME && ME.pledge; return p && p.list ? p.list.find((x) => x.status === 'active') : null; }
+function pledgeOffer() {
+  const p = ME && ME.pledge, c = CH(), st = chStatus();
+  if (!p || !p.on || !c || !st || st.over || pledgeNow()) return null;
+  if (p.list.some((x) => x.challengeId === c.id)) return null;
+  const start = c.start > today() ? c.start : today(), end = shift(c.start, c.length - 1), days = diff(start, end) + 1;
+  return days >= p.minDays ? { days, needed: Math.ceil((days * p.needPercent) / 100) } : null;
+}
+function pledgeCard(where) {
+  const p = ME && ME.pledge; if (!p) return '';
+  const now = pledgeNow(), recent = p.list.find((x) => ['won', 'lost', 'refunded', 'donated'].includes(x.status) && diff(x.end, today()) <= 10);
+  if (now) {
+    const left = Math.max(0, diff(today(), now.end) + 1), canStill = now.counted + left >= now.needed, pct = clamp((now.counted / now.needed) * 100, 0, 100);
+    return `<div class="card pledge"><h3>💰 ₹${fmt(now.amount)} on the line<span class="sp"></span><span class="pill ${canStill ? 'gold' : ''}">${now.counted}/${now.needed}</span></h3><div class="bar" style="height:12px"><i style="width:${pct}%;background:linear-gradient(90deg,var(--gold),var(--ok))"></i></div>
+      <p class="sm muted mt">${now.counted >= now.needed ? '🏆 Target reached! Keep logging; your refund comes after the last day.' : canStill ? `${now.needed - now.counted} more complete days in the next ${plural(left, 'day')}. Miss it and it goes to ${esc(now.charity)}.` : `Out of reach this time: it goes to ${esc(now.charity)}. Finish strong anyway!`}</p></div>`;
+  }
+  if (recent && where === 'rewards') return `<div class="card"><h3>💰 Last pledge</h3><p>${recent.status === 'won' || recent.status === 'refunded' ? `🏆 You won! ₹${fmt(recent.amount)} ${recent.status === 'refunded' ? 'has been refunded' : 'is on its way back to you'}.` : `You did ${recent.counted} of ${recent.needed} days. ₹${fmt(recent.amount)} ${recent.status === 'donated' ? 'was given' : 'goes'} to ${esc(recent.charity)}.`}</p></div>`;
+  const o = pledgeOffer(); if (!o) return '';
+  if (where === 'today' && (chDay() > 3 || S.game.pledgeNo === CH().id)) return '';
+  return `<div class="card pledge"><h3>💰 Put money on it?</h3><p class="sm muted">People who stake something are far more likely to finish. Pledge ₹${p.amounts.join(' / ₹')}: complete ${o.needed} of the next ${o.days} days and get it all back. Miss, and it goes to <b>${esc(p.charity)}</b>.</p>
+    <div class="row mt"><button class="btn" data-act="pledge">Make a pledge</button>${where === 'today' ? '<button class="link" data-act="pledgeno">Not now</button>' : ''}</div></div>`;
+}
+ACT.pledgeno = () => { S.game.pledgeNo = CH().id; onChange({ quiet: true }); render(); };
+ACT.pledge = () => {
+  const p = ME.pledge, o = pledgeOffer(); if (!o) return toast('Start a challenge with at least ' + p.minDays + ' days left first.', 'bad');
+  let amt = p.amounts[Math.min(1, p.amounts.length - 1)];
+  sheet(`<h2>💰 Make a pledge</h2><p class="muted">Complete <b>${o.needed} of the next ${o.days} days</b> (workout + checkpoints, logged on the day or the next day) and you get every rupee back. Miss it, and it goes to <b>${esc(p.charity)}</b>.</p>
+    <label class="f">Amount</label><div class="chipsel" id="pl-a">${p.amounts.map((a) => `<button data-v="${a}" class="${a === amt ? 'on' : ''}">₹${fmt(a)}</button>`).join('')}</div>
+    <details class="mt tiny muted"><summary>Terms</summary>${esc(p.terms)}</details>
+    <label class="row mt sm"><input type="checkbox" id="pl-ok" style="width:auto"> I understand it can’t be cancelled once paid</label>
+    <button class="btn big mt" id="pl-go" disabled>Pledge ₹${fmt(amt)}</button>`);
+  $$('#pl-a button').forEach((b) => (b.onclick = () => { amt = Number(b.dataset.v); $$('#pl-a button').forEach((x) => x.classList.toggle('on', x === b)); $('#pl-go').textContent = 'Pledge ₹' + fmt(amt); }));
+  $('#pl-ok').onchange = (e) => { $('#pl-go').disabled = !e.target.checked; };
+  $('#pl-go').onclick = async () => {
+    const b = $('#pl-go'); b.disabled = true; b.textContent = 'Opening…';
+    try {
+      const ord = await api('pledge', { method: 'POST', body: { amount: amt, challengeId: CH().id } });
+      let res = {};
+      if (ord.provider === 'razorpay') {
+        await loadRazorpay();
+        res = await new Promise((ok, bad) => { let done = false; const rz = new window.Razorpay(Object.assign({}, ord.clientData, { order_id: ord.orderId, name: 'Pandora Templates', description: `Workout pledge · ${ord.days} days`, prefill: { email: CLOUD.email, name: S.profile.name || '' }, theme: { color: '#FF5A36' }, handler: (x) => { done = true; ok(x); }, modal: { ondismiss: () => { if (!done) bad(new Error('Payment cancelled.')); } } })); rz.open(); });
+      }
+      await api('pledge/verify', { method: 'POST', body: res });
+      await refreshMe(); closeSheet(); confetti(200); chime();
+      sheet(`<div class="celebrate"><span class="e">💰</span><h2>Pledge on!</h2><p class="muted">₹${fmt(amt)} says you finish. ${ord.needed} complete days to win it back. You’ve got this.</p><button class="btn big mt" data-close>Let’s go</button></div>`); render();
+    } catch (e) { toast(esc(e.message), 'bad'); b.disabled = false; b.textContent = 'Try again'; }
+  };
+};
+
 /* ===== landing.js ===== */
 /* ---------- the page people see before signing in (/workout) ---------- */
 let LANDING = null;
 function showLanding() {
   const lp = $('#lp');
   lp.innerHTML = landingHtml();
-  animateFigures(); lpBind();
+  animateFigures(); lpBind(); applyMode();
   api('plans').then((d) => { LANDING = d; lpFill(); }).catch(() => {});
 }
 function lpBind() {
@@ -2058,7 +2575,7 @@ function lpFill() {
   const d = LANDING; if (!d) return;
   const paid = d.plans.filter((p) => !p.isFree), free = d.plans.find((p) => p.isFree);
   const el = $('#lp-plans');
-  if (el) el.innerHTML = `<div class="lp-plan"><b>Free challenge</b><div class="lp-pr">₹0</div><p>${d.freeDays} days, one challenge</p><ul>${((free && free.features) || ['Any of the 6 challenges', 'Workout player, streaks and gifts', 'Join friends’ groups']).map((f) => `<li>${esc(f)}</li>`).join('')}</ul><button class="btn ghost big" data-go="signup">Start free</button></div>` +
+  if (el) el.innerHTML = `<div class="lp-plan"><b>Free challenge</b><div class="lp-pr">₹0</div><p>${d.freeDays} days, one challenge</p><ul>${((free && free.features) || ['Any challenge, including festival specials', 'Workout player, streaks and gifts', 'Join friends’ groups']).map((f) => `<li>${esc(f)}</li>`).join('')}</ul><button class="btn ghost big" data-go="signup">Start free</button></div>` +
     paid.map((p) => `<div class="lp-plan ${p.badge ? 'best' : ''}">${p.badge ? `<span class="bdg">${esc(p.badge)}</span>` : ''}<b>${esc(p.name)}</b><div class="lp-pr">${lpPrice(p.price)}<small>/year</small></div><p>${esc(p.tagline || '')} · about ${lpPrice(Math.round(p.price / 12))} a month${p.seats ? `, or ${lpPrice(Math.round(p.price / (p.seats + 1) / 12))} a person` : ''}</p><ul>${p.features.map((f) => `<li>${esc(f)}</li>`).join('')}</ul><button class="btn big" data-go="signup">Start free, upgrade later</button></div>`).join('');
   const mb = $('#lp-mb'); if (mb && d.moneyBack) mb.innerHTML = d.moneyBack.tiers.slice().sort((a, b) => a.days - b.days).map((t) => `<div class="lp-tier"><b>${t.days}</b><span>days logged</span><em>${t.percent}% back${t.months ? `<br><small>or ${t.months} free months</small>` : ''}</em></div>`).join('');
   const gifts = $('#lp-gifts'); if (gifts && d.milestones.length) gifts.innerHTML = d.milestones.slice(0, 6).map((m) => `<div class="lp-gift"><span>${m.kind === 'streak' ? '🔥' : '✅'} ${m.days}</span><b>${esc(m.title)}</b><small>${esc(m.note || '')}</small></div>`).join('');
@@ -2071,7 +2588,7 @@ function lpFill() {
 function landingHtml() {
   const prog = PROGRAM_IDS.map((id) => { const p = PROGRAMS[id]; return `<div class="lp-prog rv" style="--pc:${p.color}"><span class="e">${p.emoji}</span><b>${esc(p.name)}</b><small>${esc(p.level)} · ${esc(p.gear)}</small><p>${esc(p.blurb)}</p></div>`; }).join('');
   const heat = Array.from({ length: 26 * 7 }, (_, i) => { const r = Math.sin(i * 12.9898) * 43758.5453 % 1; const v = Math.abs(r); return `<i class="${i > 150 ? (v > 0.2 ? 'c' : 'b') : v > 0.55 ? 'c' : v > 0.35 ? 'b' : v > 0.2 ? 'a' : ''}"></i>`; }).join('');
-  return `<header class="lp-nav"><a href="/workout" class="lp-brand"><span class="g-logo">${LOGO}</span><b>Pandora <span>Workout</span></b></a><span class="sp"></span><a href="#" class="lp-in" data-go="login">Sign in</a><a href="#" class="btn sm" data-go="signup">Start free</a></header>
+  return `<header class="lp-nav"><a href="/workout" class="lp-brand"><span class="g-logo">${LOGO}</span><b>Pandora <span>Workout</span></b></a><span class="sp"></span><button class="iconbtn lp-mode" type="button" aria-label="Light or dark"></button><a href="#" class="lp-in" data-go="login">Sign in</a><a href="#" class="btn sm" data-go="signup">Start free</a></header>
   <section class="lp-hero"><div class="lp-hero-t"><p class="lp-eye">14 to 100-day workout challenges · made for India · works offline</p>
     <h1>Roz thoda.<br><span>Saal bhar ka result.</span></h1>
     <p class="lp-sub">A plan for every day, a coach that counts with you, streaks and gifts that make you want to show up, and friends who notice when you don’t.</p>
@@ -2090,7 +2607,7 @@ function landingHtml() {
   <section class="lp-sec lp-pain" id="lp-how"><h2 class="rv">Most challenges don’t fail on day 1.<br><span>They fade out by week 2.</span></h2>
     <div class="lp-grid4">${[['🤷', 'You don’t know what to do today, so you skip it', 'The app shows today’s workout, sized for your level and phase.'], ['📉', 'You can’t see progress, so motivation drops', 'Streaks, levels, tests and a year heatmap show every win.'], ['🙈', 'Nobody notices when you stop', 'Your group sees your tick. Your buddy nudges you.'], ['😩', 'One missed day becomes a missed week', 'Streak freezes and comeback mode get you back on track.']].map(([e, a, b]) => `<div class="lp-card rv"><span class="e">${e}</span><b>${a}</b><p>${b}</p></div>`).join('')}</div></section>
 
-  <section class="lp-sec"><p class="lp-eye c">Pick one. Switch any time.</p><h2 class="c rv">Six challenges, a plan for every single day</h2><p class="lp-lead c">Choose 14 to 100 days. The plan grows through four phases (Foundation, Build, Strengthen, Peak) with recovery days and test days built in.</p><div class="lp-progs">${prog}</div></section>
+  <section class="lp-sec"><p class="lp-eye c">Pick one. Switch any time.</p><h2 class="c rv">Nine challenges, a plan for every single day</h2><p class="lp-lead c">Choose 9 to 100 days, from Couch to 5K to Navratri dance cardio and a Shaadi Fit wedding countdown. The plan grows through four phases (Foundation, Build, Strengthen, Peak) with recovery days and test days built in.</p><div class="lp-progs">${prog}</div></section>
 
   <section class="lp-sec lp-split"><div class="rv"><p class="lp-eye">Your coach, in your pocket</p><h2>Press play. Just follow along.</h2><p class="lp-lead">Every move is animated, timed and counted. Beeps for the last 3 seconds, a voice that tells you what’s next, rest timers, and “too easy / too hard” that tunes the next workout to you.</p>
     <ul class="lp-ticks"><li>40+ moves with form tips and easier/harder swaps</li><li>Intervals for HIIT and Couch to 5K run/walks</li><li>Screen stays on; works with no internet</li><li>Did the gym instead? Log any activity in a tap</li></ul></div>
@@ -2112,7 +2629,7 @@ function landingHtml() {
 
   <section class="lp-sec" id="lp-pricing"><p class="lp-eye c">Simple yearly price. No auto-renew.</p><h2 class="c rv">Start free. Keep going all year.</h2><div class="lp-plans" id="lp-plans"><div class="lp-plan"><b>Loading prices…</b></div></div></section>
 
-  <section class="lp-sec lp-faqs"><h2 class="c">Questions</h2>${[['Do I need a gym or equipment?', 'No. Four of the six challenges need nothing but you. Couch to 5K needs running shoes; yoga, a mat or towel.'], ['I’m a complete beginner. Is this for me?', 'Yes. Start with Walking or Beginner Home Workout. Every move has an easier version, and “too hard” makes the next workouts lighter.'], ['How does sharing with family work?', 'Buy a plan and add people by email from the app: 3 on Basic, 7 on Pro. They sign in with their own email and get everything free for the year.'], ['How does the money-back promise work?', 'On a yearly plan, the days you log on the day (or by the next day) are counted. Reach the target in your year and claim a part of your payment back, or free months instead. We check claims and refund within 7 working days.'], ['Does it work without internet?', 'Yes. After the first visit, install it to your home screen. Workouts and logging work offline and sync when you’re back online.'], ['Is my data private?', 'Your log and photos are private to you. Friends in a group only see your first name, streak, level and today’s tick.'], ['Is this medical advice?', 'No. It’s a planning and tracking app. Check with your doctor before starting a new exercise plan, and stop if anything hurts.']].map(([q, a]) => `<div class="lp-faq"><button>${q}<span>+</span></button><p>${a}</p></div>`).join('')}</section>
+  <section class="lp-sec lp-faqs"><h2 class="c">Questions</h2>${[['Do I need a gym or equipment?', 'No. Most challenges need nothing but you. Couch to 5K needs running shoes; yoga, a mat or towel.'], ['I’m a complete beginner. Is this for me?', 'Yes. Start with Walking or Beginner Home Workout. Every move has an easier version, and “too hard” makes the next workouts lighter.'], ['How does sharing with family work?', 'Buy a plan and add people by email from the app: 3 on Basic, 7 on Pro. They sign in with their own email and get everything free for the year.'], ['How does the money-back promise work?', 'On a yearly plan, the days you log on the day (or by the next day) are counted. Reach the target in your year and claim a part of your payment back, or free months instead. We check claims and refund within 7 working days.'], ['Does it work without internet?', 'Yes. After the first visit, install it to your home screen. Workouts and logging work offline and sync when you’re back online.'], ['Is my data private?', 'Your log and photos are private to you. Friends in a group only see your first name, streak, level and today’s tick.'], ['Is this medical advice?', 'No. It’s a planning and tracking app. Check with your doctor before starting a new exercise plan, and stop if anything hurts.']].map(([q, a]) => `<div class="lp-faq"><button>${q}<span>+</span></button><p>${a}</p></div>`).join('')}</section>
 
   <section class="lp-final"><h2>Your streak starts today.</h2><p>Pick a challenge, press play. We’ll handle the rest.</p><a href="#" class="btn big" data-go="signup"><span>Start <b data-free>14</b> days free</span></a></section>
   <footer class="lp-foot"><span>© Pandora Templates</span><a href="/">pandoratemplates.com</a><a href="/workout_challange">Excel tracker</a><a href="/planner">Wedding planner</a><a id="lp-wa" target="_blank" rel="noopener" hidden>WhatsApp us</a></footer>`;
@@ -2134,6 +2651,7 @@ function showApp() {
 function afterStart() {
   saveAuthForWorker();
   pollInbox();
+  if (doHash()) return;
   const join = store.get('wk_join');
   if (join) { joinFlow(join); return; }
   if (!CH() && !S.days.length && !S.challenges.length) setTimeout(() => setupWizard(), 500);

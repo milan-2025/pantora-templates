@@ -89,6 +89,7 @@ export interface Config {
     'workout-feed': WorkoutFeed;
     'workout-photos': WorkoutPhoto;
     'workout-claims': WorkoutClaim;
+    'workout-pledges': WorkoutPledge;
     'workout-logins': WorkoutLogin;
     users: User;
     'payload-kv': PayloadKv;
@@ -120,6 +121,7 @@ export interface Config {
     'workout-feed': WorkoutFeedSelect<false> | WorkoutFeedSelect<true>;
     'workout-photos': WorkoutPhotosSelect<false> | WorkoutPhotosSelect<true>;
     'workout-claims': WorkoutClaimsSelect<false> | WorkoutClaimsSelect<true>;
+    'workout-pledges': WorkoutPledgesSelect<false> | WorkoutPledgesSelect<true>;
     'workout-logins': WorkoutLoginsSelect<false> | WorkoutLoginsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -1538,6 +1540,7 @@ export interface WorkoutProfile {
       }[]
     | null;
   reminderHour?: number | null;
+  lastAlertDay?: string | null;
   rev?: number | null;
   adminNote?: string | null;
   /**
@@ -1620,6 +1623,11 @@ export interface WorkoutGroup {
         id?: string | null;
       }[]
     | null;
+  goalKind?: ('workouts' | 'minutes' | 'km' | 'steps' | 'complete') | null;
+  goalTarget?: number | null;
+  goalStart?: string | null;
+  goalEnd?: string | null;
+  goalDoneAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1629,12 +1637,14 @@ export interface WorkoutGroup {
  */
 export interface WorkoutFeed {
   id: string;
-  kind?: ('cheer' | 'nudge' | 'msg' | 'event') | null;
+  kind?: ('cheer' | 'nudge' | 'msg' | 'event' | 'voice' | 'alert') | null;
   groupCode?: string | null;
   toEmail?: string | null;
   fromEmail?: string | null;
   fromName?: string | null;
   text?: string | null;
+  voiceId?: string | null;
+  secs?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1677,6 +1687,32 @@ export interface WorkoutClaim {
   /**
    * Shown to the person if you reject the claim.
    */
+  adminNote?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * People who put money on finishing a challenge. Won: refund the amount in the Razorpay dashboard, then set Status to Refunded. Lost: give it to the charity named in Workout app settings, then set Status to Donated. Settled automatically the day after the challenge ends.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "workout-pledges".
+ */
+export interface WorkoutPledge {
+  id: string;
+  email: string;
+  amount?: number | null;
+  program?: string | null;
+  challengeId?: string | null;
+  start?: string | null;
+  end?: string | null;
+  needPercent?: number | null;
+  needed?: number | null;
+  counted?: number | null;
+  charity?: string | null;
+  status?: ('pending' | 'active' | 'won' | 'lost' | 'refunded' | 'donated' | 'cancelled') | null;
+  orderId?: string | null;
+  paymentId?: string | null;
+  settledAt?: string | null;
   adminNote?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -1832,6 +1868,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'workout-claims';
         value: string | WorkoutClaim;
+      } | null)
+    | ({
+        relationTo: 'workout-pledges';
+        value: string | WorkoutPledge;
       } | null)
     | ({
         relationTo: 'workout-logins';
@@ -2713,6 +2753,7 @@ export interface WorkoutProfilesSelect<T extends boolean = true> {
         id?: T;
       };
   reminderHour?: T;
+  lastAlertDay?: T;
   rev?: T;
   adminNote?: T;
   state?: T;
@@ -2745,6 +2786,11 @@ export interface WorkoutGroupsSelect<T extends boolean = true> {
         joinedAt?: T;
         id?: T;
       };
+  goalKind?: T;
+  goalTarget?: T;
+  goalStart?: T;
+  goalEnd?: T;
+  goalDoneAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2759,6 +2805,8 @@ export interface WorkoutFeedSelect<T extends boolean = true> {
   fromEmail?: T;
   fromName?: T;
   text?: T;
+  voiceId?: T;
+  secs?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2792,6 +2840,29 @@ export interface WorkoutClaimsSelect<T extends boolean = true> {
   termEnd?: T;
   paymentId?: T;
   status?: T;
+  adminNote?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "workout-pledges_select".
+ */
+export interface WorkoutPledgesSelect<T extends boolean = true> {
+  email?: T;
+  amount?: T;
+  program?: T;
+  challengeId?: T;
+  start?: T;
+  end?: T;
+  needPercent?: T;
+  needed?: T;
+  counted?: T;
+  charity?: T;
+  status?: T;
+  orderId?: T;
+  paymentId?: T;
+  settledAt?: T;
   adminNote?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -3078,6 +3149,15 @@ export interface WorkoutSetting {
       }[]
     | null;
   moneyBackTerms?: string | null;
+  /**
+   * Off until you've filled in the charity and terms.
+   */
+  pledgeOn?: boolean | null;
+  pledgeNeed?: number | null;
+  pledgeMinDays?: number | null;
+  pledgeAmounts?: string | null;
+  pledgeCharity?: string | null;
+  pledgeTerms?: string | null;
   refOn?: boolean | null;
   refFriendOff?: number | null;
   refReward?: ('days' | 'seat') | null;
@@ -3238,6 +3318,12 @@ export interface WorkoutSettingsSelect<T extends boolean = true> {
         id?: T;
       };
   moneyBackTerms?: T;
+  pledgeOn?: T;
+  pledgeNeed?: T;
+  pledgeMinDays?: T;
+  pledgeAmounts?: T;
+  pledgeCharity?: T;
+  pledgeTerms?: T;
   refOn?: T;
   refFriendOff?: T;
   refReward?: T;
