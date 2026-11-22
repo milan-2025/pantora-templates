@@ -184,6 +184,17 @@ ACT.cp = (el) => { if (!canLog()) return; checkpointSheet(el.dataset.k); };
 ACT.tests = () => testsSheet();
 ACT.upgrade = () => upgradeSheet();
 
+/* + / − buttons: tap for one step, keep pressing to count fast (speeds up the longer you hold). */
+function holdRepeat(btn, step) {
+  let t = null, n = 0;
+  const stop = () => { clearTimeout(t); t = null; };
+  const tick = () => { step(); n++; vibrate(5); t = setTimeout(tick, n < 6 ? 160 : n < 20 ? 80 : 40); };
+  btn.addEventListener('pointerdown', (e) => { e.preventDefault(); stop(); n = 0; step(); vibrate(8); t = setTimeout(tick, 400); try { btn.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ } });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach((ev) => btn.addEventListener(ev, stop));
+  btn.addEventListener('contextmenu', (e) => e.preventDefault());
+  btn.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); step(); } });
+}
+
 function checkpointSheet(k) {
   const t = today(), r = dayRow(t) || {};
   if (k === 'workout') {
@@ -197,7 +208,7 @@ function checkpointSheet(k) {
   if (k === 'water') { setDay(t, { water: v + 1 }); toast(`💧 ${v + 1} of ${T().water} glasses${v + 1 === T().water ? ' · goal hit!' : ''}`); vibrate(15); return; }
   sheet(`<h2>${cfg.e} ${cfg.n}</h2><div class="stepper"><button id="st-m">−</button><b id="st-v">${k === 'steps' ? fmt(v) : v}</b><button id="st-p">+</button></div><p class="c muted">${cfg.u} · goal ${k === 'steps' ? fmt(T()[k]) : T()[k]}</p>${k === 'steps' ? '<input id="st-in" type="number" inputmode="numeric" placeholder="Or type the number from your phone">' : ''}<button class="btn big mt" id="st-ok">Save</button>`);
   const show = () => { $('#st-v').textContent = k === 'steps' ? fmt(v) : v; };
-  $('#st-m').onclick = () => { v = Math.max(0, v - cfg.step); show(); }; $('#st-p').onclick = () => { v = Math.min(cfg.max, v + cfg.step); show(); };
+  holdRepeat($('#st-m'), () => { v = Math.max(0, v - cfg.step); show(); }); holdRepeat($('#st-p'), () => { v = Math.min(cfg.max, v + cfg.step); show(); });
   if ($('#st-in')) $('#st-in').oninput = (e) => { v = num(e.target.value); show(); };
   $('#st-ok').onclick = () => { setDay(t, { [k]: v || null }); closeSheet(); };
 }

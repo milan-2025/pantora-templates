@@ -75,6 +75,7 @@ export interface Config {
     'planner-plans': PlannerPlan;
     'planner-history': PlannerHistory;
     'planner-logins': PlannerLogin;
+    'app-passwords': AppPassword;
     affiliates: Affiliate;
     pages: Page;
     posts: Post;
@@ -105,6 +106,7 @@ export interface Config {
     'planner-plans': PlannerPlansSelect<false> | PlannerPlansSelect<true>;
     'planner-history': PlannerHistorySelect<false> | PlannerHistorySelect<true>;
     'planner-logins': PlannerLoginsSelect<false> | PlannerLoginsSelect<true>;
+    'app-passwords': AppPasswordsSelect<false> | AppPasswordsSelect<true>;
     affiliates: AffiliatesSelect<false> | AffiliatesSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
@@ -1058,6 +1060,20 @@ export interface PlannerLogin {
   createdAt: string;
 }
 /**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "app-passwords".
+ */
+export interface AppPassword {
+  id: string;
+  app: 'planner' | 'workout';
+  email: string;
+  hash: string;
+  failed?: number | null;
+  lockedUntil?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Build any page from blocks. The page with slug 'home' is the homepage.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1486,6 +1502,10 @@ export interface WorkoutProfile {
   bonusDays?: number | null;
   photosOverride?: number | null;
   bonusFreezes?: number | null;
+  /**
+   * Earned before buying: added to their plan when they buy.
+   */
+  bonusSeats?: number | null;
   refCode?: string | null;
   referredBy?: string | null;
   refCount?: number | null;
@@ -1557,6 +1577,16 @@ export interface WorkoutProfile {
     | boolean
     | null;
   push?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  orderId?: string | null;
+  order?:
     | {
         [k: string]: unknown;
       }
@@ -1746,6 +1776,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'planner-logins';
         value: string | PlannerLogin;
+      } | null)
+    | ({
+        relationTo: 'app-passwords';
+        value: string | AppPassword;
       } | null)
     | ({
         relationTo: 'affiliates';
@@ -2284,6 +2318,19 @@ export interface PlannerLoginsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "app-passwords_select".
+ */
+export interface AppPasswordsSelect<T extends boolean = true> {
+  app?: T;
+  email?: T;
+  hash?: T;
+  failed?: T;
+  lockedUntil?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "affiliates_select".
  */
 export interface AffiliatesSelect<T extends boolean = true> {
@@ -2641,6 +2688,7 @@ export interface WorkoutProfilesSelect<T extends boolean = true> {
   bonusDays?: T;
   photosOverride?: T;
   bonusFreezes?: T;
+  bonusSeats?: T;
   refCode?: T;
   referredBy?: T;
   refCount?: T;
@@ -2671,6 +2719,8 @@ export interface WorkoutProfilesSelect<T extends boolean = true> {
   logged?: T;
   completed?: T;
   push?: T;
+  orderId?: T;
+  order?: T;
   updatedAt?: T;
   createdAt?: T;
 }

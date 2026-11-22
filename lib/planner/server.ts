@@ -2,6 +2,7 @@ import "server-only";
 import { randomBytes, randomInt } from "crypto";
 import type { Payload, Where } from "payload";
 import { sendWithBrevo } from "@/lib/brevo";
+import { PasswordError, checkLogin, hasPassword, removePassword, setPassword } from "@/lib/auth/passwords";
 import { applyPromo, findAffiliate } from "@/lib/pricing";
 import {
   LIMIT_KEYS, PlannerError, applyOps, codesMatch, counts, daysLeft, describeOps, effectiveStatus, hashCode, makeToken,
@@ -133,6 +134,48 @@ export async function verifyLogin(payload: Payload, rawEmail: unknown, rawCode: 
   }
   await payload.delete({ collection: "planner-logins", where: { email: { equals: email } }, overrideAccess: true });
   return { email, token: makeToken(secret(), email, SESSION_DAYS * 864e5) };
+}
+
+/* ---------- optional password (a code always works too) ---------- */
+
+const asPlannerError = (e: unknown) => (e instanceof PasswordError ? new PlannerError(e.message, e.status) : e);
+
+/** Email + password sign-in, for people who have set a password in Account. */
+export async function passwordLogin(payload: Payload, rawEmail: unknown, password: unknown) {
+  const email = normEmail(rawEmail);
+  if (!validEmail(email)) throw new PlannerError("Please enter a valid email");
+  try { await checkLogin(payload, "planner", email, password); } catch (e) { throw asPlannerError(e); }
+  return { email, token: makeToken(secret(), email, SESSION_DAYS * 864e5) };
+}
+
+export const plannerHasPassword = (payload: Payload, email: string) => hasPassword(payload, "planner", email);
+
+/** Sets, changes or removes the signed-in person's password, and tells them by email. */
+export async function setMyPassword(payload: Payload, email: string, password: unknown, remove = false) {
+  let changed = false;
+  try {
+    if (remove) await removePassword(payload, "planner", email);
+    else changed = (await setPassword(payload, "planner", email, password)).changed;
+  } catch (e) { throw asPlannerError(e); }
+  const what = remove ? "removed" : changed ? "changed" : "set";
+  await sendWithBrevo({
+    to: [{ email }],
+    subject: `Your wedding planner password was ${what}`,
+    html: emailShell(`<h2 style="margin:0 0 8px;color:#3B1F4A">Password ${what}</h2><p>The password for your Pandora Wedding Planner account (${esc(email)}) was just ${what}.</p>
+      <p>${remove ? "You can still sign in any time with a code sent to this email." : "You can now sign in with this email and your password, or with a code sent to this email."}</p>
+      <p style="font-size:13px;color:#666">Wasn't you? Sign in with a code at ${esc(siteUrl())}/planner/login, then set a new password in Account.</p>`),
+    text: `The password for your Pandora Wedding Planner account (${email}) was just ${what}. Wasn't you? Sign in with a code and set a new password in Account.`,
+  }).catch((e) => console.error("[planner-password-email]", e));
+  return { ok: true, hasPassword: !remove };
+}
+
+/** A fresh session token, so people who keep using the planner stay signed in (sent back by /me about once a day). */
+export function refreshedToken(req: Request, subject: string) {
+  const h = req.headers.get("authorization") ?? "";
+  const raw = h.startsWith("Bearer ") ? h.slice(7) : "";
+  const exp = Number(raw.split(".")[1] ?? 0);
+  if (subject.startsWith("support:") || !exp) return undefined;
+  return exp - Date.now() < (SESSION_DAYS - 1) * 864e5 ? makeToken(secret(), subject, SESSION_DAYS * 864e5) : undefined;
 }
 
 /** The signed-in email (or "support:<plannerId>") from the request's bearer token. */

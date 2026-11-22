@@ -91,7 +91,7 @@ function setSync(s) {
 }
 
 async function refreshMe() {
-  try { ME = await api('me'); saveCache(); applyTheme(); renderNavBadges(); return ME; } catch (e) { if (e.status === 401) signOut(true); return ME; }
+  try { ME = await api('me'); if (ME.token) store.set('wk_token', ME.token); saveCache(); applyTheme(); renderNavBadges(); return ME; } catch (e) { if (e.status === 401) signOut(true); return ME; }
 }
 
 /* ----- sign in (email + 6-digit code) ----- */
@@ -100,16 +100,28 @@ function gate(mode) {
   sheet(`<div class="gate">
     <div class="g-logo">${LOGO}</div>
     <h2>${mode === 'login' ? 'Welcome back' : 'Start your free challenge'}</h2>
-    <p class="muted">${mode === 'login' ? 'We’ll email you a code. No password.' : `${(LANDING && LANDING.freeDays) || 14} days free, no card needed. We’ll email you a code to sign in.`}</p>
+    <p class="muted">${mode === 'login' ? 'Sign in with a code we email you, or your password if you set one.' : `${(LANDING && LANDING.freeDays) || 14} days free, no card needed. We’ll email you a code to sign in.`}</p>
     ${ref ? `<p class="pill ok">🎁 Friend’s referral applied</p>` : ''}
-    <form id="g1"><input type="email" id="gm" placeholder="you@email.com" autocomplete="email" required><button class="btn big">Email me a code</button></form>
+    <form id="g1"><input type="email" id="gm" placeholder="you@email.com" autocomplete="email" required><div class="pwrow" id="gpw" hidden><input type="password" id="gp" placeholder="Password" autocomplete="current-password"><button type="button" class="pweye" id="geye">Show</button></div><button class="btn big" id="g1b">Email me a code</button><button type="button" class="link" id="gmode">Sign in with a password instead</button></form>
     <form id="g2" hidden><p class="muted">Code sent to <b id="gm2"></b> (check spam too)</p><input id="gc" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-digit code" required><button class="btn big">Sign in</button><button type="button" class="link" id="gback">Use another email</button></form>
     <p class="tiny muted">By continuing you agree to our <a href="/terms" target="_blank">terms</a>. This app is for fitness tracking, not medical advice.</p>
   </div>`);
+  let pw = false;
+  const label = () => (pw ? 'Sign in' : 'Email me a code');
+  const setMode = (on) => { pw = on; store.set('wk_pwmode', on ? '1' : '0'); $('#gpw').hidden = !on; $('#gp').required = on; $('#g1b').textContent = label(); $('#gmode').textContent = on ? 'Email me a code instead' : 'Sign in with a password instead'; };
+  setMode(mode === 'login' && store.get('wk_pwmode') === '1');
+  $('#gmode').onclick = () => { setMode(!pw); (pw ? $('#gp') : $('#gm')).focus(); };
+  $('#geye').onclick = (e) => { const show = $('#gp').type === 'password'; $('#gp').type = show ? 'text' : 'password'; e.target.textContent = show ? 'Hide' : 'Show'; };
   $('#g1').onsubmit = async (e) => {
-    e.preventDefault(); const b = e.target.querySelector('button'); b.disabled = true; b.textContent = 'Sending…';
-    try { const r = await api('auth/start', { method: 'POST', body: { email: $('#gm').value } }); $('#g1').hidden = true; $('#g2').hidden = false; $('#gm2').textContent = r.email; $('#gc').focus(); if (r.devCode) $('#gc').value = r.devCode; }
-    catch (err) { toast(esc(err.message), 'bad'); } finally { b.disabled = false; b.textContent = 'Email me a code'; }
+    e.preventDefault(); const b = $('#g1b'); b.disabled = true; b.textContent = pw ? 'Signing in…' : 'Sending…';
+    try {
+      if (pw) {
+        const r = await api('auth/password', { method: 'POST', body: { email: $('#gm').value, password: $('#gp').value } });
+        store.set('wk_token', r.token); store.set('wk_email', r.email); closeSheet(); await startApp(r.email); return;
+      }
+      const r = await api('auth/start', { method: 'POST', body: { email: $('#gm').value } }); $('#g1').hidden = true; $('#g2').hidden = false; $('#gm2').textContent = r.email; $('#gc').focus(); if (r.devCode) $('#gc').value = r.devCode;
+    }
+    catch (err) { toast(esc(err.message), 'bad'); } finally { b.disabled = false; b.textContent = label(); }
   };
   $('#gback').onclick = () => { $('#g1').hidden = false; $('#g2').hidden = true; };
   $('#g2').onsubmit = async (e) => {
@@ -129,6 +141,7 @@ async function startApp(email) {
   if (c) { S = normalize(c.state); CLOUD.base = c.base; CLOUD.rev = c.rev || 0; ME = c.me || null; showApp(); }
   try {
     const [me, st] = await Promise.all([api('me'), api('state?since=-1')]);
+    if (me.token) store.set('wk_token', me.token); // still using the app: stay signed in
     ME = me;
     const pending = c ? diffOps(CLOUD.base, strip(S)).filter((o) => !o.replace) : [];
     CLOUD.base = strip(normalize(copy(st.state || {}))); CLOUD.rev = st.rev;

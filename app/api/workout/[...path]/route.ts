@@ -6,7 +6,7 @@ import { WorkoutError, type WOp } from "@/lib/workout/core";
 import {
   accessOf, addMember, buddyAction, buddyView, claimMoneyBack, confirmPhoto, createGroup, deletePhoto, emailOf, getOrCreateProfile, getPlans, getSettings,
   getState, groupPost, groupPreview, groupView, inbox, joinGroup, leaveGroup, listPhotos, markWorkoutPaid, me, quote, removeMember, requestBuddy, saveState,
-  sendReminders, signPhoto, startLogin, subscribePush, verifyLogin,
+  passwordLogin, refreshedToken, sendReminders, setMyPassword, signPhoto, startLogin, subscribePush, verifyLogin, workoutHasPassword,
 } from "@/lib/workout/server";
 
 /**
@@ -51,6 +51,11 @@ async function handle(req: Request, ctx: Ctx) {
     await getOrCreateProfile(payload, r.email, { ref: b.ref, source: b.source });
     return r;
   }
+  if (path === "auth/password" && m === "POST") {
+    limit(req, "pw", 20, 15 * 60_000);
+    if (!rateLimit(`workout-pw-email:${String(b.email).toLowerCase()}`, 10, 15 * 60_000)) throw new WorkoutError("Too many tries. Sign in with a code, or wait a few minutes.", 429);
+    return passwordLogin(payload, b.email, b.password);
+  }
   if (path === "plans" && m === "GET") {
     const [plans, s] = await Promise.all([getPlans(payload), getSettings(payload)]);
     return {
@@ -72,7 +77,12 @@ async function handle(req: Request, ctx: Ctx) {
   if (!email) throw new WorkoutError("Please sign in again", 401);
 
   switch (`${m} ${path}`) {
-    case "GET me": return me(payload, email);
+    case "GET me": {
+      const [out, hasPassword] = await Promise.all([me(payload, email), workoutHasPassword(payload, email)]);
+      const token = refreshedToken(req, email);
+      return { ...(out as object), hasPassword, ...(token ? { token } : {}) };
+    }
+    case "POST password": limit(req, "setpw", 10, 15 * 60_000); return setMyPassword(payload, email, b.password, b.remove === true);
     case "GET state": return getState(payload, email, Number(url.searchParams.get("since") ?? -1));
     case "PUT state": {
       limit(req, "save", 240, 60_000);

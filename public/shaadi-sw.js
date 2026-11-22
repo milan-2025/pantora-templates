@@ -9,7 +9,7 @@
  * - Fonts, the QR library and photos the editor already showed are kept so the design looks right offline.
  * Served from the site root because a worker may only control paths at or below its own folder.
  */
-const VERSION = "shaadi-v1";
+const VERSION = "shaadi-v2";
 const SHELL = VERSION + "-shell";
 const DATA = "shaadi-data";
 const FILES = "shaadi-files";

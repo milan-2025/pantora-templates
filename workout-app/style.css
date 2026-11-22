@@ -139,3 +139,13 @@ label.f{display:block;font-size:13px;font-weight:600;color:var(--mu);margin:12px
 .fade-in{animation:fin .35s ease}@keyframes fin{from{opacity:0;transform:translateY(8px)}}
 .pulse{animation:pls 1.6s ease-in-out infinite}@keyframes pls{0%,100%{box-shadow:0 0 0 0 var(--ring)}50%{box-shadow:0 0 0 10px transparent}}
 @media (max-width:380px){.cps{gap:5px}.cp .e{font-size:19px}.cp small{font-size:9.5px}.hero .big{font-size:28px}}
+/* password field with a show/hide button */
+.pwrow{display:flex;gap:8px;align-items:stretch}.pwrow[hidden]{display:none}.pwrow input{flex:1;min-width:0}
+.pweye{border:1px solid var(--line,rgba(255,255,255,.15));background:transparent;color:inherit;border-radius:12px;padding:0 12px;font-size:13px;cursor:pointer}
+/* Quick taps on buttons must not zoom the page (double-tap zoom on phones). Pinch zoom still works. */
+html{touch-action:manipulation}
+button,a,label,input,select,[data-act],.btn{touch-action:manipulation}
+.stepper button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.stepper b{font-variant-numeric:tabular-nums}
+input,select,textarea{font-size:16px}/* 16px+ stops iPhones zooming in when a field is tapped */
+[hidden]{display:none!important}

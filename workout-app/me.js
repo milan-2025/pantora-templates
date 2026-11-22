@@ -18,6 +18,7 @@ ROUTES.me = function () {
   const a = ME && ME.access, x = stats(), p = S.profile;
   const planLine = !a ? '' : a.kind === 'free' ? (a.status === 'new' ? `Free ${ME.limits.freeDays}-day challenge (starts when you begin)` : a.canLog ? `Free challenge · ${plural(a.daysLeft, 'day')} left` : 'Free challenge ended') : a.kind === 'member' ? `On ${esc(a.ownerEmail.split('@')[0])}’s ${esc(a.plan.name)} plan · until ${niceLong(a.expiresAt)}` : `${esc(a.plan.name)} · ${a.isPaid ? 'until ' + niceLong(a.expiresAt) : 'ended ' + niceLong(a.expiresAt)}`;
   return `<div class="card"><h3>👤 You</h3><div class="grid2"><div><label class="f">Name</label><input id="me-n" value="${esc(p.name)}" maxlength="40"></div><div><label class="f">WhatsApp (optional)</label><input id="me-ph" value="${esc(p.phone || '')}" inputmode="tel" placeholder="98xxxxxxxx"></div></div><p class="tiny muted mt">${esc(CLOUD.email)} · your WhatsApp is only shared with a buddy if you both agree.</p></div>
+    <div class="card"><h3>🔑 Password</h3><div class="setrow"><div class="t"><b>${ME && ME.hasPassword ? 'Password is set' : 'Sign in with a password (optional)'}</b><small>${ME && ME.hasPassword ? 'Sign in with your email and password, or with an emailed code.' : 'Right now you sign in with an emailed code. Codes keep working either way.'}</small></div><button class="btn sm ghost" data-act="setpw">${ME && ME.hasPassword ? 'Change' : 'Set'}</button></div></div>
     <div class="card"><h3>🎟 Plan</h3><p>${planLine}</p>${a && a.kind !== 'member' ? `<button class="btn sm" data-act="upgrade">${a.kind === 'free' ? 'See plans' : a.isPaid ? 'Renew or upgrade' : 'Renew'}</button>` : ''}${ME && ME.bonus && (ME.bonus.days || ME.bonus.seats) ? `<p class="sm muted mt">🎁 Saved for your plan: ${ME.bonus.days ? ME.bonus.days + ' bonus days' : ''}${ME.bonus.days && ME.bonus.seats ? ' and ' : ''}${ME.bonus.seats ? ME.bonus.seats + ' extra friend place' : ''}.</p>` : ''}</div>
     <div class="card"><h3>✅ Daily goals</h3><div class="grid2"><div><label class="f">💧 Water (glasses)</label><input type="number" data-t="water" value="${p.targets.water}"></div><div><label class="f">😴 Sleep (hours)</label><input type="number" step="0.5" data-t="sleep" value="${p.targets.sleep}"></div><div><label class="f">👟 Steps</label><input type="number" step="500" data-t="steps" value="${p.targets.steps}"></div><div><label class="f">🧘 Stretching (min)</label><input type="number" data-t="mob" value="${p.targets.mob}"></div></div>
       <label class="f">Checkpoints for a complete day</label><div class="chipsel">${[3, 4, 5].map((n) => `<button data-act="need" data-v="${n}" class="${p.targets.need === n ? 'on' : ''}">${n} of 5</button>`).join('')}</div></div>
@@ -47,6 +48,20 @@ ROUTES.me.after = function () {
 };
 ACT.need = (el) => { S.profile.targets.need = Number(el.dataset.v); onChange(); };
 ACT.theme = (el) => { S.prefs.theme = el.dataset.v; onChange(); applyTheme(); };
+ACT.setpw = () => {
+  const has = ME && ME.hasPassword;
+  sheet(`<h2>${has ? 'Change password' : 'Set a password'}</h2><p class="muted">Then you can sign in with ${esc(CLOUD.email)} and this password, or with a code like now.</p>
+    <form id="pw-f"><div class="pwrow"><input type="password" id="pw1" minlength="8" required autocomplete="new-password" placeholder="At least 8 characters"><button type="button" class="pweye" id="pw-eye">Show</button></div><input type="password" id="pw2" minlength="8" required autocomplete="new-password" placeholder="Type it again" class="mt"><button class="btn big mt">Save password</button></form>
+    ${has ? '<button class="link" id="pw-rm">Remove my password (use codes only)</button>' : ''}`);
+  $('#pw-eye').onclick = (e) => { const show = $('#pw1').type === 'password'; $('#pw1').type = $('#pw2').type = show ? 'text' : 'password'; e.target.textContent = show ? 'Hide' : 'Show'; };
+  $('#pw-f').onsubmit = async (e) => {
+    e.preventDefault(); if ($('#pw1').value !== $('#pw2').value) return toast('The two passwords don’t match', 'bad');
+    const b = e.target.querySelector('.btn'); b.disabled = true;
+    try { await api('password', { method: 'POST', body: { password: $('#pw1').value } }); ME.hasPassword = true; store.set('wk_pwmode', '1'); saveCache(); closeSheet(); toast(has ? 'Password changed ✔' : 'Password set ✔'); render(); }
+    catch (err) { toast(esc(err.message), 'bad'); b.disabled = false; }
+  };
+  const rm = $('#pw-rm'); if (rm) rm.onclick = async () => { try { await api('password', { method: 'POST', body: { remove: true } }); ME.hasPassword = false; saveCache(); closeSheet(); toast('Password removed'); render(); } catch (err) { toast(esc(err.message), 'bad'); } };
+};
 ACT.signout = () => { sheet(`<h2>Sign out?</h2><p class="muted">Everything is saved to your account.</p><button class="btn big" id="so-ok">Sign out</button>`); $('#so-ok').onclick = () => { closeSheet(); signOut(); }; };
 
 function download(name, text, type) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); }

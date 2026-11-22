@@ -4,7 +4,7 @@
  * - Its icons, fonts and files: from the cache, refreshed in the background.
  * - /api/*: never cached here. The app keeps its own copy of your log and syncs when back online.
  * - Pushes carry no data: the worker asks /api/workout/inbox what's new and shows it. */
-const VERSION = '7dcba554396c';
+const VERSION = 'ecffe54ffc5f';
 const CACHE = 'wk-' + VERSION;
 const PAGE = '/workout';
 const PAGES = ['/workout', '/workout/', '/workout/signup', '/workout/login'];

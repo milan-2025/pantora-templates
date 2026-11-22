@@ -2,6 +2,7 @@ import "server-only";
 import { createHash, randomBytes, randomInt } from "crypto";
 import type { Payload } from "payload";
 import { sendWithBrevo } from "@/lib/brevo";
+import { PasswordError, checkLogin, hasPassword, removePassword, setPassword } from "@/lib/auth/passwords";
 import { applyPromo, findAffiliate } from "@/lib/pricing";
 import { codesMatch, hashCode, makeToken, readToken } from "@/lib/planner/core";
 import {
@@ -140,6 +141,41 @@ export async function verifyLogin(payload: Payload, raw: unknown, rawCode: unkno
   }
   await payload.delete({ collection: LG, where: { email: { equals: email } }, overrideAccess: true });
   return { email, token: makeToken(secret(), email, SESSION_DAYS * 864e5) };
+}
+
+/* ----- optional password (a code always works too) ----- */
+const asWorkoutError = (e: unknown) => (e instanceof PasswordError ? new WorkoutError(e.message, e.status) : e);
+
+export async function passwordLogin(payload: Payload, raw: unknown, password: unknown) {
+  const email = normEmail(raw);
+  if (!validEmail(email)) throw new WorkoutError("Please enter a valid email");
+  try { await checkLogin(payload, "workout", email, password); } catch (e) { throw asWorkoutError(e); }
+  return { email, token: makeToken(secret(), email, SESSION_DAYS * 864e5) };
+}
+
+export const workoutHasPassword = (payload: Payload, email: string) => hasPassword(payload, "workout", email);
+
+export async function setMyPassword(payload: Payload, email: string, password: unknown, remove = false) {
+  let changed = false;
+  try {
+    if (remove) await removePassword(payload, "workout", email);
+    else changed = (await setPassword(payload, "workout", email, password)).changed;
+  } catch (e) { throw asWorkoutError(e); }
+  const what = remove ? "removed" : changed ? "changed" : "set";
+  await sendWithBrevo({
+    to: [{ email }],
+    subject: `Your Pandora Workout password was ${what}`,
+    html: shell(`<h2 style="margin:0 0 8px">Password ${what}</h2><p>The password for your Pandora Workout account (${esc(email)}) was just ${what}.</p><p>${remove ? "You can still sign in any time with a code sent to this email." : "You can now sign in with your email and password, or with a code sent to this email."}</p><p style="font-size:13px;color:#666">Wasn't you? Sign in with a code, then set a new password under Me.</p>`),
+    text: `The password for your Pandora Workout account (${email}) was just ${what}. Wasn't you? Sign in with a code and set a new password under Me.`,
+  }).catch((e) => console.error("[workout-password-email]", e));
+  return { ok: true, hasPassword: !remove };
+}
+
+/** A fresh token for people who keep using the app (sent back by /me about once a day), so they stay signed in. */
+export function refreshedToken(req: Request, email: string) {
+  const h = req.headers.get("authorization") ?? "";
+  const exp = Number((h.startsWith("Bearer ") ? h.slice(7) : "").split(".")[1] ?? 0);
+  return exp && exp - Date.now() < (SESSION_DAYS - 1) * 864e5 ? tokenFor(email) : undefined;
 }
 
 export function emailOf(req: Request) {
