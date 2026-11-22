@@ -81,6 +81,28 @@ export const WorkoutSettings: GlobalConfig = {
     },
     {
       type: "collapsible",
+      label: "Pledge: money on finishing a challenge",
+      fields: [
+        {
+          type: "row",
+          fields: [
+            { name: "pledgeOn", type: "checkbox", defaultValue: false, label: "Offer pledges in the app", admin: { width: "40%", description: "Off until you've filled in the charity and terms." } },
+            { name: "pledgeNeed", type: "number", min: 50, max: 100, defaultValue: 80, label: "Complete days needed (%)", admin: { width: "30%" } },
+            { name: "pledgeMinDays", type: "number", min: 7, defaultValue: 14, label: "Shortest challenge for a pledge (days)", admin: { width: "30%" } },
+          ],
+        },
+        { name: "pledgeAmounts", type: "text", defaultValue: "199, 499, 999", label: "Amounts to choose from (₹, comma-separated)" },
+        { name: "pledgeCharity", type: "text", label: "Where missed pledges go", admin: { placeholder: "e.g. Akshaya Patra Foundation (mid-day meals)" } },
+        {
+          name: "pledgeTerms",
+          type: "textarea",
+          defaultValue:
+            "You pay the amount before the pledge starts. Complete days count only when logged on the day (or by the next day). Hit the target and we refund the full amount to your original payment method within 7 working days of the challenge ending. Miss it and we give the full amount to the charity named here. Pledges can't be cancelled once paid.",
+        },
+      ],
+    },
+    {
+      type: "collapsible",
       label: "Referrals",
       fields: [
         {

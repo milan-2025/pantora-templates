@@ -270,6 +270,7 @@ export const WorkoutProfiles: CollectionConfig = {
       ],
     },
     { name: "reminderHour", type: "number", min: 0, max: 23, label: "Reminder hour (India time)", admin: { readOnly: true } },
+    { name: "lastAlertDay", type: "text", label: "Last 9 pm streak alert", admin: { readOnly: true } },
     { name: "rev", type: "number", defaultValue: 0, admin: { readOnly: true } },
     { name: "adminNote", type: "textarea" },
     { name: "state", type: "json", admin: { description: "Their logs. Edit with care.", readOnly: true } },
@@ -292,6 +293,23 @@ export const WorkoutGroups: CollectionConfig = {
     { type: "row", fields: [{ name: "ownerEmail", type: "email", required: true, index: true, admin: { width: "40%" } }, { name: "mode", type: "select", defaultValue: "together", options: [{ label: "Same challenge together", value: "together" }, { label: "Just log together", value: "log" }], admin: { width: "30%" } }, { name: "start", type: "text", admin: { width: "30%" } }] },
     { type: "row", fields: [{ name: "program", type: "text", admin: { width: "50%" } }, { name: "length", type: "number", admin: { width: "50%" } }] },
     { name: "members", type: "array", fields: [{ type: "row", fields: [{ name: "email", type: "email", required: true }, { name: "name", type: "text" }, { name: "joinedAt", type: "date" }] }] },
+    {
+      type: "collapsible",
+      label: "Shared goal",
+      admin: { initCollapsed: true, description: "Set by the group owner in the app, e.g. \"walk 500 km together by 30 Nov\"." },
+      fields: [
+        {
+          type: "row",
+          fields: [
+            { name: "goalKind", type: "select", options: [{ label: "Workouts", value: "workouts" }, { label: "Minutes moved", value: "minutes" }, { label: "Kilometres", value: "km" }, { label: "Steps", value: "steps" }, { label: "Complete days", value: "complete" }], admin: { width: "25%" } },
+            { name: "goalTarget", type: "number", min: 1, admin: { width: "25%" } },
+            { name: "goalStart", type: "text", admin: { width: "25%" } },
+            { name: "goalEnd", type: "text", admin: { width: "25%" } },
+          ],
+        },
+        { name: "goalDoneAt", type: "date", admin: { readOnly: true } },
+      ],
+    },
   ],
 };
 
@@ -302,8 +320,9 @@ export const WorkoutFeed: CollectionConfig = {
   defaultSort: "-createdAt",
   access: { read: authenticated, create: nobody, update: authenticated, delete: authenticated },
   fields: [
-    { type: "row", fields: [{ name: "kind", type: "select", options: ["cheer", "nudge", "msg", "event"].map((v) => ({ label: v, value: v })), admin: { width: "25%" } }, { name: "groupCode", type: "text", index: true, admin: { width: "25%" } }, { name: "toEmail", type: "text", index: true, admin: { width: "25%" } }, { name: "fromEmail", type: "text", admin: { width: "25%" } }] },
+    { type: "row", fields: [{ name: "kind", type: "select", options: ["cheer", "nudge", "msg", "event", "voice", "alert"].map((v) => ({ label: v, value: v })), admin: { width: "25%" } }, { name: "groupCode", type: "text", index: true, admin: { width: "25%" } }, { name: "toEmail", type: "text", index: true, admin: { width: "25%" } }, { name: "fromEmail", type: "text", admin: { width: "25%" } }] },
     { type: "row", fields: [{ name: "fromName", type: "text", admin: { width: "30%" } }, { name: "text", type: "text", admin: { width: "70%" } }] },
+    { type: "row", fields: [{ name: "voiceId", type: "text", label: "Voice note (Cloudinary id, private)", admin: { width: "70%", readOnly: true } }, { name: "secs", type: "number", label: "Seconds", admin: { width: "30%", readOnly: true } }] },
   ],
 };
 
@@ -368,6 +387,44 @@ export const WorkoutClaims: CollectionConfig = {
   ],
 };
 
+export const WorkoutPledges: CollectionConfig = {
+  slug: "workout-pledges",
+  labels: { singular: "Pledge", plural: "Pledges (money on it)" },
+  admin: {
+    group,
+    useAsTitle: "email",
+    defaultColumns: ["email", "amount", "start", "end", "status", "counted", "needed"],
+    listSearchableFields: ["email", "orderId"],
+    description:
+      "People who put money on finishing a challenge. Won: refund the amount in the Razorpay dashboard, then set Status to Refunded. Lost: give it to the charity named in Workout app settings, then set Status to Donated. Settled automatically the day after the challenge ends.",
+  },
+  defaultSort: "-createdAt",
+  access: { read: authenticated, create: nobody, update: authenticated, delete: authenticated },
+  fields: [
+    { type: "row", fields: [{ name: "email", type: "text", required: true, index: true, admin: { width: "40%", readOnly: true } }, { name: "amount", type: "number", label: "Amount (₹)", admin: { width: "20%", readOnly: true } }, { name: "program", type: "text", admin: { width: "40%", readOnly: true } }] },
+    { type: "row", fields: [{ name: "challengeId", type: "text", admin: { width: "25%", readOnly: true } }, { name: "start", type: "text", admin: { width: "25%", readOnly: true } }, { name: "end", type: "text", admin: { width: "25%", readOnly: true } }, { name: "needPercent", type: "number", label: "Needed %", admin: { width: "25%", readOnly: true } }] },
+    { type: "row", fields: [{ name: "needed", type: "number", label: "Complete days needed", admin: { width: "33%", readOnly: true } }, { name: "counted", type: "number", label: "Complete days (on time)", admin: { width: "33%", readOnly: true } }, { name: "charity", type: "text", admin: { width: "34%", readOnly: true } }] },
+    {
+      name: "status",
+      type: "select",
+      defaultValue: "pending",
+      index: true,
+      options: [
+        { label: "Waiting for payment", value: "pending" },
+        { label: "Running", value: "active" },
+        { label: "Won: refund it", value: "won" },
+        { label: "Missed: donate it", value: "lost" },
+        { label: "Refunded", value: "refunded" },
+        { label: "Donated", value: "donated" },
+        { label: "Cancelled", value: "cancelled" },
+      ],
+    },
+    { type: "row", fields: [{ name: "orderId", type: "text", index: true, admin: { width: "50%", readOnly: true } }, { name: "paymentId", type: "text", label: "Razorpay payment", admin: { width: "50%", readOnly: true } }] },
+    { name: "settledAt", type: "date", admin: { readOnly: true } },
+    { name: "adminNote", type: "textarea" },
+  ],
+};
+
 export const WorkoutLogins: CollectionConfig = {
   slug: "workout-logins",
   admin: { hidden: true },
@@ -380,4 +437,4 @@ export const WorkoutLogins: CollectionConfig = {
   ],
 };
 
-export const WORKOUT_COLLECTIONS = [WorkoutPlans, WorkoutMemberships, WorkoutProfiles, WorkoutGroups, WorkoutFeed, WorkoutPhotos, WorkoutClaims, WorkoutLogins];
+export const WORKOUT_COLLECTIONS = [WorkoutPlans, WorkoutMemberships, WorkoutProfiles, WorkoutGroups, WorkoutFeed, WorkoutPhotos, WorkoutClaims, WorkoutPledges, WorkoutLogins];

@@ -125,7 +125,7 @@ function comeback() {
   for (let i = 1; i <= 3; i++) { const r = dayRow(shift(t, -i)); if (isLogged(r) || (r && r.fz)) return false; }
   return true;
 }
-function todayPlan() { const st = chStatus(); if (!st || st.before || st.over) return null; return planDay(CH(), st.n, comeback() ? 0.7 : 1); }
+function todayPlan() { const st = chStatus(); if (!st || st.before || st.over) return null; return planDay(CH(), st.n, (comeback() ? 0.7 : 1) * checkinScale(dayRow(today()))); }
 
 /* ----- daily quests: 3 a day, picked by the date ----- */
 const QUESTS = [
@@ -232,7 +232,33 @@ function beep(freq, ms, vol) {
   try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const o = AC.createOscillator(), g = AC.createGain(); o.frequency.value = freq || 880; o.type = 'sine'; g.gain.value = vol || 0.15; o.connect(g); g.connect(AC.destination); const t = AC.currentTime; g.gain.setValueAtTime(vol || 0.15, t); g.gain.exponentialRampToValueAtTime(0.001, t + (ms || 150) / 1000); o.start(t); o.stop(t + (ms || 150) / 1000); } catch (e) { /* no audio */ }
 }
 const chime = () => { beep(660, 120); setTimeout(() => beep(880, 120), 120); setTimeout(() => beep(1320, 260), 240); };
-function say(text) { if (!S.prefs.voice || !window.speechSynthesis) return; try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = 'en-IN'; u.rate = 1.02; speechSynthesis.speak(u); } catch (e) { /* no voice */ } }
+/* ----- voice coach: English or Hindi ----- */
+const HI = () => S.prefs.lang === 'hi';
+const VOICE_LINES = {
+  start: { en: (t) => `${t}. Let's go!`, hi: (t) => `${t}. चलो, शुरू करते हैं!` },
+  rest: { en: (n, r) => `Rest. Next: ${n}${r ? ', ' + r + ' reps' : ''}.`, hi: (n, r) => `आराम करो. अगला: ${n}${r ? ', ' + r + ' बार' : ''}.` },
+  reps: { en: (n, r) => `${n}, ${r} reps`, hi: (n, r) => `${n}, ${r} बार` },
+  secs: { en: (n, sec) => `${n}, ${sec >= 60 ? Math.round(sec / 60) + ' minute' + (Math.round(sec / 60) === 1 ? '' : 's') : sec + ' seconds'}`, hi: (n, sec) => `${n}, ${sec >= 60 ? Math.round(sec / 60) + ' मिनट' : sec + ' सेकंड'}` },
+  fast: { en: () => 'Go fast!', hi: () => 'तेज़ी से!' },
+  side: { en: () => 'Switch sides', hi: () => 'साइड बदलो' },
+  left: { en: (m) => `${m} minute${m === 1 ? '' : 's'} left`, hi: (m) => `${m} मिनट बाकी` },
+  half: { en: () => 'Halfway there. Keep going!', hi: () => 'आधा हो गया. लगे रहो!' },
+  last: { en: () => 'Last one. Give it everything!', hi: () => 'आख़िरी वाला. पूरा ज़ोर लगाओ!' },
+  done: { en: () => 'Workout complete. Great job!', hi: () => 'वर्कआउट पूरा! शाबाश!' },
+};
+const line = (k, ...a) => VOICE_LINES[k][HI() ? 'hi' : 'en'](...a);
+let VOICES = [], NO_HI_TOLD = false;
+if (window.speechSynthesis) { const load = () => { try { VOICES = speechSynthesis.getVoices(); } catch (e) { VOICES = []; } }; load(); try { speechSynthesis.onvoiceschanged = load; } catch (e) { /* none */ } }
+function pickVoice(lang) { const l = lang.toLowerCase(); return VOICES.find((v) => v.lang.toLowerCase().replace('_', '-') === l) || VOICES.find((v) => v.lang.toLowerCase().startsWith(l.slice(0, 2))) || null; }
+function say(text) {
+  if (!S.prefs.voice || !window.speechSynthesis) return;
+  try {
+    speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text);
+    const lang = HI() ? 'hi-IN' : 'en-IN', v = pickVoice(lang);
+    if (HI() && !v && VOICES.length && !NO_HI_TOLD) { NO_HI_TOLD = true; toast('No Hindi voice on this phone. Add one in your phone’s text-to-speech settings.', 'bad'); }
+    u.lang = lang; if (v) u.voice = v; u.rate = HI() ? 0.98 : 1.02; speechSynthesis.speak(u);
+  } catch (e) { /* no voice */ }
+}
 function confetti(n) {
   const c = document.createElement('canvas'); c.className = 'confetti'; document.body.appendChild(c);
   const ctx = c.getContext('2d'), W = (c.width = innerWidth), H = (c.height = innerHeight);

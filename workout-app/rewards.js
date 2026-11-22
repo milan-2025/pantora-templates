@@ -4,6 +4,7 @@ ROUTES.rewards = function () {
   let h = `<div class="hero"><div class="lvl"><div class="n">${lv.level}</div><div class="sp"><small class="muted">Level ${lv.level}</small><h2 style="margin:0">${esc(lv.name)}</h2><div class="xpbar mt" style="margin-top:8px"><i style="width:${lv.pct}%"></i></div><small class="muted">${fmt(x.xp)} XP · ${fmt(lv.to - x.xp)} XP to ${esc(LEVELS[Math.min(lv.level, LEVELS.length - 1)])}</small></div></div>
     <div class="grid3 mt"><div class="stat"><b>🔥 ${x.cur}</b><small>streak</small></div><div class="stat"><b>🧊 ${fr.left}</b><small>freezes</small></div><div class="stat"><b>🏅 ${BADGES.filter((b) => b.ok(x)).length}</b><small>badges</small></div></div></div>`;
   h += giftRoad();
+  h += pledgeCard('rewards');
   h += moneyBackCard();
   h += referralCard();
   const fresh = newBadges().map((b) => b.id);

@@ -526,6 +526,18 @@ body.boot::after{content:"";position:fixed;left:50%;top:50%;width:38px;height:38
 .ogc{border:1px solid #d9d2c3;border-radius:12px;overflow:hidden;background:#f5f1ea;font-family:Inter,sans-serif}.ogc .im{aspect-ratio:1200/630;background:#ddd center/cover}.ogc .tx{padding:8px 10px;background:#e7f7dc}.ogc b{display:block;font-size:13px;color:#111}.ogc span{display:block;font-size:12px;color:#555;margin-top:2px}.ogc small{display:block;font-size:11px;color:#777;margin-top:3px}
 .mph{margin:2px 0 6px;font-size:12px}.mph.bad{color:#b42318}.mph.ok{color:#1a7f37}
 .rlx{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:6px}.rlx a,.rlx button{width:auto}
+
+/* v19: hidden edit dot + sign-in box */
+.edq{display:block;width:12px;height:12px;margin:22px auto 16px;padding:0;border:1.5px solid #8a8a8a;border-radius:50%;background:transparent;opacity:.3;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent}.edq::after{content:"";position:absolute;inset:-14px}.edq:hover,.edq:focus-visible{opacity:.7;outline:none}
+body:not(.view) .edq{display:none}
+.edsi{position:fixed;inset:0;z-index:400;background:rgba(10,5,6,.72);display:grid;place-items:center;padding:16px;font-family:Inter,system-ui,sans-serif}
+.edsi.edin{position:static;background:none;padding:0;display:block}
+.edsc{position:relative;width:100%;max-width:360px;margin:0 auto;background:#fffdf8;color:#2a2a2a;border-radius:18px;padding:22px 20px;text-align:left;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.edsc h3{margin:0 0 6px;font:700 22px 'Cormorant Garamond',Georgia,serif}.edsc p{margin:0 0 12px;font-size:14px;line-height:1.45;color:#555}
+.edsc input{display:block;width:100%;box-sizing:border-box;font-size:16px;padding:11px 12px;border:1px solid #ddd;border-radius:12px;margin:0 0 10px}
+.edsc button{display:block;width:100%;padding:11px;border:0;border-radius:999px;background:#3B1F4A;color:#fff;font-size:15px;font-weight:600;cursor:pointer}
+.edsc button:disabled{opacity:.6}.edsc .edb{background:none;color:#3B1F4A;margin-top:4px}.edsc .edx{position:absolute;top:6px;right:8px;width:auto;background:none;color:#888;font-size:24px;padding:4px 8px}
+.edsc .edm{color:#b3261e;margin:8px 0 0;min-height:1em}
 </style><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script></head>
 <body data-v="ed">
 <div class="app">
@@ -1455,6 +1467,34 @@ function plUI(){if(VIEW)return;if(PLN.linked&&$("gtab"))gtUI();
 var _sv17=doSave;doSave=function(){_sv17();if(PLN.linked&&PLN.note){PLN.note="";setTimeout(plUI,1500)}};$("svp").onclick=doSave;
 var _done17=done;done=function(){_done17();if(PLN.linked)return;var c=$("cls");if(c&&!$("mc").querySelector(".plc")){var d=document.createElement("div");d.innerHTML=plPitch("invite-live");c.parentNode.insertBefore(d.firstChild,c)}};
 setTimeout(plUI,0);
+/* ===== v19: hidden "edit this invite" dot at the very bottom of a guest invite ===== */
+/* A tiny, nearly invisible button. The couple taps it, signs in with an emailed code, and the editor opens. */
+(function(){
+ function edGo(sl,t){setKey(sl,t);location.href="/i/"+encodeURIComponent(sl)+"/edit#k="+t}
+ function edBox(sl,host,inline){
+  var w=document.createElement("div");w.className=inline?"edsi edin":"edsi";
+  w.innerHTML='<div class="edsc" role="dialog" aria-modal="true" aria-label="Sign in to edit"><button type="button" class="edx" aria-label="Close">×</button><h3>Edit this invite</h3><p>Enter the email you used for this invite (or for your wedding planner). We’ll send you a 6-digit code.</p>'
+   +'<form class="ed1"><input type="email" required autocomplete="email" placeholder="you@email.com"><button>Send code</button></form>'
+   +'<form class="ed2" hidden><p class="eds"></p><input inputmode="numeric" autocomplete="one-time-code" maxlength="6" required placeholder="6-digit code"><button>Open editor</button><button type="button" class="edb">Use another email</button></form><p class="edm" aria-live="polite"></p></div>';
+  (host||document.body).appendChild(w);
+  var f1=w.querySelector(".ed1"),f2=w.querySelector(".ed2"),m=w.querySelector(".edm"),em="";
+  var say=function(t){m.textContent=t||""};
+  var x=w.querySelector(".edx");if(inline)x.remove();else{x.onclick=function(){w.remove()};w.addEventListener("click",function(e){if(e.target===w)w.remove()})}
+  f1.onsubmit=function(e){e.preventDefault();em=f1.querySelector("input").value.trim();var b=f1.querySelector("button");b.disabled=true;say("");
+   api("POST","/edit-access/"+encodeURIComponent(sl),{email:em}).then(function(r){f1.hidden=true;f2.hidden=false;w.querySelector(".eds").textContent="If "+em+" is on this invite, a code is on its way. Check spam too.";var ci=f2.querySelector("input");if(r.devCode)ci.value=r.devCode;ci.focus()})
+   .catch(function(x){say((x&&x.error)||"Couldn’t send. Check your internet and try again.")}).then(function(){b.disabled=false})};
+  f2.onsubmit=function(e){e.preventDefault();var b=f2.querySelector("button");b.disabled=true;say("");
+   api("POST","/edit-access/"+encodeURIComponent(sl),{email:em,code:f2.querySelector("input").value}).then(function(r){edGo(r.slug,r.token)})
+   .catch(function(x){b.disabled=false;say((x&&x.error)||"Couldn’t check the code. Try again.")})};
+  w.querySelector(".edb").onclick=function(){f2.hidden=true;f1.hidden=false;say("")};
+  setTimeout(function(){try{f1.querySelector("input").focus()}catch(e){}},60);
+ }
+ window.edBox=edBox;
+ if(GM){var sc=$("sc");if(sc){var d=document.createElement("button");d.type="button";d.className="edq";d.setAttribute("aria-label","Edit this invite");d.title="Edit";sc.appendChild(d);
+  d.onclick=function(){var sl=SLUGP||decodeURIComponent(GM[1]),t=keys()[sl];if(t)return edGo(sl,t);edBox(sl)}}}
+ /* The edit page with no saved key: offer the same sign-in under the "open your private edit link" message. */
+ var _nk=noKey;noKey=function(sl,bad){_nk(sl,bad);var n=document.querySelector(".nl");if(n){var p=document.createElement("p");p.style.cssText="font-family:Inter,sans-serif;font-size:14px;margin:18px 0 6px;opacity:.85";p.textContent="No email handy? Sign in with a code instead:";n.appendChild(p);edBox(sl,n,true)}};
+})();
 /* ===== v18: works offline (installed or not). The worker /shaadi-sw.js keeps this editor, the draft and offline autosaves on the device. ===== */
 (function(){if(!("serviceWorker" in navigator)||!(EM||/^\/shaadi\/?$/.test(location.pathname)))return;
  ["/shaadi","/i/"].forEach(function(s){navigator.serviceWorker.register("/shaadi-sw.js",{scope:s}).catch(function(){})});

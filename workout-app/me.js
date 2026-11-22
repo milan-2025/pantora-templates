@@ -1,31 +1,54 @@
 /* ---------- Me: profile, plan, goals, reminders, theme, Excel import, export ---------- */
 const THEMES = [
-  { id: 'ember', n: 'Ember', bg: 'linear-gradient(135deg,#0B1020,#FF5A36)', ok: () => true },
-  { id: 'day', n: 'Day', bg: 'linear-gradient(135deg,#F4F6FB,#FF5A36)', ok: () => true },
-  { id: 'ocean', n: 'Ocean', bg: 'linear-gradient(135deg,#06141B,#22D3EE)', ok: (x) => x.level >= 5, how: 'Reach level 5' },
-  { id: 'rose', n: 'Rose', bg: 'linear-gradient(135deg,#150A12,#FF6FB5)', ok: (x) => x.perfectWeeks >= 1, how: 'Have a perfect week' },
-  { id: 'gold', n: 'Gold', bg: 'linear-gradient(135deg,#120E05,#FFC53D)', ok: (x) => x.level >= 12 || (ME && ME.gifts.some((g) => g.key === 'total50')), how: '50 complete days or level 12' },
+  { id: 'ember', n: 'Ember', c: '#FF5A36', ok: () => true },
+  { id: 'ocean', n: 'Ocean', c: '#0EA5E9', ok: (x) => x.level >= 5, how: 'Reach level 5' },
+  { id: 'rose', n: 'Rose', c: '#EC4899', ok: (x) => x.perfectWeeks >= 1, how: 'Have a perfect week' },
+  { id: 'gold', n: 'Gold', c: '#E0A100', ok: (x) => x.level >= 12 || (ME && ME.gifts.some((g) => g.key === 'total50')), how: '50 complete days or level 12' },
 ];
+/* Light or dark (or follow the phone). Kept on the device too, so the page opens in the right colours before sign-in. */
+const MODES = [['light', '☀️', 'Light'], ['dark', '🌙', 'Dark'], ['auto', '📱', 'Like my phone']];
+const darkQ = window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : null;
+function modePref() { return (S && S.prefs && S.prefs.mode) || store.get('wk_mode') || 'light'; }
+function applyMode() {
+  const want = modePref(), m = want === 'auto' ? (darkQ && darkQ.matches ? 'dark' : 'light') : want;
+  document.documentElement.dataset.mode = m; store.set('wk_mode', want);
+  const meta = $('meta[name=theme-color]'); if (meta) meta.content = m === 'dark' ? '#0B1020' : '#F4F6FB';
+  $$('#modebtn,.lp-mode').forEach((b) => { b.textContent = m === 'dark' ? '🌙' : '☀️'; b.title = m === 'dark' ? 'Dark (tap for light)' : 'Light (tap for dark)'; });
+  return m;
+}
+function toggleMode() {
+  const next = document.documentElement.dataset.mode === 'dark' ? 'light' : 'dark';
+  if (S && S.prefs && CLOUD.email) { S.prefs.mode = next; onChange({ quiet: true }); } else store.set('wk_mode', next);
+  applyMode();
+}
+if (darkQ && darkQ.addEventListener) darkQ.addEventListener('change', () => { if (modePref() === 'auto') applyMode(); });
+document.addEventListener('click', (e) => { if (e.target.closest('#modebtn,.lp-mode')) { e.preventDefault(); toggleMode(); } });
 function applyTheme() {
+  if (S.prefs.theme === 'day') { S.prefs.theme = 'ember'; if (!S.prefs.mode) S.prefs.mode = 'light'; } // the old "Day" theme is now light mode
+  if (!S.prefs.mode) S.prefs.mode = store.get('wk_mode') || 'light';
   const x = stats(), want = THEMES.find((t) => t.id === S.prefs.theme) || THEMES[0];
   const th = want.ok(x) ? want.id : 'ember';
   if (th === 'ember') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = th;
   store.set('wk_theme', th === 'ember' ? '' : th);
-  const m = $('meta[name=theme-color]'); if (m) m.content = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#0B1020';
+  applyMode();
 }
 
 ROUTES.me = function () {
   const a = ME && ME.access, x = stats(), p = S.profile;
   const planLine = !a ? '' : a.kind === 'free' ? (a.status === 'new' ? `Free ${ME.limits.freeDays}-day challenge (starts when you begin)` : a.canLog ? `Free challenge · ${plural(a.daysLeft, 'day')} left` : 'Free challenge ended') : a.kind === 'member' ? `On ${esc(a.ownerEmail.split('@')[0])}’s ${esc(a.plan.name)} plan · until ${niceLong(a.expiresAt)}` : `${esc(a.plan.name)} · ${a.isPaid ? 'until ' + niceLong(a.expiresAt) : 'ended ' + niceLong(a.expiresAt)}`;
   return `<div class="card"><h3>👤 You</h3><div class="grid2"><div><label class="f">Name</label><input id="me-n" value="${esc(p.name)}" maxlength="40"></div><div><label class="f">WhatsApp (optional)</label><input id="me-ph" value="${esc(p.phone || '')}" inputmode="tel" placeholder="98xxxxxxxx"></div></div><p class="tiny muted mt">${esc(CLOUD.email)} · your WhatsApp is only shared with a buddy if you both agree.</p></div>
+    <div class="card"><h3>🔑 Password</h3><div class="setrow"><div class="t"><b>${ME && ME.hasPassword ? 'Password is set' : 'Sign in with a password (optional)'}</b><small>${ME && ME.hasPassword ? 'Sign in with your email and password, or with an emailed code.' : 'Right now you sign in with an emailed code. Codes keep working either way.'}</small></div><button class="btn sm ghost" data-act="setpw">${ME && ME.hasPassword ? 'Change' : 'Set'}</button></div></div>
     <div class="card"><h3>🎟 Plan</h3><p>${planLine}</p>${a && a.kind !== 'member' ? `<button class="btn sm" data-act="upgrade">${a.kind === 'free' ? 'See plans' : a.isPaid ? 'Renew or upgrade' : 'Renew'}</button>` : ''}${ME && ME.bonus && (ME.bonus.days || ME.bonus.seats) ? `<p class="sm muted mt">🎁 Saved for your plan: ${ME.bonus.days ? ME.bonus.days + ' bonus days' : ''}${ME.bonus.days && ME.bonus.seats ? ' and ' : ''}${ME.bonus.seats ? ME.bonus.seats + ' extra friend place' : ''}.</p>` : ''}</div>
     <div class="card"><h3>✅ Daily goals</h3><div class="grid2"><div><label class="f">💧 Water (glasses)</label><input type="number" data-t="water" value="${p.targets.water}"></div><div><label class="f">😴 Sleep (hours)</label><input type="number" step="0.5" data-t="sleep" value="${p.targets.sleep}"></div><div><label class="f">👟 Steps</label><input type="number" step="500" data-t="steps" value="${p.targets.steps}"></div><div><label class="f">🧘 Stretching (min)</label><input type="number" data-t="mob" value="${p.targets.mob}"></div></div>
       <label class="f">Checkpoints for a complete day</label><div class="chipsel">${[3, 4, 5].map((n) => `<button data-act="need" data-v="${n}" class="${p.targets.need === n ? 'on' : ''}">${n} of 5</button>`).join('')}</div></div>
     <div class="card"><h3>🔔 Reminders & sound</h3>
       <div class="setrow"><div class="t"><b>Daily reminder</b><small>${p.reminderHour != null ? `At ${hourLabel(p.reminderHour)}, only if you haven’t logged yet` : 'A nudge if you haven’t logged by your chosen time'}</small></div>${p.reminderHour != null ? `<select id="me-hr" style="width:auto">${hourOpts(p.reminderHour)}</select>` : ''}<label class="switch"><input type="checkbox" id="me-rem" ${p.reminderHour != null ? 'checked' : ''}><span></span></label></div>
       <div class="setrow"><div class="t"><b>Beeps</b><small>Countdown beeps in workouts</small></div><label class="switch"><input type="checkbox" id="me-snd" ${S.prefs.sound ? 'checked' : ''}><span></span></label></div>
-      <div class="setrow"><div class="t"><b>Voice coach</b><small>Reads out each move</small></div><label class="switch"><input type="checkbox" id="me-vc" ${S.prefs.voice ? 'checked' : ''}><span></span></label></div></div>
-    <div class="card"><h3>🎨 Theme</h3><div class="themes">${THEMES.map((t) => `<button style="background:${t.bg}" class="${(S.prefs.theme || 'ember') === t.id ? 'on' : ''}" data-act="theme" data-v="${t.id}" ${t.ok(x) ? '' : 'disabled'} title="${esc(t.ok(x) ? t.n : t.how)}">${t.ok(x) ? esc(t.n) : ''}</button>`).join('')}</div><p class="tiny muted mt">Unlock more themes by levelling up.</p></div>
+      <div class="setrow"><div class="t"><b>Voice coach</b><small>Reads out each move</small></div><label class="switch"><input type="checkbox" id="me-vc" ${S.prefs.voice ? 'checked' : ''}><span></span></label></div>
+      <div class="setrow"><div class="t"><b>Coach language</b><small>Hindi uses your phone’s Hindi voice</small></div><div class="seg" style="width:auto"><button data-act="lang" data-v="en" class="${HI() ? '' : 'on'}">English</button><button data-act="lang" data-v="hi" class="${HI() ? 'on' : ''}">हिंदी</button></div></div>
+      <div class="setrow"><div class="t"><b>9 pm streak alert</b><small>Only if your streak is at risk that day (needs reminders on)</small></div><label class="switch"><input type="checkbox" id="me-sa" ${S.prefs.streakAlert !== false ? 'checked' : ''}><span></span></label></div></div>
+    <div class="card"><h3>🎨 Look</h3><label class="f" style="margin-top:0">Light or dark</label><div class="seg">${MODES.map(([k, e, n]) => `<button data-act="mode" data-v="${k}" class="${modePref() === k ? 'on' : ''}">${e} ${n}</button>`).join('')}</div>
+      <label class="f">Colour</label><div class="themes">${THEMES.map((t) => `<button style="background:${t.c}" class="${(S.prefs.theme || 'ember') === t.id ? 'on' : ''}" data-act="theme" data-v="${t.id}" ${t.ok(x) ? '' : 'disabled'} title="${esc(t.ok(x) ? t.n : t.how)}">${t.ok(x) ? esc(t.n) : ''}</button>`).join('')}</div><p class="tiny muted mt">Unlock more colours by levelling up. The ☀️/🌙 button at the top switches light and dark any time.</p></div>
     <div class="card"><h3>📦 Your data</h3><div class="setrow"><div class="t"><b>Import from the Excel tracker</b><small>Bought the Workout Challenge sheet? Bring your days, meals, body log and tests in.</small></div><label class="btn sm ghost" for="me-x">Import</label><input type="file" id="me-x" accept=".xlsx,.xls,.csv" hidden></div>
       <div class="setrow"><div class="t"><b>Download everything</b><small>Your full log as a spreadsheet (CSV) or backup file</small></div><button class="btn sm ghost" data-act="exportcsv">CSV</button><button class="btn sm ghost" data-act="exportjson">Backup</button></div></div>
     <div class="card"><h3>💬 Help</h3>${ME && ME.whatsapp ? `<a class="btn sm" target="_blank" rel="noopener" href="https://wa.me/${esc(ME.whatsapp.number)}?text=${encodeURIComponent(ME.whatsapp.message)}">Ask us on WhatsApp</a>` : ''} <button class="btn sm ghost" id="me-install" ${INSTALL.evt ? '' : 'hidden'}>📲 Install the app</button>
@@ -42,11 +65,28 @@ ROUTES.me.after = function () {
   const hr = $('#me-hr'); if (hr) hr.onchange = () => enableReminders(Number(hr.value));
   $('#me-snd').onchange = (e) => { S.prefs.sound = e.target.checked; onChange({ quiet: true }); };
   $('#me-vc').onchange = (e) => { S.prefs.voice = e.target.checked; onChange({ quiet: true }); };
+  $('#me-sa').onchange = (e) => { S.prefs.streakAlert = e.target.checked; onChange({ quiet: true }); };
   $('#me-x').onchange = (e) => e.target.files[0] && importExcel(e.target.files[0]);
   const ins = $('#me-install'); if (ins) ins.onclick = doInstall;
 };
 ACT.need = (el) => { S.profile.targets.need = Number(el.dataset.v); onChange(); };
 ACT.theme = (el) => { S.prefs.theme = el.dataset.v; onChange(); applyTheme(); };
+ACT.lang = (el) => { S.prefs.lang = el.dataset.v; onChange(); say(el.dataset.v === 'hi' ? 'नमस्ते! मैं आपका कोच हूँ.' : 'Hi! I’m your coach.'); };
+ACT.mode = (el) => { S.prefs.mode = el.dataset.v; onChange(); applyTheme(); };
+ACT.setpw = () => {
+  const has = ME && ME.hasPassword;
+  sheet(`<h2>${has ? 'Change password' : 'Set a password'}</h2><p class="muted">Then you can sign in with ${esc(CLOUD.email)} and this password, or with a code like now.</p>
+    <form id="pw-f"><div class="pwrow"><input type="password" id="pw1" minlength="8" required autocomplete="new-password" placeholder="At least 8 characters"><button type="button" class="pweye" id="pw-eye">Show</button></div><input type="password" id="pw2" minlength="8" required autocomplete="new-password" placeholder="Type it again" class="mt"><button class="btn big mt">Save password</button></form>
+    ${has ? '<button class="link" id="pw-rm">Remove my password (use codes only)</button>' : ''}`);
+  $('#pw-eye').onclick = (e) => { const show = $('#pw1').type === 'password'; $('#pw1').type = $('#pw2').type = show ? 'text' : 'password'; e.target.textContent = show ? 'Hide' : 'Show'; };
+  $('#pw-f').onsubmit = async (e) => {
+    e.preventDefault(); if ($('#pw1').value !== $('#pw2').value) return toast('The two passwords don’t match', 'bad');
+    const b = e.target.querySelector('.btn'); b.disabled = true;
+    try { await api('password', { method: 'POST', body: { password: $('#pw1').value } }); ME.hasPassword = true; store.set('wk_pwmode', '1'); saveCache(); closeSheet(); toast(has ? 'Password changed ✔' : 'Password set ✔'); render(); }
+    catch (err) { toast(esc(err.message), 'bad'); b.disabled = false; }
+  };
+  const rm = $('#pw-rm'); if (rm) rm.onclick = async () => { try { await api('password', { method: 'POST', body: { remove: true } }); ME.hasPassword = false; saveCache(); closeSheet(); toast('Password removed'); render(); } catch (err) { toast(esc(err.message), 'bad'); } };
+};
 ACT.signout = () => { sheet(`<h2>Sign out?</h2><p class="muted">Everything is saved to your account.</p><button class="btn big" id="so-ok">Sign out</button>`); $('#so-ok').onclick = () => { closeSheet(); signOut(); }; };
 
 function download(name, text, type) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); }

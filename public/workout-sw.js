@@ -4,7 +4,7 @@
  * - Its icons, fonts and files: from the cache, refreshed in the background.
  * - /api/*: never cached here. The app keeps its own copy of your log and syncs when back online.
  * - Pushes carry no data: the worker asks /api/workout/inbox what's new and shows it. */
-const VERSION = '7dcba554396c';
+const VERSION = 'df318bbb55e0';
 const CACHE = 'wk-' + VERSION;
 const PAGE = '/workout';
 const PAGES = ['/workout', '/workout/', '/workout/signup', '/workout/login'];
@@ -58,9 +58,11 @@ async function whatsNew() {
 }
 self.addEventListener('push', (e) => {
   e.waitUntil(whatsNew().then((m) => {
-    const title = m ? `${m.from} ${m.kind === 'nudge' ? 'nudged you 👉' : m.kind === 'event' ? '' : 'says'}`.trim() : 'Time to move 💪';
-    const body = m ? m.text : 'Your streak is waiting. Today’s workout takes about 15 minutes.';
-    return self.registration.showNotification(title, { body, icon: '/workout/icon-192.png', badge: '/workout/icon-192.png', tag: m ? 'wk-msg' : 'wk-reminder', renotify: true, data: { hash: m ? 'together/inbox' : 'today' } });
+    const alert = m && m.kind === 'alert';
+    const title = alert ? '🔥 Streak at risk' : m ? `${m.from} ${m.kind === 'nudge' ? 'nudged you 👉' : m.kind === 'event' ? '' : m.kind === 'voice' ? 'sent a voice note 🎤' : 'says'}`.trim() : 'Time to move 💪';
+    const body = alert ? m.text.replace(/^🔥 /, '') : m && m.kind === 'voice' ? 'Tap to listen' : m ? m.text : 'Your streak is waiting. Today’s workout takes about 15 minutes.';
+    const hash = alert ? 'today' : m ? (m.group === 'family' ? 'together/family' : 'together/inbox') : 'today';
+    return self.registration.showNotification(title, { body, icon: '/workout/icon-192.png', badge: '/workout/icon-192.png', tag: alert ? 'wk-streak' : m ? 'wk-msg' : 'wk-reminder', renotify: true, data: { hash } });
   }));
 });
 self.addEventListener('notificationclick', (e) => {

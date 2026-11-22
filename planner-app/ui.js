@@ -97,7 +97,19 @@ const NAV = [
 ];
 const VIEWS = {};
 let route = 'dash';
-function go(r) { route = VIEWS[r] && routeOn(r) ? r : 'dash'; try { history.replaceState(null, '', '#' + route); } catch (e) { /* ignore */ } renderAll(); window.scrollTo(0, 0); $('.side').classList.remove('open'); }
+// Phone menu: opening it adds a history step, so the phone's Back button (or swipe back) closes it.
+let MENU_PENDING = false, MENU_THEN = null;
+function openMenu() { const s = $('.side'); if (s.classList.contains('open')) return; s.classList.add('open'); try { history.pushState({ ppMenu: 1 }, '', location.href); } catch (e) { /* ignore */ } }
+function closeMenu(then) {
+  $('.side').classList.remove('open');
+  if (history.state && history.state.ppMenu) { MENU_PENDING = true; MENU_THEN = then || null; history.back(); } else if (then) then();
+}
+window.addEventListener('popstate', () => {
+  if (MENU_PENDING) { MENU_PENDING = false; const f = MENU_THEN; MENU_THEN = null; if (f) f(); return; }
+  $('.side').classList.remove('open');
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('.side').classList.contains('open')) closeMenu(); });
+function go(r) { if (history.state && history.state.ppMenu) return closeMenu(() => go(r)); route = VIEWS[r] && routeOn(r) ? r : 'dash'; try { history.replaceState(null, '', '#' + route); } catch (e) { /* ignore */ } renderAll(); window.scrollTo(0, 0); $('.side').classList.remove('open'); }
 function badges() {
   const o = d(); const bd = { tasks: o.tOver, payments: o.payOver.length };
   $$('.nav a').forEach(a => { const n = bd[a.dataset.r]; let b = a.querySelector('.bd'); if (n) { if (!b) { b = el('<span class="bd"></span>'); a.appendChild(b); } b.textContent = n; } else if (b) b.remove(); });

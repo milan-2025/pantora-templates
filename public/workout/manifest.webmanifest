@@ -5,11 +5,74 @@
   "start_url": "/workout",
   "scope": "/workout",
   "display": "standalone",
-  "background_color": "#0B1020",
-  "theme_color": "#0B1020",
+  "background_color": "#F4F6FB",
+  "theme_color": "#F4F6FB",
   "icons": [
-    { "src": "/workout/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/workout/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "/workout/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "/workout/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/workout/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/workout/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Start today's workout",
+      "short_name": "Workout",
+      "url": "/workout#do-play",
+      "icons": [
+        {
+          "src": "/workout/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "10-minute workout",
+      "short_name": "10 min",
+      "url": "/workout#do-quick",
+      "icons": [
+        {
+          "src": "/workout/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Log a glass of water",
+      "short_name": "Water +1",
+      "url": "/workout#do-water",
+      "icons": [
+        {
+          "src": "/workout/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Morning check-in",
+      "short_name": "Check-in",
+      "url": "/workout#do-checkin",
+      "icons": [
+        {
+          "src": "/workout/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
   ]
 }

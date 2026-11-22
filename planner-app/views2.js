@@ -298,7 +298,9 @@ function boot() {
   S = load();
   $('#nav').addEventListener('click', e => { const a = e.target.closest('a[data-r]'); if (a) go(a.dataset.r); });
   document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) go(g.dataset.go); });
-  $('#burger').onclick = () => $('.side').classList.toggle('open');
+  $('#burger').onclick = () => ($('.side').classList.contains('open') ? closeMenu() : openMenu());
+  $('#side-x').onclick = () => closeMenu();
+  $('#side-scrim').onclick = () => closeMenu();
   window.addEventListener('hashchange', () => { const r = location.hash.slice(1); if (VIEWS[r] && r !== route) { route = r; renderAll(); } });
   const h = location.hash.slice(1); if (VIEWS[h]) route = h;
   window.addEventListener('beforeunload', e => { save(); if (CLOUD.on && (CLOUD.pushT || CLOUD.inflight) && CLOUD.status !== 'saved') { e.preventDefault(); e.returnValue = ''; } });

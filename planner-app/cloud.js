@@ -192,20 +192,32 @@ function ungate() { document.body.classList.remove('gated'); $('#gate').style.di
 const SIGN_PAGE = () => (location.pathname.match(/^\/planner\/(signup|login)\/?$/) || [])[1] || '';
 function signInScreen(msg) {
   const page = SIGN_PAGE(), login = page === 'login';
-  const head = login ? '<h1>Welcome back</h1><p class="note">Sign in with your email to open your wedding planner.</p>'
+  const head = login ? '<h1>Welcome back</h1><p class="note">Sign in with a code we email you, or with your password if you have set one.</p>'
     : '<h1>Start planning,<br><em class="gem">free for <span data-trial-days>14</span> days.</em></h1><ul class="gperks"><li>Every screen unlocked</li><li>No card needed</li><li>Your guests, budget and vendors saved to the cloud</li></ul>';
   const g = gate((page ? '<a class="gx" href="/planner" aria-label="Back to the planner page">←</a>' : '') + head + (msg ? '<div class="banner">' + esc(msg) + '</div>' : '') +
-    '<form data-f1><label class="field">Your email<input class="inp" type="email" name="email" autocomplete="email" required placeholder="you@example.com"></label><button class="btn pri wide">Send me a sign-in code</button></form>' +
+    '<form data-f1><label class="field">Your email<input class="inp" type="email" name="email" autocomplete="email" required placeholder="you@example.com"></label><label class="field" data-pwf style="display:none">Password<span class="pwrow"><input class="inp" type="password" name="password" autocomplete="current-password" placeholder="Your password"><button type="button" class="pweye" data-eye aria-label="Show password">Show</button></span></label><button class="btn pri wide" data-go1>Send me a sign-in code</button><button type="button" class="btn ghost wide sm" data-mode>Sign in with a password instead</button></form>' +
     '<form data-f2 style="display:none"><p class="note">We sent a 6-digit code to <b data-em></b>. It may take a minute; check spam too.</p><label class="field">Code<input class="inp code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required placeholder="••••••"></label><button class="btn pri wide">Sign in</button><button type="button" class="btn ghost wide" data-back>Use a different email</button></form>' +
     '<div class="or"><span>or</span></div><button class="btn wide" data-demo>Explore the sample planner first</button><p class="note" style="font-size:11.5px;margin-top:10px">The sample stays on this device. No sign-up needed.</p>' +
     (page ? '<p class="gswitch">' + (login ? 'New here? <a href="/planner/signup">Start a free trial</a>' : 'Already have a planner? <a href="/planner/login">Sign in</a>') + '</p>' : ''));
   if (!login) lpConfig().then(c => { const t = (c.plans || []).find(p => p.isTrial); if (t) $$('[data-trial-days]', g).forEach(e => { e.textContent = t.durationDays; }); });
-  const f1 = $('[data-f1]', g), f2 = $('[data-f2]', g);
-  let email = '';
+  const f1 = $('[data-f1]', g), f2 = $('[data-f2]', g), go1 = $('[data-go1]', f1);
+  let email = '', pwMode = login && store.get('pp_pwmode') === '1';
+  const setMode = on => {
+    pwMode = on; store.set('pp_pwmode', on ? '1' : '0');
+    $('[data-pwf]', f1).style.display = on ? '' : 'none'; f1.password.required = on;
+    go1.textContent = on ? 'Sign in' : 'Send me a sign-in code';
+    $('[data-mode]', f1).textContent = on ? 'Email me a code instead' : 'Sign in with a password instead';
+  };
+  setMode(pwMode);
+  $('[data-mode]', f1).onclick = () => { setMode(!pwMode); (pwMode ? f1.password : f1.email).focus(); };
+  $('[data-eye]', f1).onclick = e => { const show = f1.password.type === 'password'; f1.password.type = show ? 'text' : 'password'; e.target.textContent = show ? 'Hide' : 'Show'; };
   f1.onsubmit = async e => {
-    e.preventDefault(); const b = $('button', f1); b.disabled = true; b.textContent = 'Sending…';
-    try { const r = await api('/auth/start', { method: 'POST', body: { email: f1.email.value } }); email = r.email; track('Lead'); $('[data-em]', g).textContent = email; f1.style.display = 'none'; f2.style.display = ''; if (r.devCode) f2.code.value = r.devCode; f2.code.focus(); }
-    catch (err) { toast(err.message); } finally { b.disabled = false; b.textContent = 'Send me a sign-in code'; }
+    e.preventDefault(); const b = go1; b.disabled = true; b.textContent = pwMode ? 'Signing in…' : 'Sending…';
+    try {
+      if (pwMode) { const r = await api('/auth/password', { method: 'POST', body: { email: f1.email.value, password: f1.password.value } }); store.set(TOKEN_KEY, r.token); await startCloud(); return; }
+      const r = await api('/auth/start', { method: 'POST', body: { email: f1.email.value } }); email = r.email; track('Lead'); $('[data-em]', g).textContent = email; f1.style.display = 'none'; f2.style.display = ''; if (r.devCode) f2.code.value = r.devCode; f2.code.focus();
+    }
+    catch (err) { toast(err.message); } finally { b.disabled = false; b.textContent = pwMode ? 'Sign in' : 'Send me a sign-in code'; }
   };
   f2.onsubmit = async e => {
     e.preventDefault(); const b = $('button', f2); b.disabled = true;
@@ -271,7 +283,8 @@ async function openPlanner(id, preload) {
 async function startCloud(noAuto) {
   try {
     const me = await api('/me');
-    CLOUD.email = me.email; CLOUD.list = me.planners || [];
+    if (me.token) store.set(TOKEN_KEY, me.token); // still using the planner: stay signed in
+    CLOUD.email = me.email; CLOUD.list = me.planners || []; CLOUD.hasPassword = !!me.hasPassword;
     if (me.support) return openPlanner(CLOUD.list[0].id);
     const last = store.get('pp_last');
     if (!noAuto && last && CLOUD.list.some(p => p.id === last)) return openPlanner(last);
@@ -402,5 +415,34 @@ VIEWS.account = function () {
   const c = el('<div class="card"><h3>Signed in</h3><p><b>' + esc(CLOUD.email || 'Support view') + '</b></p><div class="bar"><button class="btn keep" data-tour>▶ Take the tour</button>' + (CLOUD.list.length > 1 ? '<button class="btn keep" data-switch>Switch planner</button>' : '') + '<button class="btn keep" data-out>Sign out</button></div></div>');
   const sw = $('[data-switch]', c); if (sw) sw.onclick = () => { clearInterval(CLOUD.pollT); CLOUD.on = false; pickScreen(CLOUD.list); };
   $('[data-out]', c).onclick = () => signOut();
-  return [el('<div>' + ph('Account', '') + '</div>').firstChild, c];
+  return [el('<div>' + ph('Account', '') + '</div>').firstChild, c].concat(CLOUD.email ? [passwordCard()] : []);
 };
+
+/* Optional password: sign in with it or with an emailed code, whichever is handier. */
+function passwordCard() {
+  const c = el('<div class="card"></div>');
+  const draw = (editing) => {
+    const has = !!CLOUD.hasPassword;
+    c.innerHTML = '<h3>Password <small>' + (has ? 'set' : 'optional') + '</small></h3>' +
+      '<p class="note">' + (has ? 'You can sign in with your email and password, or with a code sent to your email.' : 'Right now you sign in with a code sent to your email. Set a password if you would rather type one. Codes keep working either way.') + '</p>' +
+      (editing ? '<form data-pw class="pwform"><label class="field">' + (has ? 'New password' : 'Password') + '<span class="pwrow"><input class="inp" type="password" name="p1" autocomplete="new-password" minlength="8" required placeholder="At least 8 characters"><button type="button" class="pweye" data-eye aria-label="Show password">Show</button></span></label><label class="field">Type it again<input class="inp" type="password" name="p2" autocomplete="new-password" minlength="8" required></label><div class="bar"><button class="btn pri">Save password</button><button type="button" class="btn ghost" data-cancel>Cancel</button></div></form>'
+        : '<div class="bar"><button class="btn keep" data-set>' + (has ? 'Change password' : 'Set a password') + '</button>' + (has ? '<button class="btn ghost" data-rm>Remove password</button>' : '') + '</div>');
+    const set = $('[data-set]', c); if (set) set.onclick = () => { draw(true); $('[name=p1]', c).focus(); };
+    const rm = $('[data-rm]', c); if (rm) rm.onclick = async () => {
+      if (!(await ask('Remove your password?', 'You will sign in with a code sent to ' + CLOUD.email + ' instead.', 'Remove'))) return;
+      try { await api('/me/password', { method: 'POST', body: { remove: true } }); CLOUD.hasPassword = false; toast('Password removed'); draw(false); } catch (e) { toast(e.message); }
+    };
+    const f = $('[data-pw]', c); if (!f) return;
+    $('[data-cancel]', c).onclick = () => draw(false);
+    $('[data-eye]', c).onclick = e => { const show = f.p1.type === 'password'; f.p1.type = f.p2.type = show ? 'text' : 'password'; e.target.textContent = show ? 'Hide' : 'Show'; };
+    f.onsubmit = async e => {
+      e.preventDefault();
+      if (f.p1.value !== f.p2.value) return toast('The two passwords don’t match');
+      const b = $('.pri', f); b.disabled = true;
+      try { await api('/me/password', { method: 'POST', body: { password: f.p1.value } }); CLOUD.hasPassword = true; store.set('pp_pwmode', '1'); toast(has ? 'Password changed ✔' : 'Password set ✔ You can use it next time you sign in'); draw(false); }
+      catch (err) { toast(err.message); b.disabled = false; }
+    };
+  };
+  draw(false);
+  return c;
+}
