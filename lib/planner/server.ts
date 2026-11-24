@@ -3,7 +3,7 @@ import { randomBytes, randomInt } from "crypto";
 import type { Payload, Where } from "payload";
 import { sendWithBrevo } from "@/lib/brevo";
 import { PasswordError, checkLogin, hasPassword, removePassword, setPassword } from "@/lib/auth/passwords";
-import { applyPromo, findAffiliate } from "@/lib/pricing";
+import { quoteWithCode } from "@/lib/pricing";
 import {
   LIMIT_KEYS, PlannerError, applyOps, codesMatch, counts, daysLeft, describeOps, effectiveStatus, hashCode, makeToken,
   newExpiry, normEmail, overLimit, readToken, runSheetView, validEmail,
@@ -420,7 +420,8 @@ export async function sharedRunSheet(payload: Payload, token: string) {
 
 /* ---------- payments ---------- */
 
-export async function quotePlan(payload: Payload, plan: PlanView, coupon?: string) {
+/** Price for a planner plan (or the Planner + Invite bundle) after an optional code. */
+export async function quotePlan(payload: Payload, plan: PlanView, coupon?: string, opts: { bundle?: boolean } = {}) {
   if (!coupon) return { total: plan.price, discount: 0 };
   // Planner-only fixed ₹ codes (Admin → Planner landing page & promo codes) come first.
   const g = (await payload.findGlobal({ slug: "planner-landing" as never, depth: 0, overrideAccess: true }).catch(() => null)) as Doc | null;
@@ -430,9 +431,10 @@ export async function quotePlan(payload: Payload, plan: PlanView, coupon?: strin
     const total = Math.max(1, plan.price - Math.max(0, Math.round(Number(own.amountOff) || 0))); // Razorpay needs at least ₹1
     return { total, discount: plan.price - total };
   }
-  const affiliate = await findAffiliate(payload, coupon);
-  if (!affiliate) return { total: plan.price, discount: 0, error: "That code isn’t valid" };
-  return applyPromo(plan.price, affiliate);
+  // Coupon & affiliate codes (Admin → Shop → Coupon & affiliate codes): %, flat ₹ or a special price, per plan.
+  const target = opts.bundle ? ({ kind: "bundle", name: "the Planner + Invite bundle" } as const) : ({ kind: "planner", id: plan.id, name: `the ${plan.name} plan` } as const);
+  const q = await quoteWithCode(payload, coupon, target, plan.price);
+  return q.error ? { total: plan.price, discount: 0, error: q.error } : { total: q.total, discount: q.discount, label: q.label };
 }
 
 /** Applies a confirmed Razorpay payment: switches the plan and extends validity. Safe to call twice (checkout page + webhook). */
