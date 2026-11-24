@@ -34,6 +34,7 @@ export async function POST(req: Request) {
     total: q.total,
     promoCode: q.promoCode,
     discountPercent: q.affiliate?.discountPercent ?? 0,
+    promoLabel: q.promoLabel,
     codeError: q.codeError,
     bonusTitle: q.bonus?.active ? q.bonus.title : null,
     addOns: q.addOns,
