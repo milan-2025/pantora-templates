@@ -700,27 +700,73 @@ export interface Order {
   createdAt: string;
 }
 /**
- * Each affiliate gets a promo code. Share links like pandoratemplates.com/wedding_planner?ref=CODE. See what you owe under 'Affiliate earnings' in the menu.
+ * Discount codes for the shop, the wedding planner, the invite maker and the workout app. Each code can give a % off, a flat ₹ off, or a special price, on everything or only on the products you pick (each product with its own deal). Affiliates can share links like pandoratemplates.com/wedding_planner_sheet?ref=CODE. See what you owe under 'Affiliate earnings'.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "affiliates".
  */
 export interface Affiliate {
   id: string;
-  name: string;
   /**
    * Customers type this at checkout, or arrive via ?ref=CODE
    */
   code: string;
   /**
-   * Customer discount % (up to 99%)
+   * E.g. Riya (Instagram) or Diwali sale. Only you see this.
+   */
+  name: string;
+  active?: boolean | null;
+  /**
+   * Leave empty for no end date.
+   */
+  validUntil?: string | null;
+  /**
+   * Of the amount paid (shop orders). 0 for a plain coupon.
+   */
+  commissionPercent?: number | null;
+  appliesTo?: ('all' | 'listed') | null;
+  /**
+   * A special price only makes sense per product, so set that in the list below.
+   */
+  discountType?: ('percent' | 'flat') | null;
+  /**
+   * Up to 99%
    */
   discountPercent?: number | null;
   /**
-   * Affiliate commission, as % of the amount paid
+   * Taken off the price (never below ₹1).
    */
-  commissionPercent?: number | null;
-  active?: boolean | null;
+  discountAmount?: number | null;
+  /**
+   * A deal for a particular product or plan. It beats the 'Deal on everything' for that product. Leave the product/plan box empty to cover every product in that group.
+   */
+  productDeals?:
+    | {
+        kind: 'shop' | 'planner' | 'bundle' | 'invite' | 'workout';
+        /**
+         * Empty = every shop product
+         */
+        shopProduct?: (string | null) | Product;
+        /**
+         * Empty = every paid planner plan
+         */
+        plannerPlan?: (string | null) | PlannerPlan;
+        /**
+         * Empty = every invite plan
+         */
+        invitePlan?: ('basic' | 'premium' | 'royal') | null;
+        /**
+         * Empty = every paid workout plan
+         */
+        workoutPlan?: (string | null) | WorkoutPlan;
+        type: 'percent' | 'flat' | 'price';
+        /**
+         * % for a percentage, ₹ for a flat amount or a special price
+         */
+        value: number;
+        id?: string | null;
+      }[]
+    | null;
   email?: string | null;
   phone?: string | null;
   /**
@@ -728,6 +774,114 @@ export interface Affiliate {
    */
   payoutDetails?: string | null;
   notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The free trial and the paid plans for the online wedding planner. Changes apply immediately to everyone on the plan. Leave a limit empty for unlimited. Exactly one plan should be ticked as the free trial.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "planner-plans".
+ */
+export interface PlannerPlan {
+  id: string;
+  name: string;
+  /**
+   * Short code, e.g. family. Don't change it once people have bought the plan.
+   */
+  planId: string;
+  /**
+   * Lower shows first.
+   */
+  sortOrder?: number | null;
+  /**
+   * New sign-ups start on this plan.
+   */
+  isTrial?: boolean | null;
+  /**
+   * Untick to stop selling it. People already on it keep it.
+   */
+  active?: boolean | null;
+  price?: number | null;
+  /**
+   * Trial length for the trial plan, e.g. 7 or 14.
+   */
+  durationDays: number;
+  /**
+   * Extra family emails the owner can invite (0 = none).
+   */
+  collaborators?: number | null;
+  tagline?: string | null;
+  /**
+   * E.g. “Most chosen”.
+   */
+  badge?: string | null;
+  features?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Most rows a planner on this plan can have in each list. People already above a limit (after a downgrade) can still edit and delete, just not add more.
+   */
+  limits?: {
+    guests?: number | null;
+    vendors?: number | null;
+    payments?: number | null;
+    tasks?: number | null;
+    functions?: number | null;
+    hotels?: number | null;
+    vehicles?: number | null;
+    shopping?: number | null;
+    shagun?: number | null;
+    runsheet?: number | null;
+    rituals?: number | null;
+    milni?: number | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The free challenge and the paid plans. Changes apply at once to everyone on the plan. Exactly one plan should be ticked as free.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "workout-plans".
+ */
+export interface WorkoutPlan {
+  id: string;
+  name: string;
+  /**
+   * E.g. basic. Don't change it once sold.
+   */
+  planId: string;
+  sortOrder?: number | null;
+  isFree?: boolean | null;
+  active?: boolean | null;
+  price?: number | null;
+  /**
+   * Length of the free challenge for the free plan (e.g. 14).
+   */
+  durationDays?: number | null;
+  /**
+   * People the buyer can add on their plan, besides themselves.
+   */
+  seats?: number | null;
+  /**
+   * Per person. Unused photos don't carry over.
+   */
+  photosPerWeek?: number | null;
+  tagline?: string | null;
+  /**
+   * E.g. “Best value”.
+   */
+  badge?: string | null;
+  features?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -915,71 +1069,6 @@ export interface Planner {
     | number
     | boolean
     | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * The free trial and the paid plans for the online wedding planner. Changes apply immediately to everyone on the plan. Leave a limit empty for unlimited. Exactly one plan should be ticked as the free trial.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "planner-plans".
- */
-export interface PlannerPlan {
-  id: string;
-  name: string;
-  /**
-   * Short code, e.g. family. Don't change it once people have bought the plan.
-   */
-  planId: string;
-  /**
-   * Lower shows first.
-   */
-  sortOrder?: number | null;
-  /**
-   * New sign-ups start on this plan.
-   */
-  isTrial?: boolean | null;
-  /**
-   * Untick to stop selling it. People already on it keep it.
-   */
-  active?: boolean | null;
-  price?: number | null;
-  /**
-   * Trial length for the trial plan, e.g. 7 or 14.
-   */
-  durationDays: number;
-  /**
-   * Extra family emails the owner can invite (0 = none).
-   */
-  collaborators?: number | null;
-  tagline?: string | null;
-  /**
-   * E.g. “Most chosen”.
-   */
-  badge?: string | null;
-  features?:
-    | {
-        text: string;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Most rows a planner on this plan can have in each list. People already above a limit (after a downgrade) can still edit and delete, just not add more.
-   */
-  limits?: {
-    guests?: number | null;
-    vendors?: number | null;
-    payments?: number | null;
-    tasks?: number | null;
-    functions?: number | null;
-    hotels?: number | null;
-    vehicles?: number | null;
-    shopping?: number | null;
-    shagun?: number | null;
-    runsheet?: number | null;
-    rituals?: number | null;
-    milni?: number | null;
-  };
   updatedAt: string;
   createdAt: string;
 }
@@ -1391,49 +1480,6 @@ export interface ContactSubmission {
    */
   page?: string | null;
   handled?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * The free challenge and the paid plans. Changes apply at once to everyone on the plan. Exactly one plan should be ticked as free.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "workout-plans".
- */
-export interface WorkoutPlan {
-  id: string;
-  name: string;
-  /**
-   * E.g. basic. Don't change it once sold.
-   */
-  planId: string;
-  sortOrder?: number | null;
-  isFree?: boolean | null;
-  active?: boolean | null;
-  price?: number | null;
-  /**
-   * Length of the free challenge for the free plan (e.g. 14).
-   */
-  durationDays?: number | null;
-  /**
-   * People the buyer can add on their plan, besides themselves.
-   */
-  seats?: number | null;
-  /**
-   * Per person. Unused photos don't carry over.
-   */
-  photosPerWeek?: number | null;
-  tagline?: string | null;
-  /**
-   * E.g. “Best value”.
-   */
-  badge?: string | null;
-  features?:
-    | {
-        text: string;
-        id?: string | null;
-      }[]
-    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2374,11 +2420,27 @@ export interface AppPasswordsSelect<T extends boolean = true> {
  * via the `definition` "affiliates_select".
  */
 export interface AffiliatesSelect<T extends boolean = true> {
-  name?: T;
   code?: T;
-  discountPercent?: T;
-  commissionPercent?: T;
+  name?: T;
   active?: T;
+  validUntil?: T;
+  commissionPercent?: T;
+  appliesTo?: T;
+  discountType?: T;
+  discountPercent?: T;
+  discountAmount?: T;
+  productDeals?:
+    | T
+    | {
+        kind?: T;
+        shopProduct?: T;
+        plannerPlan?: T;
+        invitePlan?: T;
+        workoutPlan?: T;
+        type?: T;
+        value?: T;
+        id?: T;
+      };
   email?: T;
   phone?: T;
   payoutDetails?: T;
