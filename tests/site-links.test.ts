@@ -27,7 +27,7 @@ describe("link map", () => {
     expect(r.sitemap).toMatch(/\/sitemap\.xml$/);
   });
   it("lists the landing pages that are not in the admin in the sitemap", () => {
-    expect(SITEMAP_LANDING_PAGES.map((p) => p.url)).toEqual(["/planner", "/shaadi", "/workout", "/crm-software"]);
+    expect(SITEMAP_LANDING_PAGES.map((p) => p.url)).toEqual(["/planner", "/shaadi", "/photos", "/workout", "/crm-software"]);
     for (const p of SITEMAP_LANDING_PAGES) expect(blocked(p.url)).toBe(false);
   });
   it("never redirects an address to itself or into a loop", () => {
@@ -41,7 +41,7 @@ describe("link map", () => {
     expect(PRODUCT_SLUG_ALIASES).toEqual({ wedding_planner: "wedding_planner_sheet", workout_challenge: "workout_challange" });
   });
   it("knows which pages are outside the Next.js app, so they get plain links", () => {
-    for (const u of ["/planner", "/planner/login", "/shaadi", "/shaadi?x=1", "/crm-software", "/crm", "/CRM/login.html", "/i/abc", "/property/x"]) expect(isStandalonePage(u), u).toBe(true);
+    for (const u of ["/planner", "/planner/login", "/shaadi", "/shaadi?x=1", "/crm-software", "/crm", "/CRM/login.html", "/i/abc", "/property/x", "/photos", "/p/aditi-kabir", "/p/aditi-kabir/manage"]) expect(isStandalonePage(u), u).toBe(true);
     for (const u of ["/", "/stays", "/blog", "/plannerx", "/wedding_planner_sheet", "/contact", "/#products", "/information"]) expect(isStandalonePage(u), u).toBe(false);
   });
   it("suggests the wedding tools on wedding products, and other tools elsewhere", () => {

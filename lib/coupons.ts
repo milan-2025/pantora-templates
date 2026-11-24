@@ -17,7 +17,8 @@ export type CouponTarget =
   | { kind: "planner"; id: string; name?: string }
   | { kind: "bundle"; name?: string }
   | { kind: "invite"; plan: string; name?: string }
-  | { kind: "workout"; id: string; name?: string };
+  | { kind: "workout"; id: string; name?: string }
+  | { kind: "photos"; plan: string; name?: string };
 
 type Rel = string | { id?: string | null } | null | undefined;
 export type ProductDealRow = {
@@ -26,6 +27,7 @@ export type ProductDealRow = {
   plannerPlan?: Rel;
   invitePlan?: string | null;
   workoutPlan?: Rel;
+  photosPlan?: string | null;
   type?: string | null;
   value?: number | null;
 };
@@ -77,6 +79,8 @@ function matchScore(row: ProductDealRow, t: CouponTarget): number {
     }
     case "invite":
       return !row.invitePlan ? 1 : row.invitePlan === t.plan ? 2 : 0;
+    case "photos":
+      return !row.photosPlan ? 1 : row.photosPlan === t.plan ? 2 : 0;
     case "bundle":
       return 2;
   }

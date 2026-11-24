@@ -76,6 +76,8 @@ export interface Config {
     'planner-history': PlannerHistory;
     'planner-logins': PlannerLogin;
     'app-passwords': AppPassword;
+    'photo-galleries': PhotoGallery;
+    'photo-items': PhotoItem;
     affiliates: Affiliate;
     pages: Page;
     posts: Post;
@@ -108,6 +110,8 @@ export interface Config {
     'planner-history': PlannerHistorySelect<false> | PlannerHistorySelect<true>;
     'planner-logins': PlannerLoginsSelect<false> | PlannerLoginsSelect<true>;
     'app-passwords': AppPasswordsSelect<false> | AppPasswordsSelect<true>;
+    'photo-galleries': PhotoGalleriesSelect<false> | PhotoGalleriesSelect<true>;
+    'photo-items': PhotoItemsSelect<false> | PhotoItemsSelect<true>;
     affiliates: AffiliatesSelect<false> | AffiliatesSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
@@ -138,12 +142,14 @@ export interface Config {
     'invite-plans': InvitePlan;
     'planner-landing': PlannerLanding;
     'workout-settings': WorkoutSetting;
+    'photo-plans': PhotoPlan;
   };
   globalsSelect: {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     'invite-plans': InvitePlansSelect<false> | InvitePlansSelect<true>;
     'planner-landing': PlannerLandingSelect<false> | PlannerLandingSelect<true>;
     'workout-settings': WorkoutSettingsSelect<false> | WorkoutSettingsSelect<true>;
+    'photo-plans': PhotoPlansSelect<false> | PhotoPlansSelect<true>;
   };
   locale: null;
   widgets: {
@@ -700,7 +706,7 @@ export interface Order {
   createdAt: string;
 }
 /**
- * Discount codes for the shop, the wedding planner, the invite maker and the workout app. Each code can give a % off, a flat ₹ off, or a special price, on everything or only on the products you pick (each product with its own deal). Affiliates can share links like pandoratemplates.com/wedding_planner_sheet?ref=CODE. See what you owe under 'Affiliate earnings'.
+ * Discount codes for the shop, the wedding planner, the invite maker, wedding photo galleries and the workout app. Each code can give a % off, a flat ₹ off, or a special price, on everything or only on the products you pick (each product with its own deal). Affiliates can share links like pandoratemplates.com/wedding_planner_sheet?ref=CODE. See what you owe under 'Affiliate earnings'.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "affiliates".
@@ -742,7 +748,7 @@ export interface Affiliate {
    */
   productDeals?:
     | {
-        kind: 'shop' | 'planner' | 'bundle' | 'invite' | 'workout';
+        kind: 'shop' | 'planner' | 'bundle' | 'invite' | 'workout' | 'photos';
         /**
          * Empty = every shop product
          */
@@ -759,6 +765,10 @@ export interface Affiliate {
          * Empty = every paid workout plan
          */
         workoutPlan?: (string | null) | WorkoutPlan;
+        /**
+         * Empty = every photo gallery plan and renewal
+         */
+        photosPlan?: ('basic' | 'premium' | 'royal' | 'renew') | null;
         type: 'percent' | 'flat' | 'price';
         /**
          * % for a percentage, ₹ for a flat amount or a special price
@@ -1161,6 +1171,109 @@ export interface AppPassword {
   hash: string;
   failed?: number | null;
   lockedUntil?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Guests open pandoratemplates.com/p/<link>. To give a couple a plan without an online payment: open the gallery, set Payment status to Paid, choose the plan and save. Deleting a gallery deletes its files too.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "photo-galleries".
+ */
+export interface PhotoGallery {
+  id: string;
+  names: string;
+  slug: string;
+  contactEmail?: string | null;
+  phone?: string | null;
+  weddingDate?: string | null;
+  plan?: ('free' | 'basic' | 'premium' | 'royal') | null;
+  paymentStatus?: ('unpaid' | 'paid') | null;
+  expiresAt?: string | null;
+  state?: ('active' | 'expired' | 'purged') | null;
+  photoCount?: number | null;
+  videoCount?: number | null;
+  storageMb?: number | null;
+  videoMb?: number | null;
+  /**
+   * [{ id, name }] in the order guests see them.
+   */
+  albums?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  cover?: string | null;
+  message?: string | null;
+  /**
+   * Set by the couple. Empty = no PIN.
+   */
+  pinHash?: string | null;
+  guestUploads?: boolean | null;
+  allowDownload?: boolean | null;
+  inviteSlug?: string | null;
+  orderId?: string | null;
+  /**
+   * The plan (or 'renew') being paid for in the last order.
+   */
+  orderPlan?: string | null;
+  amount?: number | null;
+  promoCode?: string | null;
+  paymentId?: string | null;
+  lastPaidOrder?: string | null;
+  paidAt?: string | null;
+  /**
+   * The couple's private key. Never share it.
+   */
+  editToken?: string | null;
+  reminderSentAt?: string | null;
+  purgedAt?: string | null;
+  source?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Every uploaded photo and video. Couples manage these from their gallery dashboard; delete them there so the files are removed too.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "photo-items".
+ */
+export interface PhotoItem {
+  id: string;
+  gallery: string | PhotoGallery;
+  kind: 'photo' | 'video';
+  album?: string | null;
+  status?: ('pending' | 'ready' | 'review' | 'hidden') | null;
+  by?: ('couple' | 'guest') | null;
+  name?: string | null;
+  guestName?: string | null;
+  /**
+   * Storage folder: g/<gallery>/<random>
+   */
+  base: string;
+  /**
+   * Which files exist: d = display, t = thumbnail, o = original, v = video, with sizes.
+   */
+  files?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  width?: number | null;
+  height?: number | null;
+  bytes?: number | null;
+  duration?: number | null;
+  takenAt?: string | null;
+  bunnyGuid?: string | null;
+  bunnyState?: ('sent' | 'ready' | 'failed') | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1864,6 +1977,14 @@ export interface PayloadLockedDocument {
         value: string | AppPassword;
       } | null)
     | ({
+        relationTo: 'photo-galleries';
+        value: string | PhotoGallery;
+      } | null)
+    | ({
+        relationTo: 'photo-items';
+        value: string | PhotoItem;
+      } | null)
+    | ({
         relationTo: 'affiliates';
         value: string | Affiliate;
       } | null)
@@ -2417,6 +2538,69 @@ export interface AppPasswordsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "photo-galleries_select".
+ */
+export interface PhotoGalleriesSelect<T extends boolean = true> {
+  names?: T;
+  slug?: T;
+  contactEmail?: T;
+  phone?: T;
+  weddingDate?: T;
+  plan?: T;
+  paymentStatus?: T;
+  expiresAt?: T;
+  state?: T;
+  photoCount?: T;
+  videoCount?: T;
+  storageMb?: T;
+  videoMb?: T;
+  albums?: T;
+  cover?: T;
+  message?: T;
+  pinHash?: T;
+  guestUploads?: T;
+  allowDownload?: T;
+  inviteSlug?: T;
+  orderId?: T;
+  orderPlan?: T;
+  amount?: T;
+  promoCode?: T;
+  paymentId?: T;
+  lastPaidOrder?: T;
+  paidAt?: T;
+  editToken?: T;
+  reminderSentAt?: T;
+  purgedAt?: T;
+  source?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "photo-items_select".
+ */
+export interface PhotoItemsSelect<T extends boolean = true> {
+  gallery?: T;
+  kind?: T;
+  album?: T;
+  status?: T;
+  by?: T;
+  name?: T;
+  guestName?: T;
+  base?: T;
+  files?: T;
+  width?: T;
+  height?: T;
+  bytes?: T;
+  duration?: T;
+  takenAt?: T;
+  bunnyGuid?: T;
+  bunnyState?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "affiliates_select".
  */
 export interface AffiliatesSelect<T extends boolean = true> {
@@ -2437,6 +2621,7 @@ export interface AffiliatesSelect<T extends boolean = true> {
         plannerPlan?: T;
         invitePlan?: T;
         workoutPlan?: T;
+        photosPlan?: T;
         type?: T;
         value?: T;
         id?: T;
@@ -3243,6 +3428,54 @@ export interface WorkoutSetting {
   createdAt?: string | null;
 }
 /**
+ * Names, prices (₹, incl. GST), limits and bullet points of the gallery plans. Leave the 'Plan' dropdown as it is: it decides which features each plan unlocks. Changes apply to new payments.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "photo-plans".
+ */
+export interface PhotoPlan {
+  id: string;
+  /**
+   * Optional line above the plans, e.g. “Wedding season offer: 20% off with code PHOTOS20”.
+   */
+  banner?: string | null;
+  /**
+   * What a couple pays to keep a paid gallery online one more year.
+   */
+  renewalPrice?: number | null;
+  reminderDays?: number | null;
+  plans?:
+    | {
+        planId: 'free' | 'basic' | 'premium' | 'royal';
+        name: string;
+        /**
+         * Ignored for Free.
+         */
+        price?: number | null;
+        maxPhotos?: number | null;
+        videoGb?: number | null;
+        /**
+         * Paid plans
+         */
+        months?: number | null;
+        freeDays?: number | null;
+        guestUploads?: boolean | null;
+        originals?: boolean | null;
+        tagline?: string | null;
+        badge?: string | null;
+        features?:
+          | {
+              text: string;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings_select".
  */
@@ -3405,6 +3638,40 @@ export interface WorkoutSettingsSelect<T extends boolean = true> {
       };
   vapidPublic?: T;
   vapidPrivate?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "photo-plans_select".
+ */
+export interface PhotoPlansSelect<T extends boolean = true> {
+  banner?: T;
+  renewalPrice?: T;
+  reminderDays?: T;
+  plans?:
+    | T
+    | {
+        planId?: T;
+        name?: T;
+        price?: T;
+        maxPhotos?: T;
+        videoGb?: T;
+        months?: T;
+        freeDays?: T;
+        guestUploads?: T;
+        originals?: T;
+        tagline?: T;
+        badge?: T;
+        features?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
