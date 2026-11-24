@@ -1496,7 +1496,7 @@ setTimeout(plUI,0);
  var _nk=noKey;noKey=function(sl,bad){_nk(sl,bad);var n=document.querySelector(".nl");if(n){var p=document.createElement("p");p.style.cssText="font-family:Inter,sans-serif;font-size:14px;margin:18px 0 6px;opacity:.85";p.textContent="No email handy? Sign in with a code instead:";n.appendChild(p);edBox(sl,n,true)}};
 })();
 /* ===== v18: works offline (installed or not). The worker /shaadi-sw.js keeps this editor, the draft and offline autosaves on the device. ===== */
-(function(){if(!("serviceWorker" in navigator)||!(EM||/^\/shaadi\/?$/.test(location.pathname)))return;
+(function(){if(!("serviceWorker" in navigator)||!(EM||/^\/shaadi\/create\/?$/.test(location.pathname)))return;
  ["/shaadi","/i/"].forEach(function(s){navigator.serviceWorker.register("/shaadi-sw.js",{scope:s}).catch(function(){})});
  var fl=function(){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){if(r.active&&/\/(shaadi|i\/)$/.test(r.scope))r.active.postMessage({type:"flush"})})})};
  addEventListener("online",function(){fl();toast("Back online. Saving your changes…")});
