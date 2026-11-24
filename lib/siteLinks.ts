@@ -110,6 +110,7 @@ export const ROBOTS_DISALLOW: readonly string[] = [
 export const SITEMAP_LANDING_PAGES: readonly { url: string; priority: number; changeFrequency: "daily" | "weekly" | "monthly" }[] = [
   { url: "/planner", priority: 0.9, changeFrequency: "weekly" },
   { url: "/shaadi", priority: 0.8, changeFrequency: "monthly" },
+  { url: "/photos", priority: 0.8, changeFrequency: "monthly" },
   { url: "/workout", priority: 0.8, changeFrequency: "weekly" },
   { url: "/crm-software", priority: 0.6, changeFrequency: "monthly" },
 ];
@@ -119,7 +120,7 @@ export const SITEMAP_LANDING_PAGES: readonly { url: string; priority: number; ch
  * Links to them must be plain <a> tags: Next's <Link> would prefetch them as app pages, and that request never finishes.
  */
 export function isStandalonePage(href: string): boolean {
-  return /^\/(planner|shaadi|crm-software|crm|i|property|unit|catalogue)(\/|\?|#|\.|$)/i.test(href);
+  return /^\/(planner|shaadi|photos|p|crm-software|crm|i|property|unit|catalogue)(\/|\?|#|\.|$)/i.test(href);
 }
 
 /** Same-topic links for "You might also like" on a product's sales page. */

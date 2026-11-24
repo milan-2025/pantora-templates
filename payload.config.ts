@@ -24,11 +24,14 @@ import { PlannerPlans } from "./collections/PlannerPlans";
 import { PlannerHistory } from "./collections/PlannerHistory";
 import { PlannerLogins } from "./collections/PlannerLogins";
 import { AppPasswords } from "./collections/AppPasswords";
+import { PhotoGalleries } from "./collections/PhotoGalleries";
+import { PhotoItems } from "./collections/PhotoItems";
 import { SiteSettings } from "./globals/SiteSettings";
 import { InvitePlans } from "./globals/InvitePlans";
 import { PlannerLanding } from "./globals/PlannerLanding";
 import { WORKOUT_COLLECTIONS } from "./collections/Workout";
 import { WorkoutSettings } from "./globals/WorkoutSettings";
+import { PhotoPlans } from "./globals/PhotoPlans";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -81,8 +84,8 @@ export default buildConfig({
       },
     },
   },
-  collections: [Products, Orders, Invites, InviteRsvps, Planners, PlannerPlans, PlannerHistory, PlannerLogins, AppPasswords, Affiliates, Pages, Posts, Media, ProductFiles, ContactSubmissions, ...WORKOUT_COLLECTIONS, Users],
-  globals: [SiteSettings, InvitePlans, PlannerLanding, WorkoutSettings],
+  collections: [Products, Orders, Invites, InviteRsvps, Planners, PlannerPlans, PlannerHistory, PlannerLogins, AppPasswords, PhotoGalleries, PhotoItems, Affiliates, Pages, Posts, Media, ProductFiles, ContactSubmissions, ...WORKOUT_COLLECTIONS, Users],
+  globals: [SiteSettings, InvitePlans, PlannerLanding, WorkoutSettings, PhotoPlans],
   editor: lexicalEditor(),
   // Admin emails (e.g. "forgot password") go through Brevo, like the rest of the site's email.
   email: brevoAdapter,

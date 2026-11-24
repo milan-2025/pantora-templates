@@ -16,6 +16,7 @@ export const RULE_KINDS = [
   { label: "Planner + Invite bundle", value: "bundle" },
   { label: "Wedding invite plan", value: "invite" },
   { label: "Workout app plan", value: "workout" },
+  { label: "Wedding photo gallery plan", value: "photos" },
 ];
 
 const upper: FieldHook = ({ value }) => (typeof value === "string" ? value.trim().toUpperCase() : value);
@@ -28,7 +29,7 @@ export const Affiliates: CollectionConfig = {
     useAsTitle: "code",
     defaultColumns: ["code", "name", "appliesTo", "discountType", "commissionPercent", "active"],
     description:
-      "Discount codes for the shop, the wedding planner, the invite maker and the workout app. " +
+      "Discount codes for the shop, the wedding planner, the invite maker, wedding photo galleries and the workout app. " +
       "Each code can give a % off, a flat ₹ off, or a special price, on everything or only on the products you pick (each product with its own deal). " +
       "Affiliates can share links like pandoratemplates.com/wedding_planner_sheet?ref=CODE. See what you owe under 'Affiliate earnings'.",
   },
@@ -162,6 +163,18 @@ export const Affiliates: CollectionConfig = {
               relationTo: "workout-plans",
               label: "Workout plan",
               admin: { width: "60%", condition: (_, row) => row?.kind === "workout", description: "Empty = every paid workout plan" },
+            },
+            {
+              name: "photosPlan",
+              type: "select",
+              label: "Photo gallery plan",
+              options: [
+                { label: "Basic", value: "basic" },
+                { label: "Premium", value: "premium" },
+                { label: "Royal", value: "royal" },
+                { label: "Renewal (1 more year)", value: "renew" },
+              ],
+              admin: { width: "60%", condition: (_, row) => row?.kind === "photos", description: "Empty = every photo gallery plan and renewal" },
             },
           ],
         },

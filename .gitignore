@@ -44,3 +44,4 @@ next-env.d.ts
 # payload (local uploads when Vercel Blob isn't configured)
 /media
 /product-files
+.photos-local
