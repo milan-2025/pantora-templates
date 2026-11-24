@@ -4,6 +4,7 @@ import { InviteLinksField as InviteLinksField_2c229788147671386bad7dc5b5300bb3 }
 import { InviteLinksCell as InviteLinksCell_2c229788147671386bad7dc5b5300bb3 } from '@/components/admin/InviteLinks'
 import { PlannerLinksField as PlannerLinksField_34f3b5981afaf6598d513d9f0948931c } from '@/components/admin/PlannerLinks'
 import { PlannerLinksCell as PlannerLinksCell_34f3b5981afaf6598d513d9f0948931c } from '@/components/admin/PlannerLinks'
+import { CouponDealRowLabel as CouponDealRowLabel_a3480cf0e065b49002cd34cde830bc2c } from '@/components/admin/CouponDealRowLabel'
 import { RscEntryLexicalCell as RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { RscEntryLexicalField as RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { LexicalDiffComponent as LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
@@ -42,6 +43,7 @@ export const importMap = {
   "@/components/admin/InviteLinks#InviteLinksCell": InviteLinksCell_2c229788147671386bad7dc5b5300bb3,
   "@/components/admin/PlannerLinks#PlannerLinksField": PlannerLinksField_34f3b5981afaf6598d513d9f0948931c,
   "@/components/admin/PlannerLinks#PlannerLinksCell": PlannerLinksCell_34f3b5981afaf6598d513d9f0948931c,
+  "@/components/admin/CouponDealRowLabel#CouponDealRowLabel": CouponDealRowLabel_a3480cf0e065b49002cd34cde830bc2c,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalCell": RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalField": RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#LexicalDiffComponent": LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e,
