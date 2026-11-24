@@ -61,7 +61,7 @@ export function Pricing({ product, offer }: LandingProps) {
               </div>
               {referral && (
                 <p className="mt-2 text-sm font-medium text-teal">
-                  Includes {referral.discountPercent}% off with code {referral.code}, applied automatically at checkout
+                  Includes {referral.label} with code {referral.code}, applied automatically at checkout
                 </p>
               )}
             </div>

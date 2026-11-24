@@ -10,7 +10,7 @@ export type LiveData = {
   price: number;
   regularPrice: number;
   /** Set when the visitor came via an affiliate's ?ref=CODE link and that code gives a discount. */
-  referral: { code: string; discountPercent: number; priceBefore: number } | null;
+  referral: { code: string; label: string; priceBefore: number } | null;
   /** Fixed end date of the offer price, if any. */
   endsAt: string | null;
   /** This visitor's quick-order bonus (window from their first visit), if one is running. */

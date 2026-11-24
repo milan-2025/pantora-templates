@@ -2,7 +2,8 @@ import "server-only";
 import type { Payload } from "payload";
 import { sendWithBrevo } from "@/lib/brevo";
 import { getPlanConfig } from "@/lib/invites";
-import { findAffiliate } from "@/lib/pricing";
+import { asCoupon, findAffiliate } from "@/lib/pricing";
+import { dealFor, dealLabel } from "@/lib/coupons";
 import type { Invite } from "@/payload-types";
 
 const siteUrl = () => process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
@@ -23,15 +24,19 @@ export async function emailCouple(payload: Payload, invite: Invite, opts: { kind
   const cfg = await getPlanConfig(payload);
   const promoCode = opts.kind === "reminder" ? (opts.promo?.trim().toUpperCase() || cfg.reminders.promoCode) : "";
   const affiliate = promoCode ? await findAffiliate(payload, promoCode) : null;
-  const pct = affiliate?.discountPercent ?? 0;
+  // The code's deal on the invite plans, best known first (Premium is the one most couples pick).
+  const deal = affiliate
+    ? (["premium", "basic", "royal"] as const).map((plan) => ({ plan, d: dealFor(asCoupon(affiliate), { kind: "invite", plan }) })).find((x) => x.d && x.d.value > 0) ?? null
+    : null;
+  const offer = deal?.d ? dealLabel(deal.d) + (deal.d.fromDefault ? "" : ` on ${cfg.plans.find((p) => p.id === deal.plan)?.name ?? deal.plan}`) : "";
   const link = draftLink(invite, affiliate ? promoCode : undefined);
   const names = invite.names ? esc(invite.names) : "your wedding";
   const saved = opts.kind === "saved";
 
-  const promoBox = affiliate && pct > 0
+  const promoBox = affiliate && offer
     ? `<div style="margin:18px 0;padding:14px 16px;border:1px dashed #C9972B;border-radius:14px;background:#FFF8E6;text-align:center">
          <div style="font-size:13px;color:#7A5A12">A little something to help you finish</div>
-         <div style="font-size:22px;font-weight:700;margin:4px 0">${pct}% off with code ${esc(promoCode)}</div>
+         <div style="font-size:22px;font-weight:700;margin:4px 0">${esc(offer[0].toUpperCase() + offer.slice(1))} with code ${esc(promoCode)}</div>
          <div style="font-size:12px;color:#7A5A12">It is applied automatically when you use the button below.</div></div>`
     : "";
   const note = !saved && cfg.reminders.message ? `<p style="white-space:pre-line">${esc(cfg.reminders.message)}</p>` : "";

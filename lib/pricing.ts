@@ -1,5 +1,6 @@
 import type { Payload } from "payload";
 import type { Affiliate, Product } from "@/payload-types";
+import { applyDeal, dealFor, dealLabel, isUsable, type CouponCode, type CouponTarget, type Deal } from "@/lib/coupons";
 
 /**
  * The single source of truth for what a customer pays. Always runs on the server.
@@ -109,7 +110,7 @@ export function getUpsellOptions(product: Product): UpsellOption[] {
   return options;
 }
 
-/** An active affiliate by promo code (case-insensitive), or null. */
+/** A usable coupon/affiliate code (active, not past its end date), case-insensitive, or null. */
 export async function findAffiliate(payload: Payload, rawCode: string | null | undefined): Promise<Affiliate | null> {
   const code = rawCode?.trim().toUpperCase();
   if (!code || !/^[A-Z0-9_-]{3,30}$/.test(code)) return null;
@@ -118,16 +119,35 @@ export async function findAffiliate(payload: Payload, rawCode: string | null | u
     where: { code: { equals: code }, active: { equals: true } },
     limit: 1,
     depth: 0,
+    overrideAccess: true,
   });
-  return res.docs[0] ?? null;
+  const doc = res.docs[0] ?? null;
+  return doc && isUsable(asCoupon(doc)) ? doc : null;
 }
 
-/** The promo-code discount on an amount, exactly as checkout charges it. */
-export function applyPromo(amount: number, affiliate: Affiliate | null) {
-  const discount = affiliate ? Math.round((amount * (affiliate.discountPercent ?? 0)) / 100) : 0;
-  // Razorpay can't take payments under ₹1, so even a 99% discount leaves at least ₹1 to pay.
-  const total = Math.max(amount > 0 ? 1 : 0, amount - discount);
-  return { discount: amount - total, total };
+/** The coupon fields of an Affiliate document. */
+export const asCoupon = (a: Affiliate): CouponCode => a as unknown as CouponCode;
+
+/**
+ * A code's price on one product or plan, exactly as checkout charges it.
+ * `error` is set when the code doesn't exist, has ended, or doesn't cover this product.
+ */
+export async function quoteWithCode(
+  payload: Payload,
+  rawCode: string,
+  target: CouponTarget,
+  amount: number,
+  fullPrice = amount,
+): Promise<{ discount: number; total: number; deal: Deal | null; label: string; affiliate: Affiliate | null; error?: string }> {
+  const affiliate = await findAffiliate(payload, rawCode);
+  if (!affiliate) return { discount: 0, total: amount, deal: null, label: "", affiliate: null, error: "That code isn’t valid" };
+  const deal = dealFor(asCoupon(affiliate), target);
+  if (!deal) {
+    const what = target.name ? ` on ${target.name}` : target.kind === "shop" ? " on this product" : " on this plan";
+    return { discount: 0, total: amount, deal: null, label: "", affiliate, error: `That code doesn’t work${what}` };
+  }
+  const clean: Deal = { type: deal.type, value: deal.value };
+  return { ...applyDeal(amount, clean, fullPrice), deal: clean, label: dealLabel(clean), affiliate };
 }
 
 export type Quote = {
@@ -145,6 +165,8 @@ export type Quote = {
   total: number;
   affiliate: Affiliate | null;
   promoCode: string | null;
+  /** The code's deal in words, e.g. "20% off" or "special price ₹499". */
+  promoLabel: string;
   /** Set when a code was given but isn't valid. */
   codeError: string | null;
   commission: number;
@@ -161,8 +183,8 @@ export async function getQuote(
   const listPrice = offer.price;
   const code = rawCode?.trim().toUpperCase() || null;
 
-  const affiliate = code ? await findAffiliate(payload, code) : null;
-  const codeError = code && !affiliate ? "This code isn't valid" : null;
+  let affiliate = code ? await findAffiliate(payload, code) : null;
+  let codeError = code && !affiliate ? "This code isn't valid" : null;
 
   // Only upsells from this product's own admin list are accepted; prices always come from there.
   const availableUpsells = getUpsellOptions(product);
@@ -170,8 +192,32 @@ export async function getQuote(
   const addOns = availableUpsells.filter((u) => wanted.has(u.id)).map(({ id, name, price }) => ({ id, name, price }));
   const subtotal = listPrice + addOns.reduce((sum, a) => sum + a.price, 0);
 
-  // A promo code discounts the whole order (main product + add-ons).
-  const { discount, total } = applyPromo(subtotal, affiliate);
+  // The code's deal on each line: the main product, then each add-on (by its own product deal, or the
+  // "deal on everything" when it is a %; a flat ₹ amount off everything is taken once, from the main product).
+  let discount = 0;
+  let promoLabel = "";
+  if (affiliate) {
+    const coupon = asCoupon(affiliate);
+    const mainDeal = dealFor(coupon, { kind: "shop", id: String(product.id) });
+    if (mainDeal) {
+      discount += applyDeal(listPrice, mainDeal).discount; // a special price replaces the price shown now
+      promoLabel = dealLabel(mainDeal);
+    }
+    for (const a of addOns) {
+      const d = dealFor(coupon, { kind: "shop", id: a.id });
+      if (!d || (d.fromDefault && d.type === "flat")) continue;
+      const off = applyDeal(a.price, d).discount;
+      if (off > 0 && !promoLabel) promoLabel = `${dealLabel(d)} ${a.name}`;
+      discount += off;
+    }
+    if (!mainDeal && discount === 0) {
+      codeError = `This code doesn't work on ${product.name}`;
+      affiliate = null;
+    }
+  }
+  // Razorpay can't take payments under ₹1.
+  const total = Math.max(subtotal > 0 ? 1 : 0, subtotal - discount);
+  discount = subtotal - total;
   const commission = affiliate ? Math.round((total * (affiliate.commissionPercent ?? 0)) / 100) : 0;
 
   const bonus = getBonusState(product, ctx);
@@ -186,6 +232,7 @@ export async function getQuote(
     total,
     affiliate,
     promoCode: affiliate ? code : null,
+    promoLabel: affiliate ? promoLabel : "",
     codeError,
     commission,
   };

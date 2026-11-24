@@ -19,6 +19,7 @@ export type QuoteView = {
   total: number;
   promoCode: string | null;
   discountPercent: number;
+  promoLabel?: string;
   codeError: string | null;
   /** Quick-order bonus included with an order placed now, if any. */
   bonusTitle?: string | null;
@@ -282,7 +283,7 @@ export function CheckoutForm({
           {quote.promoCode ? (
             <div className="flex items-center justify-between gap-3 rounded-xl bg-mint px-4 py-3 text-sm">
               <span className="flex items-center gap-2 font-medium text-teal">
-                <Tag className="size-4" /> {quote.promoCode} applied: {quote.discountPercent}% off
+                <Tag className="size-4" /> {quote.promoCode} applied: {quote.promoLabel || `${quote.discountPercent}% off`}
               </span>
               <button type="button" onClick={() => applyCode("")} className="text-charcoal/60 hover:text-plum" aria-label="Remove code">
                 <X className="size-4" />

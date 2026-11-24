@@ -1,7 +1,8 @@
 /*
  * Wedding invite editor offline worker. Registered twice from the editor: scope /shaadi and scope /i/.
- * It only acts for the couple's editor (/shaadi and /i/<link>/edit) and the editor's own data calls.
+ * It only acts for the couple's editor (/shaadi/create and /i/<link>/edit) and the editor's own data calls.
  * Guests' invite pages (/i/<link>, /i/<link>/<guest>) are left alone: always fresh from the server.
+ * The landing page (/shaadi) is left alone too.
  * - The editor page (same for every invite) is kept on the device, so it opens with no internet.
  * - The couple's draft (/api/shaadi/mine/<link>) is kept from the last load. Autosaves made offline are kept
  *   (the latest one per invite) and sent when the connection is back; reopening offline shows them.
@@ -9,16 +10,17 @@
  * - Fonts, the QR library and photos the editor already showed are kept so the design looks right offline.
  * Served from the site root because a worker may only control paths at or below its own folder.
  */
-const VERSION = "shaadi-v2";
+const VERSION = "shaadi-v3";
 const SHELL = VERSION + "-shell";
 const DATA = "shaadi-data";
 const FILES = "shaadi-files";
 const EDIT = "/i/__edit"; // one copy of the editor page serves every /i/<link>/edit
 
-const isEditPage = (p) => p === "/shaadi" || p === "/shaadi/" || /^\/i\/[^/]+\/edit\/?$/.test(p);
+const NEW = "/shaadi/create";
+const isEditPage = (p) => p === NEW || p === NEW + "/" || /^\/i\/[^/]+\/edit\/?$/.test(p);
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(SHELL).then((c) => c.add("/shaadi")).catch(() => null).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(SHELL).then((c) => c.add(NEW)).catch(() => null).then(() => self.skipWaiting()));
 });
 self.addEventListener("activate", (e) => {
   e.waitUntil((async () => {
@@ -109,7 +111,7 @@ self.addEventListener("fetch", (e) => {
   const same = url.origin === location.origin;
   if (same && req.mode === "navigate") {
     if (!isEditPage(url.pathname)) return; // guests' invite pages: untouched
-    const key = url.pathname.startsWith("/i/") ? EDIT : "/shaadi";
+    const key = url.pathname.startsWith("/i/") ? EDIT : NEW;
     e.respondWith((async () => {
       const c = await caches.open(SHELL);
       try {
@@ -117,7 +119,7 @@ self.addEventListener("fetch", (e) => {
         if (res.ok && !res.redirected) c.put(key, res.clone());
         return res;
       } catch (er) {
-        return (await c.match(key)) || (await c.match(EDIT)) || (await c.match("/shaadi")) || new Response("<h1>You're offline</h1><p>Open your invite editor once with internet on this device, and it will open offline after that.</p>", { status: 503, headers: { "content-type": "text/html; charset=utf-8" } });
+        return (await c.match(key)) || (await c.match(EDIT)) || (await c.match(NEW)) || new Response("<h1>You're offline</h1><p>Open your invite editor once with internet on this device, and it will open offline after that.</p>", { status: 503, headers: { "content-type": "text/html; charset=utf-8" } });
       }
     })());
     return;
@@ -134,7 +136,7 @@ self.addEventListener("fetch", (e) => {
   }
   if (same && /^\/api\/shaadi\/invites\/[^/]+$/.test(url.pathname) && req.method === "PUT") { e.respondWith(autosave(req, url)); return; }
   if (req.method !== "GET") return;
-  if (same && url.pathname.startsWith("/shaadi/")) { e.respondWith(file(req)); return; }
+  if (same && url.pathname.startsWith("/shaadi/") && !url.pathname.startsWith(NEW)) { e.respondWith(file(req)); return; }
   if (["fonts.googleapis.com", "fonts.gstatic.com", "cdnjs.cloudflare.com", "res.cloudinary.com"].includes(url.hostname)) e.respondWith(file(req));
 });
 

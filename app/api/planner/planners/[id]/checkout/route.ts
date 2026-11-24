@@ -27,7 +27,7 @@ export const POST = route(async (req, { id }) => {
   }
   if (!plan || plan.isTrial || !plan.active || plan.price < 1) throw new PlannerError("Please pick a plan");
   const coupon = typeof b.coupon === "string" && b.coupon.trim() ? b.coupon.trim().toUpperCase().slice(0, 30) : undefined;
-  const quote = await quotePlan(payload, plan, coupon);
+  const quote = await quotePlan(payload, plan, coupon, { bundle: isBundle });
   if ("error" in quote && quote.error) throw new PlannerError(quote.error);
   if (b.quoteOnly) return { total: quote.total, discount: quote.discount, name: plan.name };
 

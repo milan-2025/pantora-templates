@@ -4,7 +4,7 @@ import type { Payload } from "payload";
 import { sendWithBrevo } from "@/lib/brevo";
 import { PasswordError, checkLogin, hasPassword, removePassword, setPassword } from "@/lib/auth/passwords";
 import { getPaymentProvider } from "@/lib/payments";
-import { applyPromo, findAffiliate } from "@/lib/pricing";
+import { quoteWithCode } from "@/lib/pricing";
 import { codesMatch, hashCode, makeToken, readToken } from "@/lib/planner/core";
 import {
   DEFAULT_MILESTONES, DEFAULT_MONEYBACK, WorkoutError, applyOps, bestStreak, countOnTime, firstName, istDate, levelOf, moneyBackProgress,
@@ -1097,9 +1097,8 @@ export async function quote(payload: Payload, email: string, planKey: unknown, r
       const total = Math.max(1, plan.price - Math.max(0, Math.round(Number(own.amountOff) || 0)));
       return { plan, total, discount: plan.price - total, coupon, ref: "" };
     }
-    const affiliate = await findAffiliate(payload, coupon);
-    if (!affiliate) throw new WorkoutError("That code isn't valid");
-    const q = applyPromo(plan.price, affiliate);
+    const q = await quoteWithCode(payload, coupon, { kind: "workout", id: plan.id, name: `the ${plan.name} plan` }, plan.price);
+    if (q.error) throw new WorkoutError(q.error);
     return { plan, total: q.total, discount: q.discount, coupon, ref: "" };
   }
   const ref = typeof rawRef === "string" ? rawRef.trim().toUpperCase().slice(0, 12) : "";

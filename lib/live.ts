@@ -1,6 +1,7 @@
 import type { Payload, Where } from "payload";
 import type { Product } from "@/payload-types";
-import { applyPromo, getBonusState, getOfferState, type OfferContext } from "@/lib/pricing";
+import { asCoupon, getBonusState, getOfferState, type OfferContext } from "@/lib/pricing";
+import { applyDeal, dealFor, dealLabel } from "@/lib/coupons";
 import type { Affiliate } from "@/payload-types";
 import type { LiveData } from "@/components/landing/LiveData";
 
@@ -23,10 +24,11 @@ export async function getLiveData(
   affiliate: Affiliate | null = null,
 ): Promise<LiveData> {
   const offer = await getOfferState(payload, product, ctx);
-  const promo = affiliate ? applyPromo(offer.price, affiliate) : null;
+  const deal = affiliate ? dealFor(asCoupon(affiliate), { kind: "shop", id: String(product.id) }) : null;
+  const promo = deal ? applyDeal(offer.price, deal) : null;
   const referral =
-    affiliate && promo && promo.discount > 0
-      ? { code: affiliate.code, discountPercent: affiliate.discountPercent ?? 0, priceBefore: offer.price }
+    affiliate && deal && promo && promo.discount > 0
+      ? { code: affiliate.code, label: dealLabel(deal), priceBefore: offer.price }
       : null;
 
   let recent: LiveData["recent"] = [];
