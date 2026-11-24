@@ -2,7 +2,7 @@ import "server-only";
 import { randomBytes, timingSafeEqual } from "crypto";
 import type { Payload } from "payload";
 import { sendWithBrevo } from "@/lib/brevo";
-import { applyPromo, findAffiliate } from "@/lib/pricing";
+import { quoteWithCode } from "@/lib/pricing";
 import type { Invite } from "@/payload-types";
 
 import { DEFAULT_PLANS, PLAN_ORDER, type PlanId } from "@/lib/invitePlanDefaults";
@@ -259,9 +259,9 @@ export async function quoteFor(payload: Payload, plan: PlanId, coupon?: string, 
     base = Math.max(1, target.price - (plans.find((p) => p.id === from)?.price ?? 0));
   }
   if (!coupon) return { total: base, discount: 0, name: target.name };
-  const affiliate = await findAffiliate(payload, coupon);
-  if (!affiliate) return { total: base, discount: 0, name: target.name, error: "That code isn’t valid" };
-  return { ...applyPromo(base, affiliate), name: target.name };
+  const q = await quoteWithCode(payload, coupon, { kind: "invite", plan, name: `the ${target.name} plan` }, base, target.price);
+  if (q.error) return { total: base, discount: 0, name: target.name, error: q.error };
+  return { total: q.total, discount: q.discount, name: target.name, label: q.label };
 }
 
 const siteUrl = () => process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
