@@ -93,6 +93,9 @@ export interface Config {
     'workout-claims': WorkoutClaim;
     'workout-pledges': WorkoutPledge;
     'workout-logins': WorkoutLogin;
+    'hostbook-plans': HostbookPlan;
+    'hostbook-accounts': HostbookAccount;
+    'hostbook-logins': HostbookLogin;
     users: User;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -127,6 +130,9 @@ export interface Config {
     'workout-claims': WorkoutClaimsSelect<false> | WorkoutClaimsSelect<true>;
     'workout-pledges': WorkoutPledgesSelect<false> | WorkoutPledgesSelect<true>;
     'workout-logins': WorkoutLoginsSelect<false> | WorkoutLoginsSelect<true>;
+    'hostbook-plans': HostbookPlansSelect<false> | HostbookPlansSelect<true>;
+    'hostbook-accounts': HostbookAccountsSelect<false> | HostbookAccountsSelect<true>;
+    'hostbook-logins': HostbookLoginsSelect<false> | HostbookLoginsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -143,6 +149,7 @@ export interface Config {
     'planner-landing': PlannerLanding;
     'workout-settings': WorkoutSetting;
     'photo-plans': PhotoPlan;
+    'hostbook-settings': HostbookSetting;
   };
   globalsSelect: {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
@@ -150,6 +157,7 @@ export interface Config {
     'planner-landing': PlannerLandingSelect<false> | PlannerLandingSelect<true>;
     'workout-settings': WorkoutSettingsSelect<false> | WorkoutSettingsSelect<true>;
     'photo-plans': PhotoPlansSelect<false> | PhotoPlansSelect<true>;
+    'hostbook-settings': HostbookSettingsSelect<false> | HostbookSettingsSelect<true>;
   };
   locale: null;
   widgets: {
@@ -706,7 +714,7 @@ export interface Order {
   createdAt: string;
 }
 /**
- * Discount codes for the shop, the wedding planner, the invite maker, wedding photo galleries and the workout app. Each code can give a % off, a flat ₹ off, or a special price, on everything or only on the products you pick (each product with its own deal). Affiliates can share links like pandoratemplates.com/wedding_planner_sheet?ref=CODE. See what you owe under 'Affiliate earnings'.
+ * Discount codes for the shop, the wedding planner, the invite maker, wedding photo galleries, the workout app and HostBook. Each code can give a % off, a flat ₹ off, or a special price, on everything or only on the products you pick (each product with its own deal). Affiliates can share links like pandoratemplates.com/wedding_planner_sheet?ref=CODE. See what you owe under 'Affiliate earnings'.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "affiliates".
@@ -748,7 +756,7 @@ export interface Affiliate {
    */
   productDeals?:
     | {
-        kind: 'shop' | 'planner' | 'bundle' | 'invite' | 'workout' | 'photos';
+        kind: 'shop' | 'planner' | 'bundle' | 'invite' | 'workout' | 'photos' | 'hostbook';
         /**
          * Empty = every shop product
          */
@@ -769,6 +777,10 @@ export interface Affiliate {
          * Empty = every photo gallery plan and renewal
          */
         photosPlan?: ('basic' | 'premium' | 'royal' | 'renew') | null;
+        /**
+         * Empty = every paid HostBook plan
+         */
+        hostbookPlan?: (string | null) | HostbookPlan;
         type: 'percent' | 'flat' | 'price';
         /**
          * % for a percentage, ₹ for a flat amount or a special price
@@ -887,6 +899,71 @@ export interface WorkoutPlan {
    */
   badge?: string | null;
   features?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Add, rename or change plans and tick which features each one has. Changes apply straight away to every host on the plan. Taking a feature away only locks it: hosts keep their data. Exactly one plan should be ticked as free.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hostbook-plans".
+ */
+export interface HostbookPlan {
+  id: string;
+  name: string;
+  /**
+   * E.g. pro. Don't change it once sold.
+   */
+  planId: string;
+  sortOrder?: number | null;
+  isFree?: boolean | null;
+  active?: boolean | null;
+  price?: number | null;
+  listings?: number | null;
+  staff?: number | null;
+  /**
+   * Then they're deleted automatically.
+   */
+  idDays?: number | null;
+  hostChoosesIdDays?: boolean | null;
+  /**
+   * Bookings, calendar, guest register and income & expenses are on every plan.
+   */
+  features?:
+    | (
+        | 'checkin'
+        | 'ical'
+        | 'police'
+        | 'tasks'
+        | 'whatsapp'
+        | 'receipts'
+        | 'cleaning'
+        | 'guestFlags'
+        | 'reports'
+        | 'export'
+        | 'recurring'
+        | 'formC'
+        | 'inventory'
+        | 'maintenance'
+        | 'meters'
+        | 'deposits'
+        | 'guidebook'
+        | 'owners'
+        | 'gst'
+        | 'branding'
+      )[]
+    | null;
+  tagline?: string | null;
+  /**
+   * E.g. “Most popular”.
+   */
+  badge?: string | null;
+  highlights?:
     | {
         text: string;
         id?: string | null;
@@ -1166,7 +1243,7 @@ export interface PlannerLogin {
  */
 export interface AppPassword {
   id: string;
-  app: 'planner' | 'workout';
+  app: 'planner' | 'workout' | 'hostbook';
   email: string;
   hash: string;
   failed?: number | null;
@@ -1890,6 +1967,85 @@ export interface WorkoutLogin {
   createdAt: string;
 }
 /**
+ * One per host. To give someone a plan by hand, pick the plan and an end date. Extra listings are on top of the plan's own.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hostbook-accounts".
+ */
+export interface HostbookAccount {
+  id: string;
+  ownerEmail: string;
+  business?: string | null;
+  phone?: string | null;
+  city?: string | null;
+  source?: string | null;
+  /**
+   * Empty = free plan
+   */
+  plan?: (string | null) | HostbookPlan;
+  expiresAt?: string | null;
+  extraListings?: number | null;
+  /**
+   * Set when the host opened HostBook from the Stays host portal (gets the Stays plan free).
+   */
+  staysHostId?: string | null;
+  /**
+   * Only used when the plan lets the host choose.
+   */
+  idDays?: number | null;
+  logoUrl?: string | null;
+  staff?:
+    | {
+        email: string;
+        name?: string | null;
+        phone?: string | null;
+        perms?: ('bookings' | 'guests' | 'ids' | 'tasks' | 'expenses' | 'money')[] | null;
+        /**
+         * Listing ids this person can see. Empty = all.
+         */
+        listings?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  orderId?: string | null;
+  order?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  lastPaidOrder?: string | null;
+  paymentId?: string | null;
+  reminderSentAt?: string | null;
+  digestOn?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hostbook-logins".
+ */
+export interface HostbookLogin {
+  id: string;
+  email: string;
+  codeHash: string;
+  expiresAt: string;
+  attempts?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
@@ -2043,6 +2199,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'workout-logins';
         value: string | WorkoutLogin;
+      } | null)
+    | ({
+        relationTo: 'hostbook-plans';
+        value: string | HostbookPlan;
+      } | null)
+    | ({
+        relationTo: 'hostbook-accounts';
+        value: string | HostbookAccount;
+      } | null)
+    | ({
+        relationTo: 'hostbook-logins';
+        value: string | HostbookLogin;
       } | null)
     | ({
         relationTo: 'users';
@@ -2622,6 +2790,7 @@ export interface AffiliatesSelect<T extends boolean = true> {
         invitePlan?: T;
         workoutPlan?: T;
         photosPlan?: T;
+        hostbookPlan?: T;
         type?: T;
         value?: T;
         id?: T;
@@ -3128,6 +3297,80 @@ export interface WorkoutLoginsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hostbook-plans_select".
+ */
+export interface HostbookPlansSelect<T extends boolean = true> {
+  name?: T;
+  planId?: T;
+  sortOrder?: T;
+  isFree?: T;
+  active?: T;
+  price?: T;
+  listings?: T;
+  staff?: T;
+  idDays?: T;
+  hostChoosesIdDays?: T;
+  features?: T;
+  tagline?: T;
+  badge?: T;
+  highlights?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hostbook-accounts_select".
+ */
+export interface HostbookAccountsSelect<T extends boolean = true> {
+  ownerEmail?: T;
+  business?: T;
+  phone?: T;
+  city?: T;
+  source?: T;
+  plan?: T;
+  expiresAt?: T;
+  extraListings?: T;
+  staysHostId?: T;
+  idDays?: T;
+  logoUrl?: T;
+  staff?:
+    | T
+    | {
+        email?: T;
+        name?: T;
+        phone?: T;
+        perms?: T;
+        listings?: T;
+        id?: T;
+      };
+  orderId?: T;
+  order?: T;
+  lastPaidOrder?: T;
+  paymentId?: T;
+  reminderSentAt?: T;
+  digestOn?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hostbook-logins_select".
+ */
+export interface HostbookLoginsSelect<T extends boolean = true> {
+  email?: T;
+  codeHash?: T;
+  expiresAt?: T;
+  attempts?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
@@ -3477,6 +3720,23 @@ export interface PhotoPlan {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hostbook-settings".
+ */
+export interface HostbookSetting {
+  id: string;
+  extraListingPrice?: number | null;
+  reminderDays?: number | null;
+  /**
+   * Leave empty to give Stays hosts nothing extra.
+   */
+  staysPlan?: string | null;
+  whatsappNumber?: string | null;
+  offerText?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings_select".
  */
 export interface SiteSettingsSelect<T extends boolean = true> {
@@ -3672,6 +3932,20 @@ export interface PhotoPlansSelect<T extends boolean = true> {
             };
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hostbook-settings_select".
+ */
+export interface HostbookSettingsSelect<T extends boolean = true> {
+  extraListingPrice?: T;
+  reminderDays?: T;
+  staysPlan?: T;
+  whatsappNumber?: T;
+  offerText?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

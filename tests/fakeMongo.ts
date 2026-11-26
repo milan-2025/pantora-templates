@@ -17,7 +17,7 @@ const applyUpdate = (d: Doc, u: Doc) => {
   for (const [k, v] of Object.entries<any>(u.$set ?? {})) setPath(d, k, v);
   for (const k of Object.keys(u.$unset ?? {})) unsetPath(d, k);
   for (const [k, v] of Object.entries<any>(u.$inc ?? {})) setPath(d, k, (Number(getPath(d, k)) || 0) + v);
-  for (const [k, v] of Object.entries<any>(u.$push ?? {})) setPath(d, k, [...(getPath(d, k) || []), structuredClone(v)]);
+  for (const [k, v] of Object.entries<any>(u.$push ?? {})) setPath(d, k, [...(getPath(d, k) || []), ...(v && typeof v === "object" && Array.isArray(v.$each) ? structuredClone(v.$each) : [structuredClone(v)])]);
   for (const [k, v] of Object.entries<any>(u.$pull ?? {})) setPath(d, k, (getPath(d, k) || []).filter((x: any) => !Object.entries(v).every(([kk, vv]) => x?.[kk] === vv)));
 };
 
@@ -45,7 +45,15 @@ class Coll {
   }
   async findOne(q: Doc = {}) { const m = this.match(q)[0]; return m ? structuredClone(m) : null; }
   async countDocuments(q: Doc = {}) { return this.match(q).length; }
-  async updateOne(q: Doc, u: Doc) { const m = this.match(q)[0]; if (!m) return { matchedCount: 0 }; applyUpdate(m, u); return { matchedCount: 1 }; }
+  async updateOne(q: Doc, u: Doc, o?: Doc) {
+    const m = this.match(q)[0];
+    if (!m) {
+      if (!o?.upsert) return { matchedCount: 0 };
+      const d: Doc = Object.fromEntries(Object.entries(q).filter(([, v]) => typeof v !== "object" || v === null));
+      applyUpdate(d, u); this.docs.push(d); return { matchedCount: 0, upsertedCount: 1 };
+    }
+    applyUpdate(m, u); return { matchedCount: 1 };
+  }
   async findOneAndUpdate(q: Doc, u: Doc, o?: Doc) {
     const m = this.match(q)[0];
     if (!m) return null;

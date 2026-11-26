@@ -17,6 +17,7 @@ export const RULE_KINDS = [
   { label: "Wedding invite plan", value: "invite" },
   { label: "Workout app plan", value: "workout" },
   { label: "Wedding photo gallery plan", value: "photos" },
+  { label: "HostBook plan (Airbnb host tool)", value: "hostbook" },
 ];
 
 const upper: FieldHook = ({ value }) => (typeof value === "string" ? value.trim().toUpperCase() : value);
@@ -29,7 +30,7 @@ export const Affiliates: CollectionConfig = {
     useAsTitle: "code",
     defaultColumns: ["code", "name", "appliesTo", "discountType", "commissionPercent", "active"],
     description:
-      "Discount codes for the shop, the wedding planner, the invite maker, wedding photo galleries and the workout app. " +
+      "Discount codes for the shop, the wedding planner, the invite maker, wedding photo galleries, the workout app and HostBook. " +
       "Each code can give a % off, a flat ₹ off, or a special price, on everything or only on the products you pick (each product with its own deal). " +
       "Affiliates can share links like pandoratemplates.com/wedding_planner_sheet?ref=CODE. See what you owe under 'Affiliate earnings'.",
   },
@@ -175,6 +176,13 @@ export const Affiliates: CollectionConfig = {
                 { label: "Renewal (1 more year)", value: "renew" },
               ],
               admin: { width: "60%", condition: (_, row) => row?.kind === "photos", description: "Empty = every photo gallery plan and renewal" },
+            },
+            {
+              name: "hostbookPlan",
+              type: "relationship",
+              relationTo: "hostbook-plans",
+              label: "HostBook plan",
+              admin: { width: "60%", condition: (_, row) => row?.kind === "hostbook", description: "Empty = every paid HostBook plan" },
             },
           ],
         },

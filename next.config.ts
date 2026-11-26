@@ -42,6 +42,7 @@ const nextConfig: NextConfig = {
       { source: "/planner-sw.js", headers: [{ key: "Cache-Control", value: "no-cache" }] },
       { source: "/planner/sw.js", headers: [{ key: "Cache-Control", value: "no-cache" }, { key: "Service-Worker-Allowed", value: "/planner" }] },
       { source: "/workout-sw.js", headers: [{ key: "Cache-Control", value: "no-cache" }] },
+      { source: "/hostbook-sw.js", headers: [{ key: "Cache-Control", value: "no-cache" }] },
       { source: "/planner/share/:token*", headers: [...noindex, { key: "X-Frame-Options", value: "DENY" }] },
     ];
   },

@@ -113,6 +113,7 @@ export const SITEMAP_LANDING_PAGES: readonly { url: string; priority: number; ch
   { url: "/photos", priority: 0.8, changeFrequency: "monthly" },
   { url: "/workout", priority: 0.8, changeFrequency: "weekly" },
   { url: "/crm-software", priority: 0.6, changeFrequency: "monthly" },
+  { url: "/hostbook", priority: 0.8, changeFrequency: "monthly" },
 ];
 
 /**

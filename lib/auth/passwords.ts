@@ -9,7 +9,7 @@ import type { Payload } from "payload";
  * Only a salted scrypt hash is stored, in the hidden "app-passwords" collection (one row per app + email).
  */
 
-export type PasswordApp = "planner" | "workout";
+export type PasswordApp = "planner" | "workout" | "hostbook";
 export const MIN_PASSWORD = 8;
 export const MAX_PASSWORD = 200;
 const COLL = "app-passwords" as const;
