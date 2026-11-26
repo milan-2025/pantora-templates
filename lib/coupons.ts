@@ -18,7 +18,8 @@ export type CouponTarget =
   | { kind: "bundle"; name?: string }
   | { kind: "invite"; plan: string; name?: string }
   | { kind: "workout"; id: string; name?: string }
-  | { kind: "photos"; plan: string; name?: string };
+  | { kind: "photos"; plan: string; name?: string }
+  | { kind: "hostbook"; id: string; name?: string };
 
 type Rel = string | { id?: string | null } | null | undefined;
 export type ProductDealRow = {
@@ -28,6 +29,7 @@ export type ProductDealRow = {
   invitePlan?: string | null;
   workoutPlan?: Rel;
   photosPlan?: string | null;
+  hostbookPlan?: Rel;
   type?: string | null;
   value?: number | null;
 };
@@ -75,6 +77,10 @@ function matchScore(row: ProductDealRow, t: CouponTarget): number {
     }
     case "workout": {
       const id = relId(row.workoutPlan);
+      return !id ? 1 : String(id) === String(t.id) ? 2 : 0;
+    }
+    case "hostbook": {
+      const id = relId(row.hostbookPlan);
       return !id ? 1 : String(id) === String(t.id) ? 2 : 0;
     }
     case "invite":

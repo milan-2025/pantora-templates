@@ -141,6 +141,7 @@ function Portal({ me, onOut, onMe }: { me: Me & { host: Host }; onOut: () => voi
           <nav className="flex items-center gap-1 text-sm">
             <a href="#" className={`rounded-full px-3 py-2 ${!route[0] ? "bg-plum text-white" : "text-plum hover:bg-plum/5"}`}>My properties</a>
             <a href="#profile" className={`rounded-full px-3 py-2 ${route[0] === "profile" ? "bg-plum text-white" : "text-plum hover:bg-plum/5"}`}>Profile</a>
+            <Link href="/hostbook/app?via=stays" className="rounded-full px-3 py-2 text-plum hover:bg-plum/5" title="Guest register, bookings, tasks and money (free for Stays hosts)">HostBook</Link>
             <button type="button" onClick={onOut} className="rounded-full p-2 text-muted hover:bg-plum/5" aria-label="Sign out" title="Sign out"><LogOut className="size-4" /></button>
           </nav>
         </div>
@@ -163,6 +164,10 @@ function List({ list, name }: { list: HostProp[] | null; name: string }) {
         <div><h1 className="font-display text-3xl">Hello, {name.split(" ")[0]}</h1><p className="text-sm text-muted">Your properties and their review status.</p></div>
         <a href="#new" className="s-btn s-btn-primary"><Plus className="size-4" /> Add a property</a>
       </div>
+      <Link href="/hostbook/app?via=stays" className="s-card mt-4 flex items-center justify-between gap-3 rounded-2xl p-4 text-sm">
+        <span><b className="text-plum">HostBook is free for you</b><span className="block text-muted">Keep a guest register with IDs, sync your Airbnb calendar, track expenses and see profit for each property.</span></span>
+        <span className="s-btn s-btn-primary shrink-0">Open</span>
+      </Link>
       {!list ? <div className="mt-6 space-y-3">{[0, 1].map((i) => <div key={i} className="s-skeleton h-24" />)}</div> : list.length === 0 ? (
         <div className="s-card mt-6 rounded-3xl p-10 text-center">
           <p className="font-display text-2xl text-plum">Add your first property</p>

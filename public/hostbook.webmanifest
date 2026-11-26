@@ -1,0 +1,11 @@
+{
+  "name": "Pandora HostBook",
+  "short_name": "HostBook",
+  "description": "Guest records, bookings, tasks and money for Airbnb and homestay hosts.",
+  "start_url": "/hostbook/app",
+  "scope": "/hostbook/",
+  "display": "standalone",
+  "background_color": "#F6F1E9",
+  "theme_color": "#1F5F5B",
+  "icons": [{ "src": "/hostbook-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

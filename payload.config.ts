@@ -32,6 +32,8 @@ import { PlannerLanding } from "./globals/PlannerLanding";
 import { WORKOUT_COLLECTIONS } from "./collections/Workout";
 import { WorkoutSettings } from "./globals/WorkoutSettings";
 import { PhotoPlans } from "./globals/PhotoPlans";
+import { HOSTBOOK_COLLECTIONS } from "./collections/HostBook";
+import { HostBookSettings } from "./globals/HostBookSettings";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -84,8 +86,8 @@ export default buildConfig({
       },
     },
   },
-  collections: [Products, Orders, Invites, InviteRsvps, Planners, PlannerPlans, PlannerHistory, PlannerLogins, AppPasswords, PhotoGalleries, PhotoItems, Affiliates, Pages, Posts, Media, ProductFiles, ContactSubmissions, ...WORKOUT_COLLECTIONS, Users],
-  globals: [SiteSettings, InvitePlans, PlannerLanding, WorkoutSettings, PhotoPlans],
+  collections: [Products, Orders, Invites, InviteRsvps, Planners, PlannerPlans, PlannerHistory, PlannerLogins, AppPasswords, PhotoGalleries, PhotoItems, Affiliates, Pages, Posts, Media, ProductFiles, ContactSubmissions, ...WORKOUT_COLLECTIONS, ...HOSTBOOK_COLLECTIONS, Users],
+  globals: [SiteSettings, InvitePlans, PlannerLanding, WorkoutSettings, PhotoPlans, HostBookSettings],
   editor: lexicalEditor(),
   // Admin emails (e.g. "forgot password") go through Brevo, like the rest of the site's email.
   email: brevoAdapter,

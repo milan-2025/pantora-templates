@@ -1,0 +1,38 @@
+@import "tailwindcss";
+@source "../../components/hostbook";
+@source "./";
+
+/* Pandora HostBook: calm teal and sand, built for quick use on a phone. */
+:root {
+  --teal: #1f5f5b;
+  --teal-deep: #174744;
+  --mist: #e2eeeb;
+  --sand: #f6f1e9;
+  --ink: #1f2a2e;
+  --rust: #c4552d;
+  --sun: #e9a23b;
+  --leaf: #2e8b57;
+  --muted: #6c7679;
+  --line: rgb(31 42 46 / 0.1);
+}
+
+@theme inline {
+  --color-teal: var(--teal);
+  --color-teal-deep: var(--teal-deep);
+  --color-mist: var(--mist);
+  --color-sand: var(--sand);
+  --color-ink: var(--ink);
+  --color-rust: var(--rust);
+  --color-sun: var(--sun);
+  --color-leaf: var(--leaf);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-dm-serif), ui-serif, Georgia, serif;
+}
+
+body { background: var(--sand); color: var(--ink); -webkit-tap-highlight-color: transparent; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+/* Grid cells may shrink below their content, so long names truncate instead of widening the page on phones. */
+.grid > * { min-width: 0; }

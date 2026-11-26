@@ -5,6 +5,7 @@ import { markInvitePaid } from "@/lib/invites";
 import { markPlannerPaid } from "@/lib/planner/server";
 import { markPledgePaid, markWorkoutPaid } from "@/lib/workout/server";
 import { markPhotosPaid } from "@/lib/photos/server";
+import { markHostbookPaid } from "@/lib/hostbook/server";
 import { hmacHex, signaturesMatch } from "@/lib/payments";
 
 /**
@@ -53,7 +54,9 @@ export async function POST(req: Request) {
         const pledge = invite.found || planner?.found || workout?.found ? null : await markPledgePaid(payload, orderId, payment?.id);
         // Or a wedding photo gallery plan / renewal.
         const photos = invite.found || planner?.found || workout?.found || pledge?.found ? null : await markPhotosPaid(payload, orderId, payment?.id);
-        if (!invite.found && !planner?.found && !workout?.found && !pledge?.found && !photos?.found) console.log(`[webhook] no order ${orderId} on this site; ignored`);
+        // Or a HostBook plan (Airbnb host tool).
+        const hostbook = invite.found || planner?.found || workout?.found || pledge?.found || photos?.found ? null : await markHostbookPaid(payload, orderId, payment?.id);
+        if (!invite.found && !planner?.found && !workout?.found && !pledge?.found && !photos?.found && !hostbook?.found) console.log(`[webhook] no order ${orderId} on this site; ignored`);
       }
     }
   }
