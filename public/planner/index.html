@@ -8,7 +8,7 @@
 <meta name="description" content="Plan your Indian wedding online, from Roka to Vidaai: guests and RSVPs, budget, vendors, payments, stay, transport and shagun, shared with your family. Start a free trial.">
 <link rel="canonical" href="https://pandoratemplates.com/planner">
 <meta property="og:type" content="website"><meta property="og:url" content="https://pandoratemplates.com/planner">
-<meta property="og:title" content="Shaadi ki poori planning, ek jagah · Pandora Wedding Planner">
+<meta property="og:title" content="Your whole wedding, planned in one place · Pandora Wedding Planner">
 <meta property="og:description" content="Guests, functions, budget, vendors, payments and shagun, shared with your family. Free trial, no card needed.">
 <meta property="og:image" content="https://pandoratemplates.com/planner/lp/og.jpg"><meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.ico">
@@ -2120,11 +2120,23 @@ function passwordCard() {
 let LP_CFG = null;
 const lpConfig = () => (LP_CFG = LP_CFG || api('/landing').catch(() => ({ plans: [], testimonials: [] })));
 
+/* Headline versions for ads: /planner?v=budget shows the budget headline, so the page matches the ad that was tapped.
+   Unknown or missing ?v= shows the main one. The version is sent with ViewContent (ad_variant) and saved with the source. */
+const LP_HERO = {
+  main: { h: 'Your whole wedding, planned <em>in one place.</em>', p: 'Guests, functions, budget, vendors, payments and shagun, from Roka to Vidaai. One planner the whole family can open, live on every phone.' },
+  family: { h: 'Plan the wedding together, <em>the whole family on one plan.</em>', p: 'Mummy, Papa, Didi and your planner see the same guest list, budget and to-dos, live on every phone. No more forwarded Excel files.' },
+  budget: { h: 'Know where every rupee goes, <em>from Roka to Vidaai.</em>', p: 'Set the budget once. Every advance, balance and vendor payment is tracked, with reminders before each one is due.' },
+  guests: { h: 'Every guest, RSVP and room, <em>in one list.</em>', p: 'Families and groups, RSVPs per function, rooms, pickups and dietary notes. Know exactly who is coming and where they stay.' },
+  invite: { h: 'Plan the wedding and send the invite, <em>from one app.</em>', p: 'A digital invite your guests open on WhatsApp. Their RSVPs land straight in your guest list, function by function.' },
+};
+const lpVariant = () => { try { const v = new URLSearchParams(location.search).get('v'); return LP_HERO[v] ? v : 'main'; } catch (e) { return 'main'; } };
+
 /* Where the visitor came from (first touch, kept 30 days) — saved on their planner so you can see which ads bring trials. */
 (function rememberSource() {
   try {
     const q = new URLSearchParams(location.search);
     const parts = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'].map(k => q.get(k)).filter(Boolean);
+    if (parts.length && LP_HERO[q.get('v')]) parts.push('v=' + q.get('v'));
     if (!parts.length && q.get('fbclid')) parts.push('facebook (fbclid)');
     if (!parts.length && q.get('gclid')) parts.push('google (gclid)');
     const old = JSON.parse(store.get('pp_src') || 'null');
@@ -2157,13 +2169,13 @@ function lpPhone(src, alt, eager) {
 }
 
 const LP_FEATURES = [
-  ['guests', 'Guests & RSVP', 'Har family, har function, ek list mein.', ['Families grouped by bride’s side and groom’s side', 'RSVP per function: who’s coming to Haldi, who’s only at the Reception', 'Send your invite on WhatsApp in one tap, with each family’s own invite link, and see who still hasn’t got it', 'Ready WhatsApp messages for invites, reminders and thank-yous', 'Duplicate and wrong phone numbers found and fixed for you']],
-  ['functions', 'Every function', 'Roka se Vidaai tak, sab set.', ['Roka, Haldi, Mehndi, Sangeet, Baraat & Milni, Pheras, Reception…', 'Rename, switch off, or add your own functions', 'Date, time and countdown for each', 'Day-of run sheet: who does what, when']],
-  ['budget', 'Budget', 'Kitna socha, kitna pakka, kitna diya.', ['Your total budget split into categories, ready to adjust', 'Planned vs committed vs paid, for every line', 'Warns you before a category goes over']],
-  ['vendors', 'Vendors & quotes', 'Teen caterers, teen quotes? Compare side by side.', ['Log every quote with contact, rating and notes', 'Compare quotes for the same job and pick one', 'The chosen vendor flows straight into your budget']],
-  ['payments', 'Payments', 'Advance kisko diya, baaki kab dena hai.', ['Every advance and instalment with its due date', 'Overdue and due-soon alerts on the dashboard', 'Paid amounts update the budget automatically']],
-  ['stay', 'Stay, travel & food', 'Rooms, cars aur plates ka hisaab.', ['Allocate families to hotel rooms; see who still needs one', 'Cars and pickups, with who travels in which', 'Plates to order per function, worked out from your guest list']],
-  ['shagun', 'Shagun & len-den', 'Kisne kya diya, sab yaad rahega.', ['Shagun and gifts received and given, per function', 'Thank-yous still to send', 'Returns pending, so nothing gets missed']],
+  ['guests', 'Guests & RSVP', 'Every family and every function, in one list.', ['Families grouped by bride’s side and groom’s side', 'RSVP per function: who’s coming to Haldi, who’s only at the Reception', 'Send your invite on WhatsApp in one tap, with each family’s own invite link, and see who still hasn’t got it', 'Ready WhatsApp messages for invites, reminders and thank-yous', 'Duplicate and wrong phone numbers found and fixed for you']],
+  ['functions', 'Every function', 'From Roka to Vidaai, all set up.', ['Roka, Haldi, Mehndi, Sangeet, Baraat & Milni, Pheras, Reception…', 'Rename, switch off, or add your own functions', 'Date, time and countdown for each', 'Day-of run sheet: who does what, when']],
+  ['budget', 'Budget', 'Planned, committed and paid, side by side.', ['Your total budget split into categories, ready to adjust', 'Planned vs committed vs paid, for every line', 'Warns you before a category goes over']],
+  ['vendors', 'Vendors & quotes', 'Three caterers, three quotes? Compare them side by side.', ['Log every quote with contact, rating and notes', 'Compare quotes for the same job and pick one', 'The chosen vendor flows straight into your budget']],
+  ['payments', 'Payments', 'Who got an advance, and when the rest is due.', ['Every advance and instalment with its due date', 'Overdue and due-soon alerts on the dashboard', 'Paid amounts update the budget automatically']],
+  ['stay', 'Stay, travel & food', 'Rooms, cars and plates, all counted.', ['Allocate families to hotel rooms; see who still needs one', 'Cars and pickups, with who travels in which', 'Plates to order per function, worked out from your guest list']],
+  ['shagun', 'Shagun & len-den', 'Who gave what, remembered for you.', ['Shagun and gifts received and given, per function', 'Thank-yous still to send', 'Returns pending, so nothing gets missed']],
   ['tasks', 'Tasks & timeline', '90+ tasks, already in order.', ['A ready checklist with deadlines worked out from your wedding date', 'Only a few weeks left? Express and emergency timelines squeeze it to fit', 'Assign tasks to family members and track what’s overdue']],
 ];
 
@@ -2179,8 +2191,8 @@ function landingScreen() {
     // HERO
     '<section class="lp-hero"><div class="lp-toran" aria-hidden="true"></div><div class="lp-w lp-hero-in"><div class="lp-hero-txt">' +
       '<p class="lp-eyebrow">Online Indian Wedding Planner</p>' +
-      '<h1>Shaadi ki poori planning, <em>ek jagah.</em></h1>' +
-      '<p class="lp-lead">Guests, functions, budget, vendors, payments and shagun, from Roka to Vidaai. One planner the whole family can open, live on every phone.</p>' +
+      '<h1>' + LP_HERO[lpVariant()].h + '</h1>' +
+      '<p class="lp-lead">' + LP_HERO[lpVariant()].p + '</p>' +
       '<div class="lp-ctas">' + lpCta('Start your <span data-trial-days>14</span>-day free trial →', 'big', 'hero') + '<button class="lp-btn ghost big" data-lp-demo>See a sample wedding</button></div>' +
       '<p class="lp-micro">✓ No card needed &nbsp; ✓ Ready in 2 minutes &nbsp; ✓ Up to <span data-trial-guests>30</span> guests free</p>' +
     '</div><div class="lp-hero-vis">' + lpPhone('dash', 'Wedding dashboard: days to go, guests, budget and payments', true) +
@@ -2189,7 +2201,7 @@ function landingScreen() {
     '<div class="lp-w"><div class="lp-stats"><div><b>90+</b><span>tasks with deadlines, ready</span></div><div><b>10</b><span>functions set up, Roka to Vidaai</span></div><div><b>18</b><span>planning screens in one place</span></div><div><b>1</b><span>planner for the whole family</span></div></div></div></section>' +
 
     // BEFORE / AFTER
-    '<section class="lp-sec lp-vs"><div class="lp-w"><p class="lp-eyebrow c">Sound familiar?</p><h2 class="c">Shaadi ki planning, <em>before and after.</em></h2><div class="lp-vsgrid">' +
+    '<section class="lp-sec lp-vs"><div class="lp-w"><p class="lp-eyebrow c">Sound familiar?</p><h2 class="c">Wedding planning, <em>before and after.</em></h2><div class="lp-vsgrid">' +
       '<div class="lp-vscol bad"><h3>Without Pandora</h3><ul>' +
         '<li><b>5 WhatsApp groups, 3 Excel sheets, 1 diary.</b> The latest guest list is… somewhere.</li>' +
         '<li><b>“Beta, kitne guests final hue?”</b> Asked every evening, answered from memory.</li>' +
@@ -2220,7 +2232,7 @@ function landingScreen() {
     '</div></section>' +
 
     // WEDDING INVITE (connected to the invite maker)
-    '<section class="lp-sec lp-inv"><div class="lp-w lp-split"><div><p class="lp-eyebrow">New · Digital wedding invite</p><h2>Invite bhejo, <em>RSVP khud aa jaayenge.</em></h2>' +
+    '<section class="lp-sec lp-inv"><div class="lp-w lp-split"><div><p class="lp-eyebrow">New · Digital wedding invite</p><h2>Send the invite, <em>and the RSVPs come back by themselves.</em></h2>' +
       '<p>Make a beautiful digital invite from your planner in one tap. Names, date, functions and venues are already filled in from your plan.</p><ul class="lp-ticks">' +
       '<li>Every family gets <b>its own invite link</b>, showing only the functions they’re invited to</li>' +
       '<li>Send it from the Guest List on WhatsApp. The planner remembers who got it</li>' +
@@ -2234,7 +2246,7 @@ function landingScreen() {
     '</div></section>' +
 
     // SHAADI KE DIN BHI / everyday tools
-    '<section class="lp-sec lp-tools"><div class="lp-w"><p class="lp-eyebrow c">Made for the busy days</p><h2 class="c">Net chala jaaye, <em>planner nahi jaayega.</em></h2><p class="c lp-sub">Venues and village weddings often have no signal. Your planner still opens, and syncs when the internet is back.</p><div class="lp-g3">' +
+    '<section class="lp-sec lp-tools"><div class="lp-w"><p class="lp-eyebrow c">Made for the busy days</p><h2 class="c">No signal at the venue? <em>Your planner still works.</em></h2><p class="c lp-sub">Venues and village weddings often have no signal. Your planner still opens, and syncs when the internet is back.</p><div class="lp-g3">' +
       '<div class="lp-rcard"><span>📶</span><b>Works without internet</b><p>Install it on your home screen like an app. It opens and works offline, and your changes sync later.</p></div>' +
       '<div class="lp-rcard"><span>🎉</span><b>Wedding-day mode</b><p>Today’s functions, timings and who’s doing what, in big clear text. Tick off arrivals as guests reach.</p></div>' +
       '<div class="lp-rcard"><span>📇</span><b>Contacts phone book</b><p>Every guest, vendor and helper with a number, in one place. Call or WhatsApp in one tap.</p></div>' +
@@ -2251,7 +2263,7 @@ function landingScreen() {
     '</div></div></section>' +
 
     // FAMILY
-    '<section class="lp-sec lp-fam"><div class="lp-w lp-split"><div><p class="lp-eyebrow">Plan together</p><h2>Mummy, Papa, Didi… <em>sab ek hi plan pe.</em></h2>' +
+    '<section class="lp-sec lp-fam"><div class="lp-w lp-split"><div><p class="lp-eyebrow">Plan together</p><h2>Mummy, Papa, Didi… <em>everyone on one plan.</em></h2>' +
       '<p>Invite your family with their email. Each person signs in on their own phone and sees the same planner, live.</p><ul class="lp-ticks">' +
       '<li><b>Can edit</b> or <b>view only</b>: you decide for each person</li><li>Changes show on everyone’s phone within seconds</li><li>Activity log shows who changed what, and you can restore an earlier version</li><li data-fam-count></li></ul>' +
       '<div class="lp-ctas">' + lpCta('Start planning together', '', 'family') + '</div></div>' +
@@ -2266,7 +2278,7 @@ function landingScreen() {
     '</div><div class="lp-ctas c">' + lpCta('Start free trial →', 'big', 'steps') + '</div></div></section>' +
 
     // DEVICES + EXCEL
-    '<section class="lp-sec lp-dev"><div class="lp-w"><h2 class="c">Laptop pe plan karo, <em>phone pe check karo.</em></h2><p class="c lp-sub">The same planner on every screen. Phones get a simple card view, with no sideways scrolling, and it works offline once installed.</p>' +
+    '<section class="lp-sec lp-dev"><div class="lp-w"><h2 class="c">Plan on the laptop, <em>check on the phone.</em></h2><p class="c lp-sub">The same planner on every screen. Phones get a simple card view, with no sideways scrolling, and it works offline once installed.</p>' +
       '<div class="lp-browser"><div class="lp-bbar"><i></i><i></i><i></i><span>pandoratemplates.com/planner</span></div><img src="/planner/lp/desktop.webp" alt="The planner dashboard on a laptop" width="1280" height="800" loading="lazy" decoding="async"></div>' +
       '<div class="lp-excel"><span>📊</span><div><b>Already using the Pandora Excel planner?</b><p>Import your filled-in workbook in one click and carry on online. You can export back to Excel any time.</p></div></div>' +
     '</div></section>' +
@@ -2281,7 +2293,7 @@ function landingScreen() {
     '<section class="lp-sec" id="lp-faq"><div class="lp-w lp-narrow"><h2 class="c">Questions</h2><div class="lp-faq"></div>' + lpBand('Still deciding?', 'Try it free for <span data-trial-days>14</span> days. Nothing to pay, nothing to install.', 'Start free trial') + '</div></section>' +
 
     // FINAL CTA
-    '<section class="lp-final"><div class="lp-w lp-narrow c"><h2>Shaadi kab hai?</h2><p>Pick the date and see how much time you have.</p>' +
+    '<section class="lp-final"><div class="lp-w lp-narrow c"><h2>When is the shaadi?</h2><p>Pick the date and see how much time you have.</p>' +
       '<div class="lp-date"><input type="date" class="inp" data-lp-date aria-label="Wedding date"><div class="lp-left" data-lp-left></div></div>' +
       lpCta('Start planning free →', 'big', 'final') + '<p class="lp-micro">No card needed · <span data-trial-days>14</span> days free · Your date carries into your planner</p></div></section>' +
 
@@ -2334,7 +2346,7 @@ function landingScreen() {
   }
 
   lpConfig().then(c => lpFill(root, c));
-  track('ViewContent');
+  track('ViewContent', { ad_variant: lpVariant() });
 }
 
 function lpFill(root, c) {

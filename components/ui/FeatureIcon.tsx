@@ -1,5 +1,8 @@
 import {
+  BedDouble,
   BellRing,
+  BookOpen,
+  Briefcase,
   Calculator,
   CalendarDays,
   CalendarHeart,
@@ -8,6 +11,7 @@ import {
   Gift,
   Heart,
   House,
+  Image as ImageIcon,
   Mail,
   RefreshCw,
   ShoppingBag,
@@ -34,6 +38,10 @@ const icons = {
   Dumbbell,
   ShoppingBag,
   Sparkles,
+  Image: ImageIcon,
+  BookOpen,
+  Briefcase,
+  BedDouble,
 };
 
 export function FeatureIcon({ name, className }: { name?: string | null; className?: string }) {

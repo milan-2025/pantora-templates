@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Payload } from "payload";
-import { CONTENT_RELEASE_ID, autoPublishContent, autoPublishEnabled } from "../lib/content/autoPublish";
+import { CONTENT_RELEASE_ID, RELEASES, autoPublishContent, autoPublishEnabled } from "../lib/content/autoPublish";
+import { CATEGORIES_RELEASE_ID } from "../lib/content/categoriesRelease";
 import { BLOG_POSTS } from "../lib/content/blogPosts";
 
 /** A tiny stand-in for Payload + MongoDB: enough to see what the content pack writes, and how often. */
@@ -25,6 +26,7 @@ function fakeSite(opts: { failOnce?: boolean } = {}) {
     products: [{ id: "w", slug: "workout_challange", price: 4999, name: "Workout Challange", hero: { headline: "headline for workout challange" } }],
     posts: [],
   };
+  const settings: Record<string, unknown> = { navLinks: [{ label: "Blog", url: "/blog" }], tagline: "My own tagline" };
   const payload = {
     db: { connection: { db: { collection: () => collection } } },
     logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
@@ -36,6 +38,12 @@ function fakeSite(opts: { failOnce?: boolean } = {}) {
       }
       writes.push(`update ${c}/${id}`);
       return {};
+    },
+    findGlobal: async () => settings,
+    updateGlobal: async ({ data }: { data: Record<string, unknown> }) => {
+      writes.push("update globals/site-settings");
+      Object.assign(settings, data);
+      return settings;
     },
     create: async ({ collection: c, data }: { collection: string; data: { slug: string } }) => {
       writes.push(`create ${c}/${data.slug}`);
@@ -73,6 +81,8 @@ describe("auto-publishing the content pack", () => {
       expect(site.writes).toContain("update products/w");
       expect(site.writes.filter((w) => w.startsWith("create posts/"))).toHaveLength(BLOG_POSTS.length);
       expect(site.markers.get(CONTENT_RELEASE_ID)).toHaveProperty("doneAt");
+      expect(site.markers.get(CATEGORIES_RELEASE_ID)).toHaveProperty("doneAt");
+      expect(RELEASES.map((r) => r.id)).toEqual([CONTENT_RELEASE_ID, CATEGORIES_RELEASE_ID]);
 
       site.writes.length = 0;
       await autoPublishContent(site.payload); // a later start, or another server

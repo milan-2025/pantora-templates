@@ -2,7 +2,7 @@ import Link from "next/link";
 import { SmartLink } from "@/components/ui/SmartLink";
 import { RichText } from "@payloadcms/richtext-lexical/react";
 import type { Page, SiteSetting } from "@/payload-types";
-import { getPayloadClient, getProductLinks, getProducts } from "@/lib/cms/queries";
+import { getCatalogue, getPayloadClient, getProducts } from "@/lib/cms/queries";
 import { getOfferState } from "@/lib/pricing";
 import { formatINR, mediaDoc, whatsappLink } from "@/lib/format";
 import { buttonClasses } from "@/components/ui/Button";
@@ -14,7 +14,7 @@ import { FAQ } from "@/components/sections/FAQ";
 import { Testimonials } from "@/components/sections/Testimonials";
 import { ContactSection } from "@/components/sections/ContactSection";
 import { LinkCards, type LinkCard } from "@/components/sections/LinkCards";
-import { LANDING_PAGES } from "@/lib/siteLinks";
+import { CategoryTiles } from "@/components/sections/CategoryTiles";
 import { mainHeadingPlan, withMainHeading } from "@/lib/cms/pageText";
 import { HtmlEmbed } from "./HtmlEmbed";
 
@@ -246,23 +246,14 @@ async function ProductCardsBlock({ block }: { block: BlockOf<"productCards"> }) 
   );
 }
 
-/** Icon for an automatic product card, guessed from its name. */
-const productIcon = (name: string) =>
-  /workout|fitness|gym/i.test(name) ? "Dumbbell" : /budget|expense|money/i.test(name) ? "Wallet" : /wedding|shaadi/i.test(name) ? "Heart" : "FileSpreadsheet";
-
-/** "Our products": links to every product and landing page (automatic), or the editor's own cards. */
+/** "Our products": the editor's hand-picked cards when there are some; otherwise one tile per category, listing every app and template. */
 async function ProductHubBlock({ block }: { block: BlockOf<"productHub"> }) {
-  let cards: LinkCard[];
   if (block.cards?.length) {
-    cards = block.cards.map((c) => ({ title: c.title, text: c.text, url: c.url, cta: c.buttonLabel, icon: c.icon, image: c.image }));
-  } else {
-    const products = await getProductLinks().catch(() => []);
-    cards = [
-      ...LANDING_PAGES.map((p) => ({ title: p.label, text: p.description, url: p.url, cta: p.cta, icon: p.icon })),
-      ...products.map((p) => ({ title: p.name, text: p.tagline, url: `/${p.slug}`, cta: "See what's inside", icon: productIcon(p.name) })),
-    ];
+    const cards: LinkCard[] = block.cards.map((c) => ({ title: c.title, text: c.text, url: c.url, cta: c.buttonLabel, icon: c.icon, image: c.image }));
+    return <LinkCards id="explore" eyebrow={block.eyebrow} heading={block.heading} text={block.text} cards={cards} />;
   }
-  return <LinkCards id="explore" eyebrow={block.eyebrow} heading={block.heading} text={block.text} cards={cards} />;
+  const groups = await getCatalogue().catch(() => []);
+  return <CategoryTiles id="explore" eyebrow={block.eyebrow} heading={block.heading} text={block.text} groups={groups} />;
 }
 
 const CTA_STYLES = {

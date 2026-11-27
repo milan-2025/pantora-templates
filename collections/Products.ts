@@ -1,6 +1,7 @@
 import type { CollectionConfig, Field, TextFieldSingleValidation } from "payload";
 import { authenticated, formatSlug, publishedOrAuthenticated, validateSlug } from "@/lib/cms/access";
 import { revalidateAfterChange, revalidateAfterDelete } from "@/lib/cms/revalidate";
+import { CATEGORIES } from "@/lib/siteLinks";
 
 /** Picks a tab of the product's own Sheet preview. The stored values are kept from the first version (budget = tab 1…). */
 export const MOCKUP_TABS = [
@@ -28,6 +29,10 @@ export const FEATURE_ICONS = [
   { label: "Fitness", value: "Dumbbell" },
   { label: "Shopping bag", value: "ShoppingBag" },
   { label: "Sparkles", value: "Sparkles" },
+  { label: "Photo", value: "Image" },
+  { label: "Book", value: "BookOpen" },
+  { label: "Briefcase", value: "Briefcase" },
+  { label: "Bed / hotel", value: "BedDouble" },
 ];
 
 // Small helpers so each section reads cleanly below.
@@ -62,8 +67,9 @@ export const Products: CollectionConfig = {
     delete: authenticated,
   },
   hooks: {
-    afterChange: [revalidateAfterChange((d) => (d.slug ? [`/${d.slug}`, "/"] : ["/"]))],
-    afterDelete: [revalidateAfterDelete((d) => (d.slug ? [`/${d.slug}`, "/"] : ["/"]))],
+    // The product's own page, the homepage and the category pages (which list every product).
+    afterChange: [revalidateAfterChange((d) => [...(d.slug ? [`/${d.slug}`] : []), "/", ...CATEGORIES.map((c) => c.url)])],
+    afterDelete: [revalidateAfterDelete((d) => [...(d.slug ? [`/${d.slug}`] : []), "/", ...CATEGORIES.map((c) => c.url)])],
   },
   fields: [
     {
@@ -82,6 +88,14 @@ export const Products: CollectionConfig = {
               validate: validateSlug,
               hooks: { beforeValidate: [formatSlug] },
               admin: { description: "The page address, e.g. wedding_planner → pandoratemplates.com/wedding_planner" },
+            },
+            {
+              name: "category",
+              type: "select",
+              options: CATEGORIES.map((c) => ({ label: c.label, value: c.key })),
+              admin: {
+                description: "Which category page and menu group lists this product. Left empty, it is worked out from the address and name.",
+              },
             },
             { name: "tagline", type: "textarea", admin: { description: "One-line pitch, used under the hero heading and on product cards" } },
             media("cardImage", "Image for product cards on the homepage"),

@@ -24,6 +24,7 @@ export function LinkCards({
   text,
   cards,
   tone = "light",
+  accent,
 }: {
   id?: string;
   eyebrow?: string | null;
@@ -31,6 +32,8 @@ export function LinkCards({
   text?: string | null;
   cards: LinkCard[];
   tone?: "light" | "sand";
+  /** A category's colours for the icons and links (category pages); without it the icons cycle through the brand tints. */
+  accent?: { color: string; tint: string };
 }) {
   if (!cards.length) return null;
   return (
@@ -52,13 +55,16 @@ export function LinkCards({
                 ) : null}
                 <div className="flex flex-1 flex-col p-6">
                   {!c.image && (
-                    <span className={`mb-4 grid size-12 place-items-center rounded-2xl ${ICON_TINTS[i % ICON_TINTS.length]}`}>
+                    <span
+                      className={`mb-4 grid size-12 place-items-center rounded-2xl ${accent ? "" : ICON_TINTS[i % ICON_TINTS.length]}`}
+                      style={accent ? { background: accent.tint, color: accent.color } : undefined}
+                    >
                       <FeatureIcon name={c.icon} className="size-6" />
                     </span>
                   )}
                   <h3 className="font-display text-2xl leading-snug">{c.title}</h3>
                   {c.text && <p className="mt-2 flex-1 text-charcoal/70">{c.text}</p>}
-                  <span className="mt-5 text-sm font-semibold text-teal transition-transform group-hover:translate-x-1">
+                  <span className="mt-5 text-sm font-semibold text-teal transition-transform group-hover:translate-x-1" style={accent ? { color: accent.color } : undefined}>
                     {c.cta || "Learn more"} →
                   </span>
                 </div>
