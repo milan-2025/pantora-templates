@@ -2029,6 +2029,12 @@ export interface HostbookAccount {
   paymentId?: string | null;
   reminderSentAt?: string | null;
   digestOn?: boolean | null;
+  /**
+   * Name is always required. The host changes this in the app under Settings → Check-in form.
+   */
+  checkinRequired?:
+    ('phone' | 'email' | 'address' | 'city' | 'nationality' | 'gender' | 'age' | 'id' | 'idFront' | 'idBack')[] | null;
+  checkinAllGuests?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -3354,6 +3360,8 @@ export interface HostbookAccountsSelect<T extends boolean = true> {
   paymentId?: T;
   reminderSentAt?: T;
   digestOn?: T;
+  checkinRequired?: T;
+  checkinAllGuests?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3732,6 +3740,8 @@ export interface HostbookSetting {
   staysPlan?: string | null;
   whatsappNumber?: string | null;
   offerText?: string | null;
+  vapidPublic?: string | null;
+  vapidPrivate?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -3946,6 +3956,8 @@ export interface HostbookSettingsSelect<T extends boolean = true> {
   staysPlan?: T;
   whatsappNumber?: T;
   offerText?: T;
+  vapidPublic?: T;
+  vapidPrivate?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

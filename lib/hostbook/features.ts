@@ -90,6 +90,8 @@ export const KINDS = {
   damage: { feature: "deposits", fields: { bookingId: "ref", guestId: "ref", listingId: "ref", date: "date", note: "long", cost: "num", recovered: "num" } },
   owner: { feature: "owners", fields: { name: "text", phone: "phone", email: "text", commission: "num", notes: "long" } },
   template: { feature: "whatsapp", fields: { name: "text", body: "long" } },
+  /** In-app notifications. Written only by the server (never through the records API). */
+  notice: { feature: null, fields: {} },
 } as const satisfies Record<string, { feature: FeatureKey | null; fields: Record<string, FieldType> }>;
 
 export type Kind = keyof typeof KINDS;
@@ -116,7 +118,7 @@ export type StaffPerm = (typeof STAFF_PERMS)[number]["key"];
 /** Which permission a staff member needs to read / write each kind. */
 export const KIND_PERM: Record<Kind, StaffPerm | "owner"> = {
   listing: "bookings", booking: "bookings", guest: "guests", expense: "expenses", income: "money", recurring: "money", task: "tasks", taskrun: "tasks",
-  clean: "tasks", inventory: "tasks", maint: "tasks", meter: "tasks", damage: "bookings", owner: "owner", template: "bookings",
+  clean: "tasks", inventory: "tasks", maint: "tasks", meter: "tasks", damage: "bookings", owner: "owner", template: "bookings", notice: "bookings",
 };
 
 export const DEFAULT_TEMPLATES = [

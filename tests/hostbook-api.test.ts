@@ -114,17 +114,20 @@ describe("HostBook API", () => {
     const noAgree = await call(`checkin/${code}/submit`, { body: { guests: [{ name: "Riya Mehta" }] } });
     expect(noAgree.status).toBe(400);
     const forged = "hostbook-ids/other/ci-x-y";
-    const done = await call(`checkin/${code}/submit`, { body: { agree: true, guests: [{ name: "Riya Mehta", phone: "98765 43210", idType: "Aadhaar", idNumber: "1234 5678 9012", nationality: "Indian", photos: [{ publicId: sig.json.publicId, side: "front" }, { publicId: forged, side: "back" }] }, { name: "John Smith", nationality: "British", passport: "X123" }] } });
+    const done = await call(`checkin/${code}/submit`, { body: { agree: true, guests: [{ name: "Riya Mehta", phone: "98765 43210", idType: "Aadhaar", idNumber: "2341 2341 2346", nationality: "Indian", photos: [{ publicId: sig.json.publicId, side: "front" }, { publicId: forged, side: "back" }] }, { name: "John Smith", nationality: "British", passport: "X1234567" }] } });
     expect(done.status).toBe(200);
     expect(done.json.status).toBe("submitted");
     expect(done.json.listing.address).toBe("Sector 20, Panchkula");
-    expect(sent.some((m) => m.to === "host@example.com" && /Guest details in/.test(m.subject))).toBe(true);
+    // No email: a notification in the app instead.
+    expect(sent.some((m) => /details/i.test(m.subject))).toBe(false);
     const items = (await as(owner).get("items")).json.items;
     const guests = items.filter((x: any) => x.kind === "guest");
     expect(guests).toHaveLength(2);
     const riya = guests.find((g: any) => g.name === "Riya Mehta");
     expect(riya.idPhotos).toHaveLength(1); // the forged photo id was dropped
-    expect(riya.idMasked).toBe("•••• 9012");
+    expect(riya.idMasked).toBe("•••• 2346");
+    const notices = items.filter((x: any) => x.kind === "notice");
+    expect(notices[0]).toMatchObject({ title: "Riya Mehta +1 sent their details", read: false, link: `booking/${booking.id}` });
     const b = items.find((x: any) => x.id === booking.id);
     expect(b.guestIds).toHaveLength(2);
     // No Form C task: Form C isn't on Free.
@@ -228,13 +231,93 @@ describe("HostBook API", () => {
     expect(destroyed.some((id) => id.startsWith("hostbook-ids/"))).toBe(true);
     expect(r.json.expenses).toBe(1);
     expect(r.json.checklists).toBe(1);
-    expect(r.json.digests).toBeGreaterThanOrEqual(1);
+    // The day's summary is a notification; email only when the owner turns it on.
+    expect(r.json.digests).toBe(0);
+    expect(r.json.notices).toBeGreaterThanOrEqual(1);
     const items = (await a.get("items")).json.items;
     expect(items.find((x: any) => x.id === riya._id).idPhotos).toHaveLength(0);
-    expect(items.find((x: any) => x.id === riya._id).idNumber).toBe("1234 5678 9012");
+    expect(items.find((x: any) => x.id === riya._id).idNumber).toBe("2341 2341 2346");
     // Second run the same day doesn't add the rent again.
     const again = await call("cron", { headers: { authorization: "Bearer cron-secret" } });
     expect(again.json.expenses).toBe(0);
+  });
+
+  it("checks ID numbers, phones and required fields on the check-in form", async () => {
+    const b = (await as(owner).save("booking", { listingId: (await as(owner).get("items")).json.items.find((x: any) => x.kind === "listing").id, start: addDays(today, 20), end: addDays(today, 22) })).json.item;
+    const send = (g: any) => call(`checkin/${b.checkinCode}/submit`, { body: { agree: true, guests: [g] } });
+    const v = await call(`checkin/${b.checkinCode}`);
+    expect(v.json.required).toEqual(["phone", "id", "idFront"]);
+    let r = await send({ name: "Amit", phone: "98111 22233", idType: "Aadhaar", idNumber: "1234 5678" });
+    expect(r.status).toBe(400);
+    expect(r.json.error).toMatch(/12 digits/);
+    expect(r.json.errors[0].idNumber).toMatch(/12 digits/);
+    r = await send({ name: "Amit", phone: "98111 22233", idType: "Aadhaar", idNumber: "1234 5678 9012" });
+    expect(r.json.error).toMatch(/valid Aadhaar/);
+    r = await send({ name: "Amit", phone: "12345", idType: "PAN", idNumber: "ABCDE1234F" });
+    expect(r.json.errors[0].phone).toMatch(/10-digit/);
+    r = await send({ name: "Amit", phone: "98111 22233", idType: "PAN", idNumber: "abcde1234f" });
+    expect(r.json.errors[0].idFront).toMatch(/front/);
+    // The host relaxes the form: no ID photo needed.
+    await as(owner).post("account", { checkinRequired: ["phone", "id"] });
+    r = await send({ name: "Amit", phone: "+91 98111 22233", idType: "PAN", idNumber: "abcde1234f" });
+    expect(r.status).toBe(200);
+    const g = (await as(owner).get("items")).json.items.find((x: any) => x.kind === "guest" && x.name === "Amit");
+    expect(g).toMatchObject({ idNumber: "ABCDE1234F", phone: "98111 22233" });
+    await as(owner).post("account", { checkinRequired: ["phone", "id", "idFront"] });
+  });
+
+  it("host asks the guest to fix details; the guest sees them filled in and sends again", async () => {
+    const a = as(owner);
+    const b = (await a.get("items")).json.items.find((x: any) => x.id === booking.id);
+    expect(b.checkinStatus).toBe("submitted");
+    const ask = await a.post("checkin/request", { bookingId: b.id, fields: ["idBack", "address"], note: "Please add the back of your Aadhaar" });
+    expect(ask.status).toBe(200);
+    expect(ask.json.item.checkinStatus).toBe("changes");
+    const v = await call(`checkin/${b.checkinCode}`);
+    expect(v.json).toMatchObject({ status: "changes", canEdit: true, changeRequest: { fields: ["idBack", "address"], note: "Please add the back of your Aadhaar" } });
+    const main = v.json.guests[0];
+    expect(main).toMatchObject({ name: "Riya Mehta", idMasked: "•••• 2346", hasId: true });
+    expect(main.idNumber).toBeUndefined(); // never sent back in full
+    // The earlier front photo was deleted on schedule, so the form asks for it again.
+    const sig = await call(`checkin/${b.checkinCode}/sign`, { body: {} });
+    const send = (photos: any[]) => call(`checkin/${b.checkinCode}/submit`, { body: { agree: true, guests: v.json.guests.map((g: any, i: number) => ({ ...g, idNumber: "", address: i === 0 ? "12 Mall Road, Shimla" : g.address, photos: i === 0 ? photos : [] })) } });
+    const missing = await send([{ publicId: sig.json.publicId, side: "back" }]);
+    expect(missing.json.errors[0].idFront).toMatch(/front/);
+    const sig2 = await call(`checkin/${b.checkinCode}/sign`, { body: {} });
+    // Sends again without retyping the ID: the saved one is kept.
+    const r = await send([{ publicId: sig.json.publicId, side: "back" }, { publicId: sig2.json.publicId, side: "front" }]);
+    expect(r.json.error).toBeUndefined();
+    expect(r.json.status).toBe("submitted");
+    const items = (await a.get("items")).json.items;
+    const riya = items.find((x: any) => x.kind === "guest" && x.name === "Riya Mehta");
+    expect(riya).toMatchObject({ address: "12 Mall Road, Shimla", idNumber: "2341 2341 2346" });
+    expect(items.filter((x: any) => x.kind === "guest" && x.name === "Riya Mehta")).toHaveLength(1);
+    expect(items.some((x: any) => x.kind === "notice" && /updated their details/.test(x.title))).toBe(true);
+    // Approved: the link is closed for edits until the host asks again.
+    await a.save("booking", { checkinStatus: "approved" }, b.id);
+    expect((await call(`checkin/${b.checkinCode}/submit`, { body: { agree: true, guests: v.json.guests } })).status).toBe(409);
+    expect((await call(`checkin/${b.checkinCode}`)).json.canEdit).toBe(false);
+  });
+
+  it("host's guest editor uses the same checks", async () => {
+    const bad = await as(owner).save("guest", { name: "X", idType: "Voter ID", idNumber: "AB12" });
+    expect(bad.status).toBe(400);
+    expect(bad.json.field).toBe("idNumber");
+    const ok = await as(owner).save("guest", { name: "X", idType: "Voter ID", idNumber: "abc 1234567", email: "X@Mail.com" });
+    expect(ok.json.item).toMatchObject({ idNumber: "ABC1234567", email: "x@mail.com" });
+  });
+
+  it("notifications: marked read per person, can't be written through the API", async () => {
+    const a = as(owner);
+    expect((await a.save("notice", { title: "fake" })).status).toBe(400);
+    const before = (await a.get("items")).json.items.filter((x: any) => x.kind === "notice" && !x.read);
+    expect(before.length).toBeGreaterThan(0);
+    await a.post("notices/read", {});
+    const after = (await a.get("items")).json.items.filter((x: any) => x.kind === "notice" && !x.read);
+    expect(after).toHaveLength(0);
+    expect((await call("push/key")).json.publicKey).toMatch(/^[\w-]{80,}$/);
+    expect((await a.post("push/subscribe", { sub: { endpoint: "https://evil.example.com/x" } })).status).toBe(400);
+    expect((await a.post("push/subscribe", { sub: { endpoint: "https://fcm.googleapis.com/fcm/send/abc" } })).json.on).toBe(true);
   });
 
   it("staff removed from a team lose access", async () => {

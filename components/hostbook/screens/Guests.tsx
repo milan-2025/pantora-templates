@@ -2,7 +2,7 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Camera, Eye, Loader2, MessageCircle, Pencil, Plus, Search, Star, Trash2, Users } from "lucide-react";
 import { ID_TYPES } from "@/lib/hostbook/features";
-import { waLink, type Rec } from "@/lib/hostbook/core";
+import { ID_RULES, checkEmail, checkId, checkPhone, isIndian, waLink, type Rec } from "@/lib/hostbook/core";
 import { api, uploadSigned } from "../api";
 import { useStore } from "../store";
 import { Badge, Button, Card, Empty, Field, Input, Locked, PageHead, Select, Sheet, Tabs, Textarea, fmtDay } from "../ui";
@@ -67,7 +67,17 @@ export function GuestEditor({ guest, onClose, onSaved }: { guest: Rec | null; on
   const [busy, setBusy] = useState(false);
   const set = (k: string, v: unknown) => setF((x) => ({ ...x, [k]: v }));
   const foreign = isForeign(f as Rec);
+  // Same checks as the server and the guest's check-in form. An untouched saved ID number (masked) isn't re-checked.
+  const errs: Record<string, string | undefined> = {
+    phone: checkPhone(f.phone).error, phone2: checkPhone(f.phone2).error, email: checkEmail(f.email).error,
+    idNumber: f.idNumber ? checkId(f.idType || "Other", f.idNumber, { indian: isIndian(f.nationality) }).error : undefined,
+    passport: f.passport && !String(f.passport).includes("•") ? checkId("Passport", f.passport, { indian: isIndian(f.nationality) }).error : undefined,
+  };
+  const [shown, setShown] = useState<Set<string>>(new Set());
+  const touch = (k: string) => setShown((x) => new Set(x).add(k));
+  const err = (k: string) => (shown.has(k) ? errs[k] : undefined);
   const save = async () => {
+    if (Object.values(errs).some(Boolean)) { setShown(new Set(Object.keys(errs))); return s.toast(Object.values(errs).find(Boolean)!, "bad"); }
     setBusy(true);
     try {
       const data = { ...f };
@@ -81,19 +91,19 @@ export function GuestEditor({ guest, onClose, onSaved }: { guest: Rec | null; on
     <Sheet open onClose={onClose} title={guest ? "Edit guest" : "New guest"} footer={<><Button tone="ghost" onClick={onClose}>Cancel</Button><Button onClick={save} disabled={busy}>{busy ? "Saving…" : "Save"}</Button></>}>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Full name (as on ID)" className="col-span-2"><Input value={f.name ?? ""} onChange={(e) => set("name", e.target.value)} /></Field>
-        <Field label="Phone"><Input value={f.phone ?? ""} onChange={(e) => set("phone", e.target.value)} inputMode="tel" /></Field>
-        <Field label="Other phone"><Input value={f.phone2 ?? ""} onChange={(e) => set("phone2", e.target.value)} inputMode="tel" /></Field>
-        <Field label="Email" className="col-span-2"><Input type="email" value={f.email ?? ""} onChange={(e) => set("email", e.target.value)} /></Field>
+        <Field label="Phone" hint={<Err m={err("phone")} />}><Input value={f.phone ?? ""} onBlur={() => touch("phone")} onChange={(e) => set("phone", e.target.value)} inputMode="tel" placeholder="98765 43210" /></Field>
+        <Field label="Other phone" hint={<Err m={err("phone2")} />}><Input value={f.phone2 ?? ""} onBlur={() => touch("phone2")} onChange={(e) => set("phone2", e.target.value)} inputMode="tel" /></Field>
+        <Field label="Email" className="col-span-2" hint={<Err m={err("email")} />}><Input type="email" value={f.email ?? ""} onBlur={() => touch("email")} onChange={(e) => set("email", e.target.value)} /></Field>
         <Field label="Home address" className="col-span-2"><Textarea rows={2} value={f.address ?? ""} onChange={(e) => set("address", e.target.value)} /></Field>
         <Field label="City"><Input value={f.city ?? ""} onChange={(e) => set("city", e.target.value)} /></Field>
         <Field label="Nationality"><Input value={f.nationality ?? ""} onChange={(e) => set("nationality", e.target.value)} /></Field>
         <Field label="Gender"><Select value={f.gender ?? ""} onChange={(e) => set("gender", e.target.value)} options={["", "Female", "Male", "Other"]} /></Field>
         <Field label="Age"><Input type="number" value={f.age ?? ""} onChange={(e) => set("age", e.target.value)} /></Field>
         <Field label="ID type"><Select value={f.idType ?? ""} onChange={(e) => set("idType", e.target.value)} options={ID_TYPES} /></Field>
-        {s.can("ids") ? <Field label="ID number" hint={guest?.idMasked && !f.idNumber ? `Saved: ${guest.idMasked}. Type to replace.` : undefined}><Input value={f.idNumber ?? ""} onChange={(e) => set("idNumber", e.target.value)} /></Field> : <Field label="ID number"><Input disabled value={guest?.idMasked ?? ""} /></Field>}
+        {s.can("ids") ? <Field label="ID number" hint={err("idNumber") ? <Err m={err("idNumber")} /> : guest?.idMasked && !f.idNumber ? `Saved: ${guest.idMasked}. Type to replace.` : ID_RULES[f.idType]?.hint}><Input value={f.idNumber ?? ""} onBlur={() => touch("idNumber")} onChange={(e) => set("idNumber", e.target.value)} placeholder={ID_RULES[f.idType]?.example} inputMode={f.idType === "Aadhaar" ? "numeric" : undefined} /></Field> : <Field label="ID number"><Input disabled value={guest?.idMasked ?? ""} /></Field>}
         {foreign && s.has("formC") && <>
           <p className="col-span-2 mt-2 text-xs font-semibold text-ink/70">For Form C (foreign guests)</p>
-          <Field label="Passport no."><Input value={f.passport ?? ""} onChange={(e) => set("passport", e.target.value)} /></Field>
+          <Field label="Passport no." hint={<Err m={err("passport")} />}><Input value={f.passport ?? ""} onBlur={() => touch("passport")} onChange={(e) => set("passport", e.target.value)} /></Field>
           <Field label="Passport expiry"><Input type="date" value={f.passportExpiry ?? ""} onChange={(e) => set("passportExpiry", e.target.value)} /></Field>
           <Field label="Visa no."><Input value={f.visa ?? ""} onChange={(e) => set("visa", e.target.value)} /></Field>
           <Field label="Visa type"><Input value={f.visaType ?? ""} onChange={(e) => set("visaType", e.target.value)} placeholder="e.g. e-Tourist" /></Field>
@@ -209,3 +219,5 @@ export function GuestDetail({ id }: { id: string }) {
     </div>
   );
 }
+
+const Err = ({ m }: { m?: string }) => (m ? <span className="text-rust">{m}</span> : null);

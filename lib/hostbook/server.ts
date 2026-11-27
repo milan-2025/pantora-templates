@@ -10,7 +10,9 @@ import {
   DEFAULT_HOSTBOOK_PLANS, DEFAULT_TEMPLATES, FEATURE_KEYS, KIND_PERM, KINDS, STAFF_PERMS, isFeature, isKind,
   type FeatureKey, type Kind, type StaffPerm,
 } from "./features";
+import { makeVapidKeys, sendPush, validSub, type PushSub, type VapidKeys } from "@/lib/workout/push";
 import {
+  CHECKIN_FIELD_KEYS, DEFAULT_REQUIRED, checkEmail, checkGuest, checkId, checkPhone, isIndian, type CheckinField,
   HostBookError, addDays, cleanRecord, icalIsBlock, icalPhoneLast4, isDay, istDay, maskId, monthOf, nextDue, parseIcal, planQuote,
   type PlanLite, type Rec,
 } from "./core";
@@ -233,7 +235,8 @@ export async function teams(payload: Payload, email: string) {
 
 const accountView = (ctx: Ctx) => ({
   id: String(ctx.acct.id), business: ctx.acct.business ?? "", phone: ctx.acct.phone ?? "", city: ctx.acct.city ?? "", ownerEmail: ctx.role === "owner" ? ctx.acct.ownerEmail : "",
-  logoUrl: ctx.acct.logoUrl ?? "", idDays: ctx.access.idDays, digestOn: ctx.acct.digestOn !== false, extraListings: ctx.acct.extraListings ?? 0,
+  logoUrl: ctx.acct.logoUrl ?? "", idDays: ctx.access.idDays, digestOn: ctx.acct.digestOn === true, extraListings: ctx.acct.extraListings ?? 0,
+  checkinRequired: checkinRules(ctx.acct).required, checkinAllGuests: checkinRules(ctx.acct).all,
   staff: ctx.role === "owner" ? (ctx.acct.staff ?? []).map((s: Doc) => ({ email: s.email, name: s.name ?? "", phone: s.phone ?? "", perms: s.perms ?? [], listings: s.listings ?? [] })) : [],
   staysLinked: Boolean(ctx.acct.staysHostId),
 });
@@ -254,6 +257,7 @@ function canSee(ctx: Ctx, r: Doc) {
   if (ctx.listings && r.listingId && !ctx.listings.includes(r.listingId)) return false;
   if (r.kind === "expense" && ctx.role === "staff" && !ctx.can("money")) return r.by === ctx.email;
   if (r.kind === "template") return true;
+  if (r.kind === "notice") return noticeVisible(ctx, r);
   return ctx.can(need);
 }
 function shape(ctx: Ctx, d: Doc): Rec {
@@ -266,6 +270,7 @@ function shape(ctx: Ctx, d: Doc): Rec {
   }
   if (r.kind === "booking" && !ctx.can("money")) for (const f of MONEY_FIELDS) delete r[f];
   if (r.files) r.files = (r.files as Doc[]).map((f) => ({ publicId: f.publicId, name: f.name ?? "" }));
+  if (r.kind === "notice") { r.read = (r.readBy ?? []).includes(ctx.email); delete r.readBy; }
   return r;
 }
 
@@ -313,7 +318,7 @@ function assertCanWrite(ctx: Ctx, kind: Kind, data: Doc, existing: Doc | null) {
 }
 
 export async function saveRecord(payload: Payload, ctx: Ctx, kindRaw: unknown, idRaw: unknown, body: Doc) {
-  if (!isKind(kindRaw)) throw new HostBookError("Unknown record type");
+  if (!isKind(kindRaw) || kindRaw === "notice") throw new HostBookError("Unknown record type");
   const kind = kindRaw;
   const c = await items(payload);
   const acct = String(ctx.acct.id);
@@ -347,6 +352,20 @@ export async function saveRecord(payload: Payload, ctx: Ctx, kindRaw: unknown, i
     if (!existing && data.active === undefined) data.active = true;
   }
   if (kind === "guest" && !existing && !data.name) throw new HostBookError("Add the guest's name");
+  if (kind === "guest" || kind === "booking") {
+    // Same format checks as the guest check-in form, so the register stays clean.
+    const nat = data.nationality ?? existing?.nationality;
+    const checks: [string, { value: string; error?: string }][] = [];
+    if ("phone" in data) checks.push(["phone", checkPhone(data.phone)]);
+    if ("phone2" in data) checks.push(["phone2", checkPhone(data.phone2)]);
+    if ("email" in data) checks.push(["email", checkEmail(data.email)]);
+    if ("idNumber" in data) checks.push(["idNumber", checkId(String(data.idType ?? existing?.idType ?? "Other"), data.idNumber, { indian: isIndian(nat) })]);
+    if ("passport" in data) checks.push(["passport", checkId("Passport", data.passport, { indian: isIndian(nat) })]);
+    for (const [k, r] of checks) {
+      if (r.error) throw new HostBookError(r.error, 400, { field: k });
+      data[k] = r.value;
+    }
+  }
   if (kind === "listing" && !existing && !data.name) throw new HostBookError("Give the listing a name");
 
   if (existing) {
@@ -400,6 +419,8 @@ export async function updateAccount(payload: Payload, ctx: Ctx, b: Doc) {
   if (typeof b.phone === "string") data.phone = b.phone.replace(/[^\d+ ]/g, "").slice(0, 20);
   if (typeof b.city === "string") data.city = b.city.trim().slice(0, 80);
   if (typeof b.digestOn === "boolean") data.digestOn = b.digestOn;
+  if (Array.isArray(b.checkinRequired)) data.checkinRequired = b.checkinRequired.filter((k: string) => (CHECKIN_FIELD_KEYS as string[]).includes(k));
+  if (typeof b.checkinAllGuests === "boolean") data.checkinAllGuests = b.checkinAllGuests;
   if (b.idDays !== undefined && ctx.access.plan.hostChoosesIdDays) data.idDays = Math.min(ctx.access.plan.idDays, Math.max(1, Math.round(Number(b.idDays) || ctx.access.plan.idDays)));
   if (typeof b.logoUrl === "string" && ctx.has("branding")) data.logoUrl = /^https:\/\/[^\s"'<>]{5,500}$/.test(b.logoUrl.trim()) ? b.logoUrl.trim() : "";
   if (Array.isArray(b.staff)) {
@@ -533,18 +554,42 @@ async function bookingByCode(payload: Payload, code: unknown) {
   return { c, b, acct, access, listing };
 }
 
+const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const shortDay = (d: string) => (isDay(d) ? `${Number(d.slice(8))} ${MON[Number(d.slice(5, 7)) - 1]}` : d);
+const checkinRules = (acct: Doc) => ({
+  required: (Array.isArray(acct.checkinRequired) ? acct.checkinRequired : DEFAULT_REQUIRED).filter((k: string) => (CHECKIN_FIELD_KEYS as string[]).includes(k)) as CheckinField[],
+  all: acct.checkinAllGuests === true,
+});
+/** Guest details as the guest may see them again on their own link: ID numbers stay masked, photos only as "uploaded". */
+const guestForLink = (g: Doc) => ({
+  id: String(g._id), name: g.name ?? "", phone: g.phone ?? "", email: g.email ?? "", address: g.address ?? "", city: g.city ?? "", nationality: g.nationality ?? "",
+  gender: g.gender ?? "", age: g.age || "", idType: g.idType ?? "", idMasked: maskId(g.idNumber), hasId: Boolean(g.idNumber),
+  passportMasked: g.passport ? maskId(g.passport) : "", passportExpiry: g.passportExpiry ?? "", visa: g.visa ?? "", visaType: g.visaType ?? "", visaExpiry: g.visaExpiry ?? "",
+  arrivalInIndia: g.arrivalInIndia ?? "", arrivedFrom: g.arrivedFrom ?? "", nextDestination: g.nextDestination ?? "",
+  photos: [...new Set((g.idPhotos ?? []).map((p: Doc) => p.side))],
+});
+const editable = (status: string) => status !== "approved";
+
 export async function checkinView(payload: Payload, code: unknown) {
-  const { b, acct, access, listing } = await bookingByCode(payload, code);
+  const { c, b, acct, access, listing } = await bookingByCode(payload, code);
   const has = (f: FeatureKey) => access.features.includes(f);
+  const status = b.checkinStatus || "pending";
+  const ids: string[] = b.guestIds?.length ? b.guestIds : b.guestId ? [b.guestId] : [];
+  const guests: Doc[] = ids.length ? await c.find({ _id: { $in: ids }, acct: b.acct, kind: "guest", deleted: { $ne: true } }).toArray() : [];
+  const rules = checkinRules(acct);
   return {
     host: { name: acct.business || "Your host", logoUrl: has("branding") ? acct.logoUrl ?? "" : "" },
     listing: listing ? {
       name: listing.name ?? "", city: listing.city ?? "", rules: listing.rules ?? "", checkIn: listing.checkIn ?? "", checkOut: listing.checkOut ?? "",
       // Address, Wi-Fi and the guidebook only after details are sent, so the link alone doesn't give them away.
-      ...(b.checkinStatus === "submitted" || b.checkinStatus === "approved" ? { address: listing.address ?? "", mapUrl: listing.mapUrl ?? "", wifiName: listing.wifiName ?? "", wifiPass: listing.wifiPass ?? "", guidebook: has("guidebook") ? listing.guidebook ?? "" : "" } : {}),
+      ...(status === "submitted" || status === "approved" || (status === "changes" && b.checkinAt) ? { address: listing.address ?? "", mapUrl: listing.mapUrl ?? "", wifiName: listing.wifiName ?? "", wifiPass: listing.wifiPass ?? "", guidebook: has("guidebook") ? listing.guidebook ?? "" : "" } : {}),
     } : null,
     stay: { start: b.start, end: b.end, adults: b.adults || 1, children: b.children || 0 },
-    status: b.checkinStatus || "pending",
+    status, canEdit: editable(status),
+    changeRequest: status === "changes" ? { fields: b.changeRequest?.fields ?? [], note: b.changeRequest?.note ?? "" } : null,
+    // Details already on file (typed by the host, or sent earlier) so the guest only fixes or adds what's missing.
+    guests: guests.sort((x, y) => ids.indexOf(String(x._id)) - ids.indexOf(String(y._id))).map(guestForLink),
+    required: rules.required, requiredForAll: rules.all,
     idDays: access.idDays,
     foreignFields: has("formC"),
   };
@@ -552,56 +597,175 @@ export async function checkinView(payload: Payload, code: unknown) {
 
 export async function checkinSign(payload: Payload, code: unknown) {
   const { b } = await bookingByCode(payload, code);
+  if (!editable(b.checkinStatus)) throw new HostBookError("Your host has already confirmed your details.", 409);
   return signUpload(`${idPrefix(b.acct)}ci-${b._id}-${rid(10)}`);
 }
 
 export async function checkinSubmit(payload: Payload, code: unknown, body: Doc) {
   const { c, b, acct, access, listing } = await bookingByCode(payload, code);
-  if (b.checkinStatus === "approved") throw new HostBookError("Your host has already confirmed your details. Contact them to change anything.", 409);
+  if (!editable(b.checkinStatus)) throw new HostBookError("Your host has already confirmed your details. Contact them to change anything.", 409);
   if (body.agree !== true) throw new HostBookError("Please tick that you agree to the house rules");
   const people = Array.isArray(body.guests) ? body.guests.slice(0, 20) : [];
   if (!people.length) throw new HostBookError("Add at least one guest");
   const has = (f: FeatureKey) => access.features.includes(f);
   const now = Date.now();
-  const ids: string[] = [];
-  const foreign: string[] = [];
-  for (const raw of people) {
+  const rules = checkinRules(acct);
+  const linked: string[] = b.guestIds?.length ? b.guestIds : b.guestId ? [b.guestId] : [];
+  const onFile = new Map<string, Doc>((linked.length ? await c.find({ _id: { $in: linked }, acct: b.acct, kind: "guest", deleted: { $ne: true } }).toArray() : []).map((g: Doc) => [String(g._id), g]));
+
+  // A returning guest (same phone) is updated rather than added twice, and needn't send an ID the host already has.
+  const last10 = (p: unknown) => String(p ?? "").replace(/\D/g, "").slice(-10);
+  const withPhone: Doc[] | null = people.some((p: Doc) => last10(p?.phone).length === 10)
+    ? await c.find({ acct: b.acct, kind: "guest", deleted: { $ne: true }, phone: { $nin: ["", null] } }).toArray() : null;
+  const byPhone = (raw: unknown) => { const d = last10(raw); return d.length === 10 ? withPhone?.find((g) => last10(g.phone) === d || last10(g.phone2) === d) ?? null : null; };
+
+  // Check everyone first, so nothing is saved when one field is wrong.
+  const prepared = people.map((raw: Doc, i: number) => {
+    const prev = (typeof raw?.id === "string" ? onFile.get(raw.id) ?? null : null) ?? byPhone(raw?.phone);
     const data = cleanRecord("guest", raw ?? {}, has) as Doc;
     delete data.flag; delete data.rating; delete data.notes;
-    if (!data.name) throw new HostBookError("Each guest needs a name");
+    // A blank ID number on a guest already on file keeps the saved one (the link only shows it masked).
+    if (prev && !String(data.idNumber ?? "").trim()) delete data.idNumber;
+    if (prev && !String(data.passport ?? "").trim()) delete data.passport;
     const photos = (Array.isArray(raw?.photos) ? raw.photos : []).slice(0, 4)
       .filter((p: Doc) => typeof p?.publicId === "string" && p.publicId.startsWith(`${idPrefix(b.acct)}ci-${b._id}-`) && /^[\w/-]+$/.test(p.publicId))
       .map((p: Doc) => ({ publicId: p.publicId, side: p.side === "back" ? "back" : p.side === "visa" ? "visa" : "front", deleteAt: now + access.idDays * 864e5, at: now }));
-    // A returning guest (same phone) is updated rather than added twice.
-    const digits = String(data.phone ?? "").replace(/\D/g, "").slice(-10);
-    const last10 = (p: unknown) => String(p ?? "").replace(/\D/g, "").slice(-10);
-    const existing: Doc | null = digits.length === 10
-      ? ((await c.find({ acct: b.acct, kind: "guest", deleted: { $ne: true }, phone: { $nin: ["", null] } }).toArray()) as Doc[]).find((g) => last10(g.phone) === digits || last10(g.phone2) === digits) ?? null
-      : null;
+    const errors = checkGuest({ ...data, idNumber: data.idNumber ?? "" }, {
+      required: rules.required, all: rules.all, main: i === 0, photos: photos.map((p: Doc) => p.side),
+      hadPhotos: prev ? (prev.idPhotos ?? []).map((p: Doc) => p.side) : [], hadId: Boolean(prev?.idNumber && prev?.idType && (!data.idType || data.idType === prev.idType)),
+    });
+    if (data.idNumber) data.idNumber = checkId(String(data.idType || "Other"), data.idNumber, { indian: isIndian(data.nationality) }).value;
+    if (data.passport) data.passport = checkId("Passport", data.passport, { indian: isIndian(data.nationality) }).value;
+    if (data.phone) data.phone = checkPhone(data.phone).value;
+    if (data.email) data.email = checkEmail(data.email).value;
+    return { data, photos, prev, errors };
+  });
+  const bad = prepared.findIndex((p: Doc) => Object.keys(p.errors).length);
+  if (bad >= 0) {
+    const [field, msg] = Object.entries(prepared[bad].errors)[0] as [string, string];
+    throw new HostBookError(`${bad === 0 ? "Main guest" : `Guest ${bad + 1}`}: ${msg}`, 400, { guest: bad, field, errors: prepared.map((p: Doc) => p.errors) });
+  }
+
+  const ids: string[] = [];
+  const foreign: string[] = [];
+  const replaced: string[] = [];
+  for (const { data, photos, prev } of prepared) {
+    const existing = prev;
     if (existing) {
-      // Only what they filled in this time, so blanks don't wipe what the host already has.
+      // Only what they filled in this time, so blanks don't wipe what the host already has. A new photo of a side replaces the old one.
       const fresh = Object.fromEntries(Object.entries(data).filter(([, v]) => v !== "" && v !== 0 && v !== null));
-      await c.updateOne({ _id: existing._id }, { $set: { ...fresh, updatedAt: now }, $push: { idPhotos: { $each: photos } } });
-      ids.push(existing._id);
+      const sides = new Set(photos.map((p: Doc) => p.side));
+      const old = (existing.idPhotos ?? []) as Doc[];
+      replaced.push(...old.filter((p) => sides.has(p.side)).map((p) => p.publicId));
+      await c.updateOne({ _id: existing._id }, { $set: { ...fresh, idPhotos: [...old.filter((p) => !sides.has(p.side)), ...photos], updatedAt: now } });
+      ids.push(String(existing._id));
     } else {
       const _id = rid();
       await c.insertOne({ _id, acct: b.acct, kind: "guest", ...data, idPhotos: photos, createdAt: now, updatedAt: now, by: "check-in" });
       ids.push(_id);
     }
-    if (data.nationality && !/^(india|indian|in)$/i.test(String(data.nationality).trim())) foreign.push(String(data.name));
+    if (data.nationality && !isIndian(data.nationality)) foreign.push(String(data.name));
   }
-  await c.updateOne({ _id: b._id }, { $set: { guestIds: ids, guestId: ids[0], guestName: String(people[0]?.name ?? b.guestName ?? "").slice(0, 120), checkinStatus: "submitted", checkinAt: now, updatedAt: now } });
-  // Foreign guests: Form C must be filed within 24 hours of arrival, so a one-time task reminds the host.
-  if (foreign.length && has("formC") && has("tasks")) {
-    await c.insertOne({ _id: rid(), acct: b.acct, kind: "task", listingId: b.listingId, title: `Submit Form C: ${foreign.join(", ")}`.slice(0, 300), every: 1, unit: "once", due: b.start > istDay() ? b.start : istDay(), notes: "File within 24 hours of arrival on indianfrro.gov.in. The details are under Compliance → Form C.", active: true, createdAt: now, updatedAt: now, by: "check-in" });
+  for (const id of replaced) await destroyFile(id);
+  const again = Boolean(b.checkinAt);
+  await c.updateOne({ _id: b._id }, { $set: { guestIds: [...new Set(ids)], guestId: ids[0], guestName: String(people[0]?.name ?? b.guestName ?? "").slice(0, 120), checkinStatus: "submitted", checkinAt: now, changeRequest: null, updatedAt: now } });
+  // Foreign guests: Form C must be filed within 24 hours of arrival, so a one-time task reminds the host (once per booking).
+  if (foreign.length && has("formC") && has("tasks") && !(await c.findOne({ acct: b.acct, kind: "task", formCFor: b._id }))) {
+    await c.insertOne({ _id: rid(), acct: b.acct, kind: "task", formCFor: b._id, listingId: b.listingId, title: `Submit Form C: ${foreign.join(", ")}`.slice(0, 300), every: 1, unit: "once", due: b.start > istDay() ? b.start : istDay(), notes: "File within 24 hours of arrival on indianfrro.gov.in. The details are under Police & Form C → Form C.", active: true, createdAt: now, updatedAt: now, by: "check-in" });
   }
-  const who = [acct.ownerEmail, ...(acct.staff ?? []).filter((s: Doc) => (s.perms ?? []).includes("guests")).map((s: Doc) => s.email)];
-  for (const to of new Set(who)) {
-    await send(to, `Guest details in: ${people[0]?.name ?? "guest"} at ${listing?.name ?? "your listing"}`,
-      `<h2 style="margin:0 0 8px">Check-in details received</h2><p><b>${esc(people[0]?.name)}</b>${people.length > 1 ? ` and ${people.length - 1} more` : ""} filled in their details for <b>${esc(listing?.name ?? "")}</b>, ${esc(b.start)} to ${esc(b.end)}.</p><p>${button(`${siteUrl()}/hostbook/app#booking/${b._id}`, "Review and approve")}</p>`,
-      `${people[0]?.name} filled in check-in details for ${listing?.name ?? "your listing"} (${b.start} to ${b.end}). Review: ${siteUrl()}/hostbook/app`);
-  }
+  const who = `${people[0]?.name ?? "Guest"}${people.length > 1 ? ` +${people.length - 1}` : ""}`;
+  await notify(payload, String(acct.id), {
+    to: "guests", link: `booking/${b._id}`,
+    title: again ? `${who} updated their details` : `${who} sent their details`,
+    text: `${listing?.name ?? "Your listing"} · ${shortDay(b.start)} → ${shortDay(b.end)}. Review and approve.${foreign.length && has("formC") ? " Foreign guest: Form C due within 24 hours of arrival." : ""}`,
+  });
   return checkinView(payload, code);
+}
+
+/** Host asks the guest to fix or add some details: the guest's link opens the form again, with the fields marked. */
+export async function requestChanges(payload: Payload, ctx: Ctx, b0: Doc) {
+  if (!ctx.has("checkin")) throw new HostBookError("Online check-in isn't on your plan", 402, { reason: "feature", feature: "checkin" });
+  if (!ctx.can("guests")) throw new HostBookError("You don't have access to guest details", 403);
+  const c = await items(payload);
+  const b: Doc | null = await c.findOne({ _id: String(b0.bookingId ?? ""), acct: String(ctx.acct.id), kind: "booking", deleted: { $ne: true } });
+  if (!b) throw new HostBookError("Booking not found", 404);
+  if (ctx.listings && !ctx.listings.includes(b.listingId)) throw new HostBookError("You don't have access to this listing", 403);
+  const fields = (Array.isArray(b0.fields) ? b0.fields : []).filter((f: string) => ["name", "phone", "email", "address", "city", "nationality", "gender", "age", "id", "idFront", "idBack", "passport", "visa", "addGuests"].includes(f));
+  const note = String(b0.note ?? "").slice(0, 500).trim();
+  if (!fields.length && !note) throw new HostBookError("Pick what needs fixing, or write a note");
+  const set = { checkinStatus: "changes", changeRequest: { fields, note, at: Date.now(), by: ctx.email }, checkinCode: b.checkinCode || rid(8), updatedAt: Date.now() };
+  await c.updateOne({ _id: b._id }, { $set: set });
+  return { item: shape(ctx, { ...b, ...set }) };
+}
+
+/* ---------- notifications (in the app, and on the phone if allowed) ---------- */
+
+export type NoticeTo = "owner" | StaffPerm;
+/** Saves a notification for the owner and the staff with `to` permission, and pings their phones. */
+export async function notify(payload: Payload, acctId: string, n: { to: NoticeTo; title: string; text?: string; link?: string; key?: string }) {
+  const c = await items(payload);
+  const now = Date.now();
+  // A notice with a key replaces the earlier one (e.g. "today" once a day), so the list doesn't fill up.
+  if (n.key) await c.deleteMany({ acct: acctId, kind: "notice", key: n.key });
+  await c.insertOne({ _id: rid(), acct: acctId, kind: "notice", to: n.to, title: n.title.slice(0, 160), text: (n.text ?? "").slice(0, 400), link: n.link ?? "", key: n.key ?? "", readBy: [], createdAt: now, updatedAt: now });
+  const acct = (await payload.findByID({ collection: AC as never, id: acctId, depth: 0, overrideAccess: true }).catch(() => null)) as Doc | null;
+  if (!acct) return;
+  const emails = [acct.ownerEmail, ...(acct.staff ?? []).filter((s: Doc) => n.to !== "owner" && (s.perms ?? []).includes(n.to)).map((s: Doc) => s.email)];
+  await pushTo(payload, emails).catch((e) => console.error("[hostbook-push]", e));
+}
+
+const noticeVisible = (ctx: Ctx, d: Doc) => d.to === "owner" ? ctx.role === "owner" : ctx.can(d.to);
+
+export async function markNoticesRead(payload: Payload, ctx: Ctx, ids: unknown) {
+  const c = await items(payload);
+  const q: Doc = { acct: String(ctx.acct.id), kind: "notice", readBy: { $ne: ctx.email } };
+  if (Array.isArray(ids)) q._id = { $in: ids.map(String).slice(0, 200) };
+  const list: Doc[] = await c.find(q).toArray();
+  for (const d of list.filter((x) => noticeVisible(ctx, x))) await c.updateOne({ _id: d._id }, { $set: { readBy: [...(d.readBy ?? []), ctx.email].slice(-30), updatedAt: Date.now() } });
+  return { ok: true, read: list.length };
+}
+
+async function vapid(payload: Payload): Promise<VapidKeys> {
+  const g = ((await payload.findGlobal({ slug: "hostbook-settings" as never, depth: 0, overrideAccess: true }).catch(() => null)) ?? {}) as Doc;
+  if (g.vapidPublic && g.vapidPrivate) return { publicKey: g.vapidPublic, privateJwk: g.vapidPrivate };
+  const k = makeVapidKeys();
+  await payload.updateGlobal({ slug: "hostbook-settings" as never, data: { vapidPublic: k.publicKey, vapidPrivate: k.privateJwk } as never, overrideAccess: true });
+  return k;
+}
+async function pushCol(payload: Payload) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (payload.db as any).connection.db.collection("hb_push");
+}
+export async function pushKey(payload: Payload) { return { publicKey: (await vapid(payload)).publicKey }; }
+export async function pushSubscribe(payload: Payload, email: string, sub: unknown, off = false) {
+  const col = await pushCol(payload);
+  if (off) { await col.deleteMany({ email, ...(validSub(sub) ? { _id: (sub as PushSub).endpoint } : {}) }); return { ok: true, on: false }; }
+  if (!validSub(sub)) throw new HostBookError("Notifications aren't supported on this browser");
+  await col.deleteMany({ _id: sub.endpoint });
+  await col.insertOne({ _id: sub.endpoint, email, at: Date.now() });
+  return { ok: true, on: true };
+}
+async function pushTo(payload: Payload, emails: string[]) {
+  const col = await pushCol(payload);
+  const subs: Doc[] = await col.find({ email: { $in: [...new Set(emails)].slice(0, 50) } }).limit(100).toArray();
+  if (!subs.length) return;
+  const keys = await vapid(payload);
+  for (const s of subs) if (!(await sendPush(keys, { endpoint: s._id }))) await col.deleteMany({ _id: s._id });
+}
+/** For the phone's background worker after a push: the newest unread notification across the person's teams. */
+export async function latestNotice(payload: Payload, email: string) {
+  const own = await ownAccount(payload, email, false);
+  const accts = [...(own ? [own] : []), ...(await staffAccounts(payload, email))];
+  const c = await items(payload);
+  let best: Doc | null = null;
+  for (const a of accts) {
+    const ctx = await ctxFor(payload, email, String(a.id)).catch(() => null);
+    if (!ctx) continue;
+    const list: Doc[] = await c.find({ acct: String(a.id), kind: "notice", readBy: { $ne: email } }).sort({ createdAt: -1 }).limit(10).toArray();
+    const n = list.find((d) => noticeVisible(ctx, d));
+    if (n && (!best || n.createdAt > best.createdAt)) best = { ...n, acctId: String(a.id) };
+  }
+  return best ? { title: best.title, text: best.text, link: best.link, account: best.acctId } : null;
 }
 
 /* ---------- Airbnb / Booking.com calendar sync ---------- */
@@ -616,7 +780,7 @@ export async function syncAccount(payload: Payload, acct: Doc, access?: Access) 
   const c = await items(payload);
   const acctId = String(acct.id);
   const listings: Doc[] = await c.find({ acct: acctId, kind: "listing", deleted: { $ne: true }, archived: { $ne: true } }).toArray();
-  let added = 0, updated = 0, cancelled = 0;
+  let added = 0, updated = 0, cancelled = 0, newStays = 0;
   const errors: string[] = [];
   const today = istDay();
   for (const l of listings) {
@@ -648,6 +812,7 @@ export async function syncAccount(payload: Payload, acct: Doc, access?: Access) 
           icalUid: e.uid, icalFeed: f.url.slice(0, 300), ...(block || !a.features.includes("checkin") ? {} : { checkinCode: rid(8) }), createdAt: now, updatedAt: now, by: "sync",
         });
         added++;
+        if (!block) newStays++;
       }
       // A future booking that dropped out of the feed was cancelled on the platform.
       const gone: Doc[] = await c.find({ acct: acctId, kind: "booking", listingId: l._id, icalFeed: f.url.slice(0, 300), status: { $ne: "cancelled" }, start: { $gte: today }, deleted: { $ne: true } }).toArray();
@@ -656,6 +821,13 @@ export async function syncAccount(payload: Payload, acct: Doc, access?: Access) 
         else { await c.updateOne({ _id: g._id }, { $set: { status: "cancelled", updatedAt: now, notes: `${g.notes ? g.notes + "\n" : ""}Cancelled on ${f.source} (no longer in its calendar).` } }); cancelled++; }
       }
     }
+  }
+  if (newStays || cancelled) {
+    await notify(payload, acctId, {
+      to: "bookings", link: "bookings",
+      title: [newStays && `${newStays} new booking${newStays === 1 ? "" : "s"} synced`, cancelled && `${cancelled} cancelled on the platform`].filter(Boolean).join(", "),
+      text: "From your Airbnb / Booking.com calendars. Send check-in links to new guests.",
+    });
   }
   return { listings: listings.length, added, updated, cancelled, errors };
 }
@@ -718,6 +890,7 @@ export async function markHostbookPaid(payload: Payload, orderId: string, paymen
     collection: AC as never, id: a.id, depth: 0, overrideAccess: true,
     data: { plan: plan.id, expiresAt: o.expiresAt, extraListings: Math.max(0, Number(o.extra) || 0), lastPaidOrder: orderId, reminderSentAt: null, ...(paymentId ? { paymentId } : {}) } as never,
   });
+  await notify(payload, String(a.id), { to: "owner", link: "plan", title: `${plan.name} is active`, text: `Runs until ${String(o.expiresAt).slice(0, 10)}. Thank you!` });
   await send(a.ownerEmail, `HostBook ${plan.name} is active`, `<h2 style="margin:0 0 8px">Thank you! ${esc(plan.name)} is on</h2><p>Your HostBook plan runs until <b>${esc(String(o.expiresAt).slice(0, 10))}</b>. ${o.extra ? `It includes ${Number(o.extra)} extra listing${Number(o.extra) === 1 ? "" : "s"}.` : ""}</p><p>${button(`${siteUrl()}/hostbook/app`, "Open HostBook")}</p>`, `Your HostBook ${plan.name} plan is active until ${String(o.expiresAt).slice(0, 10)}.`);
   return { found: true as const, alreadyPaid: false };
 }
@@ -752,7 +925,7 @@ async function allAccounts(payload: Payload) {
 export async function runCron(payload: Payload, opts: { daily?: boolean } = {}) {
   const c = await items(payload);
   const today = istDay();
-  const out = { accounts: 0, synced: 0, idsDeleted: 0, expenses: 0, checklists: 0, digests: 0, reminders: 0, errors: [] as string[] };
+  const out = { accounts: 0, synced: 0, idsDeleted: 0, expenses: 0, checklists: 0, digests: 0, notices: 0, reminders: 0, errors: [] as string[] };
 
   // ID photos past their keep date: deleted from Cloudinary; the guest's written details stay.
   const expired: Doc[] = await c.find({ kind: "guest", "idPhotos.deleteAt": { $lt: Date.now() } }).limit(2000).toArray();
@@ -761,6 +934,9 @@ export async function runCron(payload: Payload, opts: { daily?: boolean } = {}) 
     for (const p of (g.idPhotos ?? []).filter((x: Doc) => x.deleteAt < Date.now())) { await destroyFile(p.publicId); out.idsDeleted++; }
     await c.updateOne({ _id: g._id }, { $set: { idPhotos: keep, idsDeletedAt: Date.now(), updatedAt: Date.now() } });
   }
+
+  // Notifications older than 60 days are cleared.
+  await c.deleteMany({ kind: "notice", createdAt: { $lt: Date.now() - 60 * 864e5 } });
 
   const s = await getSettings(payload);
   for (const acct of await allAccounts(payload)) {
@@ -796,32 +972,47 @@ export async function runCron(payload: Payload, opts: { daily?: boolean } = {}) 
           out.checklists++;
         }
       }
-      if (a.features.includes("tasks") && acct.digestOn !== false) {
-        const tasks: Doc[] = await c.find({ acct: id, kind: "task", active: { $ne: false }, deleted: { $ne: true }, due: { $lte: today } }).toArray();
+      {
+        // The day's summary goes into the app (and to phones that allow notifications). Email only if the owner turned it on.
+        const tasks: Doc[] = a.features.includes("tasks") ? await c.find({ acct: id, kind: "task", active: { $ne: false }, deleted: { $ne: true }, due: { $lte: today } }).toArray() : [];
         const ins: Doc[] = await c.find({ acct: id, kind: "booking", start: today, status: { $nin: ["cancelled", "blocked"] }, deleted: { $ne: true } }).toArray();
         const outsToday: Doc[] = await c.find({ acct: id, kind: "booking", end: today, status: { $nin: ["cancelled", "blocked"] }, deleted: { $ne: true } }).toArray();
         const low: Doc[] = a.features.includes("inventory") ? (await c.find({ acct: id, kind: "inventory", deleted: { $ne: true } }).toArray()).filter((x: Doc) => (Number(x.qty) || 0) <= (Number(x.min) || 0) && (Number(x.min) || 0) > 0) : [];
         const lmap = new Map((await c.find({ acct: id, kind: "listing" }).toArray()).map((l: Doc) => [l._id, l.name]));
-        const people = [{ email: acct.ownerEmail, all: true, listings: null as string[] | null }, ...(acct.staff ?? []).filter((x: Doc) => (x.perms ?? []).includes("tasks")).map((x: Doc) => ({ email: x.email, all: false, listings: x.listings?.length ? x.listings : null }))];
-        for (const p of people) {
-          const mine = (x: Doc) => !p.listings || !x.listingId || p.listings.includes(x.listingId);
-          const t = tasks.filter((x) => mine(x) && (p.all || !x.assignee || x.assignee === p.email));
-          const i = ins.filter(mine), o = outsToday.filter(mine), lo = low.filter(mine);
-          if (!t.length && !i.length && !o.length && !lo.length) continue;
+        const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
+        if (ins.length || outsToday.length) {
+          await notify(payload, id, {
+            to: "bookings", key: "today", link: "today",
+            title: `Today: ${[ins.length && plural(ins.length, "check-in"), outsToday.length && plural(outsToday.length, "check-out")].filter(Boolean).join(", ")}`,
+            text: [...ins.map((b) => `In: ${b.guestName || "Guest"} (${lmap.get(b.listingId) ?? ""})`), ...outsToday.map((b) => `Out: ${b.guestName || "Guest"} (${lmap.get(b.listingId) ?? ""})`)].join(" · "),
+          });
+          out.notices++;
+        }
+        if (tasks.length || low.length) {
+          await notify(payload, id, {
+            to: "tasks", key: "tasks-today", link: "tasks",
+            title: [tasks.length && `${plural(tasks.length, "task")} due`, low.length && `${low.length} item${low.length === 1 ? "" : "s"} running low`].filter(Boolean).join(", "),
+            text: [...tasks.slice(0, 6).map((x) => `${x.title}${x.due < today ? " (overdue)" : ""}`), ...low.slice(0, 4).map((x) => `Low: ${x.name}`)].join(" · "),
+          });
+          out.notices++;
+        }
+        if (acct.digestOn === true && (tasks.length || ins.length || outsToday.length || low.length)) {
+          const i = ins, o = outsToday, t = tasks, lo = low;
           const li = (x: string) => `<li style="margin:4px 0">${x}</li>`;
           const html = `<h2 style="margin:0 0 8px">Today at your stays</h2>` +
             (i.length ? `<p><b>Check-ins</b></p><ul>${i.map((b) => li(`${esc(lmap.get(b.listingId) ?? "")}: ${esc(b.guestName || "Guest")}`)).join("")}</ul>` : "") +
             (o.length ? `<p><b>Check-outs</b></p><ul>${o.map((b) => li(`${esc(lmap.get(b.listingId) ?? "")}: ${esc(b.guestName || "Guest")}`)).join("")}</ul>` : "") +
             (t.length ? `<p><b>Tasks due</b></p><ul>${t.map((x) => li(`${esc(x.title)}${x.listingId ? ` · ${esc(lmap.get(x.listingId) ?? "")}` : ""}${x.due < today ? ` <span style="color:#c0392b">(overdue since ${esc(x.due)})</span>` : ""}`)).join("")}</ul>` : "") +
             (lo.length ? `<p><b>Running low</b></p><ul>${lo.map((x) => li(`${esc(x.name)}: ${Number(x.qty) || 0} left${x.listingId ? ` · ${esc(lmap.get(x.listingId) ?? "")}` : ""}`)).join("")}</ul>` : "") +
-            `<p>${button(`${siteUrl()}/hostbook/app#today`, "Open HostBook")}</p>`;
-          await send(p.email, `Today: ${[i.length && `${i.length} check-in${i.length > 1 ? "s" : ""}`, o.length && `${o.length} check-out${o.length > 1 ? "s" : ""}`, t.length && `${t.length} task${t.length > 1 ? "s" : ""}`].filter(Boolean).join(", ") || "stock running low"}`, html, `Today at your stays: ${i.length} check-ins, ${o.length} check-outs, ${t.length} tasks. ${siteUrl()}/hostbook/app`);
+            `<p>${button(`${siteUrl()}/hostbook/app#today`, "Open HostBook")}</p><p style="font-size:12px;color:#888">You can turn this email off in HostBook → Settings.</p>`;
+          await send(acct.ownerEmail, `Today: ${[i.length && plural(i.length, "check-in"), o.length && plural(o.length, "check-out"), t.length && plural(t.length, "task")].filter(Boolean).join(", ") || "stock running low"}`, html, `Today at your stays: ${i.length} check-ins, ${o.length} check-outs, ${t.length} tasks. ${siteUrl()}/hostbook/app`);
           out.digests++;
         }
       }
       if (a.paidPlan && a.expiresAt && !acct.reminderSentAt) {
         const left = Math.ceil((Date.parse(a.expiresAt) - now) / 864e5);
         if (left > 0 && left <= s.reminderDays) {
+          await notify(payload, id, { to: "owner", link: "plan", title: `Your ${a.paidPlan.name} plan ends in ${left} day${left === 1 ? "" : "s"}`, text: "Renew to keep the paid features. Nothing is deleted if it ends." });
           await send(acct.ownerEmail, `Your HostBook ${a.paidPlan.name} plan ends in ${left} day${left === 1 ? "" : "s"}`, `<h2 style="margin:0 0 8px">Renew to keep everything unlocked</h2><p>Your ${esc(a.paidPlan.name)} plan ends on <b>${esc(a.expiresAt.slice(0, 10))}</b>. Your data stays safe either way; only the paid features lock.</p><p>${button(`${siteUrl()}/hostbook/app#plan`, "Renew for a year")}</p>`, `Your HostBook ${a.paidPlan.name} plan ends on ${a.expiresAt.slice(0, 10)}. Renew at ${siteUrl()}/hostbook/app`);
           await payload.update({ collection: AC as never, id: acct.id, data: { reminderSentAt: new Date().toISOString() } as never, overrideAccess: true });
           out.reminders++;

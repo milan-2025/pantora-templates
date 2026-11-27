@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarSync, ClipboardCheck, IdCard, IndianRupee, MessageCircle, ShieldCheck, Users2, Wrench } from "lucide-react";
+import { BellRing, CalendarSync, ClipboardCheck, IdCard, IndianRupee, MessageCircle, ShieldCheck, Users2, Wrench } from "lucide-react";
 import { getPayloadClient } from "@/lib/cms/queries";
 import { publicPlans } from "@/lib/hostbook/server";
 import { FEATURES } from "@/lib/hostbook/features";
@@ -18,7 +18,9 @@ const inr = (n: number) => "₹" + Math.round(n).toLocaleString("en-IN");
 
 const POINTS = [
   { icon: IdCard, title: "Guest register with IDs", text: "Every guest's name, phones, address and ID in one place. Returning guests are spotted by phone number." },
-  { icon: ClipboardCheck, title: "Online check-in links", text: "Send a WhatsApp link before arrival. Guests fill in their details, upload IDs and accept your house rules." },
+  { icon: ClipboardCheck, title: "Online check-in links", text: "Send a WhatsApp link before arrival. Guests fill in their details, upload IDs and accept your house rules. You choose which fields are required." },
+  { icon: IdCard, title: "IDs checked as they're typed", text: "Aadhaar must be 12 valid digits; PAN, voter ID, driving licence and passport numbers are checked too. Something wrong? Ask the guest to fix just that part." },
+  { icon: BellRing, title: "Notifications, not inbox clutter", text: "Guest details in, new bookings, today's check-ins and tasks show up under the bell and on your phone. No daily email spam." },
   { icon: CalendarSync, title: "Airbnb & Booking.com sync", text: "Paste your calendar links and bookings come in on their own. One calendar for all your listings." },
   { icon: IndianRupee, title: "Real profit for each listing", text: "Payouts, fees, cleaning, bills, salaries and repairs. Occupancy, nightly rate and Excel export for your CA." },
   { icon: Wrench, title: "Regular tasks & reminders", text: "AC service every 3 months, bills on the 5th, deep clean monthly. They come back on schedule in a morning email." },
@@ -75,7 +77,7 @@ export default async function HostBookLanding() {
       <section className="bg-white py-16">
         <div className="mx-auto max-w-6xl px-5">
           <h2 className="max-w-2xl font-serif text-4xl">Built for how hosts in India actually work</h2>
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
             {POINTS.map(({ icon: Icon, title, text }) => (
               <div key={title}><div className="mb-3 grid size-11 place-items-center rounded-xl bg-mist text-teal"><Icon className="size-5" /></div><h3 className="font-semibold">{title}</h3><p className="mt-1 text-sm text-ink/65">{text}</p></div>
             ))}
@@ -109,6 +111,9 @@ export default async function HostBookLanding() {
       <section className="mx-auto max-w-3xl px-5 pb-20">
         <h2 className="mb-6 font-serif text-3xl">Questions</h2>
         {[
+          ["What if a guest makes a mistake?", "Aadhaar, PAN, voter ID, driving licence and passport numbers, phones and emails are checked as the guest types, so most mistakes never reach you. If something still needs fixing, tap \u201cAsk guest to fix\u201d on the booking: their link opens again with everything filled in and the parts you picked marked. Guests can also update their own details until you approve them."],
+          ["Can I choose what guests must fill in?", "Yes. Under Settings \u2192 Check-in form, tick the fields that are required: phone, email, address, ID number, ID photos (front and back), and more. Apply them to the main guest or to every adult."],
+          ["Will HostBook fill my inbox?", "No. Updates appear under the bell in the app and, if you allow it, as notifications on your phone. A morning summary email is optional and off unless you turn it on."],
           ["Is my guests' ID data safe?", "ID photos are stored privately and can only be opened through short-lived links by you and staff you allow. They're deleted automatically after your plan's keep period. The written register stays for your records."],
           ["Does it connect to Airbnb?", "Yes, through Airbnb's calendar export link (and Booking.com's). Bookings and blocked dates come in every few hours. Airbnb doesn't share guest names in the calendar, so HostBook sends each guest a check-in link to fill in their details."],
           ["Can my caretaker use it?", "Yes. Add them under Team with their own email. They see check-ins, tasks and cleaning lists, and can add expenses, without seeing IDs or your income unless you allow it."],
