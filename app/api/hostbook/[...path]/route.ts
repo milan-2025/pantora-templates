@@ -4,7 +4,7 @@ import { clientIp, rateLimit } from "@/lib/rateLimit";
 import {
   HostBookError, addIdPhoto, attachFile, bootstrap, checkinSign, checkinSubmit, checkinView, checkout, completeTask, ctxFor, deleteRecord, emailOf, fileLink,
   idLinks, latestNotice, linkStaysHost, markNoticesRead, meView, pushKey, pushSubscribe, requestChanges, ownAccount, passwordLogin, publicPlans, quote, refreshedToken, removeIdPhoto, runCron, saveRecord, setMyPassword,
-  signFile, signIdUpload, startLogin, syncNow, updateAccount, verifyCheckout, verifyLogin,
+  signFile, signIdUpload, startLogin, syncNow, updateAccount, verifyCheckout, verifyLogin, saveSite, signSitePhoto, siteEnquiry,
 } from "@/lib/hostbook/server";
 import { dbs, hostFrom } from "@/lib/stays/server";
 
@@ -65,6 +65,8 @@ async function handle(req: NextRequest, ctx: Ctx) {
     return linkStaysHost(payload, actor.host);
   }
   if (path === "plans" && m === "GET") return publicPlans(payload);
+  // A guest on a host's booking website (/h/<name>) sent an enquiry: the host gets a HostBook notification.
+  if (path === "site/enquiry" && m === "POST") { limit(req, "site-enq", 10, 60 * 60_000); return siteEnquiry(payload, b); }
   if (path === "push/key" && m === "GET") return pushKey(payload);
   if (path.startsWith("checkin/")) {
     const code = path.split("/")[1];
@@ -100,6 +102,8 @@ async function handle(req: NextRequest, ctx: Ctx) {
     case "POST checkin/request": limit(req, "ask", 60, 60_000); return requestChanges(payload, c, b);
     case "POST tasks/done": limit(req, "done", 200, 60_000); return completeTask(payload, c, b.id, b);
     case "POST account": limit(req, "acct", 30, 60_000); return updateAccount(payload, c, b);
+    case "POST site": limit(req, "site", 30, 60_000); return saveSite(payload, c, b);
+    case "POST site/sign": limit(req, "site-sign", 60, 60 * 60_000); return signSitePhoto(payload, c);
     case "POST password": limit(req, "setpw", 10, 15 * 60_000); return setMyPassword(payload, email, b.password, b.remove === true);
     case "POST sync": limit(req, "sync", 10, 15 * 60_000); return syncNow(payload, c);
     case "POST ids/sign": limit(req, "id-sign", 60, 60 * 60_000); return signIdUpload(payload, c, b.guestId);

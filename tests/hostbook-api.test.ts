@@ -337,3 +337,64 @@ describe("HostBook API", () => {
     expect((await as(owner).del("items", { id: items.find((x: any) => x.kind === "listing").id })).status).toBe(400);
   });
 });
+
+describe("HostBook booking website", () => {
+  let host: string, other: string, listingId = "";
+  beforeAll(async () => {
+    host = await signIn("site-host@example.com");
+    other = await signIn("site-other@example.com");
+    const l = await as(host).save("listing", { name: "Sea View 2BHK", city: "Goa", address: "Flat 4, Lane 9", wifiPass: "secret", onSite: true, price: 3500, maxGuests: 4, photos: ["https://res.cloudinary.com/c/image/upload/v1/hostbook-site/x/p1.jpg"] });
+    listingId = l.json.item.id;
+    await as(host).save("booking", { listingId, start: addDays(today, 5), end: addDays(today, 7), guestName: "Secret Guest", phone: "9123456780" });
+  });
+
+  it("is off until the host publishes it", async () => {
+    const { getPublicSite } = await import("@/lib/hostbook/server");
+    expect(await getPublicSite(fakePayload as any, "sea-breeze")).toBeNull();
+    const draft = await as(host).post("site", { slug: "Sea Breeze", site: { on: false, title: "Sea Breeze", whatsapp: "98765 43210" } });
+    expect(draft.status).toBe(200);
+    expect(draft.json.account).toMatchObject({ siteSlug: "sea-breeze", site: { on: false, whatsapp: "919876543210" } });
+    expect(await getPublicSite(fakePayload as any, "sea-breeze")).toBeNull();
+  });
+
+  it("needs a WhatsApp number to go live, and an address nobody else has", async () => {
+    expect((await as(host).post("site", { slug: "sea-breeze", site: { on: true, title: "Sea Breeze" } })).status).toBe(400);
+    expect((await as(host).post("site", { slug: "sea-breeze", site: { on: true, title: "Sea Breeze", whatsapp: "9876543210" } })).status).toBe(200);
+    expect((await as(other).post("site", { slug: "sea breeze", site: { on: true, whatsapp: "9876543211" } })).status).toBe(409);
+    expect((await as(other).post("site", { slug: "admin", site: { on: true, whatsapp: "9876543211" } })).status).toBe(400);
+  });
+
+  it("shows only public details and booked dates", async () => {
+    const { getPublicSite } = await import("@/lib/hostbook/server");
+    const s = (await getPublicSite(fakePayload as any, "sea-breeze"))!;
+    expect(s.site).toMatchObject({ on: true, title: "Sea Breeze", whatsapp: "919876543210" });
+    expect(s.listings).toHaveLength(1);
+    expect(s.listings[0]).toMatchObject({ id: listingId, name: "Sea View 2BHK", price: 3500 });
+    expect(s.listings[0].busy).toEqual([addDays(today, 5), addDays(today, 6)]);
+    const text = JSON.stringify(s);
+    for (const hidden of ["Flat 4", "secret", "Secret Guest", "9123456780", "site-host@example.com"]) expect(text).not.toContain(hidden);
+    expect(s.branded).toBe(false); // free plan: "Made with HostBook" shows
+  });
+
+  it("hides a listing the host takes off the site", async () => {
+    const { getPublicSite } = await import("@/lib/hostbook/server");
+    await as(host).save("listing", { onSite: false }, listingId);
+    expect((await getPublicSite(fakePayload as any, "sea-breeze"))!.listings).toHaveLength(0);
+    await as(host).save("listing", { onSite: true }, listingId);
+  });
+
+  it("tells the host about a guest's enquiry", async () => {
+    const r = await call("site/enquiry", { body: { slug: "sea-breeze", listingId, start: addDays(today, 10), end: addDays(today, 12), guests: 2, name: "Riya" } });
+    expect(r.status).toBe(200);
+    const items = (await as(host).get("items?since=0")).json.items as any[];
+    const n = items.find((i) => i.kind === "notice" && /Website enquiry/.test(i.title));
+    expect(n.text).toContain("Riya");
+    expect((await call("site/enquiry", { body: { slug: "sea-breeze", listingId: "nope" } })).status).toBe(404);
+    expect((await call("site/enquiry", { body: { slug: "no-such-site", listingId } })).status).toBe(404);
+  });
+
+  it("lets only the owner change the website", async () => {
+    expect((await call("site", { body: { slug: "x-y-z", site: {} } })).status).toBe(401);
+  });
+});
+
