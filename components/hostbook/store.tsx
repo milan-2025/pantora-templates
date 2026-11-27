@@ -2,7 +2,7 @@
 /** The app's data: who is signed in, their plan, and every record of the current host account (kept on this device too). */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { FeatureKey, Kind, StaffPerm } from "@/lib/hostbook/features";
-import type { Rec } from "@/lib/hostbook/core";
+import type { CheckinField, Rec } from "@/lib/hostbook/core";
 import { api, ApiError, session } from "./api";
 
 export type PlanV = { id: string; planId: string; name: string; price: number; isFree: boolean; listings: number; staff: number; idDays: number; hostChoosesIdDays: boolean; features: FeatureKey[]; tagline: string; badge: string; highlights: string[] };
@@ -10,7 +10,7 @@ export type StaffV = { email: string; name: string; phone: string; perms: StaffP
 export type Me = {
   email: string; role: "owner" | "staff"; perms: StaffPerm[]; listingsAllowed: string[] | null; hasPassword: boolean;
   teams: { id: string; name: string; role: string }[];
-  account: { id: string; business: string; phone: string; city: string; ownerEmail: string; logoUrl: string; idDays: number; digestOn: boolean; extraListings: number; staff: StaffV[]; staysLinked: boolean };
+  account: { id: string; business: string; phone: string; city: string; ownerEmail: string; logoUrl: string; idDays: number; digestOn: boolean; extraListings: number; staff: StaffV[]; staysLinked: boolean; checkinRequired: CheckinField[]; checkinAllGuests: boolean };
   access: { plan: PlanV; paidPlan: PlanV | null; expiresAt: string | null; viaStays: boolean; listingLimit: number; staffLimit: number; idDays: number; features: FeatureKey[] };
   extraListingPrice: number; whatsapp: string;
 };

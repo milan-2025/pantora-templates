@@ -259,3 +259,117 @@ export function toCsv(rows: (string | number | null | undefined)[][]) {
 }
 
 export const inr = (n: number) => "₹" + Math.round(Number(n) || 0).toLocaleString("en-IN");
+
+/* ---------- ID, phone and email checks (check-in form and guest editor) ---------- */
+
+// Verhoeff check digit: the last digit of every Aadhaar number is one, so a single wrong digit is caught.
+const VD = [[0,1,2,3,4,5,6,7,8,9],[1,2,3,4,0,6,7,8,9,5],[2,3,4,0,1,7,8,9,5,6],[3,4,0,1,2,8,9,5,6,7],[4,0,1,2,3,9,5,6,7,8],[5,9,8,7,6,0,4,3,2,1],[6,5,9,8,7,1,0,4,3,2],[7,6,5,9,8,2,1,0,4,3],[8,7,6,5,9,3,2,1,0,4],[9,8,7,6,5,4,3,2,1,0]];
+const VP = [[0,1,2,3,4,5,6,7,8,9],[1,5,7,6,2,8,3,0,9,4],[5,8,0,3,7,9,6,1,4,2],[8,9,1,6,0,4,3,5,2,7],[9,4,5,3,1,2,6,8,7,0],[4,2,8,6,5,7,3,9,0,1],[2,7,9,3,8,0,6,4,1,5],[7,0,4,6,9,1,3,2,5,8]];
+export function verhoeffOk(num: string) {
+  let c = 0;
+  const d = num.split("").reverse().map(Number);
+  for (let i = 0; i < d.length; i++) c = VD[c][VP[i % 8][d[i]]];
+  return c === 0;
+}
+
+/** Rules for each ID type. `example` is shown as the placeholder. */
+export const ID_RULES: Record<string, { example: string; hint: string }> = {
+  Aadhaar: { example: "1234 5678 9012", hint: "12 digits" },
+  Passport: { example: "A1234567", hint: "Indian: 1 letter + 7 digits" },
+  "Driving licence": { example: "PB65 20110012345", hint: "State code + numbers, e.g. PB65 20110012345" },
+  "Voter ID": { example: "ABC1234567", hint: "3 letters + 7 digits" },
+  PAN: { example: "ABCDE1234F", hint: "5 letters, 4 digits, 1 letter" },
+  Other: { example: "", hint: "" },
+};
+
+/**
+ * Checks and tidies an ID number for its type. Returns the cleaned value (Aadhaar spaced in groups of four, others in
+ * capitals without spaces) or an error to show next to the field. Empty is allowed here; "required" is checked separately.
+ */
+export function checkId(type: string, raw: unknown, opts: { indian?: boolean } = {}): { value: string; error?: string } {
+  const s = String(raw ?? "").trim();
+  if (!s) return { value: "" };
+  const compact = s.replace(/[\s-]/g, "").toUpperCase();
+  switch (type) {
+    case "Aadhaar": {
+      if (!/^\d+$/.test(compact)) return { value: s, error: "Aadhaar has only digits" };
+      if (compact.length !== 12) return { value: s, error: `Aadhaar has 12 digits (this has ${compact.length})` };
+      if (/^[01]/.test(compact) || !verhoeffOk(compact)) return { value: s, error: "This isn't a valid Aadhaar number. Please check the digits" };
+      return { value: compact.replace(/(\d{4})(?=\d)/g, "$1 ") };
+    }
+    case "PAN":
+      return /^[A-Z]{5}\d{4}[A-Z]$/.test(compact) ? { value: compact } : { value: s, error: "PAN looks like ABCDE1234F (5 letters, 4 digits, 1 letter)" };
+    case "Voter ID":
+      return /^[A-Z]{3}\d{7}$/.test(compact) ? { value: compact } : { value: s, error: "Voter ID (EPIC) looks like ABC1234567 (3 letters, 7 digits)" };
+    case "Driving licence":
+      return /^[A-Z]{2}\d{2}[A-Z0-9]{9,14}$/.test(compact) ? { value: compact } : { value: s, error: "Driving licence starts with the state code and 2 digits, e.g. PB65 20110012345" };
+    case "Passport":
+      if (opts.indian !== false) return /^[A-Z]\d{7}$/.test(compact) ? { value: compact } : { value: s, error: "Indian passport numbers are 1 letter + 7 digits, e.g. A1234567" };
+      return /^[A-Z0-9]{6,9}$/.test(compact) ? { value: compact } : { value: s, error: "Passport number should be 6–9 letters or digits" };
+    default:
+      return /^[A-Z0-9/]{4,20}$/.test(compact) ? { value: compact } : { value: s, error: "ID number should be 4–20 letters or digits" };
+  }
+}
+
+/** Indian mobile (10 digits starting 6–9, optional +91/0) or an international number with +country code. */
+export function checkPhone(raw: unknown): { value: string; error?: string } {
+  const s = String(raw ?? "").trim();
+  if (!s) return { value: "" };
+  const plus = s.startsWith("+");
+  const d = s.replace(/\D/g, "");
+  if (!plus || d.startsWith("91")) {
+    const local = d.length === 12 && d.startsWith("91") ? d.slice(2) : d.length === 11 && d.startsWith("0") ? d.slice(1) : d;
+    if (local.length === 10 && /^[6-9]/.test(local)) return { value: `${local.slice(0, 5)} ${local.slice(5)}` };
+    if (!plus) return { value: s, error: "Enter a 10-digit mobile number (or add + and the country code)" };
+  }
+  return d.length >= 8 && d.length <= 15 ? { value: `+${d}` } : { value: s, error: "Phone number looks too short or too long" };
+}
+
+export function checkEmail(raw: unknown): { value: string; error?: string } {
+  const s = String(raw ?? "").trim().toLowerCase();
+  if (!s) return { value: "" };
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s) ? { value: s } : { value: s, error: "This email doesn't look right" };
+}
+
+export const isIndian = (nationality: unknown) => !String(nationality ?? "").trim() || /^(india|indian|in|bharat|bhartiya)$/i.test(String(nationality).trim());
+
+/** Fields a host can make required on the check-in form. Name is always required. */
+export const CHECKIN_FIELDS = [
+  { key: "phone", label: "Phone" },
+  { key: "email", label: "Email" },
+  { key: "address", label: "Home address" },
+  { key: "city", label: "City" },
+  { key: "nationality", label: "Nationality" },
+  { key: "gender", label: "Gender" },
+  { key: "age", label: "Age" },
+  { key: "id", label: "ID type & number" },
+  { key: "idFront", label: "ID photo (front)" },
+  { key: "idBack", label: "ID photo (back)" },
+] as const;
+export type CheckinField = (typeof CHECKIN_FIELDS)[number]["key"];
+export const DEFAULT_REQUIRED: CheckinField[] = ["phone", "id", "idFront"];
+export const CHECKIN_FIELD_KEYS = CHECKIN_FIELDS.map((f) => f.key) as CheckinField[];
+
+/**
+ * Checks one guest on the check-in form. `main` = the first guest; `all` = rules apply to every guest (otherwise only
+ * the main guest gets the required checks; formats are always checked). Returns field → error.
+ */
+export function checkGuest(g: Record<string, unknown>, opts: { required: CheckinField[]; all: boolean; main: boolean; photos?: string[]; hadPhotos?: string[]; hadId?: boolean }) {
+  const err: Record<string, string> = {};
+  const req = new Set(opts.main || opts.all ? opts.required : []);
+  if (!String(g.name ?? "").trim()) err.name = "Name is needed";
+  const phone = checkPhone(g.phone); if (phone.error) err.phone = phone.error;
+  const email = checkEmail(g.email); if (email.error) err.email = email.error;
+  const indian = isIndian(g.nationality);
+  const id = checkId(String(g.idType || "Other"), g.idNumber, { indian }); if (id.error) err.idNumber = id.error;
+  if (g.passport) { const p = checkId("Passport", g.passport, { indian }); if (p.error) err.passport = p.error; }
+  // Phone is only ever required for the main guest (children and partners often have none).
+  if (req.has("phone") && opts.main && !String(g.phone ?? "").trim()) err.phone = "Phone is needed";
+  for (const k of ["email", "address", "city", "nationality", "gender"] as const) if (req.has(k) && !String(g[k] ?? "").trim()) err[k] = "Needed";
+  if (req.has("age") && !(Number(g.age) > 0)) err.age = "Needed";
+  if (req.has("id") && !opts.hadId && (!g.idType || !String(g.idNumber ?? "").trim())) err.idNumber = "ID number is needed";
+  const have = new Set([...(opts.photos ?? []), ...(opts.hadPhotos ?? [])]);
+  if (req.has("idFront") && !have.has("front")) err.idFront = "Photo of the ID (front) is needed";
+  if (req.has("idBack") && !have.has("back")) err.idBack = "Photo of the ID (back) is needed";
+  return err;
+}

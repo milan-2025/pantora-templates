@@ -3,7 +3,7 @@ import { getPayloadClient } from "@/lib/cms/queries";
 import { clientIp, rateLimit } from "@/lib/rateLimit";
 import {
   HostBookError, addIdPhoto, attachFile, bootstrap, checkinSign, checkinSubmit, checkinView, checkout, completeTask, ctxFor, deleteRecord, emailOf, fileLink,
-  idLinks, linkStaysHost, meView, ownAccount, passwordLogin, publicPlans, quote, refreshedToken, removeIdPhoto, runCron, saveRecord, setMyPassword,
+  idLinks, latestNotice, linkStaysHost, markNoticesRead, meView, pushKey, pushSubscribe, requestChanges, ownAccount, passwordLogin, publicPlans, quote, refreshedToken, removeIdPhoto, runCron, saveRecord, setMyPassword,
   signFile, signIdUpload, startLogin, syncNow, updateAccount, verifyCheckout, verifyLogin,
 } from "@/lib/hostbook/server";
 import { dbs, hostFrom } from "@/lib/stays/server";
@@ -65,6 +65,7 @@ async function handle(req: NextRequest, ctx: Ctx) {
     return linkStaysHost(payload, actor.host);
   }
   if (path === "plans" && m === "GET") return publicPlans(payload);
+  if (path === "push/key" && m === "GET") return pushKey(payload);
   if (path.startsWith("checkin/")) {
     const code = path.split("/")[1];
     const sub = path.split("/")[2] ?? "";
@@ -81,6 +82,9 @@ async function handle(req: NextRequest, ctx: Ctx) {
   /* ----- signed in ----- */
   const email = emailOf(req);
   if (!email) throw new HostBookError("Please sign in again", 401);
+  // The phone's background worker after a push: newest unread notification across all teams (no team header).
+  if (path === "push/latest" && m === "GET") return { notice: await latestNotice(payload, email) };
+  if (path === "push/subscribe" && m === "POST") { limit(req, "push", 20, 15 * 60_000); return pushSubscribe(payload, email, b.sub, b.off === true); }
   const c = await ctxFor(payload, email, req.headers.get("x-hb-account"));
 
   switch (`${m} ${path}`) {
@@ -92,6 +96,8 @@ async function handle(req: NextRequest, ctx: Ctx) {
     case "GET items": return bootstrap(payload, c, Number(url.searchParams.get("since") ?? 0));
     case "POST items": limit(req, "save", 300, 60_000); return { item: await saveRecord(payload, c, b.kind, b.id, b.data ?? {}) };
     case "DELETE items": limit(req, "del", 120, 60_000); return deleteRecord(payload, c, b.id);
+    case "POST notices/read": return markNoticesRead(payload, c, b.ids);
+    case "POST checkin/request": limit(req, "ask", 60, 60_000); return requestChanges(payload, c, b);
     case "POST tasks/done": limit(req, "done", 200, 60_000); return completeTask(payload, c, b.id, b);
     case "POST account": limit(req, "acct", 30, 60_000); return updateAccount(payload, c, b);
     case "POST password": limit(req, "setpw", 10, 15 * 60_000); return setMyPassword(payload, email, b.password, b.remove === true);

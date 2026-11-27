@@ -3,6 +3,7 @@ import {
   addMonths, buildReport, cleanRecord, fillTemplate, icalIsBlock, icalPhoneLast4, maskId, nextDue, nights, nightsIn, ownerStatement, parseIcal, planQuote, toCsv, waLink,
   type PlanLite, type Rec,
 } from "@/lib/hostbook/core";
+import { checkEmail, checkGuest, checkId, checkPhone } from "@/lib/hostbook/core";
 import { DEFAULT_HOSTBOOK_PLANS, FEATURE_KEYS } from "@/lib/hostbook/features";
 import { dealFor } from "@/lib/coupons";
 
@@ -135,4 +136,42 @@ describe("messages & export", () => {
     expect(waLink("98765 43210", "hi there")).toBe("https://wa.me/919876543210?text=hi%20there");
   });
   it("quotes CSV cells", () => { expect(toCsv([["a,b", 'say "hi"', 3]])).toBe('"a,b","say ""hi""",3'); });
+});
+
+describe("ID and phone checks", () => {
+  it("Aadhaar: 12 digits with a valid check digit", () => {
+    expect(checkId("Aadhaar", "2341 2341 2346")).toEqual({ value: "2341 2341 2346" });
+    expect(checkId("Aadhaar", "234123412346").value).toBe("2341 2341 2346");
+    expect(checkId("Aadhaar", "2341 2341 234").error).toMatch(/12 digits \(this has 11\)/);
+    expect(checkId("Aadhaar", "2341 2341 2347").error).toMatch(/valid Aadhaar/);
+    expect(checkId("Aadhaar", "1341 2341 2346").error).toBeTruthy(); // can't start with 0 or 1
+    expect(checkId("Aadhaar", "2341-abcd-2346").error).toMatch(/only digits/);
+  });
+  it("PAN, voter ID, driving licence, passport", () => {
+    expect(checkId("PAN", "abcde1234f")).toEqual({ value: "ABCDE1234F" });
+    expect(checkId("PAN", "ABCD1234F").error).toBeTruthy();
+    expect(checkId("Voter ID", "ABC 1234567")).toEqual({ value: "ABC1234567" });
+    expect(checkId("Voter ID", "AB12345678").error).toBeTruthy();
+    expect(checkId("Driving licence", "PB65 20110012345")).toEqual({ value: "PB6520110012345" });
+    expect(checkId("Driving licence", "12345").error).toBeTruthy();
+    expect(checkId("Passport", "a1234567")).toEqual({ value: "A1234567" });
+    expect(checkId("Passport", "123456789", { indian: true }).error).toBeTruthy();
+    expect(checkId("Passport", "123456789", { indian: false })).toEqual({ value: "123456789" });
+    expect(checkId("Aadhaar", "")).toEqual({ value: "" });
+  });
+  it("phones and emails", () => {
+    expect(checkPhone("+91 98765-43210")).toEqual({ value: "98765 43210" });
+    expect(checkPhone("098765 43210")).toEqual({ value: "98765 43210" });
+    expect(checkPhone("5876543210").error).toBeTruthy();
+    expect(checkPhone("+44 7700 900123")).toEqual({ value: "+447700900123" });
+    expect(checkEmail("A@B.co").value).toBe("a@b.co");
+    expect(checkEmail("nope").error).toBeTruthy();
+  });
+  it("required fields apply to the main guest unless set for everyone", () => {
+    const g = { name: "A", idType: "Aadhaar", idNumber: "" };
+    expect(Object.keys(checkGuest(g, { required: ["phone", "id", "idFront"], all: false, main: true }))).toEqual(["phone", "idNumber", "idFront"]);
+    expect(checkGuest(g, { required: ["phone", "id", "idFront"], all: false, main: false })).toEqual({});
+    expect(Object.keys(checkGuest(g, { required: ["phone", "id", "address"], all: true, main: false }))).toEqual(["address", "idNumber"]);
+    expect(checkGuest(g, { required: ["id", "idFront"], all: false, main: true, hadId: true, hadPhotos: ["front"] })).toEqual({});
+  });
 });

@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { AlertTriangle, ArrowLeft, BedDouble, Check, Copy, MessageCircle, Pencil, Plus, Search, Trash2, UserPlus } from "lucide-react";
 import { BOOKING_SOURCES } from "@/lib/hostbook/features";
 import { addDays, bookingIncome, fillTemplate, istDay, nights, overlaps, waLink, type Rec } from "@/lib/hostbook/core";
+import { api } from "../api";
 import { useLookups, useStore } from "../store";
 import { Badge, Button, Card, Empty, Field, Input, Locked, PageHead, Select, Sheet, Tabs, Textarea, fmtDay, money } from "../ui";
 import { go } from "../App";
@@ -16,7 +17,43 @@ export const statusBadge = (b: Rec) => {
   return <Badge tone="teal">Upcoming</Badge>;
 };
 export const checkinBadge = (b: Rec) =>
-  b.checkinStatus === "approved" ? <Badge tone="ok"><Check className="size-3" />Details OK</Badge> : b.checkinStatus === "submitted" ? <Badge tone="warn">Details to review</Badge> : null;
+  b.checkinStatus === "approved" ? <Badge tone="ok"><Check className="size-3" />Details OK</Badge>
+    : b.checkinStatus === "submitted" ? <Badge tone="warn">Details to review</Badge>
+    : b.checkinStatus === "changes" ? <Badge tone="bad">Waiting for guest</Badge> : null;
+
+/** What a host can ask a guest to fix; the guest's form opens again with these marked. */
+export const FIX_OPTIONS = [
+  { key: "name", label: "Name" }, { key: "phone", label: "Phone" }, { key: "email", label: "Email" }, { key: "address", label: "Home address" },
+  { key: "city", label: "City" }, { key: "nationality", label: "Nationality" }, { key: "gender", label: "Gender" }, { key: "age", label: "Age" },
+  { key: "id", label: "ID type & number" }, { key: "idFront", label: "ID photo (front)" }, { key: "idBack", label: "ID photo (back)" },
+  { key: "passport", label: "Passport details" }, { key: "visa", label: "Visa details" }, { key: "addGuests", label: "Add the other guests" },
+];
+
+function AskFix({ b, onClose }: { b: Rec; onClose: () => void }) {
+  const s = useStore();
+  const [fields, setFields] = useState<string[]>([]), [note, setNote] = useState(""), [busy, setBusy] = useState(false);
+  const g = b.guestId ? s.byId.get(b.guestId) : null;
+  const phone = String(g?.phone || b.phone || "");
+  const ask = async () => {
+    setBusy(true);
+    try {
+      const r = await api("checkin/request", { body: { bookingId: b.id, fields, note } });
+      s.put(r.item);
+      const what = fields.map((k) => FIX_OPTIONS.find((o) => o.key === k)?.label.toLowerCase()).filter(Boolean).join(", ");
+      const text = `Hi ${String(g?.name || b.guestName || "").split(" ")[0] || "there"}, please update your check-in details${what ? ` (${what})` : ""}${note ? `: ${note}` : "."} ${checkinUrl(r.item)}`;
+      if (phone) window.open(waLink(phone, text), "_blank");
+      else { navigator.clipboard?.writeText(text); s.toast("Message copied. Send it to the guest"); }
+      onClose();
+    } catch (e) { s.toast((e as Error).message, "bad"); } finally { setBusy(false); }
+  };
+  return (
+    <Sheet open onClose={onClose} title="Ask the guest to fix details" footer={<><Button tone="ghost" onClick={onClose}>Cancel</Button><Button onClick={ask} disabled={busy || (!fields.length && !note.trim())}>{phone ? "Send on WhatsApp" : "Copy message"}</Button></>}>
+      <p className="mb-3 text-sm text-muted">Their check-in link opens again with what they sent already filled in, and the items below marked.</p>
+      <div className="grid grid-cols-2 gap-x-4">{FIX_OPTIONS.map((o) => <label key={o.key} className="flex items-center gap-2 py-1 text-sm"><input type="checkbox" checked={fields.includes(o.key)} onChange={() => setFields((f) => (f.includes(o.key) ? f.filter((x) => x !== o.key) : [...f, o.key]))} />{o.label}</label>)}</div>
+      <Field label="Note for the guest (optional)" className="mt-3"><Textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. The Aadhaar photo is blurry, please upload it again" /></Field>
+    </Sheet>
+  );
+}
 
 export function checkinUrl(b: Rec) { return b.checkinCode ? `${location.origin}/hostbook/c/${b.checkinCode}` : ""; }
 
@@ -173,7 +210,7 @@ export function BookingDetail({ id }: { id: string }) {
   const s = useStore();
   const { listingName, guestName } = useLookups();
   const b = s.byId.get(id);
-  const [edit, setEdit] = useState(false), [wa, setWa] = useState(false), [damage, setDamage] = useState(false);
+  const [edit, setEdit] = useState(false), [wa, setWa] = useState(false), [damage, setDamage] = useState(false), [fix, setFix] = useState(false);
   if (!b) return <Empty title="Booking not found" action={<Button onClick={() => go("bookings")}>All bookings</Button>} />;
   const people = (b.guestIds?.length ? b.guestIds : b.guestId ? [b.guestId] : []).map((g: string) => s.byId.get(g)).filter(Boolean) as Rec[];
   const link = checkinUrl(b);
@@ -213,7 +250,10 @@ export function BookingDetail({ id }: { id: string }) {
                 <Button size="sm" tone="soft" onClick={() => { navigator.clipboard?.writeText(link); s.toast("Link copied"); }}><Copy className="size-3.5" /> Copy</Button>
                 <Button size="sm" tone="soft" onClick={() => setWa(true)}><MessageCircle className="size-3.5" /> Send</Button>
                 {b.checkinStatus === "submitted" && <Button size="sm" onClick={approve}><Check className="size-3.5" /> Approve details</Button>}
+                {s.can("guests") && <Button size="sm" tone="soft" onClick={() => setFix(true)}><Pencil className="size-3.5" /> Ask guest to fix</Button>}
               </div>
+              {b.checkinStatus === "changes" && b.changeRequest && <p className="mt-2 rounded-lg bg-rust/10 px-2 py-1.5 text-xs text-rust">Asked to fix: {[...(b.changeRequest.fields ?? []).map((k: string) => FIX_OPTIONS.find((o) => o.key === k)?.label), b.changeRequest.note].filter(Boolean).join(" · ")}</p>}
+              {b.checkinStatus === "approved" && <p className="mt-2 text-[11px] text-muted">Approved, so the guest can no longer change their details. &ldquo;Ask guest to fix&rdquo; opens the form again.</p>}
             </div>
           ) : !s.has("checkin") ? <div className="mt-3"><Locked feature="checkin" compact /> <span className="text-xs text-muted">Online check-in</span></div> : null}
           {s.can("guests") && <Button size="sm" tone="ghost" className="mt-2" onClick={() => go(`guests?add=${b.id}`)}><UserPlus className="size-3.5" /> Add guest by hand</Button>}
@@ -242,6 +282,7 @@ export function BookingDetail({ id }: { id: string }) {
       {edit && <BookingEditor booking={b} onClose={() => setEdit(false)} />}
       {wa && <SendWhatsApp b={b} onClose={() => setWa(false)} />}
       {damage && <DamageEditor b={b} onClose={() => setDamage(false)} />}
+      {fix && <AskFix b={b} onClose={() => setFix(false)} />}
     </div>
   );
 }

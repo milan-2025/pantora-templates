@@ -23,5 +23,8 @@ export const HostBookSettings: GlobalConfig = {
       ],
     },
     { name: "offerText", type: "text", label: "Offer line on the plans page (optional)" },
+    // Keys for phone notifications (web push). Made automatically the first time; don't change them, or phones stop getting alerts.
+    { name: "vapidPublic", type: "text", admin: { hidden: true } },
+    { name: "vapidPrivate", type: "text", admin: { hidden: true } },
   ],
 };

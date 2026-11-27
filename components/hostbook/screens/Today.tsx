@@ -8,6 +8,7 @@ import { Button, Card, Empty, Stat, fmtDay, money } from "../ui";
 import { BookingEditor, BookingRow } from "./Bookings";
 import { ExpenseEditor } from "./Money";
 import { TaskRow } from "./Tasks";
+import { NoticeRow, useNotices } from "./Updates";
 import { go } from "../App";
 
 export function Today() {
@@ -20,6 +21,7 @@ export function Today() {
   const outs = live.filter((b) => b.end === t);
   const now = live.filter((b) => b.start <= t && b.end > t);
   const review = live.filter((b) => b.checkinStatus === "submitted");
+  const waiting = live.filter((b) => b.checkinStatus === "changes" && b.end >= t);
   const noDetails = s.has("checkin") ? live.filter((b) => b.start >= t && b.start <= addDays(t, 3) && !b.checkinStatus && !b.guestId) : [];
   const mine = (x: { assignee?: string; [k: string]: unknown }) => s.me.role === "owner" || !x.assignee || x.assignee === s.me.email;
   const tasks = s.has("tasks") && s.can("tasks") ? s.of("task").filter((x) => x.active !== false && x.due <= t && mine(x)).sort((a, b) => a.due.localeCompare(b.due)) : [];
@@ -32,6 +34,7 @@ export function Today() {
     try { const x = await api("sync", { body: {} }); await s.refresh(); s.toast(`Synced: ${x.added} new, ${x.updated} changed${x.cancelled ? `, ${x.cancelled} cancelled` : ""}${x.errors.length ? `. ${x.errors.length} feed(s) failed` : ""}`, x.errors.length ? "bad" : "ok"); }
     catch (e) { s.toast((e as Error).message, "bad"); } finally { setSyncing(false); }
   };
+  const { unread, markRead } = useNotices();
   const hour = new Date().getHours();
   const hasFeeds = listings.some((l) => Array.isArray(l.ical) && l.ical.length);
 
@@ -64,6 +67,13 @@ export function Today() {
         </div>
       </div>
 
+      {unread.length > 0 && (
+        <section className="mb-5">
+          <div className="mb-1.5 flex items-center justify-between"><h2 className="text-sm font-semibold text-ink/70">New updates</h2><span className="flex gap-3"><button onClick={() => markRead()} className="text-xs font-semibold text-muted">Mark all read</button><a href="#updates" className="text-xs font-semibold text-teal">All</a></span></div>
+          <div className="overflow-hidden rounded-2xl border border-line bg-white">{unread.slice(0, 4).map((n) => <NoticeRow key={n.id} n={n} onOpen={() => markRead([n.id])} />)}</div>
+        </section>
+      )}
+
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat label="Arriving" value={ins.filter((b) => b.start === t).length} sub={`${ins.filter((b) => b.start === tm).length} tomorrow`} />
         <Stat label="Leaving today" value={outs.length} />
@@ -75,6 +85,7 @@ export function Today() {
         <Section title="Arriving" icon={<LogIn className="size-4" />} empty="No check-ins today or tomorrow.">{ins.map((b) => <BookingRow key={b.id} b={b} />)}</Section>
         <Section title="Leaving today" icon={<LogOutIcon className="size-4" />} empty="No check-outs today.">{outs.map((b) => <BookingRow key={b.id} b={b} />)}</Section>
         {review.length > 0 && <Section title="Guest details to review" icon={<Sparkles className="size-4" />}>{review.map((b) => <BookingRow key={b.id} b={b} />)}</Section>}
+        {waiting.length > 0 && <Section title="Waiting for guests to fix details" hint="You asked these guests to update their check-in details.">{waiting.map((b) => <BookingRow key={b.id} b={b} />)}</Section>}
         {noDetails.length > 0 && <Section title="Send check-in links" icon={<BedDouble className="size-4" />} hint="Arriving in the next 3 days, no guest details yet.">{noDetails.map((b) => <BookingRow key={b.id} b={b} />)}</Section>}
         {s.has("tasks") && s.can("tasks") && <Section title="Tasks due" action={<a href="#tasks" className="text-xs font-semibold text-teal">All tasks</a>} empty="Nothing due today. 🎉">{tasks.map((x) => <TaskRow key={x.id} t={x} compact />)}</Section>}
         {cleans.length > 0 && <Section title="Cleaning to finish" action={<a href="#tasks" className="text-xs font-semibold text-teal">Open</a>}>{cleans.map((c) => <a href="#tasks" key={c.id} className="flex justify-between border-b border-line px-4 py-3 text-sm last:border-0"><span>{s.byId.get(c.listingId)?.name}</span><span className="text-muted">{(c.items ?? []).filter((i: { done: boolean }) => i.done).length}/{(c.items ?? []).length} done</span></a>)}</Section>}

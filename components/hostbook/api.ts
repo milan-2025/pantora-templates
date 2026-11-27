@@ -16,7 +16,10 @@ export const session = {
   setAccount: (a: string | null) => ls.set("hb_acct", a),
   cache: (acct: string) => { try { return JSON.parse(ls.get(`hb_cache:${acct}`) || "null"); } catch { return null; } },
   saveCache: (acct: string, v: unknown) => { try { ls.set(`hb_cache:${acct}`, JSON.stringify(v)); } catch { /* full: skip */ } },
-  clear: () => { try { Object.keys(localStorage).filter((k) => k.startsWith("hb_")).forEach((k) => localStorage.removeItem(k)); } catch { /* ignore */ } },
+  clear: () => {
+    try { Object.keys(localStorage).filter((k) => k.startsWith("hb_")).forEach((k) => localStorage.removeItem(k)); } catch { /* ignore */ }
+    try { caches.delete("hb-auth"); } catch { /* ignore */ }
+  },
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

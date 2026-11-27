@@ -18,7 +18,8 @@ import { Upkeep } from "./screens/Upkeep";
 import { Templates } from "./screens/Templates";
 import { Team } from "./screens/Team";
 import { PlanScreen, UpsellSheet } from "./screens/Plan";
-import { SettingsScreen } from "./screens/Settings";
+import { SettingsScreen, shareTokenWithWorker } from "./screens/Settings";
+import { BellLink, Updates } from "./screens/Updates";
 
 export function useRoute() {
   const [h, setH] = useState("today");
@@ -43,6 +44,7 @@ export function HostBookApp() {
       const m = await api<Me & { token?: string }>("me");
       if (m.token) session.setToken(m.token);
       if (!session.account()) session.setAccount(m.account.id);
+      shareTokenWithWorker();
       setMe(m); setState("in");
     };
     try {
@@ -216,6 +218,7 @@ function Shell({ onSwitch, onOut }: { onSwitch: (id: string) => void; onOut: () 
       case "team": return <Team />;
       case "plan": return <PlanScreen />;
       case "settings": return <SettingsScreen onSwitch={onSwitch} onOut={onOut} />;
+      case "updates": return <Updates />;
       case "more": return <MoreScreen items={[...main.slice(4), ...more]} onOut={onOut} />;
       default: return <Today />;
     }
@@ -224,7 +227,10 @@ function Shell({ onSwitch, onOut }: { onSwitch: (id: string) => void; onOut: () 
   return (
     <div className="min-h-dvh md:flex">
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-line bg-white/70 p-3 md:flex">
-        <a href="#today" className="mb-4 flex items-center gap-2 px-2 py-1"><Logo className="size-8" /><div><div className="font-serif text-xl leading-none">HostBook</div><div className="max-w-36 truncate text-[11px] text-muted">{me.account.business || me.email}</div></div></a>
+        <div className="mb-4 flex items-center justify-between gap-1">
+          <a href="#today" className="flex min-w-0 items-center gap-2 px-2 py-1"><Logo className="size-8" /><div className="min-w-0"><div className="font-serif text-xl leading-none">HostBook</div><div className="max-w-28 truncate text-[11px] text-muted">{me.account.business || me.email}</div></div></a>
+          <BellLink />
+        </div>
         <nav className="flex-1 space-y-0.5 overflow-y-auto">
           {[...main, ...more].map((n, i) => (
             <div key={n.r}>
@@ -238,7 +244,7 @@ function Shell({ onSwitch, onOut }: { onSwitch: (id: string) => void; onOut: () 
       <div className="min-w-0 flex-1">
         <header className="sticky top-0 z-30 flex items-center justify-between border-b border-line bg-sand/90 px-4 py-2.5 backdrop-blur md:hidden">
           <a href="#today" className="flex items-center gap-2"><Logo className="size-7" /><span className="max-w-48 truncate font-serif text-lg">{me.account.business || "HostBook"}</span></a>
-          <PlanPill small />
+          <div className="flex items-center gap-1"><BellLink /><PlanPill small /></div>
         </header>
         {s.offline && <div className="flex items-center justify-center gap-2 bg-sun/25 px-4 py-1.5 text-xs font-medium text-[#8a5a10]"><WifiOff className="size-3.5" /> Offline: showing what was saved on this phone. Changes need internet.</div>}
         <main className="mx-auto max-w-5xl px-4 pb-28 pt-4 md:px-8 md:pb-10 md:pt-8">{screen}</main>

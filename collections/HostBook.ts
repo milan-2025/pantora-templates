@@ -1,6 +1,7 @@
 import type { CollectionConfig } from "payload";
 import { authenticated, nobody } from "@/lib/cms/access";
 import { FEATURES, STAFF_PERMS } from "@/lib/hostbook/features";
+import { CHECKIN_FIELDS, DEFAULT_REQUIRED } from "@/lib/hostbook/core";
 
 /*
  * Pandora HostBook (/hostbook): guest records, bookings, tasks and money for Airbnb / homestay hosts.
@@ -132,7 +133,17 @@ export const HostBookAccounts: CollectionConfig = {
     { name: "lastPaidOrder", type: "text", admin: { readOnly: true } },
     { name: "paymentId", type: "text", admin: { readOnly: true } },
     { name: "reminderSentAt", type: "date", admin: { readOnly: true } },
-    { name: "digestOn", type: "checkbox", defaultValue: true, label: "Daily task email" },
+    { name: "digestOn", type: "checkbox", defaultValue: false, label: "Daily summary email (off by default; the app shows notifications instead)" },
+    {
+      name: "checkinRequired",
+      type: "select",
+      hasMany: true,
+      label: "Check-in form: required fields",
+      defaultValue: DEFAULT_REQUIRED,
+      options: CHECKIN_FIELDS.map((f) => ({ label: f.label, value: f.key })),
+      admin: { description: "Name is always required. The host changes this in the app under Settings → Check-in form." },
+    },
+    { name: "checkinAllGuests", type: "checkbox", defaultValue: false, label: "Required fields apply to every adult (not just the main guest)" },
   ],
 };
 
