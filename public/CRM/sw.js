@@ -8,7 +8,7 @@
  * - Signing out wipes the saved data and any unsent changes.
  * Bump VERSION when CRM pages change so phones fetch the new ones.
  */
-const VERSION = "crm-v3";
+const VERSION = "crm-v4";
 const SHELL = VERSION + "-shell";
 const DATA = "crm-data";
 const PAGES = ["index.html", "properties.html", "partners.html", "reports.html", "visits.html", "admin.html", "login.html", "signup.html"];
