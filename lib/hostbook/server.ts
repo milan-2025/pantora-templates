@@ -11,6 +11,7 @@ import {
   type FeatureKey, type Kind, type StaffPerm,
 } from "./features";
 import { makeVapidKeys, sendPush, validSub, type PushSub, type VapidKeys } from "@/lib/workout/push";
+import { EMPTY_SITE, busyNights, cleanSite, cleanSlug, datesFree, publicListing, showsOnSite, type PublicListing, type SiteSettings } from "@/lib/hostbook/site";
 import {
   CHECKIN_FIELD_KEYS, DEFAULT_REQUIRED, checkEmail, checkGuest, checkId, checkPhone, isIndian, type CheckinField,
   HostBookError, addDays, cleanRecord, icalIsBlock, icalPhoneLast4, isDay, istDay, maskId, monthOf, nextDue, parseIcal, planQuote,
@@ -239,6 +240,7 @@ const accountView = (ctx: Ctx) => ({
   checkinRequired: checkinRules(ctx.acct).required, checkinAllGuests: checkinRules(ctx.acct).all,
   staff: ctx.role === "owner" ? (ctx.acct.staff ?? []).map((s: Doc) => ({ email: s.email, name: s.name ?? "", phone: s.phone ?? "", perms: s.perms ?? [], listings: s.listings ?? [] })) : [],
   staysLinked: Boolean(ctx.acct.staysHostId),
+  siteSlug: ctx.acct.siteSlug ?? "", site: { ...EMPTY_SITE, ...((ctx.acct.site as Doc) ?? {}) },
 });
 
 const planView = (p: Plan) => ({ id: p.id, planId: p.planId, name: p.name, price: p.price, isFree: p.isFree, listings: p.listings, staff: p.staff, idDays: p.idDays, hostChoosesIdDays: p.hostChoosesIdDays, features: p.features, tagline: p.tagline, badge: p.badge, highlights: p.highlights });
@@ -1021,4 +1023,94 @@ export async function runCron(payload: Payload, opts: { daily?: boolean } = {}) 
     } catch (e) { out.errors.push(`${acct.ownerEmail}: ${(e as Error).message}`); }
   }
   return out;
+}
+
+/* ---------- booking website (/h/<name>) ---------- */
+
+async function cloudName(): Promise<string | undefined> {
+  try { return (await cloud()).config().cloud_name || undefined; } catch { return undefined; }
+}
+
+/** The owner turns the website on or off and edits its address and details (HostBook → Website). */
+export async function saveSite(payload: Payload, ctx: Ctx, b: Doc) {
+  if (ctx.role !== "owner") throw new HostBookError("Only the owner can change the website", 403);
+  const s = cleanSlug(b.slug);
+  if ("error" in s) throw new HostBookError(s.error);
+  const taken = await findAccount(payload, { and: [{ siteSlug: { equals: s.slug } }, { id: { not_equals: ctx.acct.id } }] });
+  if (taken) throw new HostBookError(`pandoratemplates.com/h/${s.slug} is already taken. Try another name.`, 409);
+  const site = cleanSite((b.site as Doc) ?? {}, await cloudName());
+  if (site.on && !site.whatsapp) throw new HostBookError("Add the WhatsApp number guests should message");
+  const updated = (await payload.update({ collection: AC as never, id: ctx.acct.id, data: { siteSlug: s.slug, site } as never, overrideAccess: true })) as Doc;
+  return { ok: true, account: accountView({ ...ctx, acct: updated }) };
+}
+
+/** A signed upload for a website photo: public (guests see it), images only, in the host's own folder. */
+export async function signSitePhoto(payload: Payload, ctx: Ctx) {
+  if (ctx.role !== "owner") throw new HostBookError("Only the owner can change the website", 403);
+  const { c, cfg } = await cloudCfg();
+  const timestamp = Math.floor(Date.now() / 1000);
+  const params = { allowed_formats: "jpg,jpeg,png,webp,heic", public_id: `hostbook-site/${acctFolder(String(ctx.acct.id))}/${rid(12)}`, timestamp };
+  return { url: `https://api.cloudinary.com/v1_1/${cfg.cloud_name}/image/upload`, fields: { ...params, api_key: cfg.api_key, signature: c.utils.api_sign_request(params, cfg.api_secret!) } };
+}
+
+export type PublicSite = {
+  slug: string;
+  site: SiteSettings;
+  business: string;
+  city: string;
+  logoUrl: string;
+  /** Business-plan hosts can hide the "Made with HostBook" line. */
+  branded: boolean;
+  listings: (PublicListing & { busy: string[] })[];
+};
+
+const todayIST = () => new Date(Date.now() + 5.5 * 3600_000).toISOString().slice(0, 10);
+
+/** Everything the public site shows, or null when the address is unknown or the site is switched off. */
+export async function getPublicSite(payload: Payload, slugRaw: string): Promise<PublicSite | null> {
+  const s = cleanSlug(slugRaw);
+  if ("error" in s) return null;
+  const acct = await findAccount(payload, { siteSlug: { equals: s.slug } });
+  const site = { ...EMPTY_SITE, ...((acct?.site as Doc) ?? {}) } as SiteSettings;
+  if (!acct || !site.on || !site.whatsapp) return null;
+  const c = await items(payload);
+  const id = String(acct.id);
+  const today = todayIST();
+  const [listings, bookings, access, cn] = await Promise.all([
+    c.find({ acct: id, kind: "listing", deleted: { $ne: true } }).toArray() as Promise<Doc[]>,
+    c.find({ acct: id, kind: "booking", deleted: { $ne: true }, end: { $gt: today } }, { projection: { listingId: 1, start: 1, end: 1, status: 1 } }).toArray() as Promise<Doc[]>,
+    accessOf(payload, acct),
+    cloudName(),
+  ]);
+  const branded = access.plan.features.includes("branding");
+  return {
+    slug: s.slug,
+    site,
+    business: String(acct.business ?? ""),
+    city: String(acct.city ?? ""),
+    logoUrl: branded && typeof acct.logoUrl === "string" && /^https:\/\//.test(acct.logoUrl) ? acct.logoUrl : "",
+    branded,
+    listings: listings.filter(showsOnSite).map((l) => ({ ...publicListing(l, cn), busy: busyNights(bookings, String(l._id), today, 180) })),
+  };
+}
+
+/** A guest tapped "Send enquiry": tell the host in HostBook too (the message itself goes by WhatsApp). */
+export async function siteEnquiry(payload: Payload, b: Doc) {
+  const site = await getPublicSite(payload, String(b.slug ?? ""));
+  if (!site) throw new HostBookError("This website is not available", 404);
+  const l = site.listings.find((x) => x.id === String(b.listingId ?? ""));
+  if (!l) throw new HostBookError("This place is not on the website", 404);
+  const start = String(b.start ?? ""), end = String(b.end ?? "");
+  const dated = /^\d{4}-\d{2}-\d{2}$/.test(start) && /^\d{4}-\d{2}-\d{2}$/.test(end) && end > start;
+  const name = String(b.name ?? "").replace(/\s+/g, " ").trim().slice(0, 60);
+  const guests = Math.max(0, Math.min(50, Math.round(Number(b.guests) || 0)));
+  const acct = await findAccount(payload, { siteSlug: { equals: site.slug } });
+  if (!acct) throw new HostBookError("This website is not available", 404);
+  await notify(payload, String(acct.id), {
+    to: "owner",
+    link: "bookings",
+    title: `Website enquiry: ${l.name}`,
+    text: [name || "A guest", dated ? `${start} to ${end}${datesFree(l.busy, start, end) ? "" : " (some nights already booked)"}` : "dates not picked", guests ? `${guests} guest${guests === 1 ? "" : "s"}` : ""].filter(Boolean).join(" · ") + ". They are messaging you on WhatsApp.",
+  });
+  return { ok: true };
 }

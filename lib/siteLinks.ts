@@ -143,7 +143,7 @@ export const LANDING_PAGES: readonly LandingPage[] = [
     key: "hostbook",
     label: "HostBook",
     url: "/hostbook",
-    description: "Guest register and online check-in, bookings, cleaning, money and profit for every listing, made for hosts in India.",
+    description: "Your own booking website with WhatsApp enquiries, plus guest register and online check-in, bookings, cleaning and profit for every listing.",
     cta: "Start free",
     icon: "BookOpen",
     category: "hospitality",

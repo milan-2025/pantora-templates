@@ -2,7 +2,7 @@
 /** Pandora HostBook app (/hostbook/app): sign-in, the shell with navigation, and the screens. */
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { BedDouble, CalendarDays, ChevronRight, ClipboardList, Home, IndianRupee, Loader2, LogOut, Menu, MessageCircle, Package, Settings as Cog, ShieldCheck, Sparkles, Users, Users2, WifiOff, Building2 } from "lucide-react";
+import { BedDouble, CalendarDays, ChevronRight, ClipboardList, Home, IndianRupee, Loader2, LogOut, Menu, MessageCircle, Package, Settings as Cog, ShieldCheck, Sparkles, Users, Users2, WifiOff, Building2, Globe } from "lucide-react";
 import { api, ApiError, session } from "./api";
 import { StoreProvider, useStore, type Me } from "./store";
 import { Button, Field, Input, cx } from "./ui";
@@ -19,6 +19,7 @@ import { Templates } from "./screens/Templates";
 import { Team } from "./screens/Team";
 import { PlanScreen, UpsellSheet } from "./screens/Plan";
 import { SettingsScreen, shareTokenWithWorker } from "./screens/Settings";
+import { WebsiteScreen } from "./screens/Website";
 import { BellLink, Updates } from "./screens/Updates";
 
 export function useRoute() {
@@ -194,6 +195,7 @@ function Shell({ onSwitch, onOut }: { onSwitch: (id: string) => void; onOut: () 
   ].filter((x) => x.show);
   const more: NavItem[] = [
     { r: "listings", label: "Listings", icon: <Building2 className="size-5" />, show: can("bookings") },
+    { r: "website", label: "Website", icon: <Globe className="size-5" />, show: can("owner") },
     { r: "compliance", label: "Police & Form C", icon: <ShieldCheck className="size-5" />, show: can("guests") },
     { r: "upkeep", label: "Stock & upkeep", icon: <Package className="size-5" />, show: can("tasks") },
     { r: "templates", label: "WhatsApp messages", icon: <MessageCircle className="size-5" />, show: can("bookings") },
@@ -214,6 +216,7 @@ function Shell({ onSwitch, onOut }: { onSwitch: (id: string) => void; onOut: () 
       case "money": return <MoneyScreen />;
       case "tasks": return <TasksScreen />;
       case "listings": return <Listings key={query} query={query} />;
+      case "website": return <WebsiteScreen />;
       case "compliance": return <Compliance />;
       case "upkeep": return <Upkeep />;
       case "templates": return <Templates />;

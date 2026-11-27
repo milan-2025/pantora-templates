@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BellRing, CalendarSync, ClipboardCheck, IdCard, IndianRupee, MessageCircle, ShieldCheck, Users2, Wrench } from "lucide-react";
+import { BellRing, CalendarSync, ClipboardCheck, Globe, IdCard, IndianRupee, MessageCircle, ShieldCheck, Users2, Wrench } from "lucide-react";
 import { getPayloadClient } from "@/lib/cms/queries";
 import { publicPlans } from "@/lib/hostbook/server";
 import { FEATURES } from "@/lib/hostbook/features";
@@ -22,6 +22,7 @@ const POINTS = [
   { icon: ClipboardCheck, title: "Online check-in links", text: "Send a WhatsApp link before arrival. Guests fill in their details, upload IDs and accept your house rules. You choose which fields are required." },
   { icon: IdCard, title: "IDs checked as they're typed", text: "Aadhaar must be 12 valid digits; PAN, voter ID, driving licence and passport numbers are checked too. Something wrong? Ask the guest to fix just that part." },
   { icon: BellRing, title: "Notifications, not inbox clutter", text: "Guest details in, new bookings, today's check-ins and tasks show up under the bell and on your phone. No daily email spam." },
+  { icon: Globe, title: "Your own booking website", text: "A free page at pandoratemplates.com/h/your-name with your photos, prices and free dates. Guests message you on WhatsApp to book direct, with no commission." },
   { icon: CalendarSync, title: "Airbnb & Booking.com sync", text: "Paste your calendar links and bookings come in on their own. One calendar for all your listings." },
   { icon: IndianRupee, title: "Real profit for each listing", text: "Payouts, fees, cleaning, bills, salaries and repairs. A bank-style account statement with a running balance, occupancy, nightly rate and Excel export for your CA." },
   { icon: Wrench, title: "Regular tasks & reminders", text: "AC service every 3 months, bills on the 5th, deep clean monthly. They come back on schedule in a morning email." },

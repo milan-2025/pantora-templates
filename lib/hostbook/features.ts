@@ -60,6 +60,8 @@ export const KINDS = {
     fields: {
       name: "text", address: "long", city: "text", mapUrl: "text", rules: "long", wifiName: "text", wifiPass: "text", checkIn: "text", checkOut: "text",
       cleaningFee: "num", guidebook: "long", ical: "json", checklist: "list", ownerId: "ref", commission: "num", archived: "bool", color: "text", gstin: "text", gstRate: "num",
+      // Booking website (/h/<name>): what guests see. See lib/hostbook/site.ts for what is public.
+      onSite: "bool", headline: "text", description: "long", photos: "list", price: "num", maxGuests: "num", bedrooms: "num", bathrooms: "num", amenities: "list", area: "text",
     },
   },
   booking: {

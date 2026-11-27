@@ -505,6 +505,7 @@ export interface Product {
                 | 'BookOpen'
                 | 'Briefcase'
                 | 'BedDouble'
+                | 'Building2'
               )
             | null;
           title: string;
@@ -1477,6 +1478,7 @@ export interface Page {
                         | 'BookOpen'
                         | 'Briefcase'
                         | 'BedDouble'
+                        | 'Building2'
                       )
                     | null;
                   title: string;
@@ -1537,6 +1539,7 @@ export interface Page {
                         | 'BookOpen'
                         | 'Briefcase'
                         | 'BedDouble'
+                        | 'Building2'
                       )
                     | null;
                   /**
@@ -2010,6 +2013,22 @@ export interface HostbookAccount {
    */
   idDays?: number | null;
   logoUrl?: string | null;
+  /**
+   * pandoratemplates.com/h/<this>. The host picks it in HostBook → Website; it must be unique.
+   */
+  siteSlug?: string | null;
+  /**
+   * Set by the host in HostBook → Website (on/off, title, intro, WhatsApp, cover photo).
+   */
+  site?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   staff?:
     | {
         email: string;
@@ -3361,6 +3380,8 @@ export interface HostbookAccountsSelect<T extends boolean = true> {
   staysHostId?: T;
   idDays?: T;
   logoUrl?: T;
+  siteSlug?: T;
+  site?: T;
   staff?:
     | T
     | {

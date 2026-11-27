@@ -9,6 +9,7 @@ Guest register with IDs, bookings and calendar, online guest check-in, regular t
 | The app (sign up, sign in, everything) | `/hostbook/app` (`?signup=1` opens "Create account") |
 | Guest check-in link (one per booking) | `/hostbook/c/<code>` |
 | From the Pandora Stays host portal | "HostBook" button → `/hostbook/app?via=stays` (signs in with the Stays session, Stays plan free) |
+| Booking website (public) | `/h/<name>` (host home) and `/h/<name>/<listing>` (one place, with free dates and the WhatsApp enquiry box) |
 | API | `/api/hostbook/<path>` (one route file) |
 
 ## Admin (`/admin` → HostBook)
@@ -16,6 +17,14 @@ Guest register with IDs, bookings and calendar, online guest check-in, regular t
 - **Host accounts**: one per host. Give a plan by hand by picking it and an end date. Staff and extra listings are here too.
 - **HostBook settings**: price of an extra listing, which plan Stays hosts get free (`starter`), renewal reminder days, WhatsApp number, offer line.
 - **Coupon codes**: product deal type "HostBook plan" (one plan or all).
+
+## Booking website (/h/<name>)
+- **Host side:** HostBook → More → **Website** (owner only). Pick the address, name, one line, about, WhatsApp number, Instagram and a cover photo, then **Save and publish**. Each listing gets **Show** and **Edit page** (photos up to 15, the first is the cover; one line; description; area; price per night; guests; bedrooms; bathrooms; amenities). Check-in/out times and house rules come from the listing.
+- **Guest side:** the host's places, photos and a two-month calendar. Booked nights (bookings that are not cancelled, including synced Airbnb / Booking.com ones) are crossed out; only dates leave the server. **Send enquiry on WhatsApp** opens WhatsApp with the dates, guests and name filled in, and the host gets a HostBook notification. No online payment and no booking fee.
+- **Never public:** exact address, map pin, Wi-Fi, guidebook, money, owner/GST details, guests and who booked (`publicListing` in `lib/hostbook/site.ts` is a whitelist).
+- **Every plan** gets a website. Plans with the **branding** feature (Business) drop the "Made with HostBook" line and can show their logo.
+- Photos upload straight to Cloudinary (`hostbook-site/<hash>/`, public); only photos from our Cloudinary account are shown. Addresses are unique, and words like `admin` or `hostbook` are reserved. Live sites and their places are in `/sitemap.xml`.
+- Data: account fields `siteSlug` and `site`; listing fields `onSite`, `headline`, `description`, `photos`, `price`, `maxGuests`, `bedrooms`, `bathrooms`, `amenities`, `area`. Tests: `tests/hostbook-site.test.ts` and the "HostBook booking website" part of `tests/hostbook-api.test.ts`.
 
 ## Check-in form
 - **Required fields**: the host picks them in the app (Settings → Check-in form): phone, email, address, city, nationality, gender, age, ID type & number, ID photo front/back; for the main guest or every adult. Default: phone, ID number, ID front photo. Name is always required. Stored on the host account (`checkinRequired`, `checkinAllGuests`).

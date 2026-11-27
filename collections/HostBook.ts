@@ -112,6 +112,14 @@ export const HostBookAccounts: CollectionConfig = {
     { name: "idDays", type: "number", min: 1, label: "Host's own ID keep time (days)", admin: { description: "Only used when the plan lets the host choose." } },
     { name: "logoUrl", type: "text", label: "Logo shown on guest pages" },
     {
+      name: "siteSlug",
+      type: "text",
+      index: true,
+      label: "Booking website address",
+      admin: { description: "pandoratemplates.com/h/<this>. The host picks it in HostBook → Website; it must be unique." },
+    },
+    { name: "site", type: "json", label: "Booking website settings", admin: { description: "Set by the host in HostBook → Website (on/off, title, intro, WhatsApp, cover photo)." } },
+    {
       name: "staff",
       type: "array",
       labels: { singular: "Staff member", plural: "Staff" },

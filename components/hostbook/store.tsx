@@ -10,7 +10,7 @@ export type StaffV = { email: string; name: string; phone: string; perms: StaffP
 export type Me = {
   email: string; role: "owner" | "staff"; perms: StaffPerm[]; listingsAllowed: string[] | null; hasPassword: boolean;
   teams: { id: string; name: string; role: string }[];
-  account: { id: string; business: string; phone: string; city: string; ownerEmail: string; logoUrl: string; idDays: number; digestOn: boolean; extraListings: number; staff: StaffV[]; staysLinked: boolean; checkinRequired: CheckinField[]; checkinAllGuests: boolean };
+  account: { id: string; business: string; phone: string; city: string; ownerEmail: string; logoUrl: string; idDays: number; digestOn: boolean; extraListings: number; staff: StaffV[]; staysLinked: boolean; checkinRequired: CheckinField[]; checkinAllGuests: boolean; siteSlug?: string; site?: { on: boolean; title: string; tagline: string; about: string; whatsapp: string; heroUrl: string; instagram: string } };
   access: { plan: PlanV; paidPlan: PlanV | null; expiresAt: string | null; viaStays: boolean; listingLimit: number; staffLimit: number; idDays: number; features: FeatureKey[] };
   extraListingPrice: number; whatsapp: string;
 };
