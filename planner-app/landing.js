@@ -18,18 +18,11 @@ const lpConfig = () => (LP_CFG = LP_CFG || api('/landing').catch(() => ({ plans:
 })();
 function lpSource() { try { const o = JSON.parse(store.get('pp_src') || 'null'); return o && Date.now() - o.t < 30 * 864e5 ? o.s : ''; } catch (e) { return ''; } }
 
-/* Meta Pixel: loaded only when an ID is set in the admin. Events: PageView, Lead, StartTrial, Purchase, Contact. */
-let PIXEL = null;
-function loadPixel(id) {
-  if (PIXEL || !id) return PIXEL;
-  /* eslint-disable */
-  !function (f, b, e, v, n, t, s) { if (f.fbq) return; n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments) }; if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0'; n.queue = []; t = b.createElement(e); t.async = !0; t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s) }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
-  /* eslint-enable */
-  window.fbq('init', id); window.fbq('track', 'PageView');
-  return (PIXEL = id);
-}
-async function track(ev, params) {
-  try { const c = await lpConfig(); if (!c.metaPixelId) return; loadPixel(c.metaPixelId); if (ev !== 'PageView') window.fbq('track', ev, params || {}); } catch (e) { /* tracking must never break the app */ }
+/* Meta Pixel: /pt-track.js (loaded by the page) uses the Pixel ID from Site settings and labels every event
+   "Online Wedding Planner". It sends PageView, InitiateCheckout and Purchase (Razorpay) and WhatsApp Contact by itself;
+   this adds ViewContent (landing page), Lead (sign-in code requested), StartTrial (planner created). */
+function track(ev, params) {
+  try { if (ev === 'PageView') return; (window.ptq = window.ptq || []).push([ev, params || {}]); } catch (e) { /* tracking must never break the app */ }
 }
 
 /* ---------- page ---------- */
@@ -226,7 +219,7 @@ function landingScreen() {
   }
 
   lpConfig().then(c => lpFill(root, c));
-  track('PageView');
+  track('ViewContent');
 }
 
 function lpFill(root, c) {
@@ -284,5 +277,5 @@ function lpFill(root, c) {
 
   // WhatsApp
   const wa = $('.lp-wa', root);
-  if (c.whatsapp) { wa.href = 'https://wa.me/' + c.whatsapp.number + (c.whatsapp.message ? '?text=' + encodeURIComponent(c.whatsapp.message) : ''); wa.hidden = false; wa.onclick = () => track('Contact'); }
+  if (c.whatsapp) { wa.href = 'https://wa.me/' + c.whatsapp.number + (c.whatsapp.message ? '?text=' + encodeURIComponent(c.whatsapp.message) : ''); wa.hidden = false; }
 }

@@ -1,4 +1,5 @@
 import "server-only";
+import { trackingScript } from "@/lib/tracking";
 import type { PhotoPlan } from "@/lib/photos/core";
 import { esc, inr, jsonScript, page } from "@/lib/photos/pages/shared";
 
@@ -142,7 +143,7 @@ var SOURCE=${jsonScript(o.source)};
 document.querySelectorAll("[data-close]").forEach(function(b){b.onclick=function(){b.closest("dialog").close()}});
 $("createForm").onsubmit=function(e){e.preventDefault();var btn=$("cGo");$("cErr").textContent="";btn.disabled=true;btn.textContent="Creating…";
  api("create",{body:{names:$("cNames").value,email:$("cEmail").value,weddingDate:$("cDate").value||null,phone:$("cPhone").value,source:SOURCE}})
- .then(function(r){lsSet("pt-photos:"+r.slug,r.token);location.href="/p/"+r.slug+"/manage#k="+r.token})
+ .then(function(r){lsSet("pt-photos:"+r.slug,r.token);if(window.ptTrack)ptTrack("CompleteRegistration",{currency:"INR"});setTimeout(function(){location.href="/p/"+r.slug+"/manage#k="+r.token},350)})
  .catch(function(err){$("cErr").textContent=err.message;btn.disabled=false;btn.textContent="Create my gallery"})};
 $("signinBtn").onclick=function(){$("s1").hidden=false;$("s2").hidden=true;$("s3").hidden=true;$("signin").showModal();$("sEmail").focus()};
 $("sSend").onclick=function(){$("sErr").textContent="";api("auth/start",{body:{email:$("sEmail").value}}).then(function(r){$("s1").hidden=true;$("s2").hidden=false;if(r.devCode)$("sCode").value=r.devCode;$("sCode").focus()}).catch(function(e){$("sErr").textContent=e.message})};
@@ -159,7 +160,7 @@ $("sVerify").onclick=function(){$("sErr2").textContent="";api("auth/verify",{bod
     description,
     canonical: `${o.site}/photos`,
     ogImage: `${o.site}/shaadi/og.jpg`,
-    head: `<script type="application/ld+json">${jsonScript(faqLd)}</script>`,
+    head: `<script type="application/ld+json">${jsonScript(faqLd)}</script>${trackingScript("photos")}`,
     body,
     css,
     js,

@@ -49,17 +49,9 @@ const withWww = (url?: string) => {
   }
 };
 
-// Sites allowed to use the admin login cookie (CSRF protection): the real domain plus
-// Vercel's deployment URLs. Empty in local development so any localhost port works.
-const allowedOrigins =
-  process.env.NODE_ENV === "production"
-    ? [
-        ...withWww(process.env.NEXT_PUBLIC_SITE_URL),
-        process.env.VERCEL_PROJECT_PRODUCTION_URL && `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`,
-        process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}`,
-        process.env.VERCEL_BRANCH_URL && `https://${process.env.VERCEL_BRANCH_URL}`,
-      ].filter((u): u is string => Boolean(u))
-    : [];
+// Sites allowed to use the admin login cookie (CSRF protection): the real domain, with and without www.
+// Empty in local development so any localhost port works.
+const allowedOrigins = process.env.NODE_ENV === "production" ? withWww(process.env.NEXT_PUBLIC_SITE_URL).filter(Boolean) : [];
 
 export default buildConfig({
   secret: process.env.PAYLOAD_SECRET || "dev-secret-change-me",

@@ -4,6 +4,7 @@ import { BellRing, CalendarSync, ClipboardCheck, IdCard, IndianRupee, MessageCir
 import { getPayloadClient } from "@/lib/cms/queries";
 import { publicPlans } from "@/lib/hostbook/server";
 import { FEATURES } from "@/lib/hostbook/features";
+import { AppPixel } from "@/components/AppPixel";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,7 @@ export default async function HostBookLanding() {
   const { plans, extraListingPrice, offerText } = await publicPlans(await getPayloadClient());
   return (
     <div className="bg-sand text-ink">
+      <AppPixel product="hostbook" />
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
         <Link href="/hostbook" className="flex items-center gap-2 font-serif text-2xl">
           <svg viewBox="0 0 40 40" className="size-9" aria-hidden="true"><rect width="40" height="40" rx="11" fill="#1F5F5B" /><path d="M10 19.5 20 11l10 8.5V29a1.5 1.5 0 0 1-1.5 1.5h-17A1.5 1.5 0 0 1 10 29z" fill="#F6F1E9" /><path d="M16 30.5v-7h8v7" fill="#E9A23B" /><circle cx="20" cy="18.5" r="2" fill="#1F5F5B" /></svg>

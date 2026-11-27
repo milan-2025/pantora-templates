@@ -7,6 +7,7 @@ import { jsonLd, propertyMetadata } from "@/lib/stays/seo";
 import { browsingAdmin } from "@/lib/stays/server";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbJsonLd } from "@/lib/structuredData";
+import { AppPixel } from "@/components/AppPixel";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,7 @@ export default async function StayPage({ params }: { params: Promise<{ slug: str
   if (decodeURIComponent(slug) !== data.canonical) permanentRedirect(`/stay/${data.canonical}`);
   return (
     <>
+      {!admin && <AppPixel product="stays" />}
       {data.indexable && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(data.property, `/stay/${data.canonical}`) }} />}
       {data.indexable && (
         <JsonLd

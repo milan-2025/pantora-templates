@@ -10,7 +10,7 @@ type Issued = {
 };
 
 /**
- * Uploads a file from the admin straight to Cloudinary (skipping Vercel's 4.5 MB limit).
+ * Uploads a file from the admin straight to Cloudinary (so big files never pass through the site's own request-size limit).
  * The server checks the user may upload, then signs exactly this one file.
  */
 export const CloudinaryClientUploadHandler = createClientUploadHandler({

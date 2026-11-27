@@ -1,5 +1,6 @@
 import "server-only";
 import { STUDIO_HTML } from "./studioHtml";
+import { trackingScript } from "@/lib/tracking";
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 const site = () => process.env.NEXT_PUBLIC_SITE_URL || "";
@@ -29,6 +30,8 @@ export function studioResponse(
     `<meta name="twitter:card" content="summary_large_image">`;
   let html = STUDIO_HTML.replace(/<title>[^<]*<\/title>/, () => tags);
   if (guest) html = html.replace('<body data-v="ed">', '<body data-v="ed" class="view boot">');
+  // The couple's editor reports payments to the Pixel (guests opening an invite are not tracked).
+  else html = html.replace("</head>", () => `${trackingScript("invites", { view: false })}</head>`);
   const headers: Record<string, string> = { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" };
   if (!opts.indexable) headers["x-robots-tag"] = "noindex";
   return new Response(html, { headers });

@@ -63,7 +63,7 @@ export const SiteSettings: GlobalConfig = {
             {
               name: "metaPixelId",
               type: "text",
-              admin: { description: "Meta (Instagram/Facebook) Pixel ID for ad tracking" },
+              admin: { description: "Meta (Instagram/Facebook) Pixel ID for ad tracking. Used on every page: the shop, the planner, invites, photos, workout, HostBook, Stays and the CRM. Each event says which product it came from, so make one custom conversion per product in Events Manager." },
             },
           ],
         },

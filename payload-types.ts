@@ -3478,7 +3478,7 @@ export interface SiteSetting {
       }[]
     | null;
   /**
-   * Meta (Instagram/Facebook) Pixel ID for ad tracking
+   * Meta (Instagram/Facebook) Pixel ID for ad tracking. Used on every page: the shop, the planner, invites, photos, workout, HostBook, Stays and the CRM. Each event says which product it came from, so make one custom conversion per product in Events Manager.
    */
   metaPixelId?: string | null;
   updatedAt?: string | null;
@@ -3540,9 +3540,6 @@ export interface InvitePlan {
  */
 export interface PlannerLanding {
   id: string;
-  /**
-   * Numbers only, from Meta Events Manager. When set, the page reports PageView, Lead (sign-in code requested), StartTrial (planner created) and Purchase (plan paid). Leave empty to turn the Pixel off.
-   */
   metaPixelId?: string | null;
   /**
    * With country code, digits only. Leave empty to hide the button.

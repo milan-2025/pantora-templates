@@ -57,7 +57,7 @@ export default async function CheckoutPage({ searchParams }: Args) {
 
   return (
     <div className="bg-glow min-h-screen px-4 pb-16 pt-6">
-      <TrackEvent event="InitiateCheckout" value={q.total} name={product.name} />
+      <TrackEvent event="InitiateCheckout" value={q.total} name={product.name} id={product.slug} />
       <header className="mx-auto mb-8 flex max-w-5xl items-center justify-between">
         <Logo />
         <Link href={`/${product.slug}`} className="flex items-center gap-1 text-sm font-medium text-plum hover:text-teal">

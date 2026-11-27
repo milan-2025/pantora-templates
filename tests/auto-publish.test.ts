@@ -58,17 +58,16 @@ const withEnv = async (env: Record<string, string | undefined>, run: () => Promi
 };
 
 describe("auto-publishing the content pack", () => {
-  it("runs on the production site only, unless switched on or off by hand", () => {
-    expect(autoPublishEnabled({ VERCEL_ENV: "production" })).toBe(true);
-    expect(autoPublishEnabled({ VERCEL_ENV: "preview" })).toBe(false);
-    expect(autoPublishEnabled({})).toBe(false);
+  it("runs only where AUTO_PUBLISH_CONTENT=1 is set (the live site on Hostinger)", () => {
     expect(autoPublishEnabled({ AUTO_PUBLISH_CONTENT: "1" })).toBe(true);
-    expect(autoPublishEnabled({ VERCEL_ENV: "production", AUTO_PUBLISH_CONTENT: "0" })).toBe(false);
+    expect(autoPublishEnabled({})).toBe(false);
+    expect(autoPublishEnabled({ AUTO_PUBLISH_CONTENT: "0" })).toBe(false);
+    expect(autoPublishEnabled({ NODE_ENV: "production" })).toBe(false);
   });
 
   it("publishes the homepage, the Workout Challenge page and every post, then never again", async () => {
     const site = fakeSite();
-    await withEnv({ VERCEL_ENV: "production", AUTO_PUBLISH_CONTENT: undefined }, async () => {
+    await withEnv({ AUTO_PUBLISH_CONTENT: "1" }, async () => {
       await autoPublishContent(site.payload);
       expect(site.writes).toContain("update pages/home");
       expect(site.writes).toContain("update products/w");
@@ -81,16 +80,16 @@ describe("auto-publishing the content pack", () => {
     });
   });
 
-  it("does nothing on preview deployments", async () => {
+  it("does nothing where it is not switched on", async () => {
     const site = fakeSite();
-    await withEnv({ VERCEL_ENV: "preview", AUTO_PUBLISH_CONTENT: undefined }, () => autoPublishContent(site.payload));
+    await withEnv({ AUTO_PUBLISH_CONTENT: undefined }, () => autoPublishContent(site.payload));
     expect(site.writes).toEqual([]);
     expect(site.markers.size).toBe(0);
   });
 
   it("tries again on the next start if something fails, without stopping the site", async () => {
     const site = fakeSite({ failOnce: true });
-    await withEnv({ VERCEL_ENV: "production", AUTO_PUBLISH_CONTENT: undefined }, async () => {
+    await withEnv({ AUTO_PUBLISH_CONTENT: "1" }, async () => {
       await expect(autoPublishContent(site.payload)).resolves.toBeUndefined();
       expect(site.markers.has(CONTENT_RELEASE_ID)).toBe(false);
       await autoPublishContent(site.payload);
@@ -101,7 +100,7 @@ describe("auto-publishing the content pack", () => {
 
   it("still publishes the blog posts when the homepage step fails", async () => {
     const site = fakeSite({ failOnce: true }); // the first write (the homepage) throws
-    await withEnv({ VERCEL_ENV: "production", AUTO_PUBLISH_CONTENT: undefined }, async () => {
+    await withEnv({ AUTO_PUBLISH_CONTENT: "1" }, async () => {
       await autoPublishContent(site.payload);
       expect(site.writes.filter((w) => w.startsWith("create posts/"))).toHaveLength(BLOG_POSTS.length);
       expect(site.markers.has(CONTENT_RELEASE_ID)).toBe(false); // the homepage is retried on the next start

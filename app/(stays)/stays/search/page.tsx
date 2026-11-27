@@ -4,6 +4,7 @@ import { SearchApp } from "@/components/stays/SearchApp";
 import { headers } from "next/headers";
 import { loadSite } from "@/lib/stays/pages";
 import { browsingAdmin } from "@/lib/stays/server";
+import { AppPixel } from "@/components/AppPixel";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const admin = !!(await browsingAdmin(await headers()));
   return (
     <>
+      {!admin && <AppPixel product="stays" />}
       <Header site={settings} active="search" admin={admin} />
       {/* The search screen's visible title is the filter bar; this gives search engines and screen readers its main heading. */}
       <h1 className="sr-only">{initial.city ? `Stays in ${initial.city}` : `Search stays and holiday homes | ${settings.siteName}`}</h1>

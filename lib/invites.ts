@@ -145,7 +145,7 @@ export function cleanState(input: unknown): InviteState | null {
     })).filter((g) => g.n);
   }
   if (Array.isArray(o.grp)) o.grp = (o.grp as unknown[]).map((x) => str(x, 30)).filter(Boolean).slice(0, 12);
-  // Vercel rejects request bodies over 4.5 MB anyway; keep well under it.
+  // Keep request bodies small (the server and its proxy limit their size).
   if (JSON.stringify(o).length > 3_000_000) return null;
   return o;
 }

@@ -43,7 +43,7 @@ export async function ProductLanding({ product, settings }: { product: Product; 
     <LiveDataProvider slug={product.slug} initial={live}>
       <RefCapture />
       <JsonLd data={breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: product.name, path: `/${product.slug}` }])} />
-      <TrackEvent event="ViewContent" value={offer.price} name={product.name} />
+      <TrackEvent event="ViewContent" value={offer.price} name={product.name} id={product.slug} />
       <Nav links={links} cta={{ label: "Buy now", url: checkoutHref(product) }} />
       <main>
         <Hero {...props} />

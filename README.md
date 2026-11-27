@@ -148,18 +148,40 @@ Edit `collections/*` and run `npm run generate` to update types and the admin im
 
 Use a separate Atlas database (or cluster) for local development, so testing never touches real orders.
 
-### Deploy on Vercel
-1. Create a free **MongoDB Atlas** cluster. Under **Network Access**, allow `0.0.0.0/0` (Vercel's servers have changing IPs). Copy the connection string, add a database name (e.g. `/pandora?`), and set it as `DATABASE_URI`. You can also use Vercel's MongoDB Atlas integration (Vercel → Storage), which sets the variable for you.
-2. Create a **Cloudinary** account and set `CLOUDINARY_URL` (Dashboard → API Keys → "API environment variable"). Images and videos load from Cloudinary's CDN; paid product files are stored as *private* and only reachable through the paid-order download link. Uploads go straight from the browser to Cloudinary, so large videos aren't limited by Vercel's 4.5 MB request size (Cloudinary's free plan allows up to 10 MB per image/file and 100 MB per video).
-3. Set `PAYLOAD_SECRET` and `NEXT_PUBLIC_SITE_URL` (e.g. `https://pandoratemplates.com`; the `www.` version is allowed automatically), plus `ALLOW_MOCK_PAYMENTS=true` for a demo on mock payments.
-4. Deploy. Then run the seed once against the production database (`npm run seed` with the production `DATABASE_URI` in `.env.local`), and create the first admin login at `/admin`.
-5. Point the pandoratemplates.com domain at the Vercel project. If you change domains later, update `NEXT_PUBLIC_SITE_URL` and redeploy, or admin logins on the new domain will be refused.
+### Ads tracking (Meta Pixel)
+One Pixel for the whole site: **Settings → Site settings → Tracking**. The shop pages load it through `components/Pixel.tsx`; every app page (planner, invites, photos, workout, HostBook, Stays, CRM) loads `public/pt-track.js`, which reads the same ID from `/api/site/pixel`.
+
+Every event says which product it came from (`content_ids`, `content_name`, `content_category`; the list is in `lib/tracking.ts`), so in Events Manager you make one custom conversion per product (e.g. *Purchase where content_ids contains planner*) and each campaign optimises for its own product.
+
+| Event | When |
+|---|---|
+| PageView, ViewContent | a landing page opens (shop product pages: ViewContent with the price) |
+| Lead | the planner sends a sign-in code |
+| CompleteRegistration | an account is created (planner, workout, photos, HostBook, CRM) |
+| StartTrial | a planner trial starts |
+| Contact | a WhatsApp link is tapped on an app page |
+| InitiateCheckout | the checkout page opens, or a Razorpay window opens in an app |
+| Purchase | a paid order (with its value; the order id is the event id) |
+
+Server events (Conversions API) are already reaching the same Pixel and are matched to the browser events; nothing in this code sends them, so check Events Manager → Settings if they ever stop.
+
+### Hosting (Hostinger)
+The live site runs as a **Node.js app on Hostinger** (hPanel → Websites → pandoratemplates.com). Hostinger builds and deploys every merge to `main` by itself (Git auto-deploy, `npm run build`, Node 22); there is nothing to upload by hand. Its CDN (hcdn) sits in front of the site.
+
+- **Environment variables:** hPanel → Websites → pandoratemplates.com → **Node.js → Environment variables**. Changing one restarts the app; a `NEXT_PUBLIC_…` value is built into the pages, so start a new build afterwards (Deployments → Rebuild, or merge any change).
+- **Needed there:** `DATABASE_URI`, `PAYLOAD_SECRET`, `NEXT_PUBLIC_SITE_URL` (`https://pandoratemplates.com`; `www.` is allowed automatically), `CLOUDINARY_URL`, `BREVO_API_KEY`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, **`RAZORPAY_WEBHOOK_SECRET`** (see Payments below), `CRON_SECRET`, the `PHOTOS_…` storage keys, and `AUTO_PUBLISH_CONTENT=1` (publishes a new content pack by itself on the first start after a deploy).
+- **MongoDB Atlas → Network Access:** allow `0.0.0.0/0`, or Hostinger's outgoing IP for the site (shared hosting IPs can change, so `0.0.0.0/0` with a strong password is the reliable choice). Add a database name to the connection string (e.g. `/pandora?`).
+- **Cloudinary:** images and videos load from Cloudinary's CDN; paid product files are stored as *private* and only reachable through the paid-order download link. Uploads go straight from the browser to Cloudinary, so big files never pass through the site's own request-size limit (Cloudinary's free plan allows up to 10 MB per image/file and 100 MB per video).
+- **Scheduled jobs:** hPanel → Advanced → **Cron jobs** call the `/api/…/cron/…` addresses with `Authorization: Bearer <CRON_SECRET>` (see docs/hostbook and the workout and invite docs for each job).
+- **Service workers:** Hostinger does not send the `Service-Worker-Allowed` header, so the planner, workout and HostBook apps register their offline workers from the site root (`/planner-sw.js`, `/workout-sw.js`, `/hostbook-sw.js`).
+- **First run on an empty database:** `npm run seed` once against it (with its `DATABASE_URI` in `.env.local`), then create the first admin login at `/admin`.
+- **New domain:** update `NEXT_PUBLIC_SITE_URL` and rebuild, or admin logins on the new domain are refused.
 
 ### Payments (Razorpay)
 Checkout uses **Razorpay** whenever `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` are set; without them it runs in demo mode.
 1. **Test mode:** use the `rzp_test_…` keys. Checkout shows a "TEST MODE" banner. Pay with UPI ID `success@razorpay` (or `failure@razorpay` to test a failed payment), or an Indian test card such as Visa `4100 2800 0000 1007` / RuPay `6527 6589 0000 1005` (any future expiry, any CVV, any 4–10 digit OTP). Cards like `4111 1111 1111 1111` count as international and are rejected unless international payments are enabled on the Razorpay account.
 2. **Webhook (required before launch):** Razorpay Dashboard → Webhooks → Add webhook: URL `https://<your-site>/api/payment/webhook`, events `payment.captured` and `order.paid`, and a secret you choose. Set the same secret as `RAZORPAY_WEBHOOK_SECRET`. This confirms orders and emails the files even if a buyer closes the tab right after paying.
-3. **Go live:** complete Razorpay's account activation (KYC), generate **live** keys, replace both keys in Vercel, add the webhook again in **Live mode** (test and live webhooks are separate), and redeploy. The banner disappears automatically with `rzp_live_` keys.
+3. **Go live:** complete Razorpay's account activation (KYC), generate **live** keys, replace both keys in Hostinger's environment variables, add the webhook again in **Live mode** (test and live webhooks are separate), and rebuild. The banner disappears automatically with `rzp_live_` keys.
 
 Prices are always calculated on the server, and every payment is confirmed with Razorpay's signature before the order is marked paid. Confirmation is idempotent: the checkout page and the webhook can both confirm the same order without double-emailing or double-counting commission.
 

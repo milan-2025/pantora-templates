@@ -4,6 +4,7 @@ function showLanding() {
   const lp = $('#lp');
   lp.innerHTML = landingHtml();
   animateFigures(); lpBind(); applyMode();
+  try { (window.ptq = window.ptq || []).push(['ViewContent']); } catch (e) { /* tracking never breaks the page */ }
   api('plans').then((d) => { LANDING = d; lpFill(); }).catch(() => {});
 }
 function lpBind() {
