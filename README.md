@@ -18,7 +18,7 @@ Log in at **pandoratemplates.com/admin**. Every change is live a few seconds aft
 | Offer add-ons at checkout (upsells) | Product → **Upsells** tab → **Add Upsell**: pick another shop product, set its special price (₹) and an optional one-line pitch. Buyers see it as a tick-box card above the details form; ticked add-ons are added to the total, any promo code discounts the whole order, and the add-on's files are emailed and shown on the thank-you page. Add-on sales also count on that product's own sales counter and purchase popups. |
 | Upload the file buyers get | **Shop → Product files**, then pick it in the product's "Download file" field. For more than one file or link, add rows under **More files & links** (each row: button text + a file, a link, or both). Buyers get them all on the thank-you page and in the email. |
 | Make a new page (e.g. `/ultimateweddingplanner`) | **Content → Pages → Create new**. Set the slug (the page address), add sections with the **+** button, click **Publish**. |
-| Edit the homepage | **Content → Pages → Home**. The **Our products (links)** section lists every product and landing page by itself; add your own cards to it to choose them instead. |
+| Edit the homepage | **Content → Pages → Home**. The **Our products (links)** section shows one tile per category, listing every app and product by itself; add your own cards to it to choose them instead. |
 | Write a blog post | **Content → Blog posts → Create new** (it appears at `/blog/<slug>`) |
 | Upload images or videos | **Content → Images & videos**, or straight from any image field |
 | Show a sales counter | Product → **Offer** tab → **Sales counter**: tick "Show the sales counter". It counts real paid orders on the website (refunds excluded); add genuine earlier sales (WhatsApp/Instagram) under "Real sales made before this website". It stays hidden until it reaches the minimum you set. |
@@ -147,6 +147,15 @@ The new homepage, the real Workout Challenge page and ten blog posts (content in
 Edit `collections/*` and run `npm run generate` to update types and the admin import map. MongoDB needs no migrations: new fields simply appear.
 
 Use a separate Atlas database (or cluster) for local development, so testing never touches real orders.
+
+### Categories
+The site is organised into four categories, each with its own page and accent colour on the shared plum/cream base: **Weddings & Events** (`/weddings`), **Self-Improvement** (`/self-improvement`), **Business Software** (`/business`) and **Hosts & Hospitality** (`/hospitality`).
+- They are defined, with every app, in `lib/siteLinks.ts` (`CATEGORIES`, `LANDING_PAGES`). The Products menu, the footer, the homepage "Our products" tiles, the category pages and "You might also like" on product pages are all built from there plus the published shop products, so a new product appears everywhere by itself.
+- A shop product's category: **Shop → Products → (product) → Category**. Left empty, it is worked out from the address and name.
+- One-time content updates (the homepage and menu wording) live in `lib/content/` and are listed in `RELEASES` in `lib/content/autoPublish.ts`. Each runs once on Hostinger after deploy, and only replaces text that still has its old default wording.
+
+### Ad links for the planner
+`/planner?v=family`, `?v=budget`, `?v=guests` and `?v=invite` show a headline that matches the ad (no `v` shows the main one). The version is sent to Meta with ViewContent (`ad_variant`) and saved with the planner's source, next to the UTM tags.
 
 ### Ads tracking (Meta Pixel)
 One Pixel for the whole site: **Settings → Site settings → Tracking**. The shop pages load it through `components/Pixel.tsx`; every app page (planner, invites, photos, workout, HostBook, Stays, CRM) loads `public/pt-track.js`, which reads the same ID from `/api/site/pixel`.

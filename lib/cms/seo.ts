@@ -13,7 +13,8 @@ export function seoMetadata(
   seo: { title?: string | null; description?: string | null; image?: string | Media | null } | null | undefined,
   fallback: { title: string; description?: string | null; path?: string },
 ): Metadata {
-  const title = seo?.title || fallback.title;
+  // The site adds " | Pandora Templates" to every title, so a title typed with the brand at the end would show it twice.
+  const title = (seo?.title || fallback.title).replace(/\s*[|·–-]\s*Pandora Templates\s*$/i, "") || fallback.title;
   const description = seo?.description || fallback.description || undefined;
   const image = mediaDoc(seo?.image ?? null);
   return {

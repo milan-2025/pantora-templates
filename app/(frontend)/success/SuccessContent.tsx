@@ -4,10 +4,29 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import confetti from "canvas-confetti";
-import { Download, ExternalLink, FileSpreadsheet, Gift, Mail, MessageCircle, Plus } from "lucide-react";
+import { ArrowRight, Download, ExternalLink, FileSpreadsheet, Gift, Mail, MessageCircle, Plus, Sparkles } from "lucide-react";
 import { buttonClasses } from "@/components/ui/Button";
 import { LogoMark } from "@/components/Logo";
 import { downloadPath, type ExtraItem } from "@/lib/deliverables";
+
+/**
+ * The next step after buying a sheet: the app made for the same job, which can import the sheet just bought.
+ * The links carry utm tags, so the app records where the trial came from.
+ */
+const NEXT_STEP: Record<string, { title: string; text: string; cta: string; href: string }> = {
+  wedding_planner_sheet: {
+    title: "Plan it together, online",
+    text: "Bring this sheet into the Online Wedding Planner: the whole family on one plan, payment reminders, RSVPs from a digital invite, and it works on every phone. Free for 14 days, no card needed.",
+    cta: "Start the free trial",
+    href: "/planner?v=family&utm_source=pandoratemplates&utm_medium=thank-you&utm_campaign=sheet-buyers",
+  },
+  workout_challange: {
+    title: "Get the app for your challenge",
+    text: "Pandora Workout shows today's workout, keeps your streak and brings friends in to keep you going. Import this tracker in a tap. Your first challenge is free.",
+    cta: "Try the app free",
+    href: "/workout?utm_source=pandoratemplates&utm_medium=thank-you&utm_campaign=sheet-buyers",
+  },
+};
 
 type Props = {
   paid: boolean;
@@ -171,6 +190,18 @@ export function SuccessContent(p: Props) {
           Spam folder.
         </p>
       </div>
+
+      {p.paid && NEXT_STEP[p.productSlug] && (
+        <div className="mt-6 rounded-2xl border border-marigold/40 bg-cream p-5 text-left">
+          <p className="flex items-center gap-2 font-serif text-lg text-plum">
+            <Sparkles className="size-5 text-marigold" /> {NEXT_STEP[p.productSlug].title}
+          </p>
+          <p className="mt-2 text-sm text-charcoal/80">{NEXT_STEP[p.productSlug].text}</p>
+          <a href={NEXT_STEP[p.productSlug].href} className={buttonClasses({ variant: "plum", className: "mt-4 w-full sm:w-auto" })}>
+            {NEXT_STEP[p.productSlug].cta} <ArrowRight className="size-4" />
+          </a>
+        </div>
+      )}
 
       <div className="mt-6 flex flex-col items-center justify-center gap-3 text-sm sm:flex-row">
         {p.whatsappHref && (

@@ -8,7 +8,10 @@
  * Kept free of server-only imports: it is used by route handlers that write plain HTML.
  */
 
-export type Category = "weddings" | "self-improvement" | "business" | "hospitality";
+import { SHOP_CATEGORIES, type CategoryKey } from "./siteLinks";
+
+export type Category = CategoryKey;
+export { SHOP_CATEGORIES };
 
 export type TrackedProduct = { id: string; name: string; category: Category };
 
@@ -21,12 +24,6 @@ export const TRACKED: Record<string, TrackedProduct> = {
   stays: { id: "stays", name: "Pandora Stays", category: "hospitality" },
   crm: { id: "crm", name: "LeadFlow CRM", category: "business" },
   "crm-real-estate": { id: "crm-real-estate", name: "LeadFlow for Real Estate", category: "business" },
-};
-
-/** Shop products (templates) by slug; anything not listed is reported without a category. */
-export const SHOP_CATEGORIES: Record<string, Category> = {
-  wedding_planner_sheet: "weddings",
-  workout_challange: "self-improvement",
 };
 
 const attr = (v: string) => v.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");

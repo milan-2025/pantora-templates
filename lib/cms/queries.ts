@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { getPayload } from "payload";
 import config from "@payload-config";
+import { CATEGORIES, LANDING_PAGES, productCategory, type Category } from "@/lib/siteLinks";
 
 export const getPayloadClient = () => getPayload({ config });
 
@@ -53,12 +54,37 @@ export const getProductLinks = cache(async () => {
   const res = await payload.find({
     collection: "products",
     where: published,
-    depth: 0,
+    depth: 1,
     limit: 50,
     sort: "name",
-    select: { name: true, slug: true, tagline: true },
+    select: { name: true, slug: true, tagline: true, category: true, cardImage: true },
   });
-  return res.docs.map((d) => ({ name: d.name, slug: d.slug, tagline: d.tagline ?? null }));
+  return res.docs.map((d) => ({
+    name: d.name,
+    slug: d.slug,
+    tagline: d.tagline ?? null,
+    category: productCategory({ slug: d.slug, name: d.name, category: d.category }),
+    image: typeof d.cardImage === "object" && d.cardImage?.url ? d.cardImage.url : null,
+  }));
+});
+
+export type CatalogueItem = { title: string; text: string; url: string; cta: string; icon: string; image?: string | null; kind: "app" | "template" };
+export type CatalogueGroup = { category: Category; apps: CatalogueItem[]; templates: CatalogueItem[] };
+
+/** Every app and published template, grouped by category (the menu, footer, homepage and category pages all use it). */
+export const getCatalogue = cache(async (): Promise<CatalogueGroup[]> => {
+  const products = await getProductLinks().catch(() => []);
+  return CATEGORIES.map((category) => ({
+    category,
+    apps: LANDING_PAGES.filter((p) => p.category === category.key).map((p) => ({
+      title: p.label, text: p.description, url: p.url, cta: p.cta, icon: p.icon, kind: "app" as const,
+    })),
+    templates: products
+      .filter((p) => p.category === category.key)
+      .map((p) => ({
+        title: p.name, text: p.tagline ?? "", url: `/${p.slug}`, cta: "See what's inside", icon: "FileSpreadsheet", image: p.image, kind: "template" as const,
+      })),
+  }));
 });
 
 export const getPosts = cache(async () => {

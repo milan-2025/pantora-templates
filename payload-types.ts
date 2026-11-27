@@ -201,6 +201,10 @@ export interface Product {
    */
   slug: string;
   /**
+   * Which category page and menu group lists this product. Left empty, it is worked out from the address and name.
+   */
+  category?: ('weddings' | 'self-improvement' | 'business' | 'hospitality') | null;
+  /**
    * One-line pitch, used under the hero heading and on product cards
    */
   tagline?: string | null;
@@ -497,6 +501,10 @@ export interface Product {
                 | 'Dumbbell'
                 | 'ShoppingBag'
                 | 'Sparkles'
+                | 'Image'
+                | 'BookOpen'
+                | 'Briefcase'
+                | 'BedDouble'
               )
             | null;
           title: string;
@@ -1465,6 +1473,10 @@ export interface Page {
                         | 'Dumbbell'
                         | 'ShoppingBag'
                         | 'Sparkles'
+                        | 'Image'
+                        | 'BookOpen'
+                        | 'Briefcase'
+                        | 'BedDouble'
                       )
                     | null;
                   title: string;
@@ -1521,6 +1533,10 @@ export interface Page {
                         | 'Dumbbell'
                         | 'ShoppingBag'
                         | 'Sparkles'
+                        | 'Image'
+                        | 'BookOpen'
+                        | 'Briefcase'
+                        | 'BedDouble'
                       )
                     | null;
                   /**
@@ -2271,6 +2287,7 @@ export interface PayloadMigration {
 export interface ProductsSelect<T extends boolean = true> {
   name?: T;
   slug?: T;
+  category?: T;
   tagline?: T;
   cardImage?: T;
   price?: T;

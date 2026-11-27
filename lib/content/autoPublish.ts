@@ -11,10 +11,20 @@
  * - Never stops the site from starting: errors are logged, not thrown.
  */
 import type { Payload } from "payload";
-import { planContent } from "./publish";
+import { planContent, type ContentPlan } from "./publish";
+import { CATEGORIES_RELEASE_ID, planCategoriesRelease } from "./categoriesRelease";
 
-/** Change this id to publish a future content pack once in the same way. */
+/** The first content pack (homepage, workout page, blog posts); the admin page /api/admin/publish-content runs this one. */
 export const CONTENT_RELEASE_ID = "2026-11-homepage-workout-blog";
+
+/**
+ * Every content release, oldest first. Each runs once (its own marker); add a new one to the end to publish
+ * future content the same way. Each release only changes what still has its old default wording.
+ */
+export const RELEASES: { id: string; plan: (payload: Payload) => Promise<ContentPlan> }[] = [
+  { id: CONTENT_RELEASE_ID, plan: planContent },
+  { id: CATEGORIES_RELEASE_ID, plan: planCategoriesRelease },
+];
 
 type Marker = { _id: string; startedAt: Date; doneAt?: Date; changes?: string[]; notes?: string[] };
 
@@ -27,28 +37,32 @@ export async function autoPublishContent(payload: Payload): Promise<void> {
   const db = (payload.db as unknown as { connection?: { db?: { collection: <T extends object>(name: string) => MarkerCollection<T> } } }).connection?.db;
   if (!db) return;
   const markers = db.collection<Marker>("content_releases");
+  for (const release of RELEASES) await runRelease(payload, markers, release);
+}
 
+async function runRelease(payload: Payload, markers: MarkerCollection<Marker>, release: (typeof RELEASES)[number]): Promise<void> {
+  const id = release.id;
   try {
-    await markers.insertOne({ _id: CONTENT_RELEASE_ID, startedAt: new Date() });
+    await markers.insertOne({ _id: id, startedAt: new Date() });
   } catch (err) {
     if ((err as { code?: number }).code === 11000) return; // already published (or another server is doing it right now)
-    payload.logger.error({ err }, "Content pack: could not check whether it was already published");
+    payload.logger.error({ err }, `Content pack "${id}": could not check whether it was already published`);
     return;
   }
 
   try {
-    const plan = await planContent(payload);
+    const plan = await release.plan(payload);
     const res = await plan.apply();
     if (res.failed.length) {
-      for (const f of res.failed) payload.logger.error(`Content pack: ${f.step} failed: ${f.error}`);
+      for (const f of res.failed) payload.logger.error(`Content pack "${id}": ${f.step} failed: ${f.error}`);
       throw new Error(`${res.failed.length} step(s) failed`);
     }
-    await markers.updateOne({ _id: CONTENT_RELEASE_ID }, { $set: { doneAt: new Date(), changes: plan.changes, notes: plan.notes } });
-    payload.logger.info(`Content pack "${CONTENT_RELEASE_ID}" published: ${plan.changes.length} change(s).`);
-    for (const n of plan.notes) payload.logger.warn(`Content pack: ${n}`);
+    await markers.updateOne({ _id: id }, { $set: { doneAt: new Date(), changes: plan.changes, notes: plan.notes } });
+    payload.logger.info(`Content pack "${id}" published: ${plan.changes.length} change(s).`);
+    for (const n of plan.notes) payload.logger.warn(`Content pack "${id}": ${n}`);
   } catch (err) {
-    payload.logger.error({ err }, `Content pack "${CONTENT_RELEASE_ID}" failed; it will be retried on the next start (or run it from /api/admin/publish-content)`);
-    await markers.deleteOne({ _id: CONTENT_RELEASE_ID }).catch(() => undefined);
+    payload.logger.error({ err }, `Content pack "${id}" failed; it will be retried on the next start`);
+    await markers.deleteOne({ _id: id }).catch(() => undefined);
   }
 }
 

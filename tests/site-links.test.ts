@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LANDING_PAGES, LEGACY_REDIRECTS, PRODUCT_SLUG_ALIASES, ROBOTS_DISALLOW, SITEMAP_LANDING_PAGES, isStandalonePage, relatedLandingPages } from "../lib/siteLinks";
+import { CATEGORIES, LANDING_PAGES, LEGACY_REDIRECTS, PRODUCT_SLUG_ALIASES, ROBOTS_DISALLOW, SITEMAP_LANDING_PAGES, categoryByKey, isStandalonePage, productCategory, relatedLandingPages } from "../lib/siteLinks";
 import robots from "../app/robots";
 import nextConfig from "../next.config";
 import { fixUrl, PRODUCT_HUB_BLOCK, planHomeLayout, planMenu } from "../lib/cms/homeUpgrade";
@@ -27,7 +27,7 @@ describe("link map", () => {
     expect(r.sitemap).toMatch(/\/sitemap\.xml$/);
   });
   it("lists the landing pages that are not in the admin in the sitemap", () => {
-    expect(SITEMAP_LANDING_PAGES.map((p) => p.url)).toEqual(["/planner", "/shaadi", "/photos", "/workout", "/crm-software", "/hostbook"]);
+    for (const u of ["/planner", "/shaadi", "/photos", "/workout", "/crm-software", "/hostbook", "/weddings", "/business"]) expect(SITEMAP_LANDING_PAGES.map((p) => p.url)).toContain(u);
     for (const p of SITEMAP_LANDING_PAGES) expect(blocked(p.url)).toBe(false);
   });
   it("never redirects an address to itself or into a loop", () => {
@@ -44,9 +44,45 @@ describe("link map", () => {
     for (const u of ["/planner", "/planner/login", "/shaadi", "/shaadi?x=1", "/crm-software", "/crm", "/CRM/login.html", "/i/abc", "/property/x", "/photos", "/p/aditi-kabir", "/p/aditi-kabir/manage"]) expect(isStandalonePage(u), u).toBe(true);
     for (const u of ["/", "/stays", "/blog", "/plannerx", "/wedding_planner_sheet", "/contact", "/#products", "/information"]) expect(isStandalonePage(u), u).toBe(false);
   });
-  it("suggests the wedding tools on wedding products, and other tools elsewhere", () => {
-    expect(relatedLandingPages("Wedding Planner Sheet").map((p) => p.key)).toEqual(["planner", "invites"]);
-    expect(relatedLandingPages("Workout Challange").map((p) => p.key)).toEqual(["planner", "stays"]);
+  it("suggests the apps in the same category on a product's page", () => {
+    expect(relatedLandingPages("weddings").map((p) => p.key)).toEqual(["planner", "invites", "photos"]);
+    expect(relatedLandingPages("self-improvement").map((p) => p.key)).toEqual(["workout"]);
+    expect(relatedLandingPages("hospitality").map((p) => p.key)).toEqual(["hostbook", "stays"]);
+  });
+});
+
+describe("categories", () => {
+  it("has four categories, each with its own page and at least one app", () => {
+    expect(CATEGORIES.map((c) => c.url)).toEqual(["/weddings", "/self-improvement", "/business", "/hospitality"]);
+    for (const c of CATEGORIES) {
+      expect(LANDING_PAGES.some((p) => p.category === c.key), c.key).toBe(true);
+      expect(blocked(c.url)).toBe(false);
+      expect(SITEMAP_LANDING_PAGES.map((p) => p.url)).toContain(c.url);
+      expect(c.accent).toMatch(/^#[0-9A-F]{6}$/i);
+    }
+  });
+  it("puts every app in exactly one known category", () => {
+    for (const p of LANDING_PAGES) expect(categoryByKey(p.category), p.key).toBeDefined();
+  });
+  it("files shop products by the admin's choice, then their address, then their name", () => {
+    expect(productCategory({ slug: "wedding_planner_sheet", name: "The Wedding Planner Sheet" })).toBe("weddings");
+    expect(productCategory({ slug: "workout_challange", name: "Workout Challenge Tracker" })).toBe("self-improvement");
+    expect(productCategory({ slug: "anything", name: "Anything", category: "business" })).toBe("business");
+    expect(productCategory({ slug: "gst_invoice", name: "GST Invoice Template" })).toBe("business");
+    expect(productCategory({ slug: "airbnb_host_checklist", name: "Airbnb Host Checklist" })).toBe("hospitality");
+    expect(productCategory({ slug: "habit_tracker", name: "Habit Tracker" })).toBe("self-improvement");
+    expect(productCategory({ slug: "mehndi_planner", name: "Mehndi Planner" })).toBe("weddings");
+  });
+  it("keeps the colour of each category's text readable on a light background", () => {
+    const lum = (hex: string) => {
+      const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    const contrast = (a: string, b: string) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
+    for (const c of CATEGORIES) {
+      expect(contrast(c.accent, "#FBF5EA"), `${c.key} on cream`).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(c.accent, c.tint), `${c.key} on its tint`).toBeGreaterThanOrEqual(4.5);
+    }
   });
 });
 
