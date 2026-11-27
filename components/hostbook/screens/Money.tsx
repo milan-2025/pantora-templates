@@ -1,10 +1,11 @@
 "use client";
 import { useMemo, useState } from "react";
-import { Camera, Download, FileText, Loader2, Paperclip, Plus, Printer, Repeat } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Camera, Download, FileText, Loader2, Paperclip, Plus, Printer, Repeat, Search } from "lucide-react";
 import { EXPENSE_CATEGORIES, PAY_METHODS } from "@/lib/hostbook/features";
-import { addDays, addMonths, bookingIncome, buildReport, istDay, nights, ownerStatement, toCsv, type Rec } from "@/lib/hostbook/core";
+import { addDays, addMonths, bookingIncome, buildReport, buildStatement, istDay, nights, ownerStatement, toCsv, type Rec } from "@/lib/hostbook/core";
 import { api, uploadSigned } from "../api";
 import { useLookups, useStore } from "../store";
+import { go } from "../App";
 import { Badge, Bars, Button, Card, Empty, Field, HBar, Input, Locked, PageHead, Select, Sheet, Stat, Tabs, Textarea, download, escHtml, fmtDay, fmtMonth, money, printPage } from "../ui";
 
 type Period = "month" | "last" | "fy" | "year" | "custom";
@@ -20,12 +21,13 @@ function range(p: Period, custom: { from: string; to: string }) {
 export function MoneyScreen() {
   const s = useStore();
   const full = s.can("money");
-  const [tab, setTab] = useState<"overview" | "expenses" | "income" | "repeating" | "owners" | "gst">(full ? "overview" : "expenses");
+  const [tab, setTab] = useState<"overview" | "statement" | "expenses" | "income" | "repeating" | "owners" | "gst">(full ? "overview" : "expenses");
   return (
     <div>
       <PageHead title="Money" sub={full ? "Income, expenses and profit for each listing" : "Expenses you've added"} />
-      {full && <Tabs value={tab} onChange={setTab} tabs={[{ value: "overview", label: "Overview" }, { value: "expenses", label: "Expenses" }, { value: "income", label: "Other income" }, { value: "repeating", label: "Repeating" }, { value: "owners", label: "Owner statements" }, { value: "gst", label: "GST" }]} />}
+      {full && <Tabs value={tab} onChange={setTab} tabs={[{ value: "overview", label: "Overview" }, { value: "statement", label: "Statement" }, { value: "expenses", label: "Expenses" }, { value: "income", label: "Other income" }, { value: "repeating", label: "Repeating" }, { value: "owners", label: "Owner statements" }, { value: "gst", label: "GST" }]} />}
       {tab === "overview" && <Overview />}
+      {tab === "statement" && <Statement />}
       {tab === "expenses" && <Expenses />}
       {tab === "income" && <OtherIncome />}
       {tab === "repeating" && (s.has("recurring") ? <Repeating /> : <Locked feature="recurring" />)}
@@ -323,6 +325,79 @@ function Gst() {
             <tr className="border-t border-line font-semibold"><td className="px-4 py-2">Total{lid ? ` · ${listingName(lid)}` : ""}</td><td className="text-right">{tot.n}</td><td className="text-right">{money(tot.gross)}</td><td className="px-4 text-right">{money(tot.taxes)}</td></tr></tbody></table>
       </div>
       <p className="mt-3 text-[11px] text-muted">A summary to share with your CA. It isn&apos;t a GST return.</p>
+    </div>
+  );
+}
+
+/** Every rupee in and out, oldest first, with a running balance, like a bank statement. */
+function Statement() {
+  const s = useStore();
+  const { listingName } = useLookups();
+  const [p, setP] = useState<Period>("month");
+  const [custom, setCustom] = useState({ from: addDays(istDay(), -30), to: istDay() });
+  const [lid, setLid] = useState("");
+  const [dir, setDir] = useState<"all" | "in" | "out">("all");
+  const [q, setQ] = useState("");
+  const [edit, setEdit] = useState<Rec | null>(null);
+  const { from, to } = range(p, custom);
+  const st = buildStatement(s.items, from, to, { listingId: lid, names: listingName });
+  const rows = st.rows.filter((r) => (dir === "all" || (dir === "in" ? r.moneyIn > 0 : r.moneyOut > 0)) && (!q || `${r.title} ${r.sub} ${listingName(r.listingId)}`.toLowerCase().includes(q.toLowerCase())));
+  const filtered = dir !== "all" || Boolean(q);
+  const open = (r: (typeof rows)[number]) => {
+    if (r.kind === "booking") go(`booking/${r.id}`);
+    else if (r.kind === "expense") setEdit(s.byId.get(r.id) ?? null);
+    else if (r.kind === "maint") go("upkeep");
+  };
+  const where = lid ? listingName(lid) : "All listings";
+  const exportCsv = () => {
+    if (!s.has("export")) return s.upsell("export");
+    download(`statement-${from}-to-${to}.csv`, toCsv([
+      ["Date", "Details", "Notes", "Listing", "Money in (₹)", "Money out (₹)", "Balance (₹)"],
+      [from, "Opening balance", "", where, "", "", st.opening],
+      ...rows.map((r) => [r.date, r.title, r.sub, r.listingId ? listingName(r.listingId) : "All", r.moneyIn || "", r.moneyOut || "", r.balance]),
+      [to, "Closing balance", "", where, st.moneyIn, st.moneyOut, st.closing],
+    ]));
+  };
+  const print = () => printPage("Account statement", `<h1>Account statement</h1><p class="muted">${escHtml(s.me.account.business || s.me.email)} · ${escHtml(where)} · ${fmtDay(from, true)} to ${fmtDay(to, true)}</p>
+    <table><tr><th>Date</th><th>Details</th><th>Listing</th><th class="r">Money in</th><th class="r">Money out</th><th class="r">Balance</th></tr>
+    <tr class="tot"><td>${fmtDay(from, true)}</td><td>Opening balance</td><td></td><td></td><td></td><td class="r">${money(st.opening)}</td></tr>
+    ${rows.map((r) => `<tr><td>${fmtDay(r.date, true)}</td><td>${escHtml(r.title)}${r.sub ? `<br><span class="muted">${escHtml(r.sub)}</span>` : ""}</td><td>${escHtml(r.listingId ? listingName(r.listingId) : "All")}</td><td class="r">${r.moneyIn ? money(r.moneyIn) : ""}</td><td class="r">${r.moneyOut ? money(r.moneyOut) : ""}</td><td class="r">${money(r.balance)}</td></tr>`).join("")}
+    <tr class="tot"><td>${fmtDay(to, true)}</td><td>Closing balance</td><td></td><td class="r">${money(st.moneyIn)}</td><td class="r">${money(st.moneyOut)}</td><td class="r">${money(st.closing)}</td></tr></table>`);
+  return (
+    <div>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <PeriodPicker {...{ p, setP, custom, setCustom, lid, setLid }} />
+        <div className="mb-4 flex gap-2"><Button tone="soft" size="sm" onClick={print}><Printer className="size-3.5" /> PDF</Button><Button tone="soft" size="sm" onClick={exportCsv}><Download className="size-3.5" /> Excel</Button></div>
+      </div>
+      <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Stat label="Opening balance" value={money(st.opening)} sub={fmtDay(from, true)} />
+        <Stat label="Money in" value={money(st.moneyIn)} tone="ok" sub={`${st.rows.filter((r) => r.moneyIn).length} entries`} />
+        <Stat label="Money out" value={money(st.moneyOut)} tone="bad" sub={`${st.rows.filter((r) => r.moneyOut).length} entries`} />
+        <Stat label="Closing balance" value={money(st.closing)} tone={st.closing >= 0 ? "ok" : "bad"} sub={fmtDay(to, true)} />
+      </div>
+      <div className="mb-3 flex flex-wrap gap-2">
+        <Tabs value={dir} onChange={setDir} tabs={[{ value: "all", label: "All" }, { value: "in", label: "Money in" }, { value: "out", label: "Money out" }]} />
+        <div className="relative min-w-48 flex-1"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" /><Input className="pl-9" placeholder="Search guest, category, vendor, note" value={q} onChange={(e) => setQ(e.target.value)} /></div>
+      </div>
+      <div className="overflow-hidden rounded-2xl border border-line bg-white">
+        <div className="flex items-center justify-between bg-sand px-4 py-2 text-xs font-semibold text-muted"><span>{fmtDay(from, true)} · Opening balance</span><span>{money(st.opening)}</span></div>
+        {rows.length ? rows.map((r) => (
+          <button key={`${r.kind}-${r.id}`} onClick={() => open(r)} className="flex w-full items-center gap-3 border-t border-line px-4 py-3 text-left hover:bg-ink/[.02]">
+            <span className={`grid size-8 shrink-0 place-items-center rounded-full ${r.moneyIn ? "bg-leaf/12 text-leaf" : "bg-rust/10 text-rust"}`}>{r.moneyIn ? <ArrowDownLeft className="size-4" /> : <ArrowUpRight className="size-4" />}</span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-semibold">{r.title}</span>
+              <span className="block truncate text-xs text-muted">{fmtDay(r.date, true)}{r.listingId ? ` · ${listingName(r.listingId)}` : " · All listings"}{r.sub && r.sub !== listingName(r.listingId) ? ` · ${r.sub}` : ""}</span>
+            </span>
+            <span className="text-right">
+              <span className={`block text-sm font-semibold ${r.moneyIn ? "text-leaf" : "text-rust"}`}>{r.moneyIn ? `+${money(r.moneyIn)}` : `−${money(r.moneyOut)}`}</span>
+              {!filtered && <span className="block text-[11px] text-muted">Bal {money(r.balance)}</span>}
+            </span>
+          </button>
+        )) : <p className="border-t border-line px-4 py-8 text-center text-sm text-muted">Nothing in or out in these dates.</p>}
+        <div className="flex items-center justify-between border-t border-line bg-sand px-4 py-2.5 text-sm font-semibold"><span>{fmtDay(to, true)} · Closing balance</span><span className={st.closing < 0 ? "text-rust" : ""}>{money(st.closing)}</span></div>
+      </div>
+      <p className="mt-2 text-[11px] text-muted">Bookings count on their check-in date, at what you receive (payout). Paid repairs from the maintenance log are included.{lid ? " Shared expenses (not tied to a listing) only show under All listings." : ""}{filtered ? " Balances are hidden while filtered." : ""}</p>
+      {edit && <ExpenseEditor expense={edit} onClose={() => setEdit(null)} />}
     </div>
   );
 }

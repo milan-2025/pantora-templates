@@ -258,7 +258,7 @@ export function toCsv(rows: (string | number | null | undefined)[][]) {
   }).join(",")).join("\r\n");
 }
 
-export const inr = (n: number) => "₹" + Math.round(Number(n) || 0).toLocaleString("en-IN");
+export const inr = (n: number) => { const v = Math.round(Number(n) || 0); return (v < 0 ? "−₹" : "₹") + Math.abs(v).toLocaleString("en-IN"); };
 
 /* ---------- ID, phone and email checks (check-in form and guest editor) ---------- */
 
@@ -372,4 +372,50 @@ export function checkGuest(g: Record<string, unknown>, opts: { required: Checkin
   if (req.has("idFront") && !have.has("front")) err.idFront = "Photo of the ID (front) is needed";
   if (req.has("idBack") && !have.has("back")) err.idBack = "Photo of the ID (back) is needed";
   return err;
+}
+
+/* ---------- account statement (every rupee in and out, like a bank statement) ---------- */
+
+export type StatementRow = {
+  id: string; date: string; kind: "booking" | "income" | "expense" | "maint"; title: string; sub: string; listingId: string;
+  moneyIn: number; moneyOut: number; balance: number;
+};
+
+/**
+ * All money in (booking payouts on the check-in date, other income) and out (expenses, paid repairs) between two dates,
+ * oldest first, with a running balance that starts from everything before `from`. With a listing, only that listing's
+ * rows (shared expenses with no listing are left out).
+ */
+export function buildStatement(items: Rec[], from: string, to: string, opts: { listingId?: string; names?: (id: string) => string } = {}) {
+  const name = opts.names ?? (() => "");
+  const lines: Omit<StatementRow, "balance">[] = [];
+  for (const x of items) {
+    if (opts.listingId && x.listingId !== opts.listingId) continue;
+    if (x.kind === "booking" && x.status !== "cancelled" && x.status !== "blocked" && isDay(x.start)) {
+      const amt = bookingIncome(x);
+      if (!amt) continue;
+      const fee = Number(x.platformFee) || 0;
+      lines.push({ id: x.id, date: x.start, kind: "booking", title: `Booking: ${x.guestName || "Guest"}`, sub: [x.source, `${nights(x)} night${nights(x) === 1 ? "" : "s"}`, fee ? `fee ${inr(fee)}` : ""].filter(Boolean).join(" · "), listingId: x.listingId ?? "", moneyIn: amt, moneyOut: 0 });
+    } else if (x.kind === "income" && isDay(x.date) && Number(x.amount)) {
+      lines.push({ id: x.id, date: x.date, kind: "income", title: x.source || "Other income", sub: x.note ?? "", listingId: x.listingId ?? "", moneyIn: Number(x.amount), moneyOut: 0 });
+    } else if (x.kind === "expense" && isDay(x.date) && Number(x.amount)) {
+      lines.push({ id: x.id, date: x.date, kind: "expense", title: x.category || "Expense", sub: [x.vendor, x.method, x.note].filter(Boolean).join(" · "), listingId: x.listingId ?? "", moneyIn: 0, moneyOut: Number(x.amount) });
+    } else if (x.kind === "maint" && isDay(x.date) && Number(x.cost) && x.status !== "planned") {
+      lines.push({ id: x.id, date: x.date, kind: "maint", title: `Repair: ${x.title || "Maintenance"}`, sub: x.vendor ?? "", listingId: x.listingId ?? "", moneyIn: 0, moneyOut: Number(x.cost) });
+    }
+  }
+  // Same day: money in before money out, then by creation order, so the balance reads naturally.
+  lines.sort((a, b) => a.date.localeCompare(b.date) || (b.moneyIn ? 1 : 0) - (a.moneyIn ? 1 : 0));
+  const r2 = (v: number) => Math.round(v * 100) / 100;
+  let balance = 0;
+  const rows: StatementRow[] = [];
+  for (const l of lines) {
+    balance = r2(balance + l.moneyIn - l.moneyOut);
+    if (l.date < from) continue;
+    if (l.date > to) break;
+    rows.push({ ...l, sub: l.sub || (l.listingId ? name(l.listingId) : ""), balance });
+  }
+  const opening = r2(lines.filter((l) => l.date < from).reduce((s, l) => s + l.moneyIn - l.moneyOut, 0));
+  const moneyIn = r2(rows.reduce((s, r) => s + r.moneyIn, 0)), moneyOut = r2(rows.reduce((s, r) => s + r.moneyOut, 0));
+  return { from, to, opening, moneyIn, moneyOut, closing: r2(opening + moneyIn - moneyOut), rows };
 }

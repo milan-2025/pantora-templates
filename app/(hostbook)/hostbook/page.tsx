@@ -22,7 +22,7 @@ const POINTS = [
   { icon: IdCard, title: "IDs checked as they're typed", text: "Aadhaar must be 12 valid digits; PAN, voter ID, driving licence and passport numbers are checked too. Something wrong? Ask the guest to fix just that part." },
   { icon: BellRing, title: "Notifications, not inbox clutter", text: "Guest details in, new bookings, today's check-ins and tasks show up under the bell and on your phone. No daily email spam." },
   { icon: CalendarSync, title: "Airbnb & Booking.com sync", text: "Paste your calendar links and bookings come in on their own. One calendar for all your listings." },
-  { icon: IndianRupee, title: "Real profit for each listing", text: "Payouts, fees, cleaning, bills, salaries and repairs. Occupancy, nightly rate and Excel export for your CA." },
+  { icon: IndianRupee, title: "Real profit for each listing", text: "Payouts, fees, cleaning, bills, salaries and repairs. A bank-style account statement with a running balance, occupancy, nightly rate and Excel export for your CA." },
   { icon: Wrench, title: "Regular tasks & reminders", text: "AC service every 3 months, bills on the 5th, deep clean monthly. They come back on schedule in a morning email." },
   { icon: Users2, title: "Caretaker accounts", text: "Cleaners and managers get their own sign-in and see only what you allow. IDs and money stay private." },
   { icon: ShieldCheck, title: "Police register & Form C", text: "Print the guest register for any dates. Foreign guests get Form C details ready to copy, with a 24-hour reminder." },

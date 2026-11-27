@@ -3,7 +3,7 @@ import {
   addMonths, buildReport, cleanRecord, fillTemplate, icalIsBlock, icalPhoneLast4, maskId, nextDue, nights, nightsIn, ownerStatement, parseIcal, planQuote, toCsv, waLink,
   type PlanLite, type Rec,
 } from "@/lib/hostbook/core";
-import { checkEmail, checkGuest, checkId, checkPhone } from "@/lib/hostbook/core";
+import { buildStatement, inr, checkEmail, checkGuest, checkId, checkPhone } from "@/lib/hostbook/core";
 import { DEFAULT_HOSTBOOK_PLANS, FEATURE_KEYS } from "@/lib/hostbook/features";
 import { dealFor } from "@/lib/coupons";
 
@@ -173,5 +173,38 @@ describe("ID and phone checks", () => {
     expect(checkGuest(g, { required: ["phone", "id", "idFront"], all: false, main: false })).toEqual({});
     expect(Object.keys(checkGuest(g, { required: ["phone", "id", "address"], all: true, main: false }))).toEqual(["address", "idNumber"]);
     expect(checkGuest(g, { required: ["id", "idFront"], all: false, main: true, hadId: true, hadPhotos: ["front"] })).toEqual({});
+  });
+});
+
+describe("account statement", () => {
+  const items = [
+    { id: "l1", kind: "listing", name: "Pine View" },
+    { id: "b0", kind: "booking", listingId: "l1", start: "2026-10-20", end: "2026-10-22", payout: 4000, status: "confirmed", guestName: "Old", source: "Airbnb" },
+    { id: "e0", kind: "expense", listingId: "l1", date: "2026-10-25", amount: 1500, category: "Cleaning" },
+    { id: "b1", kind: "booking", listingId: "l1", start: "2026-11-05", end: "2026-11-08", payout: 9000, platformFee: 450, status: "confirmed", guestName: "Riya", source: "Airbnb" },
+    { id: "bx", kind: "booking", listingId: "l1", start: "2026-11-06", end: "2026-11-07", payout: 5000, status: "cancelled" },
+    { id: "e1", kind: "expense", listingId: "", date: "2026-11-05", amount: 800, category: "Internet", vendor: "Airtel" },
+    { id: "i1", kind: "income", listingId: "l1", date: "2026-11-10", amount: 500, source: "Extra bed" },
+    { id: "m1", kind: "maint", listingId: "l1", date: "2026-11-12", cost: 1200, title: "Geyser", status: "done" },
+    { id: "m2", kind: "maint", listingId: "l1", date: "2026-11-13", cost: 9999, title: "Paint", status: "planned" },
+    { id: "e2", kind: "expense", listingId: "l1", date: "2026-12-01", amount: 300, category: "Laundry" },
+  ] as Rec[];
+  it("opening balance, running balance and closing balance", () => {
+    const st = buildStatement(items, "2026-11-01", "2026-11-30");
+    expect(st.opening).toBe(2500);
+    expect(st.rows.map((r) => [r.date, r.title, r.moneyIn, r.moneyOut, r.balance])).toEqual([
+      ["2026-11-05", "Booking: Riya", 9000, 0, 11500],
+      ["2026-11-05", "Internet", 0, 800, 10700],
+      ["2026-11-10", "Extra bed", 500, 0, 11200],
+      ["2026-11-12", "Repair: Geyser", 0, 1200, 10000],
+    ]);
+    expect(st.rows[0].sub).toBe("Airbnb · 3 nights · fee ₹450");
+    expect(st).toMatchObject({ moneyIn: 9500, moneyOut: 2000, closing: 10000 });
+    expect(inr(-12000)).toBe("−₹12,000");
+  });
+  it("one listing leaves out shared expenses", () => {
+    const st = buildStatement(items, "2026-11-01", "2026-11-30", { listingId: "l1" });
+    expect(st.rows.some((r) => r.title === "Internet")).toBe(false);
+    expect(st.closing).toBe(2500 + 9000 + 500 - 1200);
   });
 });

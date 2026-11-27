@@ -28,6 +28,9 @@ Guest register with IDs, bookings and calendar, online guest check-in, regular t
 - **Fixing details**: guests can change their details until the host approves them. The host can tap "Ask guest to fix" on a booking, pick the items and add a note. The booking goes to `checkinStatus: "changes"`, and the guest's link opens again pre-filled (ID numbers masked; a blank ID keeps the saved one) with the items marked. A new photo of a side replaces the old one.
 - A returning guest matched by phone is updated (not duplicated), and doesn't need to resend an ID the host already has.
 
+## Account statement
+Money → Statement: every booking payout (on its check-in date), other income, expense and paid repair, oldest first. It shows money in, money out, a running balance from an opening balance, and a closing balance. Filters: dates, listing (shared expenses only under All listings), in/out, and search. PDF and Excel (Excel needs the export feature). Logic: `buildStatement` in `lib/hostbook/core.ts`.
+
 ## Notifications (instead of most emails)
 - Stored in `hb_items` as `kind: "notice"` (to the owner, or to staff with a given permission), shown under the bell and on the Today screen, cleared after 60 days. Read state is per person.
 - **Phone notifications**: web push with no payload. Keys are in HostBook settings (hidden fields, made automatically). Subscriptions are in the MongoDB collection `hb_push`. The app's worker (`/hostbook-sw.js`) asks `/api/hostbook/push/latest` what to show. Free: no SMS or email cost.
