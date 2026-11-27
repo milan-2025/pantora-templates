@@ -1,5 +1,7 @@
 import "server-only";
 import { trackingScript } from "@/lib/tracking";
+import { REVIEWS_CSS, reviewsHtml, type Review } from "@/lib/reviews";
+import { stickyCtaHtml } from "@/lib/appPage";
 import type { Plan } from "@/lib/invites";
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
@@ -25,7 +27,7 @@ const FAQ: [string, string][] = [
 ];
 
 /** The wedding invite maker's landing page (/shaadi). `qs` is the visitor's query string, passed on to the editor links. */
-export function landingHtml(opts: { plans: Plan[]; banner: string; months: number; site: string; qs: string }) {
+export function landingHtml(opts: { plans: Plan[]; banner: string; months: number; site: string; qs: string; reviews?: Review[] }) {
   const create = "/shaadi/create" + (opts.qs ? "?" + opts.qs : "");
   const t0 = THEMES[0];
   const plans = opts.plans
@@ -190,7 +192,7 @@ details p{color:var(--mut);margin:10px 0 0}
 footer{border-top:1px solid var(--line);padding:26px 0 40px;font-size:15px;color:var(--mut)}
 footer .w{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 footer a{color:var(--mut)}
-</style>${trackingScript("invites")}</head>
+${REVIEWS_CSS}</style>${trackingScript("invites")}</head>
 <body>
 <div class="back" id="back"><div class="w"><span id="backtx">You have an invite in progress on this device.</span><a id="backlink" href="${esc(create)}">Continue my invite</a></div></div>
 ${opts.banner ? `<div class="banner">${esc(opts.banner)}</div>` : ""}
@@ -259,16 +261,18 @@ ${opts.banner ? `<div class="banner">${esc(opts.banner)}</div>` : ""}
   <div class="after"><a class="btn btn-p" href="${esc(create)}">Start designing, free</a></div>
 </div></section>
 
+${reviewsHtml(opts.reviews ?? [], "Couples who sent theirs")}
 <section class="faq"><div class="w">
   <h2>Questions couples ask</h2>
   ${FAQ.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("")}
 </div></section>
 
-<section class="end"><div class="w">
+<section class="end" data-pt-final><div class="w">
   <h2>Your guests are waiting for the date. Send it to them.</h2>
   <a class="btn btn-p" href="${esc(create)}">Make my invite</a>
 </div></section>
 
+${stickyCtaHtml("Make my invite, free", create, { bg: "#7a1424", fg: "#fff" })}
 <footer><div class="w">
   <span>Pandora Templates</span>
   <span><a href="/planner">Wedding planner</a>, <a href="/wedding_planner_sheet">Planner spreadsheet</a>, <a href="/stays">Stays</a>, <a href="/contact">Contact</a>, <a href="/refund">Refunds</a></span>

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPayloadClient } from "@/lib/cms/queries";
 import { getPaymentProvider } from "@/lib/payments";
+import { getReviews } from "@/lib/reviewsServer";
 import { clientIp, rateLimit } from "@/lib/rateLimit";
 import { WorkoutError, type WOp } from "@/lib/workout/core";
 import {
@@ -60,8 +61,9 @@ async function handle(req: Request, ctx: Ctx) {
     return passwordLogin(payload, b.email, b.password);
   }
   if (path === "plans" && m === "GET") {
-    const [plans, s] = await Promise.all([getPlans(payload), getSettings(payload)]);
+    const [plans, s, reviews] = await Promise.all([getPlans(payload), getSettings(payload), getReviews(payload, "workout")]);
     return {
+      reviews,
       plans: plans.filter((p) => p.active || p.isFree).map(({ id, planId, name, price, durationDays, seats, photosPerWeek, isFree, tagline, badge, features }) => ({ id, planId, name, price, durationDays, seats, photosPerWeek, isFree, tagline, badge, features })),
       freeDays: s.freeDays, offerText: s.offerText, whatsapp: s.whatsappNumber ? { number: s.whatsappNumber, message: s.whatsappMessage } : null,
       moneyBack: s.moneyBackOn ? { tiers: s.moneyBackTiers, rule: s.moneyBackRule } : null, friendOff: s.refOn ? s.refFriendOff : 0,

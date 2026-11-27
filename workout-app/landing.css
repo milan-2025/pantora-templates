@@ -40,3 +40,11 @@
 .rv{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.9,.3,1)}.rv.in{opacity:1;transform:none}
 @media (max-width:900px){.lp-hero,.lp-split,.lp-mbox{grid-template-columns:1fr}.lp-split.rev>:first-child{order:0}.lp-grid4{grid-template-columns:1fr 1fr}.lp-grid3,.lp-progs,.lp-plans,.lp-giftrow{grid-template-columns:1fr 1fr}.lp-phone{transform:none}.lp-hero{padding-top:18px}}
 @media (max-width:600px){.lp-grid4,.lp-grid3,.lp-progs,.lp-plans{grid-template-columns:1fr}.lp-giftrow{grid-template-columns:1fr 1fr}.lp-sec{padding:50px 18px}.lp-cta .btn{width:100%}.lp-phone{width:280px}.lp-in{display:none}}
+
+/* Start button fixed to the bottom on phones (see lpSticky in landing.js) */
+.lp-sticky{position:fixed;left:0;right:0;bottom:0;z-index:60;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:var(--card,rgba(255,255,255,.94));border-top:1px solid rgba(0,0,0,.08);transform:translateY(110%);transition:transform .25s}
+.lp-sticky.on{transform:none}.lp-sticky .btn{display:flex;justify-content:center;width:100%;box-sizing:border-box}
+@media(min-width:900px){.lp-sticky{display:none}}
+/* Reviews from the admin */
+.lp-reviews{max-width:1080px;margin:0 auto;padding:48px 20px}.lp-rv-grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-top:20px}
+.lp-rv{margin:0;background:var(--card,#fff);border:1px solid rgba(0,0,0,.08);border-radius:18px;padding:20px}.lp-rv blockquote{margin:0 0 12px;line-height:1.55}.lp-rv figcaption b{display:block}.lp-rv figcaption span{font-size:.85em;opacity:.65}

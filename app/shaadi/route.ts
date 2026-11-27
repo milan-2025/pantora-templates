@@ -1,6 +1,7 @@
 import { getPayloadClient } from "@/lib/cms/queries";
 import { getPlanConfig } from "@/lib/invites";
 import { landingHtml } from "@/lib/shaadi/landing";
+import { getReviews } from "@/lib/reviewsServer";
 
 export const dynamic = "force-dynamic";
 
@@ -13,8 +14,9 @@ export async function GET(req: Request) {
   if (EDITOR_PARAMS.some((p) => url.searchParams.has(p))) {
     return Response.redirect(new URL("/shaadi/create" + url.search, url), 307);
   }
-  const cfg = await getPlanConfig(await getPayloadClient());
+  const payload = await getPayloadClient();
+  const [cfg, reviews] = await Promise.all([getPlanConfig(payload), getReviews(payload, "invites")]);
   const site = process.env.NEXT_PUBLIC_SITE_URL || url.origin;
-  const html = landingHtml({ plans: cfg.plans, banner: cfg.banner, months: cfg.months, site, qs: url.searchParams.toString() });
+  const html = landingHtml({ plans: cfg.plans, banner: cfg.banner, months: cfg.months, site, qs: url.searchParams.toString(), reviews });
   return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
 }

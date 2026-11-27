@@ -234,10 +234,24 @@ function landingScreen() {
   track('ViewContent', { ad_variant: lpVariant() });
 }
 
+/* Google's price data: SoftwareApplication with the free trial and the live paid plans (added once, after they load). */
+function lpStructuredData(trial, paid, bundle) {
+  try {
+    if (document.getElementById('lp-ld')) return;
+    const offers = (trial ? [{ name: trial.name, price: 0 }] : []).concat(paid.map(p => ({ name: p.name, price: Number(p.price) || 0 })));
+    if (bundle && bundle.on && bundle.price) offers.push({ name: 'Planner + digital invite', price: Number(bundle.price) });
+    if (!offers.length) return;
+    const prices = offers.map(o => o.price);
+    const s = document.createElement('script'); s.type = 'application/ld+json'; s.id = 'lp-ld';
+    s.textContent = JSON.stringify({ '@context': 'https://schema.org', '@type': 'SoftwareApplication', name: 'Pandora Online Wedding Planner', url: location.origin + '/planner', applicationCategory: 'LifestyleApplication', operatingSystem: 'Web, Android, iOS (installable web app)', description: 'Plan an Indian wedding online with your family: guests and RSVPs, budget, vendors, payments, stay and shagun.', publisher: { '@type': 'Organization', name: 'Pandora Templates', url: 'https://pandoratemplates.com' }, offers: { '@type': 'AggregateOffer', priceCurrency: 'INR', lowPrice: Math.min(...prices), highPrice: Math.max(...prices), offerCount: offers.length, offers: offers.map(o => ({ '@type': 'Offer', name: o.name, price: o.price, priceCurrency: 'INR' })) } });
+    document.head.appendChild(s);
+  } catch (e) { /* never break the page */ }
+}
 function lpFill(root, c) {
   if (!root.isConnected || !document.body.classList.contains('lp-on')) return;
   const plans = c.plans || [], trial = plans.find(p => p.isTrial), paid = plans.filter(p => !p.isTrial && p.active);
   const days = trial ? trial.durationDays : 14, tg = trial && trial.limits ? trial.limits.guests : null;
+  lpStructuredData(trial, paid, c.bundle);
   $$('[data-trial-days]', root).forEach(e => { e.textContent = days; });
   $$('[data-trial-guests]', root).forEach(e => { e.textContent = tg == null ? 'unlimited' : tg; });
   const maxCol = paid.reduce((m, p) => Math.max(m, p.collaborators || 0), 0);
