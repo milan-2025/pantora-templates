@@ -7,6 +7,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { getPayloadClient } from "@/lib/cms/queries";
+import { getPaymentProvider } from "@/lib/payments";
+import { BILLING_MONTHS, BillingError, CRM_PRICES, markCrmPaid, quoteCrm } from "@/lib/crm/billing";
 import { clientIp, rateLimit } from "@/lib/rateLimit";
 import {
   UNIT_STATUSES, UNIT_LIMITS, PROJECT_TYPES, canRelease, canTransition, cleanUnit, expiredHoldFilter,
@@ -375,6 +377,36 @@ async function handle(req: NextRequest) {
   const key = url.searchParams.get("k") || "";
 
   switch (r) {
+    // Plan & billing (admins). Not in WRITES, so a company whose trial or plan has ended can still pay.
+    case "billing":
+      return json({
+        plan: W.plan, validUntil: W.validUntil || null, trialEnds: W.trialEnds || null, daysLeft: st.daysLeft, readonly: st.ro, admin,
+        prices: CRM_PRICES, months: BILLING_MONTHS,
+        payments: admin ? (W.payments || []).slice(-12).reverse().map((p: any) => ({ plan: p.plan, months: p.months, amount: p.amount, at: p.at, until: p.until, paymentId: p.paymentId })) : [],
+      });
+    case "billing_checkout": {
+      const no = only(); if (no) return no;
+      if (!rateLimit(`crm-billing:${ws}`, 20, 3600_000)) return json({ error: "Too many tries. Please wait a little and try again." }, 429);
+      let q;
+      try { q = quoteCrm(body.plan, body.months); } catch (e) { return json({ error: e instanceof BillingError ? e.message : "Could not start the payment" }, 400); }
+      const order = await getPaymentProvider().createOrder({
+        amount: q.total, currency: "INR",
+        customer: { name: U.name || W.name, email: U.email, phone: "", city: "" } as never,
+        description: `LeadFlow ${q.name} – ${q.months} month${q.months === 1 ? "" : "s"} (${W.name})`,
+      });
+      await c.ws.updateOne({ _id: ws }, { $set: { billing: { orderId: order.orderId, plan: q.plan, months: q.months, amount: q.total, by: U._id, at: Date.now() } } });
+      return json({ orderId: order.orderId, provider: order.provider, clientData: order.clientData ?? null, total: q.total, plan: q.plan, months: q.months });
+    }
+    case "billing_verify": {
+      const no = only(); if (no) return no;
+      const orderId = String(W.billing?.orderId || "");
+      if (!orderId) return json({ error: "No payment to confirm" }, 400);
+      const v = await getPaymentProvider().verify({ orderId, payload: body });
+      if (!v.ok) return json({ error: "Payment could not be verified. If money was taken, it will be confirmed automatically within a few minutes." }, 400);
+      await markCrmPaid(orderId, v.paymentId);
+      const fresh = await c.ws.findOne({ _id: ws });
+      return json({ ok: 1, plan: fresh?.plan, validUntil: fresh?.validUntil || null });
+    }
     case "me": if (mode === "realestate" && !W.catPub) { W.catPub = rid(); await c.ws.updateOne({ _id: ws, catPub: { $exists: false } }, { $set: { catPub: W.catPub } }); W.catPub = (await c.ws.findOne({ _id: ws }))?.catPub || W.catPub; }
       return json({ id: U._id, name: U.name, role: U.role, sa, ws: { name: W.name, plan: W.plan, mode, catPub: mode === "realestate" ? W.catPub : undefined, daysLeft: st.daysLeft, readonly: st.ro, sheetToken: admin ? W.sheetToken : undefined } });
     case "leads": {
