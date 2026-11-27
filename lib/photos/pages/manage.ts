@@ -1,4 +1,5 @@
 import "server-only";
+import { trackingScript } from "@/lib/tracking";
 import { esc, jsonScript, page } from "@/lib/photos/pages/shared";
 
 /** /p/<link>/manage: the couple's dashboard. The private key arrives after "#k=" (never sent to the server in the URL). */
@@ -235,5 +236,5 @@ function paid(){toast("Payment received. Thank you!");return A("").then(function
 boot();
 `;
 
-  return page({ title: `${o.names} · Gallery dashboard`, body, css, js, noindex: true });
+  return page({ title: `${o.names} · Gallery dashboard`, body, css, js, noindex: true, head: trackingScript("photos", { view: false }) });
 }

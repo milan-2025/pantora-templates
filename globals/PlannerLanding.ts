@@ -17,21 +17,11 @@ export const PlannerLanding: GlobalConfig = {
   access: { read: authenticated, update: authenticated },
   fields: [
     {
-      type: "collapsible",
-      label: "Ads tracking",
-      admin: { initCollapsed: false },
-      fields: [
-        {
-          name: "metaPixelId",
-          type: "text",
-          label: "Meta Pixel ID",
-          admin: {
-            placeholder: "e.g. 123456789012345",
-            description:
-              "Numbers only, from Meta Events Manager. When set, the page reports PageView, Lead (sign-in code requested), StartTrial (planner created) and Purchase (plan paid). Leave empty to turn the Pixel off.",
-          },
-        },
-      ],
+      // No longer used: every page, the planner included, uses the one Pixel in Settings → Site settings → Tracking.
+      // Kept (hidden) so any value saved here stays in the database.
+      name: "metaPixelId",
+      type: "text",
+      admin: { hidden: true },
     },
     {
       type: "collapsible",

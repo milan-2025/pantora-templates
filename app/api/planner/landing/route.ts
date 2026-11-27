@@ -7,7 +7,7 @@ import { SAMPLE_TESTIMONIALS } from "@/globals/PlannerLanding";
 
 type Doc = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-/** Everything the /planner landing page needs: plans, Pixel ID, WhatsApp button and the testimonials ticked to show. */
+/** Everything the /planner landing page needs: plans, WhatsApp button and the testimonials ticked to show (the Pixel comes from Site settings, via /pt-track.js). */
 export const GET = route(async () => {
   const payload = await getPayloadClient();
   let g = ((await payload.findGlobal({ slug: "planner-landing" as never, depth: 0, overrideAccess: true }).catch(() => null)) ?? {}) as Doc;
@@ -17,7 +17,6 @@ export const GET = route(async () => {
     g = ((await payload.updateGlobal({ slug: "planner-landing" as never, data: data as never, overrideAccess: true }).catch(() => null)) ?? { ...g, ...data }) as Doc;
   }
   const plans = (await getPlans(payload)).filter((p) => p.active || p.isTrial);
-  const pixel = String(g.metaPixelId ?? "").replace(/\D/g, "");
   const wa = String(g.whatsappNumber ?? "").replace(/\D/g, "");
   const bundle = await bundleInfo(payload);
   // The invite's own Premium price, so the page can show what the bundle saves.
@@ -25,7 +24,6 @@ export const GET = route(async () => {
   return {
     plans,
     bundle: { on: bundle.on, price: bundle.price, invitePremium: Number(premium?.price) || null },
-    metaPixelId: pixel || null,
     offerText: String(g.offerText ?? "").trim() || null,
     whatsapp: wa ? { number: wa, message: String(g.whatsappMessage ?? "") } : null,
     testimonials: (g.testimonials ?? [])

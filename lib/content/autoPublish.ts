@@ -2,8 +2,8 @@
  * Publishes the content pack (lib/content/) by itself, exactly once, the first time the live site starts
  * after it is deployed, so nobody has to run `npm run publish-content:apply` by hand.
  *
- * - Runs only on the production deployment (Vercel sets VERCEL_ENV=production), never on preview
- *   deployments or local development. Set AUTO_PUBLISH_CONTENT=1 to allow it elsewhere, or 0 to switch it off.
+ * - Runs only where AUTO_PUBLISH_CONTENT=1 is set: the live site on Hostinger (Node.js → Environment variables),
+ *   never in local development or tests unless switched on there too. 0 (or unset) switches it off.
  * - A marker document in the `content_releases` collection makes sure it runs once: the first server to
  *   start claims the marker, every later start (and every other server starting at the same time) skips.
  *   After that, edits made in the admin are never overwritten.
@@ -19,9 +19,7 @@ export const CONTENT_RELEASE_ID = "2026-11-homepage-workout-blog";
 type Marker = { _id: string; startedAt: Date; doneAt?: Date; changes?: string[]; notes?: string[] };
 
 export function autoPublishEnabled(env: Record<string, string | undefined> = process.env): boolean {
-  if (env.AUTO_PUBLISH_CONTENT === "0") return false;
-  if (env.AUTO_PUBLISH_CONTENT === "1") return true;
-  return env.VERCEL_ENV === "production";
+  return env.AUTO_PUBLISH_CONTENT === "1";
 }
 
 export async function autoPublishContent(payload: Payload): Promise<void> {

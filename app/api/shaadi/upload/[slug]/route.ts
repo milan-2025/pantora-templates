@@ -9,7 +9,7 @@ const ALLOWED = "jpg,jpeg,png,webp,gif,heic,mp4,mov,webm,mp3,m4a,aac,wav,ogg,oga
 
 /**
  * Signs a direct browser-to-Cloudinary upload for a couple's photo, video or song, so big files never pass through
- * this server (Vercel limits request bodies to 4.5 MB). Files land in the invites/<link> folder.
+ * this server (keeps request bodies small; big uploads never pass through the site). Files land in the invites/<link> folder.
  */
 export async function POST(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   if (!rateLimit(`invite-upload:${clientIp(req)}`, 60, 3_600_000)) return NextResponse.json({ error: "Too many uploads. Please try later." }, { status: 429 });

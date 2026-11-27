@@ -247,7 +247,7 @@ function trialScreen() {
     '<button class="pitem" data-s="demo"><b>🎁 Start with the sample data</b><small>Ananya &amp; Arjun’s example, to edit into your own</small></button></div><button class="btn ghost wide" data-out>Sign out</button>');
   const create = async st => {
     $$('.pitem', g).forEach(b => { b.style.opacity = .5; b.style.pointerEvents = 'none'; });
-    try { const r = await api('/planners', { method: 'POST', body: { state: stripLocal(st), source: lpSource() } }); track('StartTrial', { value: 0, currency: 'INR' }); await openPlanner(r.meta.id, r); }
+    try { const r = await api('/planners', { method: 'POST', body: { state: stripLocal(st), source: lpSource() } }); track('CompleteRegistration', { currency: 'INR' }); track('StartTrial', { value: 0, currency: 'INR' }); await openPlanner(r.meta.id, r); }
     catch (err) { toast(err.message); $$('.pitem', g).forEach(b => { b.style.opacity = ''; b.style.pointerEvents = ''; }); if (err.data && err.data.reason === 'limit') toast(err.message); }
   };
   $$('[data-s]', g).forEach(b => b.onclick = () => { const s = b.dataset.s; const st = s === 'fresh' ? freshState() : s === 'demo' ? demoState() : normalize(local); st.demo = false;
@@ -355,7 +355,7 @@ async function upgradeModal(reason) {
         });
       }
       await api('/planners/' + CLOUD.id + '/verify', { method: 'POST', body: res });
-      m.remove(); track('Purchase', { value: o.total || 0, currency: 'INR' }); await poll(true); renderAll(); toast('🎉 Your plan is active. Thank you!');
+      m.remove(); await poll(true); renderAll(); toast('🎉 Your plan is active. Thank you!');
     } catch (e) { toast(e.message); b.disabled = false; b.textContent = label; }
   });
 }

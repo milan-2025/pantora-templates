@@ -46,7 +46,7 @@ const isColl = (c: unknown): c is Coll => typeof c === "string" && (COLLS as rea
 const isTop = (k: unknown): k is TopKey => typeof k === "string" && (TOP_KEYS as readonly string[]).includes(k);
 const isObj = (v: unknown): v is Record<string, unknown> => Boolean(v) && typeof v === "object" && !Array.isArray(v);
 
-export const MAX_STATE_BYTES = 3_000_000; // Vercel request bodies stop at 4.5 MB
+export const MAX_STATE_BYTES = 3_000_000; // keeps each save well under the server's request-size limit
 const MAX_ROW_BYTES = 12_000;
 const MAX_OPS = 5000;
 

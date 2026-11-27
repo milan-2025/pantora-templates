@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { HostBookApp } from "@/components/hostbook/App";
+import { AppPixel } from "@/components/AppPixel";
 
 export const metadata: Metadata = {
   title: "HostBook · Pandora Templates",
@@ -10,5 +11,10 @@ export const metadata: Metadata = {
 };
 
 export default function HostBookAppPage() {
-  return <HostBookApp />;
+  return (
+    <>
+      <AppPixel product="hostbook" view={false} />
+      <HostBookApp />
+    </>
+  );
 }

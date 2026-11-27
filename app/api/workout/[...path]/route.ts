@@ -4,7 +4,7 @@ import { getPaymentProvider } from "@/lib/payments";
 import { clientIp, rateLimit } from "@/lib/rateLimit";
 import { WorkoutError, type WOp } from "@/lib/workout/core";
 import {
-  accessOf, addMember, buddyAction, buddyView, claimMoneyBack, confirmPhoto, createGroup, deletePhoto, emailOf, getOrCreateProfile, getPlans, getSettings,
+  accessOf, addMember, buddyAction, buddyView, claimMoneyBack, confirmPhoto, createGroup, deletePhoto, emailOf, findProfile, getOrCreateProfile, getPlans, getSettings,
   getState, groupPost, groupPreview, groupView, inbox, joinGroup, leaveGroup, listPhotos, markWorkoutPaid, me, quote, removeMember, requestBuddy, saveState,
   familyPost, familyView, setGroupGoal, signVoice, startPledge, verifyPledge,
   passwordLogin, refreshedToken, sendReminders, setMyPassword, signPhoto, startLogin, subscribePush, verifyLogin, workoutHasPassword,
@@ -49,8 +49,10 @@ async function handle(req: Request, ctx: Ctx) {
   if (path === "auth/verify" && m === "POST") {
     limit(req, "verify", 20, 15 * 60_000);
     const r = await verifyLogin(payload, b.email, b.code);
+    const existed = await findProfile(payload, r.email);
     await getOrCreateProfile(payload, r.email, { ref: b.ref, source: b.source });
-    return r;
+    // isNew lets the app report a sign-up (CompleteRegistration) to the Meta Pixel.
+    return { ...r, isNew: !existed };
   }
   if (path === "auth/password" && m === "POST") {
     limit(req, "pw", 20, 15 * 60_000);

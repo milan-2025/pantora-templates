@@ -13,7 +13,7 @@ A module inside the existing Pandora Templates website. It keeps every property 
 
 ## 1. Repository audit (summary)
 
-- **Stack found:** Next.js 16 (App Router, webpack build), Payload CMS 3 for the site admin, MongoDB (Atlas) through Payload, Cloudinary for files, Brevo for email, Tailwind CSS v4, deployed on Vercel.
+- **Stack found:** Next.js 16 (App Router, webpack build), Payload CMS 3 for the site admin, MongoDB (Atlas) through Payload, Cloudinary for files, Brevo for email, Tailwind CSS v4, hosted on Hostinger (Node.js app, auto-deployed from `main`).
 - **Existing patterns reused:** the CRM and planner already keep their own MongoDB collections through Payload's connection, expose API routes under `app/api/*`, hash passwords with scrypt, sign session cookies with `PAYLOAD_SECRET`, upload straight from the browser to Cloudinary with server-signed parameters, and test API routes against an in-memory MongoDB fake (`tests/fakeMongo.ts`). Stays follows the same patterns, so it adds **no new infrastructure and no new paid services**.
 - **Admin login:** Payload's admin users *are* the stays administrators; there is no second admin account to manage.
 - **Isolation:** stays pages live in their own route group (`app/(stays)`) with their own layout and stylesheet (same brand colours and fonts), and their data lives in collections prefixed `stay_`. The shop, CRM, planner, invites and Payload collections are untouched. The only shared files changed: `next.config.ts` (privacy headers), `lib/cms/access.ts` (reserves the `stays` / `stay` slugs), plus a new site-wide `sitemap.xml` and `robots.txt`.
@@ -98,9 +98,9 @@ Maps use free OpenStreetMap tiles and need no key. To use another tile provider,
 
 ## 4. Deployment
 
-Same as the rest of the site (Vercel + MongoDB Atlas + Cloudinary; see the main README). After deploying:
+Same as the rest of the site (Hostinger + MongoDB Atlas + Cloudinary; see "Hosting (Hostinger)" in the main README). After deploying:
 
-1. Make sure `CLOUDINARY_URL` is set in Vercel (Project → Settings → Environment Variables), then redeploy.
+1. Make sure `CLOUDINARY_URL` is set on Hostinger (hPanel → Websites → pandoratemplates.com → Node.js → Environment variables); saving restarts the app.
 2. Open `/stays/admin` once; the first request creates the indexes and default amenities automatically.
 3. Submit `https://<your-site>/sitemap.xml` in Google Search Console (optional).
 4. On your phone, open `/stays/admin` and "Add to Home screen" to install the dashboard app.
@@ -121,7 +121,7 @@ Same as the rest of the site (Vercel + MongoDB Atlas + Cloudinary; see the main 
 | OpenStreetMap tiles | maps | free under the [tile usage policy](https://operations.osmfoundation.org/policies/tiles/) (light, non-bulk use with attribution). For heavy traffic switch to a free-tier provider such as MapTiler or Stadia in Settings → Map |
 | WhatsApp click-to-chat (`wa.me`) | enquiries | free |
 | Brevo | email alerts (already used) | free tier 300 emails/day |
-| Vercel | hosting (already used) | unchanged |
+| Hostinger | hosting (already used) | unchanged |
 
 ## 7. Tests
 
@@ -135,7 +135,7 @@ Browser checks (run against a production build with a real MongoDB; scripts not 
 ## 8. Known limitations
 
 - **WhatsApp:** click-to-chat can't tell the website who messaged or what they wrote. The enquiry log therefore shows *button clicks* (someone pressed a button and WhatsApp opened) separately from enquiries you record yourself. Capturing real messages automatically would need the paid WhatsApp Business API.
-- **Uploads need Cloudinary:** without `CLOUDINARY_URL`, uploads are refused (there's no local fallback, because Vercel can't keep uploaded files).
+- **Uploads need Cloudinary:** without `CLOUDINARY_URL`, uploads are refused (there's no local fallback: files saved on the web server would be lost on the next deploy).
 - **Forgotten host passwords:** there is no self-service "forgot password" email yet. In Hosts, press **Reset link** and send it to the host on WhatsApp.
 - **Short Google Maps links** (`maps.app.goo.gl`) are followed on the server to find the pin; if Google changes that, paste the long link or tap the map.
 - **Offline editing** covers title, short description, description, availability and guest prices. Photos, addresses and host details can't be edited offline (private data isn't stored on the device). Background sync works in Chrome/Android; on iPhone, queued edits are sent the next time the app is opened online.

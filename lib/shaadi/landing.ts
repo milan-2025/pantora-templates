@@ -1,4 +1,5 @@
 import "server-only";
+import { trackingScript } from "@/lib/tracking";
 import type { Plan } from "@/lib/invites";
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
@@ -189,7 +190,7 @@ details p{color:var(--mut);margin:10px 0 0}
 footer{border-top:1px solid var(--line);padding:26px 0 40px;font-size:15px;color:var(--mut)}
 footer .w{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 footer a{color:var(--mut)}
-</style></head>
+</style>${trackingScript("invites")}</head>
 <body>
 <div class="back" id="back"><div class="w"><span id="backtx">You have an invite in progress on this device.</span><a id="backlink" href="${esc(create)}">Continue my invite</a></div></div>
 ${opts.banner ? `<div class="banner">${esc(opts.banner)}</div>` : ""}

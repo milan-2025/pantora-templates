@@ -8,6 +8,7 @@ import { CardGrid, Footer, Header } from "@/components/stays/ui";
 import { SearchBar } from "@/components/stays/SearchBar";
 import { HomeMap } from "@/components/stays/HomeMap";
 import { waLink } from "@/lib/stays/core";
+import { AppPixel } from "@/components/AppPixel";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,7 @@ export default async function StaysHome() {
   const wa = waLink(s.whatsappNumber, s.templates.general);
   return (
     <>
+      {!admin && <AppPixel product="stays" />}
       <Header site={s} active="home" admin={!!admin} />
       <main>
         <section className="relative overflow-hidden">

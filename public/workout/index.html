@@ -231,6 +231,7 @@ input,select,textarea{font-size:16px}/* 16px+ stops iPhones zooming in when a fi
 @media (max-width:900px){.lp-hero,.lp-split,.lp-mbox{grid-template-columns:1fr}.lp-split.rev>:first-child{order:0}.lp-grid4{grid-template-columns:1fr 1fr}.lp-grid3,.lp-progs,.lp-plans,.lp-giftrow{grid-template-columns:1fr 1fr}.lp-phone{transform:none}.lp-hero{padding-top:18px}}
 @media (max-width:600px){.lp-grid4,.lp-grid3,.lp-progs,.lp-plans{grid-template-columns:1fr}.lp-giftrow{grid-template-columns:1fr 1fr}.lp-sec{padding:50px 18px}.lp-cta .btn{width:100%}.lp-phone{width:280px}.lp-in{display:none}}
 </style>
+<script src="/pt-track.js" data-id="workout" data-name="Pandora Workout" data-category="self-improvement" data-view="off" defer></script>
 </head>
 <body>
 <div id="app">
@@ -1009,7 +1010,7 @@ function gate(mode) {
     e.preventDefault(); const b = e.target.querySelector('button'); b.disabled = true; b.textContent = 'Checking…';
     try {
       const r = await api('auth/verify', { method: 'POST', body: { email: $('#gm2').textContent, code: $('#gc').value, ref: store.get('wk_ref') || '', source: store.get('wk_src') || '' } });
-      store.set('wk_token', r.token); store.set('wk_email', r.email); closeSheet(); await startApp(r.email);
+      store.set('wk_token', r.token); store.set('wk_email', r.email); if (r.isNew) (window.ptq = window.ptq || []).push(['CompleteRegistration', { currency: 'INR' }]); closeSheet(); await startApp(r.email);
     } catch (err) { toast(esc(err.message), 'bad'); b.disabled = false; b.textContent = 'Sign in'; }
   };
   setTimeout(() => $('#gm') && $('#gm').focus(), 200);
@@ -2562,6 +2563,7 @@ function showLanding() {
   const lp = $('#lp');
   lp.innerHTML = landingHtml();
   animateFigures(); lpBind(); applyMode();
+  try { (window.ptq = window.ptq || []).push(['ViewContent']); } catch (e) { /* tracking never breaks the page */ }
   api('plans').then((d) => { LANDING = d; lpFill(); }).catch(() => {});
 }
 function lpBind() {

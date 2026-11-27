@@ -24,7 +24,7 @@ export default async function SuccessPage({ searchParams }: Args) {
 
   return (
     <div className="bg-glow grid min-h-screen place-items-center px-4 py-16">
-      {paid && <TrackEvent event="Purchase" value={order.amount} name={product?.name} />}
+      {paid && <TrackEvent event="Purchase" value={order.amount} name={product?.name} id={product?.slug ?? undefined} />}
       <SuccessContent
         paid={paid}
         orderId={order?.orderId ?? ""}

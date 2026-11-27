@@ -21,7 +21,7 @@ import {
  *   type, so they can't be opened without a signed, expiring download link. Downloads still go
  *   through Payload, which checks access first (see collections/ProductFiles.ts).
  * - Files are uploaded straight from the browser to Cloudinary (signed by the server), which
- *   avoids Vercel's 4.5 MB request limit for videos and large files.
+ *   keeps videos and large files off the site's own request-size limit.
  */
 
 type Visibility = "public" | "private";

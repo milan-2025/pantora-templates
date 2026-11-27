@@ -108,7 +108,9 @@ function Auth({ onIn, error }: { onIn: () => void; error?: string }) {
   const verify = async () => {
     setBusy(true); setMsg("");
     let source = ""; try { source = sessionStorage.getItem("hb_source") ?? ""; } catch { /* ignore */ }
-    try { const r = await api<{ token: string }>("auth/verify", { body: { email, code, signup: mode === "up", business, phone, source } }); finish(r.token); }
+    try { const r = await api<{ token: string }>("auth/verify", { body: { email, code, signup: mode === "up", business, phone, source } });
+      if (mode === "up") (window as { ptTrack?: (e: string, p?: object) => void }).ptTrack?.("CompleteRegistration", { currency: "INR" });
+      finish(r.token); }
     catch (e) { setMsg((e as Error).message); } finally { setBusy(false); }
   };
   const withPassword = async () => {

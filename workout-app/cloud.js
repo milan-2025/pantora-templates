@@ -128,7 +128,7 @@ function gate(mode) {
     e.preventDefault(); const b = e.target.querySelector('button'); b.disabled = true; b.textContent = 'Checking…';
     try {
       const r = await api('auth/verify', { method: 'POST', body: { email: $('#gm2').textContent, code: $('#gc').value, ref: store.get('wk_ref') || '', source: store.get('wk_src') || '' } });
-      store.set('wk_token', r.token); store.set('wk_email', r.email); closeSheet(); await startApp(r.email);
+      store.set('wk_token', r.token); store.set('wk_email', r.email); if (r.isNew) (window.ptq = window.ptq || []).push(['CompleteRegistration', { currency: 'INR' }]); closeSheet(); await startApp(r.email);
     } catch (err) { toast(esc(err.message), 'bad'); b.disabled = false; b.textContent = 'Sign in'; }
   };
   setTimeout(() => $('#gm') && $('#gm').focus(), 200);
