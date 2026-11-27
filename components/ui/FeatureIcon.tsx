@@ -3,6 +3,7 @@ import {
   BellRing,
   BookOpen,
   Briefcase,
+  Building2,
   Calculator,
   CalendarDays,
   CalendarHeart,
@@ -42,6 +43,7 @@ const icons = {
   BookOpen,
   Briefcase,
   BedDouble,
+  Building2,
 };
 
 export function FeatureIcon({ name, className }: { name?: string | null; className?: string }) {

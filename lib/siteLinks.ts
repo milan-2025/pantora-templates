@@ -50,7 +50,7 @@ export const CATEGORIES: readonly Category[] = [
     label: "Business Software",
     url: "/business",
     tagline: "Follow up every lead",
-    description: "Software for small sales teams and real estate businesses: every lead called, every follow-up on time, and reports that show which ads bring buyers.",
+    description: "Software for small sales teams, builders and brokers: every lead called, every follow-up on time, property inventory and site visits, and reports that show which ads bring buyers.",
     accent: "#3F4BA8",
     tint: "#E3E6F7",
     icon: "Users",
@@ -71,7 +71,7 @@ export const categoryByKey = (key: string | null | undefined): Category | undefi
 
 export type LandingPage = {
   /** Stable id, used by the homepage block to pick and order cards. */
-  key: "planner" | "invites" | "photos" | "stays" | "hostbook" | "crm" | "workout";
+  key: "planner" | "invites" | "photos" | "stays" | "hostbook" | "crm" | "crm-real-estate" | "workout";
   label: string;
   url: string;
   /** One or two sentences for cards and link titles. */
@@ -131,6 +131,15 @@ export const LANDING_PAGES: readonly LandingPage[] = [
     category: "business",
   },
   {
+    key: "crm-real-estate",
+    label: "LeadFlow for Real Estate",
+    url: "/real-estate-crm",
+    description: "For builders, brokers and channel partners: enquiries, live unit inventory and holds, site visits, project pages and partner logins.",
+    cta: "Try it free",
+    icon: "Building2",
+    category: "business",
+  },
+  {
     key: "hostbook",
     label: "HostBook",
     url: "/hostbook",
@@ -178,6 +187,7 @@ export const LEGACY_REDIRECTS: readonly { source: string; destination: string }[
   { source: "/workout_challenge", destination: "/workout_challange" },
   // The CRM sales page has a clean address.
   { source: "/crm-software.html", destination: "/crm-software" },
+  { source: "/real-estate-crm.html", destination: "/real-estate-crm" },
 ];
 
 /** Product slugs that moved: old checkout links (?product=wedding_planner) still find the product. */
@@ -215,7 +225,8 @@ export const SITEMAP_LANDING_PAGES: readonly { url: string; priority: number; ch
   { url: "/shaadi", priority: 0.8, changeFrequency: "monthly" },
   { url: "/photos", priority: 0.8, changeFrequency: "monthly" },
   { url: "/workout", priority: 0.8, changeFrequency: "weekly" },
-  { url: "/crm-software", priority: 0.6, changeFrequency: "monthly" },
+  { url: "/crm-software", priority: 0.7, changeFrequency: "monthly" },
+  { url: "/real-estate-crm", priority: 0.7, changeFrequency: "monthly" },
   { url: "/hostbook", priority: 0.8, changeFrequency: "monthly" },
 ];
 
@@ -224,7 +235,7 @@ export const SITEMAP_LANDING_PAGES: readonly { url: string; priority: number; ch
  * Links to them must be plain <a> tags: Next's <Link> would prefetch them as app pages, and that request never finishes.
  */
 export function isStandalonePage(href: string): boolean {
-  return /^\/(planner|shaadi|photos|p|workout|crm-software|crm|i|property|unit|catalogue)(\/|\?|#|\.|$)/i.test(href);
+  return /^\/(planner|shaadi|photos|p|workout|crm-software|real-estate-crm|crm|i|property|unit|catalogue)(\/|\?|#|\.|$)/i.test(href);
 }
 
 /** Apps in the same category, for "You might also like" on a product's sales page (other categories are one tap away in the menu). */

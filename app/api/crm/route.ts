@@ -325,6 +325,8 @@ async function handle(req: NextRequest) {
     if (pw.length < 8) return json({ error: "Password must be at least 8 characters" }, 400);
     if (await c.users.findOne({ email })) return json({ error: "An account with this email already exists. Please log in." }, 400);
     const w = await newWs(c, company, "trial", 14);
+    // Sign-ups from the LeadFlow for Real Estate page (/real-estate-crm) start with real estate mode on.
+    if (body.for === "real-estate") await c.ws.updateOne({ _id: w._id }, { $set: { mode: "realestate" } });
     const u = { _id: rid(), ws: w._id, name, email, pass: hash(pw), role: "admin" };
     await c.users.insertOne(u);
     const res = json({ name });
