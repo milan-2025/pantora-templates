@@ -61,6 +61,12 @@ describe("categories", () => {
       expect(c.accent).toMatch(/^#[0-9A-F]{6}$/i);
     }
   });
+  it("sells LeadFlow as two products: the CRM and LeadFlow for Real Estate", () => {
+    expect(LANDING_PAGES.filter((p) => p.category === "business").map((p) => [p.key, p.url])).toEqual([
+      ["crm", "/crm-software"],
+      ["crm-real-estate", "/real-estate-crm"],
+    ]);
+  });
   it("puts every app in exactly one known category", () => {
     for (const p of LANDING_PAGES) expect(categoryByKey(p.category), p.key).toBeDefined();
   });
@@ -94,6 +100,7 @@ describe("next.config routes", () => {
         { source: "/wedding_planner", destination: "/wedding_planner_sheet", permanent: true },
         { source: "/workout_challenge", destination: "/workout_challange", permanent: true },
         { source: "/crm-software.html", destination: "/crm-software", permanent: true },
+        { source: "/real-estate-crm.html", destination: "/real-estate-crm", permanent: true },
       ]),
     );
   });
@@ -102,6 +109,7 @@ describe("next.config routes", () => {
     const before = (Array.isArray(rewrites) ? rewrites : rewrites.beforeFiles) ?? [];
     const to = (source: string) => before.find((r) => r.source === source)?.destination;
     expect(to("/crm-software")).toBe("/crm-software.html");
+    expect(to("/real-estate-crm")).toBe("/real-estate-crm.html");
     expect(to("/CRM")).toBe("/CRM/index.html");
     expect(to("/CRM/api.php")).toBe("/api/crm");
     expect(to("/planner")).toBe("/planner/index.html");

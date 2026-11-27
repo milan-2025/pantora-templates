@@ -33,6 +33,7 @@ export const FEATURE_ICONS = [
   { label: "Book", value: "BookOpen" },
   { label: "Briefcase", value: "Briefcase" },
   { label: "Bed / hotel", value: "BedDouble" },
+  { label: "Building", value: "Building2" },
 ];
 
 // Small helpers so each section reads cleanly below.

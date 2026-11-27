@@ -23,6 +23,7 @@ const nextConfig: NextConfig = {
         { source: "/workout/signup", destination: "/workout/index.html" },
         { source: "/workout/login", destination: "/workout/index.html" },
         { source: "/crm-software", destination: "/crm-software.html" },
+        { source: "/real-estate-crm", destination: "/real-estate-crm.html" },
         { source: "/CRM/api.php", destination: "/api/crm" },
       ],
       afterFiles: [],

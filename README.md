@@ -139,8 +139,9 @@ To link the homepage and menu to every product (the "Our products" section, Onli
 The new homepage, the real Workout Challenge page and ten blog posts (content in `lib/content/`) publish themselves once, the first time the production site starts after deploying (`lib/content/autoPublish.ts`; a marker in the `content_releases` collection stops it running twice, so later admin edits are never overwritten). Preview deployments and local development skip it; set `AUTO_PUBLISH_CONTENT=1` to allow it or `0` to switch it off. `npm run publish-content` shows what it would change, and `npm run publish-content:apply` publishes it by hand, e.g. to another database.
 
 ### Addresses
-- Landing pages outside the admin: `/planner` (online planner), `/shaadi` (invite maker), `/stays`, `/crm-software` (LeadFlow CRM sales page). `/CRM` and `/crm` open the CRM app itself; Next.js rewrites ignore letter case, so the sales page needs its own address.
-- Old addresses redirect permanently: `/wedding_planner` → `/wedding_planner_sheet`, `/workout_challenge` → `/workout_challange`, `/crm-software.html` → `/crm-software`. Add more in `LEGACY_REDIRECTS` in `lib/siteLinks.ts`, but never for an address that is a live page.
+- Landing pages outside the admin: `/planner` (online planner), `/shaadi` (invite maker), `/photos`, `/workout`, `/hostbook`, `/stays`, `/crm-software` (LeadFlow CRM) and `/real-estate-crm` (LeadFlow for Real Estate). `/CRM` and `/crm` open the CRM app itself; Next.js rewrites ignore letter case, so the sales pages need their own addresses.
+- LeadFlow is sold as two products on one app: sign-ups from `/real-estate-crm` go to `/CRM/signup.html?for=real-estate` and start with real estate mode on; everyone else starts as a normal CRM. Either can switch the mode in the menu.
+- Old addresses redirect permanently: `/wedding_planner` → `/wedding_planner_sheet`, `/workout_challenge` → `/workout_challange`, `/crm-software.html` → `/crm-software`, `/real-estate-crm.html` → `/real-estate-crm`. Add more in `LEGACY_REDIRECTS` in `lib/siteLinks.ts`, but never for an address that is a live page.
 - Links to `/planner`, `/shaadi` and the CRM must be plain `<a>` tags (or `components/ui/SmartLink`), not Next's `<Link>`: they are not Next.js pages, and a prefetch of them never finishes.
 
 ### Changing the data model

@@ -46,6 +46,16 @@ beforeAll(async () => {
 });
 
 describe("mode switch", () => {
+  it("starts in real estate mode when signing up from the LeadFlow for Real Estate page", async () => {
+    const r = await call("signup", { body: { company: "Gamma Estates", name: "Owner Gamma", email: "owner@gamma.in", password: "password123", for: "real-estate" } });
+    expect(r.status).toBe(200);
+    const g = { cookie: r.setCookie.split(";")[0], email: "owner@gamma.in" };
+    expect((await as(g).get("me")).json.ws.mode).toBe("realestate");
+    expect((await as(g).get("projects_list")).status).toBe(200);
+    // Anything else in "for" is ignored: a normal CRM.
+    const o = await call("signup", { body: { company: "Delta", name: "Owner Delta", email: "owner@delta.in", password: "password123", for: "x" } });
+    expect((await as({ cookie: o.setCookie.split(";")[0], email: "owner@delta.in" }).get("me")).json.ws.mode).toBe("general");
+  });
   it("starts as a normal CRM and real estate endpoints are locked", async () => {
     expect((await as(A).get("me")).json.ws.mode).toBe("general");
     for (const r of ["projects_list", "units_list"]) {
