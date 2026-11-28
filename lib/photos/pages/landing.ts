@@ -1,5 +1,7 @@
 import "server-only";
 import { trackingScript } from "@/lib/tracking";
+import { REVIEWS_CSS, reviewsHtml, type Review } from "@/lib/reviews";
+import { appJsonLd, jsonLdScript, stickyCtaHtml } from "@/lib/appPage";
 import type { PhotoPlan } from "@/lib/photos/core";
 import { esc, inr, jsonScript, page } from "@/lib/photos/pages/shared";
 
@@ -13,7 +15,7 @@ const FAQ: [string, string][] = [
 ];
 
 /** /photos: the landing page, with sign-up and sign-in. */
-export function landingHtml(o: { plans: PhotoPlan[]; banner: string; renewalPrice: number; site: string; source: string }) {
+export function landingHtml(o: { plans: PhotoPlan[]; banner: string; renewalPrice: number; site: string; source: string; reviews?: Review[] }) {
   const paid = o.plans.filter((p) => p.id !== "free");
   const free = o.plans.find((p) => p.id === "free")!;
   const cards = o.plans
@@ -73,7 +75,7 @@ ${o.banner ? `<div class="banner">${esc(o.banner)}</div>` : ""}
  <div class="plans">${cards}</div>
 </div></section>
 
-<section id="start" class="w start">
+<section id="start" class="w start" data-pt-final>
  <div class="card start-card">
   <h2>Create your gallery</h2>
   <p class="hint">Start free. Upgrade any time from your dashboard.</p>
@@ -87,8 +89,10 @@ ${o.banner ? `<div class="banner">${esc(o.banner)}</div>` : ""}
  </div>
 </section>
 
+${reviewsHtml(o.reviews ?? [], "Couples sharing their photos")}
 <section class="w faq"><h2>Questions</h2>${FAQ.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("")}</section>
 </main>
+${stickyCtaHtml("Create my gallery, free", "#start", { bg: "#7a1424", fg: "#fff" })}
 <footer class="w foot"><p>Also from Pandora Templates: <a href="/shaadi">Wedding invite maker</a> · <a href="/planner">Online wedding planner</a></p></footer>
 
 <dialog id="signin"><div class="dlg">
@@ -160,7 +164,7 @@ $("sVerify").onclick=function(){$("sErr2").textContent="";api("auth/verify",{bod
     description,
     canonical: `${o.site}/photos`,
     ogImage: `${o.site}/shaadi/og.jpg`,
-    head: `<script type="application/ld+json">${jsonScript(faqLd)}</script>${trackingScript("photos")}`,
+    head: `<script type="application/ld+json">${jsonScript(faqLd)}</script>${jsonLdScript(appJsonLd({ name: "Pandora Wedding Photo Sharing", url: `${o.site}/photos`, description, category: "PhotographyApplication", offers: o.plans.map((p) => ({ name: p.name, price: p.price })) }))}${trackingScript("photos")}<style>${REVIEWS_CSS}</style>`,
     body,
     css,
     js,

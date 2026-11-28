@@ -81,6 +81,7 @@ export interface Config {
     affiliates: Affiliate;
     pages: Page;
     posts: Post;
+    reviews: Review;
     media: Media;
     'product-files': ProductFile;
     'contact-submissions': ContactSubmission;
@@ -118,6 +119,7 @@ export interface Config {
     affiliates: AffiliatesSelect<false> | AffiliatesSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
+    reviews: ReviewsSelect<false> | ReviewsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     'product-files': ProductFilesSelect<false> | ProductFilesSelect<true>;
     'contact-submissions': ContactSubmissionsSelect<false> | ContactSubmissionsSelect<true>;
@@ -1675,6 +1677,32 @@ export interface Post {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Real words from real customers, shown on each app's page. The online planner's reviews stay under Wedding planner → Landing page.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reviews".
+ */
+export interface Review {
+  id: string;
+  product: 'invites' | 'photos' | 'workout' | 'hostbook' | 'crm';
+  /**
+   * First name, or first name + initial
+   */
+  name: string;
+  /**
+   * e.g. Bride · Jaipur · Feb 2027, or Host · 3 homestays in Manali
+   */
+  detail?: string | null;
+  quote: string;
+  show?: boolean | null;
+  /**
+   * Lower numbers show first
+   */
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "contact-submissions".
  */
@@ -2192,6 +2220,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'posts';
         value: string | Post;
+      } | null)
+    | ({
+        relationTo: 'reviews';
+        value: string | Review;
       } | null)
     | ({
         relationTo: 'media';
@@ -3034,6 +3066,20 @@ export interface PostsSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reviews_select".
+ */
+export interface ReviewsSelect<T extends boolean = true> {
+  product?: T;
+  name?: T;
+  detail?: T;
+  quote?: T;
+  show?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

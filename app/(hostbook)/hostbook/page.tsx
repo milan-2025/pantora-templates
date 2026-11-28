@@ -5,6 +5,9 @@ import { getPayloadClient } from "@/lib/cms/queries";
 import { publicPlans } from "@/lib/hostbook/server";
 import { FEATURES } from "@/lib/hostbook/features";
 import { AppPixel } from "@/components/AppPixel";
+import { StickyCta } from "@/components/StickyCta";
+import { getReviews } from "@/lib/reviewsServer";
+import { appJsonLd } from "@/lib/appPage";
 
 export const dynamic = "force-dynamic";
 
@@ -32,10 +35,20 @@ const POINTS = [
 ];
 
 export default async function HostBookLanding() {
-  const { plans, extraListingPrice, offerText } = await publicPlans(await getPayloadClient());
+  const payload = await getPayloadClient();
+  const [{ plans, extraListingPrice, offerText }, reviews] = await Promise.all([publicPlans(payload), getReviews(payload, "hostbook")]);
+  const site = (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, "");
+  const ld = appJsonLd({
+    name: "Pandora HostBook",
+    url: `${site}/hostbook`,
+    description: "Guest register and online check-in, bookings and calendar sync, profit per listing, and your own booking website, for Airbnb hosts and homestays in India.",
+    category: "BusinessApplication",
+    offers: plans.map((p) => ({ name: p.name, price: p.price, description: p.isFree ? "Free" : "Per year" })),
+  });
   return (
     <div className="bg-sand text-ink">
       <AppPixel product="hostbook" />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, "\\u003c") }} />
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
         <Link href="/hostbook" className="flex items-center gap-2 font-serif text-2xl">
           <svg viewBox="0 0 40 40" className="size-9" aria-hidden="true"><rect width="40" height="40" rx="11" fill="#1F5F5B" /><path d="M10 19.5 20 11l10 8.5V29a1.5 1.5 0 0 1-1.5 1.5h-17A1.5 1.5 0 0 1 10 29z" fill="#F6F1E9" /><path d="M16 30.5v-7h8v7" fill="#E9A23B" /><circle cx="20" cy="18.5" r="2" fill="#1F5F5B" /></svg>
@@ -88,7 +101,7 @@ export default async function HostBookLanding() {
         </div>
       </section>
 
-      <section id="plans" className="mx-auto max-w-6xl px-5 py-16">
+      <section id="plans" data-pt-final className="mx-auto max-w-6xl px-5 py-16">
         <h2 className="font-serif text-4xl">Simple yearly plans</h2>
         <p className="mt-2 text-ink/65">Prices include GST. Need more listings? Add them for {inr(extraListingPrice)} each a year on any paid plan.</p>
         <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -111,6 +124,19 @@ export default async function HostBookLanding() {
         </div>
       </section>
 
+      {reviews.length ? (
+        <section className="mx-auto max-w-6xl px-5 pb-16">
+          <h2 className="mb-6 font-serif text-3xl">Hosts using HostBook</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {reviews.map((r) => (
+              <figure key={r.name + r.quote} className="rounded-3xl bg-white p-5 shadow-sm">
+                <blockquote className="leading-relaxed">“{r.quote}”</blockquote>
+                <figcaption className="mt-3 text-sm"><b>{r.name}</b>{r.detail ? <span className="block text-muted">{r.detail}</span> : null}</figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+      ) : null}
       <section className="mx-auto max-w-3xl px-5 pb-20">
         <h2 className="mb-6 font-serif text-3xl">Questions</h2>
         {[
@@ -124,6 +150,7 @@ export default async function HostBookLanding() {
           ["I list on Pandora Stays. Do I pay?", "Open HostBook from your Stays host portal and you get the Starter plan free while you're a Stays host."],
         ].map(([q, a]) => <details key={q} className="mb-2 rounded-2xl border border-line bg-white p-4"><summary className="cursor-pointer font-semibold">{q}</summary><p className="mt-2 text-sm text-ink/70">{a}</p></details>)}
       </section>
+      <StickyCta label="Start free: 1 listing" href="/hostbook/app?signup=1" bg="#1F5F5B" />
       <footer className="border-t border-line py-8 text-center text-xs text-muted">© Pandora Templates · <Link href="/" className="underline">pandoratemplates.com</Link></footer>
     </div>
   );
