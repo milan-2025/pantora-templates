@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { Payload } from "payload";
 import { CONTENT_RELEASE_ID, RELEASES, autoPublishContent, autoPublishEnabled } from "../lib/content/autoPublish";
 import { CATEGORIES_RELEASE_ID } from "../lib/content/categoriesRelease";
+import { BLOG_RELEASE_ID } from "../lib/content/blogRelease";
 import { BLOG_POSTS } from "../lib/content/blogPosts";
 
 /** A tiny stand-in for Payload + MongoDB: enough to see what the content pack writes, and how often. */
@@ -82,7 +83,7 @@ describe("auto-publishing the content pack", () => {
       expect(site.writes.filter((w) => w.startsWith("create posts/"))).toHaveLength(BLOG_POSTS.length);
       expect(site.markers.get(CONTENT_RELEASE_ID)).toHaveProperty("doneAt");
       expect(site.markers.get(CATEGORIES_RELEASE_ID)).toHaveProperty("doneAt");
-      expect(RELEASES.map((r) => r.id)).toEqual([CONTENT_RELEASE_ID, CATEGORIES_RELEASE_ID]);
+      expect(RELEASES.map((r) => r.id)).toEqual([CONTENT_RELEASE_ID, CATEGORIES_RELEASE_ID, BLOG_RELEASE_ID]);
 
       site.writes.length = 0;
       await autoPublishContent(site.payload); // a later start, or another server

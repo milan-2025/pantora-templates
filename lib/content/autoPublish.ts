@@ -13,6 +13,7 @@
 import type { Payload } from "payload";
 import { planContent, type ContentPlan } from "./publish";
 import { CATEGORIES_RELEASE_ID, planCategoriesRelease } from "./categoriesRelease";
+import { BLOG_RELEASE_ID, planBlogRelease } from "./blogRelease";
 
 /** The first content pack (homepage, workout page, blog posts); the admin page /api/admin/publish-content runs this one. */
 export const CONTENT_RELEASE_ID = "2026-11-homepage-workout-blog";
@@ -24,6 +25,7 @@ export const CONTENT_RELEASE_ID = "2026-11-homepage-workout-blog";
 export const RELEASES: { id: string; plan: (payload: Payload) => Promise<ContentPlan> }[] = [
   { id: CONTENT_RELEASE_ID, plan: planContent },
   { id: CATEGORIES_RELEASE_ID, plan: planCategoriesRelease },
+  { id: BLOG_RELEASE_ID, plan: planBlogRelease },
 ];
 
 type Marker = { _id: string; startedAt: Date; doneAt?: Date; changes?: string[]; notes?: string[] };
