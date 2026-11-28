@@ -87,6 +87,10 @@ describe("one Pixel for every app page", () => {
     ]);
   });
 
+  it("adds the ad headline version to every event, and remembers it for the visit", async () => {
+    const t = await runTracker({ pixel: "1", dataset: { id: "photos", name: "Wedding Photo Sharing", category: "weddings", variants: "main,guests,qr" } });
+    expect(t.calls[2]).toEqual(["track", "ViewContent", { content_ids: ["photos"], content_name: "Wedding Photo Sharing", content_category: "weddings", content_type: "product", ad_variant: "main" }, undefined]);
+  });
   it("does nothing at all when no Pixel ID is set in the admin", async () => {
     const t = await runTracker({ pixel: null, dataset: { id: "crm", name: "LeadFlow CRM", category: "business" } });
     (t.window.ptTrack as (e: string) => void)("CompleteRegistration");
@@ -101,7 +105,7 @@ describe("product labels", () => {
     expect(SHOP_CATEGORIES).toEqual({ wedding_planner_sheet: "weddings", workout_challange: "self-improvement" });
   });
   it("writes the script tag for plain-HTML pages", () => {
-    expect(trackingScript("invites")).toBe('<script src="/pt-track.js" data-id="invites" data-name="Wedding Invite Maker" data-category="weddings" defer></script>');
+    expect(trackingScript("invites")).toBe('<script src="/pt-track.js" data-id="invites" data-name="Wedding Invite Maker" data-category="weddings" data-variants="main,rsvp,save,cost,family" defer></script>');
     expect(trackingScript("photos", { view: false })).toContain('data-view="off"');
     expect(trackingScript("nope")).toBe("");
   });

@@ -21,6 +21,17 @@
   if (d.name) product.content_name = d.name;
   if (d.category) product.content_category = d.category;
   if (d.id) product.content_type = 'product';
+  // Ad headline version (?v=…, see lib/adVariants.ts): every event in the visit carries it as ad_variant, so a
+  // sign-up or purchase made later is still credited to the headline that brought the visitor.
+  if (d.variants) {
+    try {
+      var list = d.variants.split(','), key = 'pt_v_' + (d.id || '');
+      var v = new URLSearchParams(location.search).get('v');
+      var chosen = v && list.indexOf(v) >= 0 ? v : (v ? 'main' : null);
+      if (chosen) sessionStorage.setItem(key, chosen);
+      product.ad_variant = chosen || sessionStorage.getItem(key) || 'main';
+    } catch (e) { product.ad_variant = 'main'; }
+  }
 
   var STANDARD = ['AddPaymentInfo', 'AddToCart', 'AddToWishlist', 'CompleteRegistration', 'Contact', 'CustomizeProduct', 'Donate', 'FindLocation',
     'InitiateCheckout', 'Lead', 'PageView', 'Purchase', 'Schedule', 'Search', 'StartTrial', 'SubmitApplication', 'Subscribe', 'ViewContent'];

@@ -9,6 +9,7 @@
  */
 
 import { SHOP_CATEGORIES, type CategoryKey } from "./siteLinks";
+import { AD_VARIANTS } from "./adVariants";
 
 export type Category = CategoryKey;
 export { SHOP_CATEGORIES };
@@ -33,5 +34,12 @@ export function trackingScript(key: keyof typeof TRACKED | string, opts: { view?
   const p = TRACKED[key];
   if (!p) return "";
   const view = opts.view === false ? ' data-view="off"' : "";
-  return `<script src="/pt-track.js" data-id="${attr(p.id)}" data-name="${attr(p.name)}" data-category="${attr(p.category)}"${view} defer></script>`;
+  const v = variantsFor(key);
+  return `<script src="/pt-track.js" data-id="${attr(p.id)}" data-name="${attr(p.name)}" data-category="${attr(p.category)}"${v ? ` data-variants="${attr(v)}"` : ""}${view} defer></script>`;
+}
+
+/** The ad headline versions a product's pages know (lib/adVariants.ts), for pt-track.js's data-variants. */
+export function variantsFor(key: string): string {
+  const all = (AD_VARIANTS as Record<string, Record<string, unknown>>)[key];
+  return all ? Object.keys(all).join(",") : "";
 }

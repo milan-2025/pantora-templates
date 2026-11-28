@@ -157,8 +157,20 @@ The site is organised into four categories, each with its own page and accent co
 - A shop product's category: **Shop → Products → (product) → Category**. Left empty, it is worked out from the address and name.
 - One-time content updates (the homepage and menu wording) live in `lib/content/` and are listed in `RELEASES` in `lib/content/autoPublish.ts`. Each runs once on Hostinger after deploy, and only replaces text that still has its old default wording.
 
-### Ad links for the planner
-`/planner?v=family`, `?v=budget`, `?v=guests` and `?v=invite` show a headline that matches the ad (no `v` shows the main one). The version is sent to Meta with ViewContent (`ad_variant`) and saved with the planner's source, next to the UTM tags.
+### Ad links (headline versions)
+Add `?v=<version>` to an ad's link and the page's headline matches the ad. No `v`, or one not in this table, shows the main headline. The version is sent to Meta with every Pixel event as `ad_variant`, and remembered for the visit, so sign-ups and purchases are credited to the headline that brought the visitor. Combine with UTM tags as usual, e.g. `/shaadi?v=rsvp&utm_source=meta&utm_campaign=invites`.
+
+| Page | Versions | Where the wording lives |
+|---|---|---|
+| `/planner` | `family`, `budget`, `guests`, `invite` | `planner-app/landing.js` (`LP_HERO`), then `npm run build-planner` |
+| `/shaadi` | `rsvp`, `save`, `cost`, `family` | `lib/adVariants.ts` |
+| `/photos` | `guests`, `qr`, `albums` | `lib/adVariants.ts` |
+| `/hostbook` | `register`, `website`, `profit`, `sync` | `lib/adVariants.ts` |
+| `/workout` | `home`, `family`, `streak`, `beginner` | `workout-app/landing.js` (`LP_HERO`), then `npm run build-workout` |
+| `/crm-software` | `followup`, `team`, `ads`, `price` | `public/crm-software.html` |
+| `/real-estate-crm` | `inventory`, `visits`, `partners`, `pages` | `public/real-estate-crm.html` |
+
+When adding a version outside `lib/adVariants.ts`, also add it to that page's `data-variants` list on the `pt-track.js` script tag (the test in `tests/ad-variants.test.ts` checks they match).
 
 ### Ads tracking (Meta Pixel)
 One Pixel for the whole site: **Settings → Site settings → Tracking**. The shop pages load it through `components/Pixel.tsx`; every app page (planner, invites, photos, workout, HostBook, Stays, CRM) loads `public/pt-track.js`, which reads the same ID from `/api/site/pixel`.

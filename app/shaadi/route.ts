@@ -17,6 +17,6 @@ export async function GET(req: Request) {
   const payload = await getPayloadClient();
   const [cfg, reviews] = await Promise.all([getPlanConfig(payload), getReviews(payload, "invites")]);
   const site = process.env.NEXT_PUBLIC_SITE_URL || url.origin;
-  const html = landingHtml({ plans: cfg.plans, banner: cfg.banner, months: cfg.months, site, qs: url.searchParams.toString(), reviews });
+  const html = landingHtml({ plans: cfg.plans, banner: cfg.banner, months: cfg.months, site, qs: url.searchParams.toString(), reviews, v: url.searchParams.get("v") });
   return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
 }

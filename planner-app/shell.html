@@ -21,7 +21,7 @@
 <script>/* Hide the planner until we know whether to show it (prevents a flash of it before the landing page). */
 try { document.documentElement.classList.add(localStorage.getItem('pp_token') || sessionStorage.getItem('pp_support') ? 'boot-app' : 'boot-out'); } catch (e) { document.documentElement.classList.add('boot-out'); }</script>
 <style>/*CSS*/</style>
-<script src="/pt-track.js" data-id="planner" data-name="Online Wedding Planner" data-category="weddings" data-view="off" defer></script>
+<script src="/pt-track.js" data-id="planner" data-variants="main,family,budget,guests,invite" data-name="Online Wedding Planner" data-category="weddings" data-view="off" defer></script>
 </head>
 <body>
 <div class="top"><button id="burger" aria-label="Menu">☰</button><b>Pandora Wedding Planner</b><span class="sp"></span><button id="undo-m" class="tb" hidden aria-label="Undo">↶</button><button id="srch-m" class="tb" aria-label="Search">🔍</button><span id="sync-m"></span></div>
