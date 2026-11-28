@@ -125,6 +125,8 @@ export const Planners: CollectionConfig = {
         { name: "paymentId", type: "text", admin: { readOnly: true } },
         { name: "orderPaid", type: "checkbox", defaultValue: false, admin: { readOnly: true, description: "Ticked once this order's payment was applied." } },
         { name: "orderBundle", type: "checkbox", defaultValue: false, label: "Order includes the wedding invite", admin: { readOnly: true, description: "Planner + Invite bundle: paying also unlocks the linked invite on Premium." } },
+        { name: "orderPack", type: "checkbox", defaultValue: false, label: "Order is the Shaadi pack", admin: { readOnly: true, description: "Shaadi pack: paying also unlocks the invite on Premium and a wedding photo gallery." } },
+        { name: "photoGallery", type: "text", label: "Photo gallery (its link)", admin: { readOnly: true, description: "The wedding photo gallery that came with the Shaadi pack. Opens at /p/<this>." } },
       ],
     },
     {

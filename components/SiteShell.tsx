@@ -11,7 +11,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
     label: g.category.label,
     url: g.category.url,
     accent: g.category.accent,
-    items: [...g.apps, ...g.templates].map((i) => ({ title: i.title, url: i.url, kind: i.kind })),
+    items: [...g.apps, ...g.templates, ...g.tools].map((i) => ({ title: i.title, url: i.url, kind: i.kind })),
   }));
   const cta = settings.navCta?.label && settings.navCta?.url ? { label: settings.navCta.label, url: settings.navCta.url } : null;
   return (

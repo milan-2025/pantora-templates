@@ -460,6 +460,60 @@ export async function markPhotosPaid(payload: Payload, orderId: string, paymentI
   return { found: true as const, alreadyPaid: false };
 }
 
+/* ---------------- Shaadi pack ---------------- */
+
+/**
+ * Shaadi pack paid in the wedding planner: the couple's gallery goes onto the pack's photo plan. Uses the gallery
+ * already linked to the planner, else the newest gallery on the owner's email, else makes one. A gallery already on
+ * the same or a bigger paid plan only keeps the later end date. Emails the couple their private dashboard link.
+ */
+export async function grantPackGallery(
+  payload: Payload,
+  o: { email: string; names: string; weddingDate?: string; inviteSlug?: string; slug?: string | null; planId: string; note: string },
+) {
+  const cfg = await getPhotoPlans(payload);
+  const plan = cfg.plans.find((p) => p.id === o.planId && p.price > 0) ?? planOf(cfg, "premium");
+  const email = normEmail(o.email);
+  let g = o.slug ? await findGallery(payload, o.slug) : null;
+  if (!g && validEmail(email)) {
+    const r = await payload.find({ collection: G, where: { contactEmail: { equals: email } }, sort: "-createdAt", limit: 1, depth: 0, overrideAccess: true });
+    g = (r.docs[0] as Doc | undefined) ?? null;
+  }
+  if (!g) {
+    const names = str(o.names, 80) || "Our wedding";
+    const base = slugify(names) || "wedding";
+    let slug = `${base}-${rand(2)}`;
+    while (await findGallery(payload, slug)) slug = `${base}-${rand(3)}`;
+    const date = o.weddingDate && !Number.isNaN(Date.parse(o.weddingDate)) ? new Date(o.weddingDate).toISOString() : undefined;
+    g = (await payload.create({
+      collection: G,
+      data: {
+        names, slug, contactEmail: email, ...(date ? { weddingDate: date } : {}),
+        plan: "free", paymentStatus: "unpaid", state: "active", expiresAt: new Date().toISOString(),
+        albums: DEFAULT_ALBUMS, editToken: rand(16), allowDownload: true, guestUploads: false,
+        source: "shaadi-pack", inviteSlug: str(o.inviteSlug, 80),
+      } as never,
+      overrideAccess: true,
+    })) as Doc;
+  }
+  const rank = (id?: string | null) => cfg.plans.findIndex((p) => p.id === id);
+  const keepPlan = g.paymentStatus === "paid" && rank(g.plan) > rank(plan.id);
+  const next = afterPayment(cfg.plans, g, plan.id);
+  const data = {
+    plan: keepPlan ? g.plan : next.plan,
+    expiresAt: next.expiresAt,
+    paymentStatus: "paid",
+    state: "active",
+    paidAt: new Date().toISOString(),
+    reminderSentAt: null,
+    ...(g.inviteSlug || !o.inviteSlug ? {} : { inviteSlug: str(o.inviteSlug, 80) }),
+    manualNote: [g.manualNote, o.note].filter(Boolean).join(" · "),
+  };
+  const done = (await payload.update({ collection: G, id: g.id, data: data as never, overrideAccess: true, depth: 0 })) as Doc;
+  await sendPaid(done, planOf(cfg, done.plan).name, false).catch((e) => console.error("[photos] pack email", e));
+  return done;
+}
+
 /* ---------------- sign in with email (lost link) ---------------- */
 
 const CODE_MINUTES = 15;

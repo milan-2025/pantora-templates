@@ -14,6 +14,7 @@ export const RULE_KINDS = [
   { label: "Shop product (Excel sheets, templates…)", value: "shop" },
   { label: "Wedding planner plan", value: "planner" },
   { label: "Planner + Invite bundle", value: "bundle" },
+  { label: "Shaadi pack (Planner + Invite + Photos)", value: "pack" },
   { label: "Wedding invite plan", value: "invite" },
   { label: "Workout app plan", value: "workout" },
   { label: "Wedding photo gallery plan", value: "photos" },

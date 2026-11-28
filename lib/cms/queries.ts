@@ -2,7 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { getPayload } from "payload";
 import config from "@payload-config";
-import { CATEGORIES, LANDING_PAGES, productCategory, type Category } from "@/lib/siteLinks";
+import { CATEGORIES, FREE_TOOLS, LANDING_PAGES, productCategory, type Category } from "@/lib/siteLinks";
 
 export const getPayloadClient = () => getPayload({ config });
 
@@ -68,8 +68,8 @@ export const getProductLinks = cache(async () => {
   }));
 });
 
-export type CatalogueItem = { title: string; text: string; url: string; cta: string; icon: string; image?: string | null; kind: "app" | "template" };
-export type CatalogueGroup = { category: Category; apps: CatalogueItem[]; templates: CatalogueItem[] };
+export type CatalogueItem = { title: string; text: string; url: string; cta: string; icon: string; image?: string | null; kind: "app" | "template" | "tool" };
+export type CatalogueGroup = { category: Category; apps: CatalogueItem[]; templates: CatalogueItem[]; tools: CatalogueItem[] };
 
 /** Every app and published template, grouped by category (the menu, footer, homepage and category pages all use it). */
 export const getCatalogue = cache(async (): Promise<CatalogueGroup[]> => {
@@ -78,6 +78,9 @@ export const getCatalogue = cache(async (): Promise<CatalogueGroup[]> => {
     category,
     apps: LANDING_PAGES.filter((p) => p.category === category.key).map((p) => ({
       title: p.label, text: p.description, url: p.url, cta: p.cta, icon: p.icon, kind: "app" as const,
+    })),
+    tools: FREE_TOOLS.filter((t) => t.category === category.key).map((t) => ({
+      title: t.label, text: t.description, url: t.url, cta: t.cta, icon: t.icon, kind: "tool" as const,
     })),
     templates: products
       .filter((p) => p.category === category.key)

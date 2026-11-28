@@ -132,6 +132,7 @@ export const PhotoGalleries: CollectionConfig = {
       fields: [
         { name: "orderId", type: "text", index: true, admin: { readOnly: true } },
         { name: "orderPlan", type: "text", admin: { readOnly: true, description: "The plan (or 'renew') being paid for in the last order." } },
+        { name: "manualNote", type: "textarea", label: "Admin note", admin: { description: "Optional, only you see it. \"Shaadi pack\" is added when the gallery came with a wedding planner Shaadi pack." } },
         { name: "amount", type: "number", admin: { readOnly: true } },
         { name: "promoCode", type: "text", admin: { readOnly: true } },
         { name: "paymentId", type: "text", admin: { readOnly: true } },

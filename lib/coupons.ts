@@ -16,6 +16,7 @@ export type CouponTarget =
   | { kind: "shop"; id: string; name?: string }
   | { kind: "planner"; id: string; name?: string }
   | { kind: "bundle"; name?: string }
+  | { kind: "pack"; name?: string }
   | { kind: "invite"; plan: string; name?: string }
   | { kind: "workout"; id: string; name?: string }
   | { kind: "photos"; plan: string; name?: string }
@@ -88,6 +89,7 @@ function matchScore(row: ProductDealRow, t: CouponTarget): number {
     case "photos":
       return !row.photosPlan ? 1 : row.photosPlan === t.plan ? 2 : 0;
     case "bundle":
+    case "pack":
       return 2;
   }
 }

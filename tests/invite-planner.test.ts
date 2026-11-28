@@ -195,6 +195,41 @@ describe("planner ↔ invite through the server", () => {
     expect(sum).toMatchObject({ premium: true, links: { Priya: expect.stringMatching(/\/i\/aanya-rohan-\w+\/priya$/) } });
   });
 
+  it("Shaadi pack payment: planner Family, invite Premium and a paid photo gallery; an existing gallery is upgraded", async () => {
+    const p = await server.createPlanner(fakePayload, "o@x.in", PS);
+    const fam = (await server.getPlans(fakePayload)).find((x) => x.planId === "family")!;
+    const before = await ip.inviteSummary(fakePayload, planner(p.id));
+    expect(before).toMatchObject({ pack: { on: true, price: 4999, photoPlan: "premium" }, photos: null });
+    // A free gallery the couple made earlier with the same email
+    await fakePayload.create({ collection: "photo-galleries", data: { slug: "aanya-rohan-1a", names: "Aanya & Rohan", contactEmail: "o@x.in", plan: "free", paymentStatus: "unpaid", state: "active", editToken: "e".repeat(32), expiresAt: new Date().toISOString() } });
+    await fakePayload.update({ collection: "planners", id: p.id, data: { orderId: "ord_p", orderPlan: fam.id, orderAmount: 4999, orderBundle: true, orderPack: true } });
+    await server.markPlannerPaid(fakePayload, "ord_p", "pay_p");
+    expect(planner(p.id)).toMatchObject({ status: "paid", plan: fam.id, photoGallery: "aanya-rohan-1a" });
+    expect(invite(planner(p.id).invite)).toMatchObject({ paymentStatus: "paid", plan: "premium", manualNote: "Shaadi pack" });
+    const g = fakePayload.db["photo-galleries"].find((x: { slug: string }) => x.slug === "aanya-rohan-1a");
+    expect(g).toMatchObject({ plan: "premium", paymentStatus: "paid", manualNote: "Shaadi pack", inviteSlug: invite(planner(p.id).invite).slug });
+    expect(new Date(g.expiresAt).getTime()).toBeGreaterThan(Date.now() + 700 * 864e5); // Premium: 2 years
+    expect(fakePayload.db["photo-galleries"]).toHaveLength(1);
+    const after = await ip.inviteSummary(fakePayload, planner(p.id));
+    expect(after).toMatchObject({ pack: { on: false }, photos: { url: expect.stringMatching(/\/p\/aanya-rohan-1a$/) } });
+    // Paying again (webhook + verify) changes nothing
+    await server.markPlannerPaid(fakePayload, "ord_p", "pay_p");
+    expect(fakePayload.db["photo-galleries"]).toHaveLength(1);
+  });
+
+  it("Shaadi pack makes a new gallery when the couple has none", async () => {
+    const p = await server.createPlanner(fakePayload, "new@x.in", PS);
+    const fam = (await server.getPlans(fakePayload)).find((x) => x.planId === "family")!;
+    await fakePayload.update({ collection: "planners", id: p.id, data: { orderId: "ord_q", orderPlan: fam.id, orderAmount: 4999, orderBundle: true, orderPack: true } });
+    await server.markPlannerPaid(fakePayload, "ord_q");
+    const slug = planner(p.id).photoGallery;
+    const g = fakePayload.db["photo-galleries"].find((x: { slug: string }) => x.slug === slug);
+    expect(g).toMatchObject({ contactEmail: "new@x.in", plan: "premium", paymentStatus: "paid", source: "shaadi-pack" });
+    expect(g.editToken).toMatch(/^[0-9a-f]{32}$/);
+    const mails = vi.mocked(sendWithBrevo).mock.calls.map((c) => String(c[0].html));
+    expect(mails.some((h) => h.includes(`/p/${slug}/manage#k=${g.editToken}`))).toBe(true);
+  });
+
   it("sends each cross-sell email once, two days after the purchase", async () => {
     const days = (n: number) => new Date(Date.now() - n * 864e5).toISOString();
     await fakePayload.create({ collection: "invites", data: { slug: "a-b", editToken: "t1", names: "A & B", paymentStatus: "paid", paidAt: days(3), contactEmail: "c@x.in", state: {} } });

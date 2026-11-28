@@ -20,6 +20,7 @@ const lpVariant = () => { try { const v = new URLSearchParams(location.search).g
 (function rememberSource() {
   try {
     const q = new URLSearchParams(location.search);
+    if (q.get('pack') === '1') store.set('pp_pack', JSON.stringify({ t: Date.now() }));
     const code = (q.get('code') || '').trim().toUpperCase();
     if (/^[A-Z0-9_-]{3,30}$/.test(code)) store.set('pp_code', JSON.stringify({ c: code, t: Date.now() }));
     const parts = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'].map(k => q.get(k)).filter(Boolean);
@@ -271,6 +272,12 @@ function lpFill(root, c) {
     const save = fam && c.bundle.invitePremium ? fam.price + c.bundle.invitePremium - bundle.price : 0;
     bb.innerHTML = '💍 <b>Planner + Invite bundle: ' + inr(bundle.price) + '</b> one-time' + (save > 0 ? ' · save ' + inr(save) : '') + '. Family plan and the invite on Premium, together.';
     bb.hidden = false;
+  }
+  // Shaadi pack: Planner + Invite + Photo gallery (price and photo plan from the admin)
+  const pack = c.pack && c.pack.on ? c.pack : null;
+  if (pack) {
+    const worth = (fam ? fam.price : 0) + (c.bundle && c.bundle.invitePremium || 0) + (pack.photoPrice || 0);
+    $('.lp-plans', root).insertAdjacentHTML('beforeend', '<div class="lp-plan hot"><span class="lp-badge">Shaadi pack</span><h3>Planner + Invite + Photos</h3><div class="lp-pp">' + inr(pack.price) + '</div><div class="lp-pn">one-time' + (worth > pack.price ? ' · worth ' + inr(worth) : '') + '</div><ul class="lp-ticks"><li>Everything in ' + esc(fam ? fam.name : 'Family') + '</li><li>Digital wedding invite on Premium</li><li>Wedding photo gallery ' + esc(pack.photoPlanName || '') + '</li><li>RSVPs land in your Guest List</li></ul><a class="lp-btn wide" href="/shaadi-pack" data-cta="plan pack">See the Shaadi pack</a></div>');
   }
   if (bundle) $('.lp-plans', root).insertAdjacentHTML('beforeend', '<div class="lp-plan hot"><span class="lp-badge">Best value</span><h3>Planner + Invite</h3><div class="lp-pp">' + inr(bundle.price) + '</div><div class="lp-pn">one-time' + (fam ? ' · ' + esc(fam.name) + ' plan' : '') + ' + digital invite Premium</div><ul class="lp-ticks"><li>Everything in ' + esc(fam ? fam.name : 'Family') + '</li><li>Digital wedding invite on Premium</li><li>Each family’s own invite link</li><li>RSVPs and blessings land in your Guest List</li></ul>' + lpCta('Start free, upgrade later', 'wide', 'plan bundle') + '</div>');
   if (c.offerText) {

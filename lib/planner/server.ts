@@ -421,7 +421,7 @@ export async function sharedRunSheet(payload: Payload, token: string) {
 /* ---------- payments ---------- */
 
 /** Price for a planner plan (or the Planner + Invite bundle) after an optional code. */
-export async function quotePlan(payload: Payload, plan: PlanView, coupon?: string, opts: { bundle?: boolean } = {}) {
+export async function quotePlan(payload: Payload, plan: PlanView, coupon?: string, opts: { bundle?: boolean; pack?: boolean } = {}) {
   if (!coupon) return { total: plan.price, discount: 0 };
   // Planner-only fixed ₹ codes (Admin → Planner landing page & promo codes) come first.
   const g = (await payload.findGlobal({ slug: "planner-landing" as never, depth: 0, overrideAccess: true }).catch(() => null)) as Doc | null;
@@ -432,7 +432,11 @@ export async function quotePlan(payload: Payload, plan: PlanView, coupon?: strin
     return { total, discount: plan.price - total };
   }
   // Coupon & affiliate codes (Admin → Shop → Coupon & affiliate codes): %, flat ₹ or a special price, per plan.
-  const target = opts.bundle ? ({ kind: "bundle", name: "the Planner + Invite bundle" } as const) : ({ kind: "planner", id: plan.id, name: `the ${plan.name} plan` } as const);
+  const target = opts.pack
+    ? ({ kind: "pack", name: "the Shaadi pack" } as const)
+    : opts.bundle
+      ? ({ kind: "bundle", name: "the Planner + Invite bundle" } as const)
+      : ({ kind: "planner", id: plan.id, name: `the ${plan.name} plan` } as const);
   const q = await quoteWithCode(payload, coupon, target, plan.price);
   return q.error ? { total: plan.price, discount: 0, error: q.error } : { total: q.total, discount: q.discount, label: q.label };
 }
@@ -455,7 +459,17 @@ export async function markPlannerPaid(payload: Payload, orderId: string, payment
   });
   if (!res.docs.length) return { found: true as const, alreadyPaid: true };
   let bundleNote = "";
-  if (doc.orderBundle) {
+  if (doc.orderPack) {
+    // Shaadi pack: the wedding invite goes live on Premium and the photo gallery is paid for too.
+    try {
+      const { grantPack, inviteUrl } = await import("@/lib/invitePlanner");
+      const { invite, gallery } = await grantPack(payload, doc);
+      bundleNote = `<p>Your <b>wedding invite</b> is live on Premium: <a href="${inviteUrl(invite.slug)}">${inviteUrl(invite.slug)}</a>. Open it from the planner's dashboard to finish the design.</p>
+        <p>Your <b>wedding photo gallery</b> is ready: <a href="${siteUrl()}/p/${gallery.slug}">${siteUrl()}/p/${gallery.slug}</a>. We've emailed you its private dashboard link separately; you can also sign in at <a href="${siteUrl()}/photos">pandoratemplates.com/photos</a> with this email.</p>`;
+    } catch (e) {
+      console.error("[planner-pack]", e);
+    }
+  } else if (doc.orderBundle) {
     // Planner + Invite bundle: the wedding invite goes live on Premium too.
     try {
       const { grantBundleInvite, inviteUrl } = await import("@/lib/invitePlanner");

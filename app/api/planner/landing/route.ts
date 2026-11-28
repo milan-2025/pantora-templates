@@ -1,7 +1,8 @@
 import { getPayloadClient } from "@/lib/cms/queries";
 import { route } from "@/lib/planner/http";
 import { getPlans } from "@/lib/planner/server";
-import { bundleInfo } from "@/lib/invitePlanner";
+import { bundleInfo, packInfo } from "@/lib/invitePlanner";
+import { getPhotoPlans, planOf } from "@/lib/photos/plans";
 import { getPlanConfig } from "@/lib/invites";
 import { SAMPLE_TESTIMONIALS } from "@/globals/PlannerLanding";
 
@@ -21,9 +22,12 @@ export const GET = route(async () => {
   const bundle = await bundleInfo(payload);
   // The invite's own Premium price, so the page can show what the bundle saves.
   const premium = (await getPlanConfig(payload).catch(() => null))?.plans.find((p) => p.id === "premium");
+  const pack = await packInfo(payload);
+  const photo = planOf(await getPhotoPlans(payload), pack.photoPlan);
   return {
     plans,
     bundle: { on: bundle.on, price: bundle.price, invitePremium: Number(premium?.price) || null },
+    pack: { on: pack.on, price: pack.price, photoPlanName: photo.name, photoPrice: photo.price },
     offerText: String(g.offerText ?? "").trim() || null,
     whatsapp: wa ? { number: wa, message: String(g.whatsappMessage ?? "") } : null,
     testimonials: (g.testimonials ?? [])

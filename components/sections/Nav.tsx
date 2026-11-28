@@ -10,7 +10,7 @@ import { Logo } from "@/components/Logo";
 
 export type NavLink = { label: string; url: string };
 /** One category in the Products menu: its page, colour and the apps/templates in it. */
-export type MenuGroup = { label: string; url: string; accent: string; items: { title: string; url: string; kind: "app" | "template" }[] };
+export type MenuGroup = { label: string; url: string; accent: string; items: { title: string; url: string; kind: "app" | "template" | "tool" }[] };
 
 export function Nav({ links, cta, menu = [] }: { links: NavLink[]; cta?: NavLink | null; menu?: MenuGroup[] }) {
   const { scrollY } = useScroll();
@@ -74,7 +74,7 @@ export function Nav({ links, cta, menu = [] }: { links: NavLink[]; cta?: NavLink
                               <li key={i.url}>
                                 <SmartLink href={i.url} onClick={() => setProductsOn(null)} className="block leading-snug text-plum hover:text-teal">
                                   {i.title}
-                                  <span className="block text-[0.7rem] font-semibold uppercase tracking-wider text-charcoal/45">{i.kind === "app" ? "App" : "Template"}</span>
+                                  <span className="block text-[0.7rem] font-semibold uppercase tracking-wider text-charcoal/45">{i.kind === "app" ? "App" : i.kind === "tool" ? "Free tool" : "Template"}</span>
                                 </SmartLink>
                               </li>
                             ))}
