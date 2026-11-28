@@ -62,7 +62,7 @@ function upgradeSheet(reason) {
   const mb = ME && ME.moneyBack && ME.moneyBack.tiers.slice().sort((x, y) => x.days - y.days);
   sheet(`<h2>${a && a.kind === 'owner' && !a.isPaid ? 'Renew your plan' : 'Keep going all year'}</h2>${reason ? `<p class="banner warn" style="margin:8px 0 14px">${esc(reason)}</p>` : ''}
     <div class="opts">${plans.map((p) => `<div class="plan ${p.badge ? 'best' : ''}">${p.badge ? `<span class="bdg">${esc(p.badge)}</span>` : ''}<b style="font-family:var(--fh);font-size:18px">${esc(p.name)}</b><div class="pr">₹${fmt(p.price)}<small class="muted" style="font-size:14px"> / year</small></div><div class="muted sm">${esc(p.tagline || '')}</div><ul>${(p.features || []).map((f) => `<li>${esc(f)}</li>`).join('')}</ul><button class="btn big" data-act="buy" data-p="${esc(p.planId)}">Choose ${esc(p.name)}</button></div>`).join('')}</div>
-    <details class="mt"><summary class="sm">Have a promo code?</summary><input id="up-c" class="mt" placeholder="Code" style="text-transform:uppercase"></details>
+    <details class="mt"${store.get('wk_code') ? ' open' : ''}><summary class="sm">Have a promo code?</summary><input id="up-c" class="mt" placeholder="Code" style="text-transform:uppercase" value="${esc(store.get('wk_code') || '')}"></details>
     ${ref ? `<p class="pill ok mt">🎁 Friend’s referral: ₹${(ME && ME.referral && ME.referral.friendOff) || ''} off at checkout</p>` : ''}
     ${mb && mb.length ? `<p class="sm muted mt">💸 <b>Money-back promise:</b> log ${mb[0].days} days in your year and get ${mb[0].percent}% back${mb[1] ? `; ${mb[1].days} days, ${mb[1].percent}%` : ''}.</p>` : ''}
     <p class="tiny muted">One-time payment for a year. No auto-renewal. Secure checkout by Razorpay (UPI, cards, net banking).</p>`);

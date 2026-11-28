@@ -20,6 +20,8 @@ const lpVariant = () => { try { const v = new URLSearchParams(location.search).g
 (function rememberSource() {
   try {
     const q = new URLSearchParams(location.search);
+    const code = (q.get('code') || '').trim().toUpperCase();
+    if (/^[A-Z0-9_-]{3,30}$/.test(code)) store.set('pp_code', JSON.stringify({ c: code, t: Date.now() }));
     const parts = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'].map(k => q.get(k)).filter(Boolean);
     if (parts.length && LP_HERO[q.get('v')]) parts.push('v=' + q.get('v'));
     if (!parts.length && q.get('fbclid')) parts.push('facebook (fbclid)');

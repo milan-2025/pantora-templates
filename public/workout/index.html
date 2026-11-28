@@ -2033,7 +2033,7 @@ function upgradeSheet(reason) {
   const mb = ME && ME.moneyBack && ME.moneyBack.tiers.slice().sort((x, y) => x.days - y.days);
   sheet(`<h2>${a && a.kind === 'owner' && !a.isPaid ? 'Renew your plan' : 'Keep going all year'}</h2>${reason ? `<p class="banner warn" style="margin:8px 0 14px">${esc(reason)}</p>` : ''}
     <div class="opts">${plans.map((p) => `<div class="plan ${p.badge ? 'best' : ''}">${p.badge ? `<span class="bdg">${esc(p.badge)}</span>` : ''}<b style="font-family:var(--fh);font-size:18px">${esc(p.name)}</b><div class="pr">₹${fmt(p.price)}<small class="muted" style="font-size:14px"> / year</small></div><div class="muted sm">${esc(p.tagline || '')}</div><ul>${(p.features || []).map((f) => `<li>${esc(f)}</li>`).join('')}</ul><button class="btn big" data-act="buy" data-p="${esc(p.planId)}">Choose ${esc(p.name)}</button></div>`).join('')}</div>
-    <details class="mt"><summary class="sm">Have a promo code?</summary><input id="up-c" class="mt" placeholder="Code" style="text-transform:uppercase"></details>
+    <details class="mt"${store.get('wk_code') ? ' open' : ''}><summary class="sm">Have a promo code?</summary><input id="up-c" class="mt" placeholder="Code" style="text-transform:uppercase" value="${esc(store.get('wk_code') || '')}"></details>
     ${ref ? `<p class="pill ok mt">🎁 Friend’s referral: ₹${(ME && ME.referral && ME.referral.friendOff) || ''} off at checkout</p>` : ''}
     ${mb && mb.length ? `<p class="sm muted mt">💸 <b>Money-back promise:</b> log ${mb[0].days} days in your year and get ${mb[0].percent}% back${mb[1] ? `; ${mb[1].days} days, ${mb[1].percent}%` : ''}.</p>` : ''}
     <p class="tiny muted">One-time payment for a year. No auto-renewal. Secure checkout by Razorpay (UPI, cards, net banking).</p>`);
@@ -2722,6 +2722,8 @@ function afterStart() {
 (function readLink() {
   const q = new URLSearchParams(location.search);
   if (q.get('ref')) store.set('wk_ref', q.get('ref').toUpperCase().slice(0, 12));
+  // A promo code from an offer email (?code=…): filled into the upgrade screen.
+  if (/^[A-Za-z0-9_-]{3,30}$/.test(q.get('code') || '')) store.set('wk_code', q.get('code').toUpperCase());
   if (q.get('join')) store.set('wk_join', q.get('join').toLowerCase().slice(0, 12));
   // Ad headline version (?v=…): kept for this visit, because the address is cleaned below before the page draws.
   if (q.get('v')) try { sessionStorage.setItem('wk_v', q.get('v').slice(0, 30)); } catch (e) { /* private mode */ }

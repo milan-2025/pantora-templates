@@ -152,6 +152,7 @@ export interface Config {
     'workout-settings': WorkoutSetting;
     'photo-plans': PhotoPlan;
     'hostbook-settings': HostbookSetting;
+    'buyer-offers': BuyerOffer;
   };
   globalsSelect: {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
@@ -160,6 +161,7 @@ export interface Config {
     'workout-settings': WorkoutSettingsSelect<false> | WorkoutSettingsSelect<true>;
     'photo-plans': PhotoPlansSelect<false> | PhotoPlansSelect<true>;
     'hostbook-settings': HostbookSettingsSelect<false> | HostbookSettingsSelect<true>;
+    'buyer-offers': BuyerOffersSelect<false> | BuyerOffersSelect<true>;
   };
   locale: null;
   widgets: {
@@ -3827,6 +3829,43 @@ export interface HostbookSetting {
   createdAt?: string | null;
 }
 /**
+ * Emails past sheet buyers an offer for the matching app, once each. Make the coupon code first under Shop → Affiliates (it must cover that app's plans), then switch the campaign on. Preview and send a test at /api/admin/buyer-offers.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "buyer-offers".
+ */
+export interface BuyerOffer {
+  id: string;
+  /**
+   * Off: nothing is sent, even by the daily job.
+   */
+  on?: boolean | null;
+  /**
+   * Brevo's free plan sends 300 a day, shared with order and sign-in emails, so keep this well under it.
+   */
+  dailyLimit?: number | null;
+  plannerOn?: boolean | null;
+  /**
+   * e.g. SHEET500. Must exist under Shop → Affiliates and cover the planner plans.
+   */
+  plannerCode?: string | null;
+  /**
+   * Shown in the email, e.g. ₹500 off the Family plan. Keep it exactly what the code does.
+   */
+  plannerOffer?: string | null;
+  workoutOn?: boolean | null;
+  /**
+   * e.g. TRACKER30. Must exist under Shop → Affiliates and cover the workout plans.
+   */
+  workoutCode?: string | null;
+  /**
+   * Shown in the email, e.g. 30% off any yearly plan.
+   */
+  workoutOffer?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site-settings_select".
  */
@@ -4039,6 +4078,23 @@ export interface HostbookSettingsSelect<T extends boolean = true> {
   offerText?: T;
   vapidPublic?: T;
   vapidPrivate?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "buyer-offers_select".
+ */
+export interface BuyerOffersSelect<T extends boolean = true> {
+  on?: T;
+  dailyLimit?: T;
+  plannerOn?: T;
+  plannerCode?: T;
+  plannerOffer?: T;
+  workoutOn?: T;
+  workoutCode?: T;
+  workoutOffer?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
