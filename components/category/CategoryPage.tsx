@@ -31,9 +31,9 @@ export async function CategoryPage({ categoryKey }: { categoryKey: CategoryKey }
   const catalogue = await getCatalogue();
   const group = catalogue.find((g) => g.category.key === categoryKey);
   if (!group) notFound();
-  const { category: c, apps, templates } = group;
+  const { category: c, apps, templates, tools } = group;
   const accent = { color: c.accent, tint: c.tint };
-  const all = [...apps, ...templates];
+  const all = [...apps, ...templates, ...tools];
 
   return (
     <SiteShell>
@@ -78,6 +78,14 @@ export async function CategoryPage({ categoryKey }: { categoryKey: CategoryKey }
         text="Buy once and keep it: Excel and Google Sheets files with the formulas already built in."
         cards={templates.map((t) => ({ title: t.title, text: t.text, url: t.url, cta: t.cta, icon: t.icon, image: t.image }))}
         tone="sand"
+        accent={accent}
+      />
+      <LinkCards
+        id="free-tools"
+        eyebrow="Free tools"
+        heading="Free calculators"
+        text="No sign-up: put in your numbers and get the answer straight away."
+        cards={tools.map((t) => ({ title: t.title, text: t.text, url: t.url, cta: t.cta, icon: t.icon }))}
         accent={accent}
       />
       <CategoryTiles

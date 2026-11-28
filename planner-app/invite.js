@@ -128,7 +128,8 @@ function invCard() {
       (INV.note ? '<div class="banner" style="margin:8px 0"><span>📋 Planner changes waiting in the invite draft: <b>' + esc(INV.note) + '</b>. Open the editor to check them and press <b>Save &amp; publish</b>.</span></div>' : '') +
       (rv ? '<div class="banner" style="margin:8px 0"><span>📨 <b>' + rv + ' new RSVP' + (rv > 1 ? 's' : '') + '</b> from the general link need matching to a family.</span><span class="sp"></span><button class="btn sm pri" data-inv="review">Review</button></div>' : '') +
       (checks.length ? '<p class="note" style="margin-top:6px">Check headcount: ' + checks.map(x => '<a data-pg="' + esc(x.g.id) + '">' + esc(x.k) + '</a> said ' + x.ir.n + ', ' + x.members.length + ' listed').join(' · ') + '</p>' : '') +
-      '<div class="bar" style="margin-top:10px">' + (invCanEdit() ? '<button class="btn pri" data-inv="open">✎ Open invite editor</button>' : '') + '<a class="btn" href="' + esc(INV.url) + '" target="_blank" rel="noopener">👁 View invite</a>' + (bl.length ? '<button class="btn" data-inv="bless">🙏 Blessings</button>' : '') + '<button class="btn ghost" data-go="guests">Send invites from the Guest List</button></div>';
+      '<div class="bar" style="margin-top:10px">' + (invCanEdit() ? '<button class="btn pri" data-inv="open">✎ Open invite editor</button>' : '') + '<a class="btn" href="' + esc(INV.url) + '" target="_blank" rel="noopener">👁 View invite</a>' + (bl.length ? '<button class="btn" data-inv="bless">🙏 Blessings</button>' : '') + (INV.photos ? '<a class="btn" href="' + esc(INV.photos.url) + '" target="_blank" rel="noopener">📸 Photo gallery</a>' : '') + '<button class="btn ghost" data-go="guests">Send invites from the Guest List</button></div>' +
+      (INV.photos ? '<p class="note" style="margin-top:6px">📸 Your Shaadi pack photo gallery: add photos from its dashboard (the link is in your email, or sign in at <a href="/photos" target="_blank" rel="noopener">pandoratemplates.com/photos</a> with ' + esc(CLOUD.meta.owner || 'your email') + ').</p>' : '');
   }
   card.onclick = e => {
     const pg = e.target.closest('[data-pg]'); if (pg) { openProfile('guest', pg.dataset.pg); return; }
@@ -180,8 +181,19 @@ function invReplySec(g) {
   ]));
 }
 
-/** Plan picker: the Planner + Invite bundle beside the plans (owner only, until the invite is Premium). */
+/** Plan picker: the Shaadi pack (until bought) and the Planner + Invite bundle (until the invite is Premium), owner only. */
 function invBundleCard(owner) {
+  return invPackCard(owner) + invPlainBundleCard(owner);
+}
+const PHOTO_PLAN_NAME = { basic: 'Basic', premium: 'Premium', royal: 'Royal' };
+function invPackCard(owner) {
+  const k = INV.pack;
+  if (!k || !k.on) return '';
+  const ph = PHOTO_PLAN_NAME[k.photoPlan] || 'Premium';
+  return '<div class="plan hot"><span class="pb">Shaadi pack</span><h3>Planner + Invite + Photos</h3><div class="pp">' + inr(k.price) + '</div><div class="note">One payment for all three · Family plan, invite Premium, photo gallery ' + esc(ph) + '</div><ul><li>Everything in Family</li><li>Digital wedding invite on Premium, a link for every family</li><li>Wedding photo gallery (' + esc(ph) + '): albums, QR code for the venue' + (k.photoPlan === 'basic' ? '' : ', guest uploads and videos') + '</li><li>RSVPs land in your Guest List</li></ul>' +
+    (owner ? '<button class="btn pri wide keep" data-buy="pack">Choose the Shaadi pack</button>' : '') + '</div>';
+}
+function invPlainBundleCard(owner) {
   const b = INV.bundle;
   if (!b || !b.on || INV.premium) return '';
   return '<div class="plan hot"><span class="pb">Best value</span><h3>Planner + Invite</h3><div class="pp">' + inr(b.price) + '</div><div class="note">Family plan + wedding invite Premium · valid 1 year</div><ul><li>Everything in Family</li><li>Digital wedding invite on Premium</li><li>A personal link for every family</li><li>RSVPs and blessings land in your Guest List</li></ul>' +
@@ -192,6 +204,12 @@ function invBundleCard(owner) {
 function invAfterOpen() {
   let ik = null; try { ik = sessionStorage.getItem('pp_ik'); } catch (e) { /* ignore */ }
   invLoad(true).then(() => {
+    // Came from /shaadi-pack (or ?pack=1): open the plan window once, with the pack in it.
+    let pk = null; try { pk = JSON.parse(store.get('pp_pack') || 'null'); } catch (e) { pk = null; }
+    if (pk && Date.now() - pk.t < 30 * 864e5) {
+      store.del('pp_pack');
+      if (INV.pack && INV.pack.on && CLOUD.meta.role === 'owner') upgradeModal('🎁 Shaadi pack: Planner + Invite + Photo gallery in one payment. Choose it below, or start with the free trial and upgrade any time.');
+    }
     if (!ik) return;
     try { sessionStorage.removeItem('pp_ik'); } catch (e) { /* ignore */ }
     if (INV.linked || !invCanEdit()) return;

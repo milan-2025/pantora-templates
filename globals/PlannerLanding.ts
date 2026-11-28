@@ -101,6 +101,25 @@ export const PlannerLanding: GlobalConfig = {
           ],
         },
         {
+          type: "row",
+          fields: [
+            { name: "packOn", type: "checkbox", label: "Offer the Shaadi pack", defaultValue: true, admin: { width: "30%", description: "Planner + Invite + Photo gallery in one payment. Shown on /shaadi-pack, the planner page and its upgrade window." } },
+            { name: "packPrice", type: "number", label: "Shaadi pack price (₹)", defaultValue: 4999, min: 1, admin: { width: "35%", description: "Planner Family plan + Invite Premium + the photo plan below. Coupon codes can target \"Shaadi pack\"." } },
+            {
+              name: "packPhotoPlan",
+              type: "select",
+              label: "Photo gallery plan in the pack",
+              defaultValue: "premium",
+              options: [
+                { label: "Basic", value: "basic" },
+                { label: "Premium", value: "premium" },
+                { label: "Royal", value: "royal" },
+              ],
+              admin: { width: "35%" },
+            },
+          ],
+        },
+        {
           name: "crossSellOn",
           type: "checkbox",
           label: "Send the cross-sell email",

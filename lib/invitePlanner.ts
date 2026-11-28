@@ -37,6 +37,35 @@ export async function bundleInfo(payload: Payload) {
   return { on: g?.bundleOn !== false, price, crossSell: g?.crossSellOn !== false };
 }
 
+/** Shaadi pack (Planner Family + Invite Premium + a photo gallery plan), set in Admin → Planner landing page & promo codes. */
+export async function packInfo(payload: Payload) {
+  const g = (await payload.findGlobal({ slug: "planner-landing" as never, depth: 0, overrideAccess: true }).catch(() => null)) as Doc | null;
+  const price = Math.max(1, Math.round(Number(g?.packPrice) || 4999));
+  const photoPlan = ["basic", "premium", "royal"].includes(String(g?.packPhotoPlan)) ? String(g?.packPhotoPlan) : "premium";
+  return { on: g?.packOn !== false, price, photoPlan };
+}
+
+/** Shaadi pack paid: the invite goes live on Premium (made now if needed) and the couple gets a paid photo gallery. */
+export async function grantPack(payload: Payload, planner: Doc) {
+  const invite = await grantBundleInvite(payload, planner, "Shaadi pack");
+  const { photoPlan } = await packInfo(payload);
+  const { grantPackGallery } = await import("@/lib/photos/server");
+  const date = String((planner.state as Doc | undefined)?.settings?.date ?? "");
+  const gallery = await grantPackGallery(payload, {
+    email: planner.ownerEmail,
+    names: String(planner.names || invite.names || ""),
+    weddingDate: /^\d{4}-\d\d-\d\d$/.test(date) ? date : undefined,
+    inviteSlug: invite.slug,
+    slug: planner.photoGallery || null,
+    planId: photoPlan,
+    note: "Shaadi pack",
+  });
+  if (planner.photoGallery !== gallery.slug) {
+    await payload.update({ collection: "planners", id: planner.id, data: { photoGallery: gallery.slug } as never, depth: 0, overrideAccess: true });
+  }
+  return { invite, gallery };
+}
+
 /* ---------- linking ---------- */
 
 export async function linkedInvite(payload: Payload, planner: Doc): Promise<Doc | null> {
@@ -200,9 +229,12 @@ export async function reviewReply(payload: Payload, planner: Doc, by: string, ro
 /* ---------- what the planner shows ---------- */
 
 export async function inviteSummary(payload: Payload, planner: Doc) {
-  const bundle = await bundleInfo(payload);
+  const [bundle, pk] = await Promise.all([bundleInfo(payload), packInfo(payload)]);
+  // The Shaadi pack is offered until it's bought; the photo gallery that came with it is shown on the invite card.
+  const pack = { on: pk.on && !planner.photoGallery, price: pk.price, photoPlan: pk.photoPlan };
+  const photos = planner.photoGallery ? { url: `${siteUrl()}/p/${planner.photoGallery}` } : null;
   const invite = await linkedInvite(payload, planner);
-  if (!invite) return { linked: false as const, bundle: { on: bundle.on, price: bundle.price } };
+  if (!invite) return { linked: false as const, bundle: { on: bundle.on, price: bundle.price }, pack, photos };
   const live = isLive(invite as never);
   const premium = live && planRank(invite.plan) >= planRank("premium");
   const url = inviteUrl(invite.slug);
@@ -221,6 +253,8 @@ export async function inviteSummary(payload: Payload, planner: Doc) {
     replies: replies.totalDocs,
     review: (review.docs as Doc[]).map((r) => ({ id: String(r.id), name: r.name, guests: r.guests, events: r.events ?? "", meal: r.meal ?? "", message: r.message ?? "", side: r.side ?? "", at: r.createdAt })),
     bundle: { on: bundle.on && !premium, price: bundle.price },
+    pack,
+    photos,
   };
 }
 
@@ -229,7 +263,7 @@ export const editUrlOf = (invite: Doc) => editLink(invite as never);
 /* ---------- bundle ---------- */
 
 /** Planner + Invite bundle paid: the planner's invite (made now if needed) goes live on Premium. */
-export async function grantBundleInvite(payload: Payload, planner: Doc) {
+export async function grantBundleInvite(payload: Payload, planner: Doc, note = "Planner + Invite bundle") {
   const invite = await createInviteFor(payload, planner);
   if (isLive(invite as never) && planRank(invite.plan) >= planRank("premium")) return invite;
   const { months } = await getPlanConfig(payload);
@@ -244,7 +278,7 @@ export async function grantBundleInvite(payload: Payload, planner: Doc) {
       ...(live && invite.expiresAt ? {} : { expiresAt: expires.toISOString() }),
       ...(invite.published ? {} : { published: invite.state, publishedAt: new Date().toISOString() }),
       ...(invite.contactEmail ? {} : { contactEmail: planner.ownerEmail }),
-      manualNote: [invite.manualNote, "Planner + Invite bundle"].filter(Boolean).join(" · "),
+      manualNote: [invite.manualNote, note].filter(Boolean).join(" · "),
     } as never,
     depth: 0,
     overrideAccess: true,

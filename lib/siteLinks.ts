@@ -71,7 +71,7 @@ export const categoryByKey = (key: string | null | undefined): Category | undefi
 
 export type LandingPage = {
   /** Stable id, used by the homepage block to pick and order cards. */
-  key: "planner" | "invites" | "photos" | "stays" | "hostbook" | "crm" | "crm-real-estate" | "workout";
+  key: "planner" | "invites" | "photos" | "shaadi-pack" | "stays" | "hostbook" | "crm" | "crm-real-estate" | "workout";
   label: string;
   url: string;
   /** One or two sentences for cards and link titles. */
@@ -110,6 +110,15 @@ export const LANDING_PAGES: readonly LandingPage[] = [
     description: "Every wedding photo and video in one private link, with albums per function, a QR code for the venue and guest uploads.",
     cta: "Start free",
     icon: "Image",
+    category: "weddings",
+  },
+  {
+    key: "shaadi-pack",
+    label: "Shaadi Pack",
+    url: "/shaadi-pack",
+    description: "The planner, the digital invite and the photo gallery together, for one price: plan it, invite everyone, then share every photo.",
+    cta: "See the pack",
+    icon: "Gift",
     category: "weddings",
   },
   {
@@ -155,6 +164,30 @@ export const LANDING_PAGES: readonly LandingPage[] = [
     description: "Holiday homes and family stays around Chandigarh, Zirakpur and Panchkula, booked directly with the host.",
     cta: "Find a stay",
     icon: "House",
+    category: "hospitality",
+  },
+];
+
+/** Free calculators: no sign-in, found on Google, each leads to the app in its category. */
+export type FreeTool = { key: "wedding-budget" | "airbnb-profit"; label: string; url: string; description: string; cta: string; icon: string; category: CategoryKey };
+
+export const FREE_TOOLS: readonly FreeTool[] = [
+  {
+    key: "wedding-budget",
+    label: "Wedding Budget Calculator",
+    url: "/wedding-budget-calculator",
+    description: "Pick your city, guest count and functions, and see what an Indian wedding costs, split into venue, food, decor, outfits and more.",
+    cta: "Work out my budget",
+    icon: "Calculator",
+    category: "weddings",
+  },
+  {
+    key: "airbnb-profit",
+    label: "Airbnb Profit Calculator",
+    url: "/airbnb-profit-calculator",
+    description: "Nightly rate, occupancy, platform fees, cleaning, bills and GST in, monthly and yearly profit out, plus the break-even occupancy.",
+    cta: "Work out my profit",
+    icon: "Calculator",
     category: "hospitality",
   },
 ];
@@ -228,6 +261,9 @@ export const SITEMAP_LANDING_PAGES: readonly { url: string; priority: number; ch
   { url: "/crm-software", priority: 0.7, changeFrequency: "monthly" },
   { url: "/real-estate-crm", priority: 0.7, changeFrequency: "monthly" },
   { url: "/hostbook", priority: 0.8, changeFrequency: "monthly" },
+  { url: "/shaadi-pack", priority: 0.8, changeFrequency: "monthly" },
+  { url: "/wedding-budget-calculator", priority: 0.8, changeFrequency: "monthly" },
+  { url: "/airbnb-profit-calculator", priority: 0.8, changeFrequency: "monthly" },
 ];
 
 /**

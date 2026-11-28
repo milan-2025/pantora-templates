@@ -45,7 +45,7 @@ describe("link map", () => {
     for (const u of ["/", "/stays", "/blog", "/plannerx", "/wedding_planner_sheet", "/contact", "/#products", "/information"]) expect(isStandalonePage(u), u).toBe(false);
   });
   it("suggests the apps in the same category on a product's page", () => {
-    expect(relatedLandingPages("weddings").map((p) => p.key)).toEqual(["planner", "invites", "photos"]);
+    expect(relatedLandingPages("weddings").map((p) => p.key)).toEqual(["planner", "invites", "photos", "shaadi-pack"]);
     expect(relatedLandingPages("self-improvement").map((p) => p.key)).toEqual(["workout"]);
     expect(relatedLandingPages("hospitality").map((p) => p.key)).toEqual(["hostbook", "stays"]);
   });

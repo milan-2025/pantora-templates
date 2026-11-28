@@ -55,7 +55,7 @@ export function CategoryTiles({
                       <li key={item.url}>
                         <SmartLink href={item.url} title={item.text} className="group/i flex items-baseline justify-between gap-2 text-plum hover:underline">
                           <span>{item.title}</span>
-                          <span className="shrink-0 text-[0.7rem] font-semibold uppercase tracking-wider text-charcoal/50">{item.kind === "app" ? "App" : "Template"}</span>
+                          <span className="shrink-0 text-[0.7rem] font-semibold uppercase tracking-wider text-charcoal/50">{item.kind === "app" ? "App" : item.kind === "tool" ? "Free tool" : "Template"}</span>
                         </SmartLink>
                       </li>
                     ))}
