@@ -23,6 +23,8 @@ function afterStart() {
 (function readLink() {
   const q = new URLSearchParams(location.search);
   if (q.get('ref')) store.set('wk_ref', q.get('ref').toUpperCase().slice(0, 12));
+  // A promo code from an offer email (?code=…): filled into the upgrade screen.
+  if (/^[A-Za-z0-9_-]{3,30}$/.test(q.get('code') || '')) store.set('wk_code', q.get('code').toUpperCase());
   if (q.get('join')) store.set('wk_join', q.get('join').toLowerCase().slice(0, 12));
   // Ad headline version (?v=…): kept for this visit, because the address is cleaned below before the page draws.
   if (q.get('v')) try { sessionStorage.setItem('wk_v', q.get('v').slice(0, 30)); } catch (e) { /* private mode */ }

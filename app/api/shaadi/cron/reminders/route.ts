@@ -3,12 +3,14 @@ import { getPayloadClient } from "@/lib/cms/queries";
 import { emailCouple } from "@/lib/inviteEmail";
 import { sendCrossSells } from "@/lib/invitePlanner";
 import { getPlanConfig } from "@/lib/invites";
+import { sendBuyerOffers } from "@/lib/buyerOffers";
 
 /**
  * Emails couples who saved their email but never paid (once each). Call it once a day, e.g. from a cron job:
  *   curl -H "Authorization: Bearer $CRON_SECRET" https://<your-site>/api/shaadi/cron/reminders
  * Turn it on, set the delay and add a promo code in /admin → Wedding invites → Invite plans & prices.
- * The same job sends the planner ↔ invite cross-sell email (Admin → Planner landing page & promo codes).
+ * The same job sends the planner ↔ invite cross-sell email (Admin → Planner landing page & promo codes)
+ * and today's batch of past buyer offers (Settings → Past buyer offers).
  */
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
@@ -20,8 +22,13 @@ export async function GET(req: Request) {
     console.error("[cross-sell]", e);
     return { error: "failed" };
   });
+  // Past buyer offers (Settings → Past buyer offers): today's batch, if switched on.
+  const buyerOffers = await sendBuyerOffers(payload).catch((e) => {
+    console.error("[buyer-offers]", e);
+    return { error: "failed" };
+  });
   const { reminders } = await getPlanConfig(payload);
-  if (!reminders.enabled) return NextResponse.json({ sent: 0, skipped: "reminders are switched off", crossSell });
+  if (!reminders.enabled) return NextResponse.json({ sent: 0, skipped: "reminders are switched off", crossSell, buyerOffers });
 
   const cutoff = new Date(Date.now() - reminders.afterHours * 3_600_000).toISOString();
   const due = await payload.find({
@@ -49,5 +56,5 @@ export async function GET(req: Request) {
       console.error("[invite-reminder]", invite.slug, e);
     }
   }
-  return NextResponse.json({ sent, checked: due.docs.length, crossSell });
+  return NextResponse.json({ sent, checked: due.docs.length, crossSell, buyerOffers });
 }

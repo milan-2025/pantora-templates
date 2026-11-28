@@ -20,6 +20,7 @@ import { Invites } from "./collections/Invites";
 import { InviteRsvps } from "./collections/InviteRsvps";
 import { ContactSubmissions } from "./collections/ContactSubmissions";
 import { Reviews } from "./collections/Reviews";
+import { BuyerOffers } from "./globals/BuyerOffers";
 import { Planners } from "./collections/Planners";
 import { PlannerPlans } from "./collections/PlannerPlans";
 import { PlannerHistory } from "./collections/PlannerHistory";
@@ -80,7 +81,7 @@ export default buildConfig({
     },
   },
   collections: [Products, Orders, Invites, InviteRsvps, Planners, PlannerPlans, PlannerHistory, PlannerLogins, AppPasswords, PhotoGalleries, PhotoItems, Affiliates, Pages, Posts, Reviews, Media, ProductFiles, ContactSubmissions, ...WORKOUT_COLLECTIONS, ...HOSTBOOK_COLLECTIONS, Users],
-  globals: [SiteSettings, InvitePlans, PlannerLanding, WorkoutSettings, PhotoPlans, HostBookSettings],
+  globals: [SiteSettings, InvitePlans, PlannerLanding, WorkoutSettings, PhotoPlans, HostBookSettings, BuyerOffers],
   editor: lexicalEditor(),
   // Admin emails (e.g. "forgot password") go through Brevo, like the rest of the site's email.
   email: brevoAdapter,

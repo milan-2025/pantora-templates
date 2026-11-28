@@ -326,6 +326,8 @@ async function cloudBoot() {
 
 /* ---------- upgrade ---------- */
 let RZP_LOADING = null;
+/* A promo code from an offer email link (?code=…), kept for 30 days and filled into the plan screen. */
+function savedCode() { try { const o = JSON.parse(store.get('pp_code') || 'null'); return o && Date.now() - o.t < 30 * 864e5 ? o.c : ''; } catch (e) { return ''; } }
 function loadRazorpay() {
   if (window.Razorpay) return Promise.resolve();
   RZP_LOADING = RZP_LOADING || new Promise((ok, bad) => { const s = document.createElement('script'); s.src = 'https://checkout.razorpay.com/v1/checkout.js'; s.onload = ok; s.onerror = () => { RZP_LOADING = null; bad(new Error('Couldn’t load the payment window. Check your connection.')); }; document.body.appendChild(s); });
@@ -339,7 +341,7 @@ async function upgradeModal(reason) {
   const owner = CLOUD.meta.role === 'owner', cur = CLOUD.meta.plan;
   $('.plans', m).innerHTML = plans.map(p => '<div class="plan' + (p.badge ? ' hot' : '') + '">' + (p.badge ? '<span class="pb">' + esc(p.badge) + '</span>' : '') + '<h3>' + esc(p.name) + '</h3><div class="pp">' + inr(p.price) + '</div><div class="note">' + esc(p.tagline) + ' · valid ' + (p.durationDays % 365 === 0 ? (p.durationDays / 365) + ' year' + (p.durationDays > 365 ? 's' : '') : p.durationDays + ' days') + '</div><ul>' + p.features.map(f => '<li>' + esc(f) + '</li>').join('') + '</ul>' +
     (owner ? '<button class="btn pri wide keep" data-buy="' + esc(p.id) + '">' + (cur.id === p.id && CLOUD.meta.status !== 'expired' ? 'Renew' : 'Choose ' + esc(p.name)) + '</button>' : '') + '</div>').join('') + (typeof invBundleCard === 'function' ? invBundleCard(owner) : '');
-  $('.plans', m).insertAdjacentHTML('afterend', owner ? '<div class="row2" style="margin-top:12px;align-items:flex-end"><label class="field">Promo code (optional)<input class="inp" data-coupon style="text-transform:uppercase"></label></div>' : '<p class="note">Only the planner’s owner (' + esc(CLOUD.meta.owner) + ') can upgrade. Ask them to open Plan &amp; billing.</p>');
+  $('.plans', m).insertAdjacentHTML('afterend', owner ? '<div class="row2" style="margin-top:12px;align-items:flex-end"><label class="field">Promo code (optional)<input class="inp" data-coupon style="text-transform:uppercase" value="' + esc(savedCode()) + '"></label></div>' : '<p class="note">Only the planner’s owner (' + esc(CLOUD.meta.owner) + ') can upgrade. Ask them to open Plan &amp; billing.</p>');
   $$('[data-buy]', m).forEach(b => b.onclick = async () => {
     b.disabled = true; const label = b.textContent; b.textContent = 'Opening payment…';
     try {
