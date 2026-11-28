@@ -8,6 +8,7 @@ import { AppPixel } from "@/components/AppPixel";
 import { StickyCta } from "@/components/StickyCta";
 import { getReviews } from "@/lib/reviewsServer";
 import { appJsonLd } from "@/lib/appPage";
+import { pickVariant } from "@/lib/adVariants";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +35,9 @@ const POINTS = [
   { icon: MessageCircle, title: "WhatsApp templates", text: "Confirmation, check-in details, checkout reminder and review request, filled in from the booking." },
 ];
 
-export default async function HostBookLanding() {
+export default async function HostBookLanding({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const v = (await searchParams).v;
+  const hero = pickVariant("hostbook", typeof v === "string" ? v : null).headline;
   const payload = await getPayloadClient();
   const [{ plans, extraListingPrice, offerText }, reviews] = await Promise.all([publicPlans(payload), getReviews(payload, "hostbook")]);
   const site = (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, "");
@@ -64,8 +67,8 @@ export default async function HostBookLanding() {
       <section className="mx-auto grid max-w-6xl items-center gap-10 px-5 pb-16 pt-8 md:grid-cols-[1.1fr_.9fr] md:pt-16">
         <div>
           <p className="mb-3 inline-block rounded-full bg-mist px-3 py-1 text-xs font-semibold text-teal">For Airbnb, homestay & serviced-apartment hosts</p>
-          <h1 className="font-serif text-5xl leading-[1.05] md:text-6xl">Every guest, booking and rupee. One book.</h1>
-          <p className="mt-5 max-w-xl text-lg text-ink/70">Keep a proper guest register with IDs, sync your Airbnb calendar, hand jobs to your caretaker and finally see what each listing really earns.</p>
+          <h1 className="font-serif text-5xl leading-[1.05] md:text-6xl">{hero.h}</h1>
+          <p className="mt-5 max-w-xl text-lg text-ink/70">{hero.p}</p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link href="/hostbook/app?signup=1" className="rounded-full bg-teal px-6 py-3 font-semibold text-white">Start free: 1 listing</Link>
             <a href="#plans" className="rounded-full border border-ink/15 bg-white px-6 py-3 font-semibold">See plans</a>

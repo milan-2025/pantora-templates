@@ -24,7 +24,9 @@ function afterStart() {
   const q = new URLSearchParams(location.search);
   if (q.get('ref')) store.set('wk_ref', q.get('ref').toUpperCase().slice(0, 12));
   if (q.get('join')) store.set('wk_join', q.get('join').toLowerCase().slice(0, 12));
-  const src = [q.get('utm_source'), q.get('utm_campaign'), q.get('utm_content')].filter(Boolean).join(' / ');
+  // Ad headline version (?v=…): kept for this visit, because the address is cleaned below before the page draws.
+  if (q.get('v')) try { sessionStorage.setItem('wk_v', q.get('v').slice(0, 30)); } catch (e) { /* private mode */ }
+  const src = [q.get('utm_source'), q.get('utm_campaign'), q.get('utm_content'), q.get('v') ? 'v=' + q.get('v') : ''].filter(Boolean).join(' / ');
   if (src && !store.get('wk_src')) store.set('wk_src', src.slice(0, 120));
   if (q.toString()) history.replaceState(null, '', location.pathname + location.hash);
 })();

@@ -2,6 +2,7 @@ import "server-only";
 import { trackingScript } from "@/lib/tracking";
 import { REVIEWS_CSS, reviewsHtml, type Review } from "@/lib/reviews";
 import { appJsonLd, jsonLdScript, stickyCtaHtml } from "@/lib/appPage";
+import { pickVariant } from "@/lib/adVariants";
 import type { PhotoPlan } from "@/lib/photos/core";
 import { esc, inr, jsonScript, page } from "@/lib/photos/pages/shared";
 
@@ -15,7 +16,8 @@ const FAQ: [string, string][] = [
 ];
 
 /** /photos: the landing page, with sign-up and sign-in. */
-export function landingHtml(o: { plans: PhotoPlan[]; banner: string; renewalPrice: number; site: string; source: string; reviews?: Review[] }) {
+export function landingHtml(o: { plans: PhotoPlan[]; banner: string; renewalPrice: number; site: string; source: string; reviews?: Review[]; v?: string | null }) {
+  const hero = pickVariant("photos", o.v).headline;
   const paid = o.plans.filter((p) => p.id !== "free");
   const free = o.plans.find((p) => p.id === "free")!;
   const cards = o.plans
@@ -40,8 +42,8 @@ ${o.banner ? `<div class="banner">${esc(o.banner)}</div>` : ""}
 <section class="w hero">
  <div>
   <p class="kicker">Wedding photo sharing</p>
-  <h1>Every wedding photo, in one beautiful link</h1>
-  <p class="lead">Haldi to vidaai, sorted into albums. Send one link on WhatsApp or put a QR code at the venue, and the whole family sees every photo and video. No app, no Google Drive mess.</p>
+  <h1>${esc(hero.h)}</h1>
+  <p class="lead">${esc(hero.p)}</p>
   <div class="ctas"><a class="btn btn-p" href="#start">Create my gallery, free</a><a class="btn btn-g" href="#plans">See plans</a></div>
   <p class="small">Free for ${free.freeDays} days with up to ${free.maxPhotos} photos. No card needed.</p>
  </div>

@@ -1,5 +1,5 @@
 import Script from "next/script";
-import { TRACKED } from "@/lib/tracking";
+import { TRACKED, variantsFor } from "@/lib/tracking";
 
 /**
  * Loads /pt-track.js (the shared Meta Pixel for app pages) labelled with one product, so Events Manager can tell
@@ -16,6 +16,7 @@ export function AppPixel({ product, view = true }: { product: keyof typeof TRACK
       data-id={p.id}
       data-name={p.name}
       data-category={p.category}
+      {...(variantsFor(product) ? { "data-variants": variantsFor(product) } : {})}
       {...(view ? {} : { "data-view": "off" })}
     />
   );

@@ -2,6 +2,7 @@ import "server-only";
 import { trackingScript } from "@/lib/tracking";
 import { REVIEWS_CSS, reviewsHtml, type Review } from "@/lib/reviews";
 import { stickyCtaHtml } from "@/lib/appPage";
+import { pickVariant } from "@/lib/adVariants";
 import type { Plan } from "@/lib/invites";
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
@@ -27,7 +28,8 @@ const FAQ: [string, string][] = [
 ];
 
 /** The wedding invite maker's landing page (/shaadi). `qs` is the visitor's query string, passed on to the editor links. */
-export function landingHtml(opts: { plans: Plan[]; banner: string; months: number; site: string; qs: string; reviews?: Review[] }) {
+export function landingHtml(opts: { plans: Plan[]; banner: string; months: number; site: string; qs: string; reviews?: Review[]; v?: string | null }) {
+  const hero = pickVariant("invites", opts.v).headline;
   const create = "/shaadi/create" + (opts.qs ? "?" + opts.qs : "");
   const t0 = THEMES[0];
   const plans = opts.plans
@@ -205,8 +207,8 @@ ${opts.banner ? `<div class="banner">${esc(opts.banner)}</div>` : ""}
 <main>
 <section class="hero">
   <div>
-    <h1>Your wedding invite, ready for WhatsApp tonight</h1>
-    <p class="lead">Every function with its date, venue and map. RSVPs that count themselves. Photos, music and a countdown. One link the whole family can share.</p>
+    <h1>${esc(hero.h)}</h1>
+    <p class="lead">${esc(hero.p)}</p>
     <div class="ctas"><a class="btn btn-p" href="${esc(create)}">Start designing, free</a><a class="btn btn-g" href="#prices">See prices</a></div>
     <p class="small">Free to design. Pay once to publish, from ${inr(from)}. No app needed for you or your guests.</p>
   </div>

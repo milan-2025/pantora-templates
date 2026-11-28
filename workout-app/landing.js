@@ -1,4 +1,29 @@
 /* ---------- the page people see before signing in (/workout) ---------- */
+/* Headline versions for ads: /workout?v=home shows the home-workout headline (unknown or no v: main).
+   pt-track.js sends the version with every Pixel event as ad_variant. Keep in step with the README table. */
+const LP_HERO = {
+ "main": {
+  "h": "A little every day.<br><span>Results all year.</span>",
+  "p": "A plan for every day, a coach that counts with you, streaks and gifts that make you want to show up, and friends who notice when you don’t."
+ },
+ "home": {
+  "h": "Get fit at home.<br><span>No gym, no equipment.</span>",
+  "p": "Follow-along workouts for every day of the challenge, sized to your level. Press play in your living room and the app counts with you."
+ },
+ "family": {
+  "h": "Work out together.<br><span>The whole family, one plan.</span>",
+  "p": "One yearly plan covers you and up to 7 family members or friends. Everyone sees each other's ticks, and nobody wants to break the streak."
+ },
+ "streak": {
+  "h": "Never miss a day.<br><span>Streaks, gifts and a buddy.</span>",
+  "p": "Daily reminders, streak freezes, gifts at every milestone and a buddy who notices when you skip. Built to keep you showing up."
+ },
+ "beginner": {
+  "h": "New to workouts?<br><span>Start with 10 minutes a day.</span>",
+  "p": "Beginner challenges start gentle and grow with you. Every move has an easier version, and \"too hard\" makes the next workouts lighter."
+ }
+};
+const lpVariant = () => { try { const v = new URLSearchParams(location.search).get('v') || sessionStorage.getItem('wk_v'); return v && Object.prototype.hasOwnProperty.call(LP_HERO, v) ? v : 'main'; } catch (e) { return 'main'; } };
 let LANDING = null;
 function showLanding() {
   const lp = $('#lp');
@@ -57,7 +82,7 @@ function landingHtml() {
   const heat = Array.from({ length: 26 * 7 }, (_, i) => { const r = Math.sin(i * 12.9898) * 43758.5453 % 1; const v = Math.abs(r); return `<i class="${i > 150 ? (v > 0.2 ? 'c' : 'b') : v > 0.55 ? 'c' : v > 0.35 ? 'b' : v > 0.2 ? 'a' : ''}"></i>`; }).join('');
   return `<header class="lp-nav"><a href="/workout" class="lp-brand"><span class="g-logo">${LOGO}</span><b>Pandora <span>Workout</span></b></a><span class="sp"></span><button class="iconbtn lp-mode" type="button" aria-label="Light or dark"></button><a href="#" class="lp-in" data-go="login">Sign in</a><a href="#" class="btn sm" data-go="signup">Start free</a></header>
   <section class="lp-hero"><div class="lp-hero-t"><p class="lp-eye">14 to 100-day workout challenges · made for India · works offline</p>
-    <h1>A little every day.<br><span>Results all year.</span></h1>
+    <h1>${LP_HERO[lpVariant()].h}</h1>
     <p class="lp-sub">A plan for every day, a coach that counts with you, streaks and gifts that make you want to show up, and friends who notice when you don’t.</p>
     <p class="lp-offer" id="lp-offer" hidden></p>
     <div class="lp-cta"><a href="#" class="btn big" data-go="signup"><span>Start your <b data-free>14</b>-day challenge free</span></a><a href="#lp-how" class="btn ghost big">See how it works</a></div>
